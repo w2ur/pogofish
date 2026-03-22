@@ -1,0 +1,40 @@
+# Dependencies
+node_modules/
+.venv/
+__pycache__/
+*.pyc
+
+# Build output
+app/dist/
+*.egg-info/
+
+# Environment
+.env
+.env.*
+!.env.example
+
+# OS files
+.DS_Store
+Thumbs.db
+
+# Editor
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# Training artifacts
+training/checkpoints/
+training/logs/
+*.pt
+*.pth
+wandb/
+
+# Plans and scratch
+docs/plans/
+PLAN.md
+.superpowers/
+
+# Backups and exports
+*.bak
+*.backup
