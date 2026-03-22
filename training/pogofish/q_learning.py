@@ -12,6 +12,7 @@ from __future__ import annotations
 
 import random
 import time
+from typing import TYPE_CHECKING
 
 from pogofish.engine import (
     GameState, Move,
@@ -19,6 +20,12 @@ from pogofish.engine import (
     is_terminal, reward as engine_reward, winner,
 )
 from pogofish.encoding import state_to_key, move_to_key
+
+if TYPE_CHECKING:
+    from pogofish.minimax import SolveResult
+
+if TYPE_CHECKING:
+    from pogofish.minimax import SolveResult
 
 
 class QTable:
@@ -271,4 +278,60 @@ def train(
         "q_table": qt,
         "training_log": training_log,
         "sample_games": sample_games,
+    }
+
+
+def evaluate(
+    qt: QTable,
+    decisive_positions: dict[GameState, SolveResult],
+) -> dict:
+    """
+    Evaluate Q-table against decisive minimax positions.
+
+    Both Q-table and minimax use native GameState keys — no conversion needed.
+
+    A decisive position is "visited" if the state appears in the Q-table.
+    Accuracy is measured by checking whether the Q-value of the minimax-optimal
+    move has the same sign as the minimax value (positive = winning, negative = losing).
+
+    Returns dict with:
+      - coverage: fraction of decisive positions present in the Q-table
+      - accuracy: fraction of visited positions where the minimax best move's
+                  Q-value sign agrees with the minimax value sign
+      - value_agreement: coverage * accuracy (overall correctness)
+      - total_decisive: total number of decisive positions
+    """
+    # Only count non-terminal decisive positions (those with a best_move to evaluate).
+    actionable = {s: r for s, r in decisive_positions.items() if r.best_move is not None}
+    total = len(actionable)
+    if total == 0:
+        return {"coverage": 0.0, "accuracy": 0.0, "value_agreement": 0.0, "total_decisive": len(decisive_positions)}
+
+    visited = 0
+    correct = 0
+
+    for state, minimax_result in actionable.items():
+        if state not in qt:
+            continue
+
+        q_val = qt.get_value(state, minimax_result.best_move)
+        if q_val == 0.0:
+            # Minimax best move has not been meaningfully learned yet.
+            continue
+
+        visited += 1
+        minimax_sign = 1 if minimax_result.value > 0 else -1
+
+        if (q_val > 0 and minimax_sign > 0) or (q_val < 0 and minimax_sign < 0):
+            correct += 1
+
+    coverage = visited / total
+    accuracy = correct / visited if visited > 0 else 0.0
+    value_agreement = coverage * accuracy
+
+    return {
+        "coverage": round(coverage, 4),
+        "accuracy": round(accuracy, 4),
+        "value_agreement": round(value_agreement, 4),
+        "total_decisive": total,
     }

@@ -6,7 +6,8 @@ from pogofish.engine import (
     W, R, GameState, Move,
     initial_state, legal_moves, apply_move, is_terminal, reward,
 )
-from pogofish.q_learning import QTable, play_episode, train
+from pogofish.minimax import solve
+from pogofish.q_learning import QTable, play_episode, train, evaluate
 
 
 # ---------------------------------------------------------------------------
@@ -197,3 +198,39 @@ def test_train_short_run():
     assert len(result["sample_games"]) > 0
     first_episodes = [g["episode"] for g in result["sample_games"] if g["episode"] <= 10]
     assert len(first_episodes) == 10
+
+
+# ---------------------------------------------------------------------------
+# 6. Evaluation
+# ---------------------------------------------------------------------------
+
+
+def test_evaluate_empty_qtable():
+    """Empty Q-table has 0% coverage and 0% accuracy."""
+    qt = QTable()
+    table = {}
+    solve(SMALL_STATE, table)
+    decisive = {s: r for s, r in table.items() if r.value != 0.0}
+    assert len(decisive) > 0
+
+    result = evaluate(qt, decisive)
+    assert result["coverage"] == 0.0
+    assert result["accuracy"] == 0.0
+    assert result["value_agreement"] == 0.0
+
+
+def test_evaluate_perfect_qtable():
+    """Q-table with correct signs gets 100% accuracy on covered states."""
+    qt = QTable()
+    table = {}
+    solve(SMALL_STATE, table)
+    decisive = {s: r for s, r in table.items() if r.value != 0.0}
+
+    for state, solve_result in decisive.items():
+        if solve_result.best_move is not None:
+            qt.set_value(state, solve_result.best_move, solve_result.value)
+
+    result = evaluate(qt, decisive)
+    assert result["coverage"] == 1.0
+    assert result["accuracy"] == 1.0
+    assert result["value_agreement"] == 1.0
