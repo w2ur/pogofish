@@ -24,6 +24,7 @@ Thumbs.db
 *.swo
 
 # Training artifacts
+models/
 training/checkpoints/
 training/logs/
 *.pt
