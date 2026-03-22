@@ -119,6 +119,7 @@ def play_episode(
     gamma: float,
     max_moves: int = 50,
     record: bool = False,
+    start_state: GameState | None = None,
 ) -> dict:
     """
     Play one self-play episode. Both sides use the same Q-table.
@@ -127,8 +128,9 @@ def play_episode(
       {"moves": [...], "result": str, "num_moves": int}
     If record=True, moves list contains full move data (string-encoded for JSON).
     If record=False, moves list is empty (saves memory during bulk training).
+    If start_state is provided, episodes begin from that state instead of initial_state().
     """
-    state = initial_state()
+    state = start_state if start_state is not None else initial_state()
     moves_log: list[dict] = []
     move_count = 0
     next_state = state  # Initialize for the result check after loop.
@@ -189,6 +191,7 @@ def train(
     max_moves: int = 50,
     patience: int = 3,
     output_dir: str | None = None,
+    start_state: GameState | None = None,
 ) -> dict:
     """
     Train a Q-learning agent via self-play.
@@ -223,7 +226,7 @@ def train(
             or (remainder != 0 and remainder > eval_interval - 10)
         )
 
-        game = play_episode(qt, epsilon, alpha, gamma, max_moves, record=should_record)
+        game = play_episode(qt, epsilon, alpha, gamma, max_moves, record=should_record, start_state=start_state)
 
         if should_record:
             game["episode"] = ep

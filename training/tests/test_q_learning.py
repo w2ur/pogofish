@@ -2,6 +2,7 @@
 
 import gzip
 import json
+from pathlib import Path
 
 import pytest
 
@@ -280,3 +281,64 @@ def test_export_is_compressed(tmp_path):
     with gzip.open(path, "rt") as f:
         data = json.load(f)
     assert "q_table" in data
+
+
+# ---------------------------------------------------------------------------
+# 8. Integration (slow)
+# ---------------------------------------------------------------------------
+
+
+@pytest.mark.slow
+def test_training_shows_learning_signal():
+    """
+    Train for 1000 episodes with minimax eval on a small table.
+    Verify that value agreement improves from the random baseline.
+    """
+    minimax = {}
+    solve(SMALL_STATE, minimax)
+    decisive = {s: r for s, r in minimax.items() if r.value != 0.0}
+    assert len(decisive) > 0
+
+    result = train(
+        episodes=1000,
+        eval_interval=200,
+        minimax_table=decisive,
+        max_moves=50,
+        patience=100,  # Don't early stop
+        start_state=SMALL_STATE,
+    )
+
+    log = result["training_log"]
+    assert len(log) >= 4
+
+    first_agreement = log[0]["value_agreement"]
+    last_agreement = log[-1]["value_agreement"]
+    assert last_agreement > first_agreement or last_agreement > 0.3, (
+        f"No learning signal: first={first_agreement:.3f}, last={last_agreement:.3f}"
+    )
+
+    assert len(result["sample_games"]) >= 10
+
+
+@pytest.mark.slow
+def test_export_full_run(tmp_path):
+    """Train with export and verify all artifacts are created."""
+    output_dir = str(tmp_path / "q_learning")
+
+    train(
+        episodes=200,
+        eval_interval=100,
+        snapshot_interval=100,
+        minimax_table=None,
+        output_dir=output_dir,
+        max_moves=50,
+    )
+
+    out = Path(output_dir)
+    assert (out / "q_table_final.json.gz").exists()
+    assert (out / "training_log.json").exists()
+    assert (out / "sample_games.json").exists()
+    assert (out / "q_table_checkpoint_100.json.gz").exists()
+
+    qt, meta = load_q_table(out / "q_table_final.json.gz")
+    assert len(qt) > 0
