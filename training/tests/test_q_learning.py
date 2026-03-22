@@ -6,7 +6,7 @@ from pogofish.engine import (
     W, R, GameState, Move,
     initial_state, legal_moves, apply_move, is_terminal, reward,
 )
-from pogofish.q_learning import QTable
+from pogofish.q_learning import QTable, play_episode, train
 
 
 # ---------------------------------------------------------------------------
@@ -140,3 +140,60 @@ def test_q_update_nonterminal_negation():
     # Q = 0 + 0.1 * (-0.495 - 0) = -0.0495
     expected = 0.1 * (0.0 - 0.99 * 0.5)
     assert abs(qt.get_value(state, move) - expected) < 1e-9
+
+
+# ---------------------------------------------------------------------------
+# 4. Single episode
+# ---------------------------------------------------------------------------
+
+
+def test_play_episode_returns_valid_game():
+    """A single episode produces a valid game record."""
+    qt = QTable()
+    game = play_episode(qt, epsilon=1.0, alpha=0.1, gamma=0.99, max_moves=50, record=True)
+    assert len(game["moves"]) > 0
+    assert game["result"] in ("W_wins", "R_wins", "draw")
+    assert game["num_moves"] == len(game["moves"])
+
+
+def test_play_episode_no_record():
+    """Without record=True, moves list is empty but num_moves is tracked."""
+    qt = QTable()
+    game = play_episode(qt, epsilon=1.0, alpha=0.1, gamma=0.99, max_moves=50)
+    assert game["moves"] == []
+    assert game["num_moves"] > 0
+
+
+def test_play_episode_updates_qtable():
+    """Playing an episode should populate the Q-table."""
+    qt = QTable()
+    assert len(qt) == 0
+    play_episode(qt, epsilon=1.0, alpha=0.1, gamma=0.99, max_moves=50)
+    assert len(qt) > 0
+
+
+def test_play_episode_respects_max_moves():
+    """Games should not exceed max_moves."""
+    qt = QTable()
+    game = play_episode(qt, epsilon=1.0, alpha=0.1, gamma=0.99, max_moves=10)
+    assert game["num_moves"] <= 10
+
+
+# ---------------------------------------------------------------------------
+# 5. Training loop
+# ---------------------------------------------------------------------------
+
+
+def test_train_short_run():
+    """Short training run produces expected artifacts."""
+    result = train(
+        episodes=100,
+        eval_interval=50,
+        minimax_table=None,
+        max_moves=50,
+    )
+    assert result["q_table"] is not None
+    assert len(result["training_log"]) >= 2
+    assert len(result["sample_games"]) > 0
+    first_episodes = [g["episode"] for g in result["sample_games"] if g["episode"] <= 10]
+    assert len(first_episodes) == 10
