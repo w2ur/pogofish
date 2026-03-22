@@ -4,7 +4,7 @@ Shared encoding for GameState and Move to/from string keys.
 State key format: "cell0/cell1/.../cell8:player"
   Each cell is the concatenated piece string bottom-to-top (e.g., "WR").
   Empty cell = "". Current player after ":".
-  Example: "WW/WW/WW///RR/RR/RR:W"
+  Example: "WW/WW/WW////RR/RR/RR:W"
 
 Move key format: "from_cell,num_pieces,to_cell"
   Example: "0,1,3"
