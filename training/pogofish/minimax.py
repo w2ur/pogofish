@@ -24,6 +24,7 @@ import time
 from pathlib import Path
 from typing import NamedTuple
 
+from pogofish.encoding import state_to_key, key_to_state
 from pogofish.engine import (
     GameState,
     Move,
@@ -240,22 +241,6 @@ def full_solve(
 # ---------------------------------------------------------------------------
 
 
-def _state_to_key(state: GameState) -> str:
-    """Convert a GameState to a compact string key for JSON serialization."""
-    # Board: each cell is a string of piece chars (e.g., "WR" = W bottom, R top).
-    # Cells separated by "/". Current player appended after ":".
-    cells = ["".join(cell) for cell in state.board]
-    return "/".join(cells) + ":" + state.current_player
-
-
-def _key_to_state(key: str) -> GameState:
-    """Convert a compact string key back to a GameState."""
-    board_str, player = key.rsplit(":", 1)
-    cells = board_str.split("/")
-    board = tuple(tuple(cell) for cell in cells)
-    return GameState(board=board, current_player=player)
-
-
 def _result_to_dict(result: SolveResult) -> dict:
     """Convert a SolveResult to a JSON-serializable dict."""
     d: dict = {"v": int(result.value)}
@@ -290,7 +275,7 @@ def export_table(
             "max_ply": MAX_PLY,
             "unique_states": len(table),
         },
-        "states": {_state_to_key(s): _result_to_dict(r) for s, r in table.items()},
+        "states": {state_to_key(s): _result_to_dict(r) for s, r in table.items()},
     }
     if stats is not None:
         data["meta"]["elapsed_seconds"] = round(stats.elapsed_seconds, 2)
@@ -315,7 +300,7 @@ def load_table(path: str | Path) -> tuple[dict[GameState, SolveResult], dict]:
 
     table: dict[GameState, SolveResult] = {}
     for key, result_dict in data["states"].items():
-        state = _key_to_state(key)
+        state = key_to_state(key)
         table[state] = _dict_to_result(result_dict)
 
     return table, data["meta"]
