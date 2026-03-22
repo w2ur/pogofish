@@ -1,5 +1,8 @@
 """Tests for Q-learning."""
 
+import gzip
+import json
+
 import pytest
 
 from pogofish.engine import (
@@ -7,7 +10,7 @@ from pogofish.engine import (
     initial_state, legal_moves, apply_move, is_terminal, reward,
 )
 from pogofish.minimax import solve
-from pogofish.q_learning import QTable, play_episode, train, evaluate
+from pogofish.q_learning import QTable, play_episode, train, evaluate, export_q_table, load_q_table
 
 
 # ---------------------------------------------------------------------------
@@ -226,11 +229,54 @@ def test_evaluate_perfect_qtable():
     solve(SMALL_STATE, table)
     decisive = {s: r for s, r in table.items() if r.value != 0.0}
 
+    # For a "perfect" Q-table, ALL moves in a position must have the correct
+    # sign (positive for winning, negative for losing). This simulates a
+    # converged Q-table where best_value returns the correct sign.
     for state, solve_result in decisive.items():
-        if solve_result.best_move is not None:
-            qt.set_value(state, solve_result.best_move, solve_result.value)
+        moves = legal_moves(state)
+        for m in moves:
+            qt.set_value(state, m, solve_result.value)
 
     result = evaluate(qt, decisive)
     assert result["coverage"] == 1.0
     assert result["accuracy"] == 1.0
     assert result["value_agreement"] == 1.0
+
+
+# ---------------------------------------------------------------------------
+# 7. Export / Import
+# ---------------------------------------------------------------------------
+
+
+def test_export_and_load_roundtrip(tmp_path):
+    """Export Q-table and load it back — values must match."""
+    qt = QTable()
+    state = initial_state()
+    moves = legal_moves(state)
+    qt.set_value(state, moves[0], 0.42)
+    qt.set_value(state, moves[1], -0.3)
+
+    path = tmp_path / "q_table.json.gz"
+    meta = {"episode": 100, "value_agreement": 0.5}
+    export_q_table(qt, path, meta)
+    assert path.exists()
+
+    loaded_qt, loaded_meta = load_q_table(path)
+    assert loaded_meta["episode"] == 100
+    assert loaded_qt.get_value(state, moves[0]) == pytest.approx(0.42)
+    assert loaded_qt.get_value(state, moves[1]) == pytest.approx(-0.3)
+
+
+def test_export_is_compressed(tmp_path):
+    """Exported file should be gzip-compressed."""
+    qt = QTable()
+    state = initial_state()
+    for m in legal_moves(state):
+        qt.set_value(state, m, 0.1)
+
+    path = tmp_path / "q_table.json.gz"
+    export_q_table(qt, path)
+
+    with gzip.open(path, "rt") as f:
+        data = json.load(f)
+    assert "q_table" in data

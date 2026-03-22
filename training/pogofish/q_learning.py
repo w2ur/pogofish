@@ -10,8 +10,11 @@ The negation (-γ instead of +γ) accounts for the opponent's turn at s'.
 
 from __future__ import annotations
 
+import gzip
+import json
 import random
 import time
+from pathlib import Path
 from typing import TYPE_CHECKING
 
 from pogofish.engine import (
@@ -19,10 +22,7 @@ from pogofish.engine import (
     initial_state, legal_moves, apply_move,
     is_terminal, reward as engine_reward, winner,
 )
-from pogofish.encoding import state_to_key, move_to_key
-
-if TYPE_CHECKING:
-    from pogofish.minimax import SolveResult
+from pogofish.encoding import state_to_key, key_to_state, move_to_key, key_to_move
 
 if TYPE_CHECKING:
     from pogofish.minimax import SolveResult
@@ -242,7 +242,7 @@ def train(
 
             if minimax_table is not None:
                 # evaluate() is defined in Task 4 — only called when minimax_table provided.
-                eval_result = evaluate(qt, minimax_table)  # noqa: F821
+                eval_result = evaluate(qt, minimax_table)
                 entry.update(eval_result)
                 agreement = eval_result["value_agreement"]
 
@@ -268,11 +268,11 @@ def train(
 
         # Snapshot checkpoint (expensive — writes Q-table to disk).
         if output_dir is not None and ep % snapshot_interval == 0:
-            _export_checkpoint(qt, ep, training_log[-1] if training_log else {}, output_dir)  # noqa: F821
+            _export_checkpoint(qt, ep, training_log[-1] if training_log else {}, output_dir)
 
     # Final export.
     if output_dir is not None:
-        _export_final(qt, training_log, sample_games, output_dir)  # noqa: F821
+        _export_final(qt, training_log, sample_games, output_dir)
 
     return {
         "q_table": qt,
@@ -290,19 +290,21 @@ def evaluate(
 
     Both Q-table and minimax use native GameState keys — no conversion needed.
 
-    A decisive position is "visited" if the state appears in the Q-table.
-    Accuracy is measured by checking whether the Q-value of the minimax-optimal
-    move has the same sign as the minimax value (positive = winning, negative = losing).
+    For each decisive position, checks whether sign(max(Q[state])) matches
+    the minimax value sign. This measures "does the agent understand who's
+    winning?" — not whether it picks the optimal move.
 
     Returns dict with:
-      - coverage: fraction of decisive positions present in the Q-table
-      - accuracy: fraction of visited positions where the minimax best move's
-                  Q-value sign agrees with the minimax value sign
+      - coverage: fraction of decisive positions with non-zero best Q-value
+      - accuracy: fraction of covered positions with correct value sign
       - value_agreement: coverage * accuracy (overall correctness)
       - total_decisive: total number of decisive positions
     """
-    # Only count non-terminal decisive positions (those with a best_move to evaluate).
-    actionable = {s: r for s, r in decisive_positions.items() if r.best_move is not None}
+    # Filter to positions with legal moves (terminal/stuck states can't appear
+    # in the Q-table — exclude from denominator).
+    actionable = {
+        s: r for s, r in decisive_positions.items() if legal_moves(s)
+    }
     total = len(actionable)
     if total == 0:
         return {"coverage": 0.0, "accuracy": 0.0, "value_agreement": 0.0, "total_decisive": len(decisive_positions)}
@@ -314,15 +316,16 @@ def evaluate(
         if state not in qt:
             continue
 
-        q_val = qt.get_value(state, minimax_result.best_move)
-        if q_val == 0.0:
-            # Minimax best move has not been meaningfully learned yet.
+        moves = legal_moves(state)
+        q_best = qt.best_value(state, moves)
+        if q_best == 0.0:
+            # All Q-values still at default — not meaningfully learned.
             continue
 
         visited += 1
         minimax_sign = 1 if minimax_result.value > 0 else -1
 
-        if (q_val > 0 and minimax_sign > 0) or (q_val < 0 and minimax_sign < 0):
+        if (q_best > 0 and minimax_sign > 0) or (q_best < 0 and minimax_sign < 0):
             correct += 1
 
     coverage = visited / total
@@ -335,3 +338,141 @@ def evaluate(
         "value_agreement": round(value_agreement, 4),
         "total_decisive": total,
     }
+
+
+def export_q_table(
+    qt: QTable,
+    path: str | Path,
+    meta: dict | None = None,
+) -> None:
+    """
+    Export Q-table as gzipped JSON.
+    Converts native GameState/Move keys to strings at export time.
+    """
+    serialized: dict[str, dict[str, float]] = {}
+    for state, moves_dict in qt._table.items():
+        sk = state_to_key(state)
+        serialized[sk] = {move_to_key(m): v for m, v in moves_dict.items()}
+
+    data = {
+        "meta": meta or {},
+        "q_table": serialized,
+    }
+    path = Path(path)
+    path.parent.mkdir(parents=True, exist_ok=True)
+    with gzip.open(path, "wt", encoding="utf-8") as f:
+        json.dump(data, f, separators=(",", ":"))
+
+
+def load_q_table(path: str | Path) -> tuple[QTable, dict]:
+    """
+    Load Q-table from gzipped JSON.
+    Converts string keys back to native GameState/Move objects.
+    """
+    with gzip.open(path, "rt", encoding="utf-8") as f:
+        data = json.load(f)
+
+    qt = QTable()
+    for sk, moves_dict in data["q_table"].items():
+        state = key_to_state(sk)
+        qt._table[state] = {key_to_move(mk): v for mk, v in moves_dict.items()}
+
+    return qt, data.get("meta", {})
+
+
+def _export_checkpoint(qt: QTable, episode: int, entry: dict, output_dir: str) -> None:
+    """Save a Q-table checkpoint snapshot."""
+    out = Path(output_dir)
+    path = out / f"q_table_checkpoint_{episode}.json.gz"
+    export_q_table(qt, path, meta=entry)
+    print(f"  Snapshot saved: {path}")
+
+
+def _export_final(
+    qt: QTable,
+    training_log: list[dict],
+    sample_games: list[dict],
+    output_dir: str,
+) -> None:
+    """Save final Q-table, training log, and sample games."""
+    out = Path(output_dir)
+    out.mkdir(parents=True, exist_ok=True)
+
+    meta = training_log[-1] if training_log else {}
+    export_q_table(qt, out / "q_table_final.json.gz", meta=meta)
+
+    with open(out / "training_log.json", "w") as f:
+        json.dump(training_log, f, indent=2)
+
+    with open(out / "sample_games.json", "w") as f:
+        json.dump(sample_games, f, indent=2)
+
+    print(f"Final artifacts saved to {out}/")
+
+
+def main() -> None:
+    """CLI entry point: cd training && python -m pogofish.q_learning train/eval."""
+    import argparse
+
+    parser = argparse.ArgumentParser(description="Pogo Q-Learning")
+    subparsers = parser.add_subparsers(dest="command", required=True)
+
+    tp = subparsers.add_parser("train", help="Train via self-play")
+    tp.add_argument("--episodes", type=int, default=5_000_000)
+    tp.add_argument("--eval-interval", type=int, default=50_000)
+    tp.add_argument("--snapshot-interval", type=int, default=1_000_000)
+    tp.add_argument("--minimax-table", type=str, default=None)
+    tp.add_argument("--output-dir", type=str, default="training/models/q_learning")
+    tp.add_argument("--alpha-start", type=float, default=0.1)
+    tp.add_argument("--alpha-end", type=float, default=0.01)
+    tp.add_argument("--gamma", type=float, default=0.99)
+    tp.add_argument("--epsilon-start", type=float, default=1.0)
+    tp.add_argument("--epsilon-end", type=float, default=0.05)
+    tp.add_argument("--epsilon-decay-frac", type=float, default=0.8)
+    tp.add_argument("--max-moves", type=int, default=50)
+    tp.add_argument("--patience", type=int, default=3)
+
+    ep = subparsers.add_parser("eval", help="Evaluate Q-table vs minimax")
+    ep.add_argument("--q-table", type=str, required=True)
+    ep.add_argument("--minimax-table", type=str, required=True)
+
+    args = parser.parse_args()
+
+    if args.command == "train":
+        minimax = None
+        if args.minimax_table:
+            from pogofish.minimax import load_table
+            raw_table, meta = load_table(args.minimax_table)
+            minimax = {s: r for s, r in raw_table.items() if r.value != 0.0}
+            print(f"Loaded {len(minimax):,} decisive positions from minimax table")
+
+        train(
+            episodes=args.episodes,
+            eval_interval=args.eval_interval,
+            snapshot_interval=args.snapshot_interval,
+            minimax_table=minimax,
+            alpha_start=args.alpha_start,
+            alpha_end=args.alpha_end,
+            gamma=args.gamma,
+            epsilon_start=args.epsilon_start,
+            epsilon_end=args.epsilon_end,
+            epsilon_decay_frac=args.epsilon_decay_frac,
+            max_moves=args.max_moves,
+            patience=args.patience,
+            output_dir=args.output_dir,
+        )
+    elif args.command == "eval":
+        from pogofish.minimax import load_table
+        raw_table, _ = load_table(args.minimax_table)
+        decisive = {s: r for s, r in raw_table.items() if r.value != 0.0}
+
+        qt, meta = load_q_table(args.q_table)
+        result = evaluate(qt, decisive)
+        print(f"Coverage:        {result['coverage']:.1%}")
+        print(f"Accuracy:        {result['accuracy']:.1%}")
+        print(f"Value agreement: {result['value_agreement']:.1%}")
+        print(f"Decisive states: {result['total_decisive']:,}")
+
+
+if __name__ == "__main__":
+    main()
