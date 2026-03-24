@@ -39,3 +39,6 @@ PLAN.md
 # Backups and exports
 *.bak
 *.backup
+
+# Terminal session logs
+iTerm2 Session*

@@ -210,6 +210,17 @@ def train(
     patience_counter = 0
     start_time = time.perf_counter()
 
+    print(f"Training config:")
+    print(f"  Episodes:    {episodes:,}")
+    print(f"  α:           {alpha_start} → {alpha_end}")
+    print(f"  γ:           {gamma}")
+    print(f"  ε:           {epsilon_start} → {epsilon_end} (over {epsilon_decay_frac:.0%} of episodes = {epsilon_decay_episodes:,})")
+    print(f"  Max moves:   {max_moves}")
+    print(f"  Eval every:  {eval_interval:,}")
+    print(f"  Snap every:  {snapshot_interval:,}")
+    print(f"  Patience:    {patience}")
+    print()
+
     for ep in range(1, episodes + 1):
         # Compute epsilon and alpha with linear decay.
         if ep <= epsilon_decay_episodes:
@@ -257,12 +268,26 @@ def train(
 
             training_log.append(entry)
 
-            print(
-                f"[{ep:>8,}] ε={epsilon:.3f} α={alpha:.4f} "
-                f"|Q|={len(qt):,} "
-                f"t={elapsed:.0f}s"
-                + (f" agree={entry.get('value_agreement', '?'):.1%}" if minimax_table else "")
-            )
+            # Verbose progress output.
+            rate = ep / elapsed if elapsed > 0 else 0
+            eta_s = (episodes - ep) / rate if rate > 0 else 0
+            eta_h = eta_s / 3600
+            mem_mb = len(qt) * 200 / 1_000_000  # rough estimate: ~200 bytes per entry
+
+            lines = [
+                f"──── Episode {ep:,} / {episodes:,} ({ep/episodes:.0%}) ────",
+                f"  ε={epsilon:.3f}  α={alpha:.4f}  γ={gamma}",
+                f"  Q-table: {len(qt):,} states (~{mem_mb:,.0f} MB est.)",
+                f"  Speed:   {rate:,.0f} ep/s   Elapsed: {elapsed/60:,.1f} min   ETA: {eta_h:.1f} h",
+            ]
+            if minimax_table is not None:
+                cov = entry.get("coverage", 0)
+                acc = entry.get("accuracy", 0)
+                agr = entry.get("value_agreement", 0)
+                lines.append(f"  Coverage: {cov:.1%}   Accuracy: {acc:.1%}   Agreement: {agr:.1%}")
+                if patience_counter > 0:
+                    lines.append(f"  ⚠ No improvement for {patience_counter}/{patience} evals")
+            print("\n".join(lines))
 
             # Early stopping.
             if minimax_table is not None and patience_counter >= patience:
@@ -421,19 +446,19 @@ def main() -> None:
     subparsers = parser.add_subparsers(dest="command", required=True)
 
     tp = subparsers.add_parser("train", help="Train via self-play")
-    tp.add_argument("--episodes", type=int, default=5_000_000)
+    tp.add_argument("--episodes", type=int, default=2_000_000)
     tp.add_argument("--eval-interval", type=int, default=50_000)
-    tp.add_argument("--snapshot-interval", type=int, default=1_000_000)
+    tp.add_argument("--snapshot-interval", type=int, default=500_000)
     tp.add_argument("--minimax-table", type=str, default=None)
-    tp.add_argument("--output-dir", type=str, default="training/models/q_learning")
-    tp.add_argument("--alpha-start", type=float, default=0.1)
+    tp.add_argument("--output-dir", type=str, default="models/q_learning")
+    tp.add_argument("--alpha-start", type=float, default=0.3)
     tp.add_argument("--alpha-end", type=float, default=0.01)
     tp.add_argument("--gamma", type=float, default=0.99)
     tp.add_argument("--epsilon-start", type=float, default=1.0)
     tp.add_argument("--epsilon-end", type=float, default=0.05)
-    tp.add_argument("--epsilon-decay-frac", type=float, default=0.8)
+    tp.add_argument("--epsilon-decay-frac", type=float, default=0.2)
     tp.add_argument("--max-moves", type=int, default=50)
-    tp.add_argument("--patience", type=int, default=3)
+    tp.add_argument("--patience", type=int, default=5)
 
     ep = subparsers.add_parser("eval", help="Evaluate Q-table vs minimax")
     ep.add_argument("--q-table", type=str, required=True)

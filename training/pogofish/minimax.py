@@ -214,24 +214,60 @@ def best_move(state: GameState, table: dict[GameState, SolveResult] | None = Non
 
 def full_solve(
     state: GameState | None = None,
+    max_ply: int | None = None,
+    progress_interval: float = 10.0,
 ) -> tuple[dict[GameState, SolveResult], SolveStats]:
     """
     Solve the entire game tree from the given state (default: initial state).
 
+    Args:
+        state: Starting position (default: initial_state()).
+        max_ply: Override MAX_PLY for this solve (default: module-level MAX_PLY).
+        progress_interval: Print progress every N seconds (0 to disable).
+
     Returns a table mapping every reachable state to its SolveResult,
     and solve statistics.
     """
+    global MAX_PLY
     from pogofish.engine import initial_state
 
     if state is None:
         state = initial_state()
 
+    old_max_ply = MAX_PLY
+    if max_ply is not None:
+        MAX_PLY = max_ply
+
     table: dict[GameState, SolveResult] = {}
-
     start = time.perf_counter()
-    _solve(state, table, set(), 0, -2.0, 2.0)
-    elapsed = time.perf_counter() - start
 
+    import threading
+
+    stop_event = threading.Event()
+
+    def _progress_reporter():
+        while not stop_event.wait(progress_interval):
+            elapsed = time.perf_counter() - start
+            n = len(table)
+            decisive = sum(1 for r in table.values() if r.value != 0.0)
+            rate = n / elapsed if elapsed > 0 else 0
+            print(
+                f"  [{elapsed:6.0f}s] {n:>12,} states "
+                f"({decisive:,} decisive) "
+                f"@ {rate:,.0f} states/s"
+            )
+
+    if progress_interval > 0:
+        reporter = threading.Thread(target=_progress_reporter, daemon=True)
+        reporter.start()
+
+    try:
+        _solve(state, table, set(), 0, -2.0, 2.0)
+    finally:
+        stop_event.set()
+        MAX_PLY = old_max_ply
+
+    elapsed = time.perf_counter() - start
     stats = SolveStats(unique_states=len(table), elapsed_seconds=elapsed)
     return table, stats
 
@@ -260,6 +296,7 @@ def export_table(
     table: dict[GameState, SolveResult],
     path: str | Path,
     stats: SolveStats | None = None,
+    max_ply: int | None = None,
 ) -> None:
     """
     Export the transposition table as gzipped JSON.
@@ -272,7 +309,7 @@ def export_table(
     """
     data = {
         "meta": {
-            "max_ply": MAX_PLY,
+            "max_ply": max_ply if max_ply is not None else MAX_PLY,
             "unique_states": len(table),
         },
         "states": {state_to_key(s): _result_to_dict(r) for s, r in table.items()},
@@ -304,3 +341,35 @@ def load_table(path: str | Path) -> tuple[dict[GameState, SolveResult], dict]:
         table[state] = _dict_to_result(result_dict)
 
     return table, data["meta"]
+
+
+# ---------------------------------------------------------------------------
+# CLI
+# ---------------------------------------------------------------------------
+
+
+def main() -> None:
+    """CLI entry point: cd training && python -m pogofish.minimax solve."""
+    import argparse
+
+    parser = argparse.ArgumentParser(description="Pogo Minimax Solver")
+    subparsers = parser.add_subparsers(dest="command", required=True)
+
+    sp = subparsers.add_parser("solve", help="Solve the full game tree")
+    sp.add_argument("--max-ply", type=int, default=50, help="Max half-moves before draw (default: 50)")
+    sp.add_argument("--output", type=str, default="models/minimax_table.json.gz", help="Output path")
+    sp.add_argument("--progress", type=float, default=10.0, help="Progress interval in seconds (0 to disable)")
+
+    args = parser.parse_args()
+
+    if args.command == "solve":
+        print(f"Minimax solve: max_ply={args.max_ply}, output={args.output}")
+        table, stats = full_solve(max_ply=args.max_ply, progress_interval=args.progress)
+        decisive = sum(1 for r in table.values() if r.value != 0.0)
+        print(f"\nDone: {stats.unique_states:,} states ({decisive:,} decisive) in {stats.elapsed_seconds:.0f}s")
+        export_table(table, args.output, stats)
+        print(f"Exported to {args.output}")
+
+
+if __name__ == "__main__":
+    main()
