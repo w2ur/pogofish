@@ -15,7 +15,11 @@ Action encoding:
 
 from __future__ import annotations
 
+import random
+from collections import deque
+
 import torch
+import torch.nn as nn
 
 from pogofish.engine import W, R, GameState, Move, legal_moves
 
@@ -88,3 +92,85 @@ def legal_move_mask(state: GameState) -> torch.Tensor:
     for move in legal_moves(state):
         mask[move_to_action(move)] = True
     return mask
+
+
+# ---------------------------------------------------------------------------
+# DQN Model
+# ---------------------------------------------------------------------------
+
+
+class DQNModel(nn.Module):
+    """
+    Configurable MLP that maps a state tensor (109,) to Q-values (243,).
+
+    Hidden layers default to [128, 64]. No activation on the output layer.
+    """
+
+    def __init__(self, hidden_layers: list[int] | None = None) -> None:
+        super().__init__()
+        if hidden_layers is None:
+            hidden_layers = [128, 64]
+
+        layer_sizes = [STATE_SIZE] + hidden_layers + [ACTION_SIZE]
+        layers: list[nn.Module] = []
+        for i in range(len(layer_sizes) - 1):
+            layers.append(nn.Linear(layer_sizes[i], layer_sizes[i + 1]))
+            if i < len(layer_sizes) - 2:
+                layers.append(nn.ReLU())
+
+        self.net = nn.Sequential(*layers)
+
+    def forward(self, x: torch.Tensor) -> torch.Tensor:
+        return self.net(x)
+
+
+# ---------------------------------------------------------------------------
+# Replay Buffer
+# ---------------------------------------------------------------------------
+
+
+class ReplayBuffer:
+    """
+    Circular buffer storing (state, action, reward, next_state, done) transitions.
+    """
+
+    def __init__(self, capacity: int = 100_000) -> None:
+        self._buffer: deque[tuple[torch.Tensor, int, float, torch.Tensor, bool]] = deque(
+            maxlen=capacity
+        )
+
+    def add(
+        self,
+        state: torch.Tensor,
+        action: int,
+        reward: float,
+        next_state: torch.Tensor,
+        done: bool,
+    ) -> None:
+        self._buffer.append((state, action, reward, next_state, done))
+
+    def sample(
+        self, batch_size: int
+    ) -> tuple[torch.Tensor, torch.Tensor, torch.Tensor, torch.Tensor, torch.Tensor]:
+        """
+        Return a random batch of transitions as stacked tensors.
+
+        Returns:
+            states:      (B, 109) float32
+            actions:     (B,)     long
+            rewards:     (B,)     float32
+            next_states: (B, 109) float32
+            dones:       (B,)     bool
+        """
+        batch = random.sample(self._buffer, batch_size)
+        states, actions, rewards, next_states, dones = zip(*batch)
+        return (
+            torch.stack(states).float(),
+            torch.tensor(actions, dtype=torch.long),
+            torch.tensor(rewards, dtype=torch.float32),
+            torch.stack(next_states).float(),
+            torch.tensor(dones, dtype=torch.bool),
+        )
+
+    def __len__(self) -> int:
+        return len(self._buffer)
