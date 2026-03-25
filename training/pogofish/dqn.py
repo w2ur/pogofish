@@ -15,13 +15,20 @@ Action encoding:
 
 from __future__ import annotations
 
+import copy
 import random
+import time
 from collections import deque
 
 import torch
 import torch.nn as nn
 
-from pogofish.engine import W, R, GameState, Move, legal_moves
+from pogofish.engine import (
+    W, R, GameState, Move,
+    initial_state, legal_moves, apply_move,
+    is_terminal, reward as engine_reward, winner,
+)
+from pogofish.encoding import state_to_key, move_to_key
 
 # ---------------------------------------------------------------------------
 # Constants
@@ -174,3 +181,252 @@ class ReplayBuffer:
 
     def __len__(self) -> int:
         return len(self._buffer)
+
+
+# ---------------------------------------------------------------------------
+# Self-play episode
+# ---------------------------------------------------------------------------
+
+
+def play_episode(
+    model: DQNModel,
+    epsilon: float,
+    max_moves: int = 50,
+    record: bool = False,
+) -> tuple[dict, list[tuple[torch.Tensor, int, float, torch.Tensor, bool]]]:
+    """
+    Play one self-play game. Both sides use the same model with epsilon-greedy.
+
+    Returns:
+        game: dict with keys "moves", "result", "num_moves"
+        transitions: list of (state_t, action, reward, next_state_t, done)
+    """
+    state = initial_state()
+    moves_log: list[dict] = []
+    transitions: list[tuple[torch.Tensor, int, float, torch.Tensor, bool]] = []
+    move_count = 0
+    next_state = state
+
+    while move_count < max_moves:
+        moves = legal_moves(state)
+        if not moves:
+            break
+
+        state_t = encode_state(state)
+        mask = legal_move_mask(state)
+
+        # Epsilon-greedy action selection.
+        if random.random() < epsilon:
+            move = random.choice(moves)
+            action = move_to_action(move)
+        else:
+            with torch.no_grad():
+                q_vals = model(state_t.unsqueeze(0)).squeeze(0)
+                q_vals[~mask] = float("-inf")
+                action = q_vals.argmax().item()
+                move = action_to_move(action)
+
+        if record:
+            moves_log.append({
+                "state": state_to_key(state),
+                "move": move_to_key(move),
+                "player": state.current_player,
+            })
+
+        next_state = apply_move(state, move)
+        # Reward from the mover's perspective.
+        r = engine_reward(next_state, state.current_player)
+        next_state_t = encode_state(next_state)
+        done = is_terminal(next_state)
+
+        transitions.append((state_t, action, r, next_state_t, done))
+        move_count += 1
+
+        if done:
+            break
+        state = next_state
+
+    # Determine result.
+    if is_terminal(next_state):
+        w = winner(next_state)
+        result = f"{w}_wins" if w else "draw"
+    else:
+        result = "draw"
+
+    return {"moves": moves_log, "result": result, "num_moves": move_count}, transitions
+
+
+# ---------------------------------------------------------------------------
+# Training loop
+# ---------------------------------------------------------------------------
+
+
+def train(
+    episodes: int = 500_000,
+    eval_interval: int = 10_000,
+    snapshot_interval: int = 100_000,
+    hidden_layers: list[int] | None = None,
+    minimax_table: dict | None = None,
+    gamma: float = 0.99,
+    lr: float = 1e-3,
+    epsilon_start: float = 1.0,
+    epsilon_end: float = 0.05,
+    epsilon_decay_frac: float = 0.2,
+    batch_size: int = 64,
+    buffer_capacity: int = 100_000,
+    tau: float = 0.005,
+    max_moves: int = 50,
+    patience: int = 5,
+    output_dir: str | None = None,
+) -> dict:
+    """
+    Train a DQN agent via self-play with replay buffer and target network.
+
+    Returns dict with: model, training_log, sample_games.
+    """
+    if hidden_layers is None:
+        hidden_layers = [128, 64]
+
+    model = DQNModel(hidden_layers=hidden_layers)
+    target_model = copy.deepcopy(model)
+    target_model.eval()
+    optimizer = torch.optim.Adam(model.parameters(), lr=lr)
+    buffer = ReplayBuffer(capacity=buffer_capacity)
+
+    training_log: list[dict] = []
+    sample_games: list[dict] = []
+
+    epsilon_decay_episodes = int(episodes * epsilon_decay_frac)
+    best_agreement = -1.0
+    patience_counter = 0
+    start_time = time.perf_counter()
+    loss_val = 0.0
+
+    arch_name = "x".join(str(h) for h in hidden_layers)
+
+    print("Training config (DQN):")
+    print(f"  Episodes:    {episodes:,}")
+    print(f"  lr:          {lr}")
+    print(f"  gamma:        {gamma}")
+    print(f"  epsilon:      {epsilon_start} -> {epsilon_end} (over {epsilon_decay_frac:.0%} = {epsilon_decay_episodes:,})")
+    print(f"  Architecture: {arch_name}")
+    print(f"  Buffer:      {buffer_capacity:,}")
+    print(f"  Batch size:  {batch_size}")
+    print(f"  Tau:         {tau}")
+    print(f"  Max moves:   {max_moves}")
+    print(f"  Eval every:  {eval_interval:,}")
+    print(f"  Snap every:  {snapshot_interval:,}")
+    print(f"  Patience:    {patience}")
+    print()
+
+    for ep in range(1, episodes + 1):
+        # Compute epsilon with linear decay.
+        if ep <= epsilon_decay_episodes:
+            epsilon = epsilon_start + (epsilon_end - epsilon_start) * (ep / epsilon_decay_episodes)
+        else:
+            epsilon = epsilon_end
+
+        # Record first 10 games + last 10 before each eval checkpoint.
+        remainder = ep % eval_interval
+        should_record = (
+            ep <= 10
+            or (remainder != 0 and remainder > eval_interval - 10)
+        )
+
+        game, transitions = play_episode(model, epsilon, max_moves, record=should_record)
+
+        if should_record:
+            game["episode"] = ep
+            sample_games.append(game)
+
+        # Store all transitions from the episode.
+        for t in transitions:
+            buffer.add(*t)
+
+        # Skip training until warmup complete.
+        if len(buffer) < batch_size:
+            continue
+
+        # Sample and train.
+        states, actions, rewards, next_states, dones = buffer.sample(batch_size)
+        q_all = model(states)
+        q_values = q_all.gather(1, actions.unsqueeze(1)).squeeze(1)
+
+        with torch.no_grad():
+            q_next = target_model(next_states)
+            max_q_next = q_next.max(dim=1).values
+            # Two-player negation: r - gamma * max(Q_target(s'))
+            targets = rewards - gamma * max_q_next * (~dones).float()
+
+        loss = nn.functional.mse_loss(q_values, targets)
+        optimizer.zero_grad()
+        loss.backward()
+        optimizer.step()
+        loss_val = loss.item()
+
+        # Soft update target network (Polyak averaging).
+        for p, tp in zip(model.parameters(), target_model.parameters()):
+            tp.data.copy_(tau * p.data + (1 - tau) * tp.data)
+
+        # Eval checkpoint.
+        if ep % eval_interval == 0:
+            elapsed = time.perf_counter() - start_time
+            entry: dict = {
+                "episode": ep,
+                "epsilon": round(epsilon, 4),
+                "loss": round(loss_val, 6),
+                "buffer_size": len(buffer),
+                "elapsed_seconds": round(elapsed, 1),
+            }
+
+            if minimax_table is not None:
+                eval_result = evaluate(model, minimax_table)  # noqa: F821
+                entry.update(eval_result)
+                agreement = eval_result["value_agreement"]
+
+                if agreement > best_agreement:
+                    best_agreement = agreement
+                    patience_counter = 0
+                else:
+                    patience_counter += 1
+
+            training_log.append(entry)
+
+            # Verbose progress output.
+            rate = ep / elapsed if elapsed > 0 else 0
+            eta_s = (episodes - ep) / rate if rate > 0 else 0
+            eta_h = eta_s / 3600
+
+            lines = [
+                f"---- Episode {ep:,} / {episodes:,} ({ep/episodes:.0%}) ----",
+                f"  eps={epsilon:.3f}  lr={lr}  gamma={gamma}  arch={arch_name}",
+                f"  Buffer: {len(buffer):,}   Loss: {loss_val:.4f}",
+                f"  Speed: {rate:,.0f} ep/s   Elapsed: {elapsed/60:,.1f} min   ETA: {eta_h:.1f} h",
+            ]
+            if minimax_table is not None:
+                cov = entry.get("coverage", 0)
+                acc = entry.get("accuracy", 0)
+                agr = entry.get("value_agreement", 0)
+                lines.append(f"  Coverage: {cov:.1%}   Accuracy: {acc:.1%}   Agreement: {agr:.1%}")
+                if patience_counter > 0:
+                    lines.append(f"  No improvement for {patience_counter}/{patience} evals")
+            print("\n".join(lines))
+
+            # Flush progress to disk.
+            if output_dir is not None:
+                _flush_progress(training_log, sample_games, output_dir)  # noqa: F821
+
+            # Early stopping.
+            if minimax_table is not None and patience_counter >= patience:
+                print(f"Early stopping at episode {ep} (no improvement for {patience} evals)")
+                break
+
+        # Snapshot checkpoint.
+        if output_dir is not None and ep % snapshot_interval == 0:
+            _save_model(model, ep, training_log[-1] if training_log else {}, output_dir)  # noqa: F821
+
+    return {
+        "model": model,
+        "training_log": training_log,
+        "sample_games": sample_games,
+    }

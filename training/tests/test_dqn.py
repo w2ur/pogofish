@@ -20,6 +20,8 @@ from pogofish.dqn import (
     legal_move_mask,
     action_to_move,
     move_to_action,
+    play_episode,
+    train,
 )
 
 
@@ -164,3 +166,40 @@ def test_replay_buffer_sample_returns_tensors() -> None:
     assert rewards.dtype == torch.float32
     assert next_states.dtype == torch.float32
     assert dones.dtype == torch.bool
+
+
+# ---------------------------------------------------------------------------
+# play_episode tests
+# ---------------------------------------------------------------------------
+
+
+def test_play_episode_returns_valid_game() -> None:
+    model = DQNModel(hidden_layers=[64, 32])
+    game, transitions = play_episode(model, epsilon=1.0, max_moves=50, record=True)
+    assert len(game["moves"]) > 0
+    assert game["result"] in ("W_wins", "R_wins", "draw")
+    assert len(transitions) > 0
+    assert len(transitions[0]) == 5
+
+
+def test_play_episode_no_record() -> None:
+    model = DQNModel(hidden_layers=[64, 32])
+    game, transitions = play_episode(model, epsilon=1.0, max_moves=50)
+    assert game["moves"] == []
+    assert len(transitions) > 0
+
+
+# ---------------------------------------------------------------------------
+# train tests
+# ---------------------------------------------------------------------------
+
+
+def test_train_short_run() -> None:
+    result = train(
+        episodes=50, eval_interval=25,
+        hidden_layers=[64, 32],
+        minimax_table=None, max_moves=50,
+    )
+    assert result["model"] is not None
+    assert len(result["training_log"]) >= 2
+    assert len(result["sample_games"]) > 0
