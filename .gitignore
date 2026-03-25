@@ -42,3 +42,6 @@ PLAN.md
 
 # Terminal session logs
 iTerm2 Session*
+
+# Jupyter
+.ipynb_checkpoints/
