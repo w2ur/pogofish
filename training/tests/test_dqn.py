@@ -22,7 +22,9 @@ from pogofish.dqn import (
     move_to_action,
     play_episode,
     train,
+    evaluate,
 )
+from pogofish.minimax import solve
 
 
 def test_encode_state_shape() -> None:
@@ -203,3 +205,55 @@ def test_train_short_run() -> None:
     assert result["model"] is not None
     assert len(result["training_log"]) >= 2
     assert len(result["sample_games"]) > 0
+
+
+# ---------------------------------------------------------------------------
+# evaluate tests
+# ---------------------------------------------------------------------------
+
+_SMALL_BOARD = ((W,), (W,), (R,), (), (), (W,), (), (), ())
+_SMALL_STATE = GameState(board=_SMALL_BOARD, current_player=W)
+
+
+def test_evaluate_untrained_model() -> None:
+    """Untrained model has some coverage (outputs are nonzero from random init)."""
+    model = DQNModel(hidden_layers=[64, 32])
+    table: dict = {}
+    solve(_SMALL_STATE, table)
+    decisive = {s: r for s, r in table.items() if r.value != 0.0}
+    result = evaluate(model, decisive)
+    assert "coverage" in result
+    assert "accuracy" in result
+    assert "value_agreement" in result
+
+
+def test_evaluate_returns_total_decisive() -> None:
+    """total_decisive is positive when decisive positions with legal moves exist."""
+    model = DQNModel(hidden_layers=[64, 32])
+    table: dict = {}
+    solve(_SMALL_STATE, table)
+    decisive = {s: r for s, r in table.items() if r.value != 0.0}
+    result = evaluate(model, decisive)
+    # Terminal states (no legal moves) are excluded, so total_decisive <= len(decisive)
+    assert 0 < result["total_decisive"] <= len(decisive)
+
+
+def test_evaluate_empty_decisive() -> None:
+    """Passing an empty decisive table returns zero metrics."""
+    model = DQNModel(hidden_layers=[64, 32])
+    result = evaluate(model, {})
+    assert result["coverage"] == 0.0
+    assert result["accuracy"] == 0.0
+    assert result["value_agreement"] == 0.0
+    assert result["total_decisive"] == 0
+
+
+def test_evaluate_value_agreement_is_product() -> None:
+    """value_agreement equals coverage * accuracy (within rounding)."""
+    model = DQNModel(hidden_layers=[64, 32])
+    table: dict = {}
+    solve(_SMALL_STATE, table)
+    decisive = {s: r for s, r in table.items() if r.value != 0.0}
+    result = evaluate(model, decisive)
+    expected = round(result["coverage"] * result["accuracy"], 4)
+    assert abs(result["value_agreement"] - expected) < 1e-6

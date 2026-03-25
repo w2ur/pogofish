@@ -257,6 +257,67 @@ def play_episode(
 
 
 # ---------------------------------------------------------------------------
+# Evaluation against minimax
+# ---------------------------------------------------------------------------
+
+
+def evaluate(model: DQNModel, decisive_positions: dict) -> dict:
+    """Evaluate DQN against decisive minimax positions.
+
+    For each decisive position with legal moves, compares the sign of the
+    model's best Q-value against the sign of the minimax value.
+
+    Args:
+        model: The DQN model to evaluate.
+        decisive_positions: Mapping of GameState -> SolveResult where value != 0.
+
+    Returns:
+        Dict with keys: coverage, accuracy, value_agreement, total_decisive.
+    """
+    from pogofish.engine import legal_moves as get_legal_moves
+
+    actionable = {s: r for s, r in decisive_positions.items() if get_legal_moves(s)}
+    total = len(actionable)
+    if total == 0:
+        return {
+            "coverage": 0.0,
+            "accuracy": 0.0,
+            "value_agreement": 0.0,
+            "total_decisive": len(decisive_positions),
+        }
+
+    visited = 0
+    correct = 0
+
+    model.eval()
+    with torch.no_grad():
+        for state, minimax_result in actionable.items():
+            state_t = encode_state(state)
+            mask = legal_move_mask(state)
+            q_vals = model(state_t.unsqueeze(0)).squeeze(0)
+            q_vals[~mask] = float("-inf")
+            q_best = q_vals.max().item()
+
+            if q_best == float("-inf"):
+                continue
+
+            visited += 1
+            minimax_sign = 1 if minimax_result.value > 0 else -1
+            if (q_best > 0 and minimax_sign > 0) or (q_best < 0 and minimax_sign < 0):
+                correct += 1
+
+    model.train()
+    coverage = visited / total
+    accuracy = correct / visited if visited > 0 else 0.0
+    return {
+        "coverage": round(coverage, 4),
+        "accuracy": round(accuracy, 4),
+        "value_agreement": round(coverage * accuracy, 4),
+        "total_decisive": total,
+    }
+
+
+# ---------------------------------------------------------------------------
 # Training loop
 # ---------------------------------------------------------------------------
 
