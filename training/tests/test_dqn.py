@@ -23,6 +23,9 @@ from pogofish.dqn import (
     play_episode,
     train,
     evaluate,
+    save_model,
+    load_model,
+    export_onnx,
 )
 from pogofish.minimax import solve
 
@@ -257,3 +260,27 @@ def test_evaluate_value_agreement_is_product() -> None:
     result = evaluate(model, decisive)
     expected = round(result["coverage"] * result["accuracy"], 4)
     assert abs(result["value_agreement"] - expected) < 1e-6
+
+
+# ---------------------------------------------------------------------------
+# save_model / load_model / export_onnx tests
+# ---------------------------------------------------------------------------
+
+
+def test_save_and_load_model(tmp_path) -> None:
+    model = DQNModel(hidden_layers=[64, 32])
+    state = encode_state(initial_state())
+    q_before = model(state.unsqueeze(0)).detach()
+    save_model(model, [64, 32], tmp_path / "test.pt")
+    loaded, layers = load_model(tmp_path / "test.pt")
+    q_after = loaded(state.unsqueeze(0)).detach()
+    assert layers == [64, 32]
+    assert torch.allclose(q_before, q_after)
+
+
+def test_export_onnx(tmp_path) -> None:
+    model = DQNModel(hidden_layers=[64, 32])
+    path = tmp_path / "test.onnx"
+    export_onnx(model, str(path))
+    assert path.exists()
+    assert path.stat().st_size > 0

@@ -16,9 +16,11 @@ Action encoding:
 from __future__ import annotations
 
 import copy
+import json
 import random
 import time
 from collections import deque
+from pathlib import Path
 
 import torch
 import torch.nn as nn
@@ -42,6 +44,12 @@ ACTION_SIZE = NUM_CELLS * 3 * NUM_CELLS  # 243
 # Piece encoding values
 _PIECE_VALUE: dict[str, float] = {W: 1.0, R: -1.0}
 _PLAYER_VALUE: dict[str, float] = {W: 1.0, R: -1.0}
+
+ARCHITECTURES: dict[str, list[int]] = {
+    "tiny": [64, 32],
+    "small": [128, 64],
+    "medium": [256, 128, 64],
+}
 
 
 # ---------------------------------------------------------------------------
@@ -318,6 +326,64 @@ def evaluate(model: DQNModel, decisive_positions: dict) -> dict:
 
 
 # ---------------------------------------------------------------------------
+# Save / load / export
+# ---------------------------------------------------------------------------
+
+
+def save_model(model: DQNModel, hidden_layers: list[int], path) -> None:
+    """Save model state dict and architecture info to a .pt file."""
+    path = Path(path)
+    path.parent.mkdir(parents=True, exist_ok=True)
+    torch.save({"hidden_layers": hidden_layers, "state_dict": model.state_dict()}, path)
+
+
+def load_model(path) -> tuple[DQNModel, list[int]]:
+    """Load a model from a .pt file. Returns (model, hidden_layers)."""
+    data = torch.load(path, weights_only=False)
+    model = DQNModel(hidden_layers=data["hidden_layers"])
+    model.load_state_dict(data["state_dict"])
+    return model, data["hidden_layers"]
+
+
+def export_onnx(model: DQNModel, path: str) -> None:
+    """Export model to ONNX format with dynamic batch axis."""
+    model.eval()
+    dummy = torch.randn(1, STATE_SIZE)
+    torch.onnx.export(
+        model, dummy, path,
+        input_names=["state"], output_names=["q_values"],
+        dynamic_axes={"state": {0: "batch"}, "q_values": {0: "batch"}},
+        opset_version=17,
+        dynamo=False,
+    )
+
+
+# ---------------------------------------------------------------------------
+# Internal helpers used by train()
+# ---------------------------------------------------------------------------
+
+
+def _save_model(model: DQNModel, hidden_layers: list[int], output_dir: str, filename: str) -> None:
+    save_model(model, hidden_layers, Path(output_dir) / filename)
+    print(f"  Model saved: {Path(output_dir) / filename}")
+
+
+def _export_onnx(model: DQNModel, output_dir: str, filename: str) -> None:
+    path = str(Path(output_dir) / filename)
+    export_onnx(model, path)
+    print(f"  ONNX exported: {path}")
+
+
+def _flush_progress(training_log: list[dict], sample_games: list[dict], output_dir: str) -> None:
+    out = Path(output_dir)
+    out.mkdir(parents=True, exist_ok=True)
+    with open(out / "training_log.json", "w") as f:
+        json.dump(training_log, f, indent=2)
+    with open(out / "sample_games.json", "w") as f:
+        json.dump(sample_games, f, indent=2)
+
+
+# ---------------------------------------------------------------------------
 # Training loop
 # ---------------------------------------------------------------------------
 
@@ -441,7 +507,7 @@ def train(
             }
 
             if minimax_table is not None:
-                eval_result = evaluate(model, minimax_table)  # noqa: F821
+                eval_result = evaluate(model, minimax_table)
                 entry.update(eval_result)
                 agreement = eval_result["value_agreement"]
 
@@ -475,7 +541,7 @@ def train(
 
             # Flush progress to disk.
             if output_dir is not None:
-                _flush_progress(training_log, sample_games, output_dir)  # noqa: F821
+                _flush_progress(training_log, sample_games, output_dir)
 
             # Early stopping.
             if minimax_table is not None and patience_counter >= patience:
@@ -484,10 +550,105 @@ def train(
 
         # Snapshot checkpoint.
         if output_dir is not None and ep % snapshot_interval == 0:
-            _save_model(model, ep, training_log[-1] if training_log else {}, output_dir)  # noqa: F821
+            _save_model(model, hidden_layers, output_dir, f"model_ep{ep}.pt")
+
+    # Final export
+    if output_dir:
+        _save_model(model, hidden_layers, output_dir, "model_final.pt")
+        # ONNX export uses the best model, not the final model
+        best_path = Path(output_dir) / "model_best.pt"
+        if best_path.exists():
+            best_model, _ = load_model(best_path)
+        else:
+            best_model = model
+            _save_model(model, hidden_layers, output_dir, "model_best.pt")
+        _export_onnx(best_model, output_dir, "model_best.onnx")
+        _flush_progress(training_log, sample_games, output_dir)
+        print(f"Final artifacts saved to {output_dir}/")
 
     return {
         "model": model,
         "training_log": training_log,
         "sample_games": sample_games,
     }
+
+
+# ---------------------------------------------------------------------------
+# CLI entry point
+# ---------------------------------------------------------------------------
+
+
+def main() -> None:
+    import argparse
+
+    parser = argparse.ArgumentParser(description="Pogo DQN")
+    subparsers = parser.add_subparsers(dest="command", required=True)
+
+    tp = subparsers.add_parser("train")
+    tp.add_argument("--arch", nargs="+", default=["small"],
+                    help="Architecture(s): tiny, small, medium, or custom like 128,64")
+    tp.add_argument("--episodes", type=int, default=500_000)
+    tp.add_argument("--eval-interval", type=int, default=10_000)
+    tp.add_argument("--snapshot-interval", type=int, default=100_000)
+    tp.add_argument("--minimax-table", type=str, default=None)
+    tp.add_argument("--output-dir", type=str, default="models/dqn")
+    tp.add_argument("--lr", type=float, default=1e-3)
+    tp.add_argument("--gamma", type=float, default=0.99)
+    tp.add_argument("--tau", type=float, default=0.005)
+    tp.add_argument("--epsilon-start", type=float, default=1.0)
+    tp.add_argument("--epsilon-end", type=float, default=0.05)
+    tp.add_argument("--epsilon-decay-frac", type=float, default=0.2)
+    tp.add_argument("--batch-size", type=int, default=64)
+    tp.add_argument("--buffer-capacity", type=int, default=100_000)
+    tp.add_argument("--max-moves", type=int, default=50)
+    tp.add_argument("--patience", type=int, default=5)
+
+    ep = subparsers.add_parser("eval")
+    ep.add_argument("--model", type=str, required=True)
+    ep.add_argument("--minimax-table", type=str, required=True)
+
+    args = parser.parse_args()
+
+    if args.command == "train":
+        minimax = None
+        if args.minimax_table:
+            from pogofish.minimax import load_table
+            raw, _ = load_table(args.minimax_table)
+            minimax = {s: r for s, r in raw.items() if r.value != 0.0}
+            print(f"Loaded {len(minimax):,} decisive positions")
+
+        for arch_name in args.arch:
+            if arch_name in ARCHITECTURES:
+                layers = ARCHITECTURES[arch_name]
+            else:
+                layers = [int(x) for x in arch_name.split(",")]
+            arch_dir = f"{args.output_dir}/{arch_name}"
+            print(f"\n{'='*60}")
+            print(f"Training architecture: {arch_name}")
+            print(f"{'='*60}\n")
+            train(
+                episodes=args.episodes, eval_interval=args.eval_interval,
+                snapshot_interval=args.snapshot_interval,
+                hidden_layers=layers, minimax_table=minimax,
+                gamma=args.gamma, lr=args.lr,
+                epsilon_start=args.epsilon_start, epsilon_end=args.epsilon_end,
+                epsilon_decay_frac=args.epsilon_decay_frac,
+                batch_size=args.batch_size, buffer_capacity=args.buffer_capacity,
+                tau=args.tau, max_moves=args.max_moves,
+                patience=args.patience, output_dir=arch_dir,
+            )
+
+    elif args.command == "eval":
+        from pogofish.minimax import load_table
+        raw, _ = load_table(args.minimax_table)
+        decisive = {s: r for s, r in raw.items() if r.value != 0.0}
+        model, layers = load_model(args.model)
+        result = evaluate(model, decisive)
+        print(f"Architecture: {'x'.join(str(h) for h in layers)}")
+        print(f"Coverage:        {result['coverage']:.1%}")
+        print(f"Accuracy:        {result['accuracy']:.1%}")
+        print(f"Value agreement: {result['value_agreement']:.1%}")
+
+
+if __name__ == "__main__":
+    main()

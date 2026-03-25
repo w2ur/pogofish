@@ -44,6 +44,11 @@ PYTHONPATH=. python -m pogofish.minimax solve --max-ply 20
 # Q-learning training (2M episodes, ~2-5 hours)
 PYTHONPATH=. python -m pogofish.q_learning train --minimax-table models/minimax_table.json.gz
 
+# DQN training (500k episodes, verifies against minimax)
+PYTHONPATH=. python -m pogofish.dqn train --arch small --minimax-table models/minimax_table.json.gz
+PYTHONPATH=. python -m pogofish.dqn train --arch tiny small medium  # multi-arch sweep
+PYTHONPATH=. python -m pogofish.dqn eval --model models/dqn/small/model_best.pt --minimax-table models/minimax_table.json.gz
+
 # Interactive CLI game
 PYTHONPATH=. python -m pogofish
 ```
@@ -64,6 +69,7 @@ training/
     minimax.py       # Negamax + alpha-beta, CLI with --max-ply, export/import
     encoding.py      # Shared state/move string encoding for serialization
     q_learning.py    # QTable, train, evaluate, export/import, CLI
+    dqn.py           # DQNModel, train, evaluate, save/load, ONNX export, CLI
     cli.py           # Curses interactive game UI
   tests/             # pytest (76 fast + 4 slow behind --runslow)
   models/            # Training artifacts (gitignored)
@@ -75,6 +81,10 @@ app/                 # Vite + React web app (not yet started)
 - Training: `cd training && python -m pytest tests/ -v` (76 fast tests)
 - Slow tests: `python -m pytest tests/ -v --runslow` (includes full solve + integration)
 - App: Vitest (not yet set up)
+
+## Build Warning Exceptions
+
+- `DeprecationWarning: You are using the legacy TorchScript-based ONNX export` — emitted by PyTorch 2.9+ when `dynamo=False`. The dynamo exporter (default) requires the `onnxscript` package which is not in requirements.txt. Using the legacy path intentionally until `onnxscript` is added as a dependency. Tracked: add `onnxscript` to requirements.txt when upgrading ONNX export path.
 
 ## Deployment
 
