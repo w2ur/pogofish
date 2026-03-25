@@ -874,6 +874,8 @@ def _replay_curses_main(scr: curses.window, games: list[dict]) -> None:
 
     game_idx = 0
     move_idx = 0
+    auto_play = False
+    auto_delay_ms = 500  # milliseconds between auto moves
 
     while True:
         game = games[game_idx]
@@ -950,19 +952,58 @@ def _replay_curses_main(scr: curses.window, games: list[dict]) -> None:
 
         # Controls
         y += 1
-        _safe_addstr(scr, y, x_offset, "\u2192 next move   \u2190 prev move   n next game   p prev game   q quit", dim)
+        auto_label = f"\u25b6 AUTO ({auto_delay_ms}ms)" if auto_play else "\u25b6 auto"
+        auto_attr = curses.color_pair(CP_GREEN) | bold if auto_play else dim
+        _safe_addstr(scr, y, x_offset, "\u2192 next   \u2190 prev   ", dim)
+        _safe_addstr(scr, y, x_offset + 19, "a ", dim)
+        _safe_addstr(scr, y, x_offset + 21, auto_label, auto_attr)
+        cx = x_offset + 21 + len(auto_label) + 3
+        _safe_addstr(scr, y, cx, "+/- speed   n/p game   q quit", dim)
 
         scr.refresh()
 
-        # Input
+        # Input — use timeout for auto mode.
+        if auto_play:
+            scr.timeout(auto_delay_ms)
+        else:
+            scr.timeout(-1)
+
         key = scr.getch()
 
         if key == curses.KEY_RESIZE:
             scr.clear()
             continue
 
+        if key == -1:
+            # Timeout in auto mode — advance.
+            if move_idx < len(game.get("moves", [])):
+                move_idx += 1
+            elif game_idx < len(games) - 1:
+                # Auto-advance to next game.
+                game_idx += 1
+                move_idx = 0
+                time.sleep(1)  # Pause between games.
+            else:
+                auto_play = False  # Reached the end.
+            continue
+
         if key == ord("q"):
             return
+
+        if key == ord("a"):
+            auto_play = not auto_play
+            continue
+
+        if key == ord("+") or key == ord("="):
+            auto_delay_ms = max(100, auto_delay_ms - 100)
+            continue
+
+        if key == ord("-"):
+            auto_delay_ms = min(2000, auto_delay_ms + 100)
+            continue
+
+        # Manual controls (also work during auto to override).
+        auto_play = False  # Any manual input stops auto.
 
         if key == curses.KEY_RIGHT or key == ord(" "):
             if move_idx < len(game.get("moves", [])):
