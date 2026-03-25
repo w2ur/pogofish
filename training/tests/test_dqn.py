@@ -2,6 +2,7 @@
 
 import torch
 import pytest
+from pathlib import Path
 
 from pogofish.engine import (
     W,
@@ -284,3 +285,49 @@ def test_export_onnx(tmp_path) -> None:
     export_onnx(model, str(path))
     assert path.exists()
     assert path.stat().st_size > 0
+
+
+# ---------------------------------------------------------------------------
+# Slow integration tests (skipped by default, run with --runslow)
+# ---------------------------------------------------------------------------
+
+
+@pytest.mark.slow
+def test_dqn_training_learns() -> None:
+    """Short DQN training shows coverage against small minimax table."""
+    minimax: dict = {}
+    solve(_SMALL_STATE, minimax)
+    decisive = {s: r for s, r in minimax.items() if r.value != 0.0}
+
+    result = train(
+        episodes=500,
+        eval_interval=100,
+        hidden_layers=[64, 32],
+        minimax_table=decisive,
+        max_moves=50,
+        patience=100,
+    )
+    log = result["training_log"]
+    assert len(log) >= 4
+    last = log[-1]
+    assert last.get("coverage", 0) > 0, "No coverage after 500 episodes"
+
+
+@pytest.mark.slow
+def test_dqn_export_full_run(tmp_path) -> None:
+    """Train with export and verify all artifacts are created."""
+    output_dir = str(tmp_path / "dqn_test")
+    train(
+        episodes=100,
+        eval_interval=50,
+        snapshot_interval=50,
+        hidden_layers=[64, 32],
+        minimax_table=None,
+        output_dir=output_dir,
+        max_moves=50,
+    )
+    out = Path(output_dir)
+    assert (out / "model_final.pt").exists()
+    assert (out / "model_best.onnx").exists()
+    assert (out / "training_log.json").exists()
+    assert (out / "sample_games.json").exists()
