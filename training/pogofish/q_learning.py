@@ -289,6 +289,11 @@ def train(
                     lines.append(f"  ⚠ No improvement for {patience_counter}/{patience} evals")
             print("\n".join(lines))
 
+            # Flush training log and sample games to disk at every eval checkpoint.
+            # This ensures data survives a Ctrl+C or crash.
+            if output_dir is not None:
+                _flush_progress(training_log, sample_games, output_dir)
+
             # Early stopping.
             if minimax_table is not None and patience_counter >= patience:
                 print(f"Early stopping at episode {ep} (no improvement for {patience} evals)")
@@ -406,6 +411,22 @@ def load_q_table(path: str | Path) -> tuple[QTable, dict]:
         qt._table[state] = {key_to_move(mk): v for mk, v in moves_dict.items()}
 
     return qt, data.get("meta", {})
+
+
+def _flush_progress(
+    training_log: list[dict],
+    sample_games: list[dict],
+    output_dir: str,
+) -> None:
+    """Flush training log and sample games to disk (crash-safe incremental save)."""
+    out = Path(output_dir)
+    out.mkdir(parents=True, exist_ok=True)
+
+    with open(out / "training_log.json", "w") as f:
+        json.dump(training_log, f, indent=2)
+
+    with open(out / "sample_games.json", "w") as f:
+        json.dump(sample_games, f, indent=2)
 
 
 def _export_checkpoint(qt: QTable, episode: int, entry: dict, output_dir: str) -> None:

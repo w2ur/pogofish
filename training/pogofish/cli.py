@@ -84,6 +84,7 @@ class Phase(Enum):
     PICK_COUNT = auto()
     MOVE = auto()
     GAME_OVER = auto()
+    REPLAY = auto()
 
 
 class UIState(NamedTuple):
@@ -827,14 +828,184 @@ def _ascii_main() -> None:
 
 
 # ---------------------------------------------------------------------------
+# Replay mode
+# ---------------------------------------------------------------------------
+
+
+def _load_sample_games(path: str) -> list[dict]:
+    """Load sample games from JSON file."""
+    import json
+    from pathlib import Path
+
+    p = Path(path)
+    if not p.exists():
+        print(f"Error: {path} not found")
+        sys.exit(1)
+
+    with open(p) as f:
+        return json.load(f)
+
+
+def _replay_build_states(game: dict) -> list[GameState]:
+    """Build the sequence of board states from a recorded game."""
+    from pogofish.encoding import key_to_state, key_to_move
+
+    states = []
+    if game["moves"]:
+        # First state from the first move's state field.
+        states.append(key_to_state(game["moves"][0]["state"]))
+        for move_record in game["moves"]:
+            state = key_to_state(move_record["state"])
+            move = key_to_move(move_record["move"])
+            next_state = apply_move(state, move)
+            states.append(next_state)
+    else:
+        states.append(initial_state())
+
+    return states
+
+
+def _replay_curses_main(scr: curses.window, games: list[dict]) -> None:
+    """Replay mode: step through recorded games."""
+    _init_colors()
+    curses.curs_set(0)
+    scr.keypad(True)
+    scr.nodelay(False)
+
+    game_idx = 0
+    move_idx = 0
+
+    while True:
+        game = games[game_idx]
+        states = _replay_build_states(game)
+        state = states[min(move_idx, len(states) - 1)]
+
+        # Build a UIState for rendering (no interaction, just display).
+        ui = UIState(
+            phase=Phase.REPLAY,
+            cursor=-1,
+            source=-1,
+            num_pieces=0,
+            error_msg="",
+            turn_number=move_idx + 1,
+            pick_selection=0,
+        )
+
+        scr.erase()
+        max_y, max_x = scr.getmaxyx()
+        x_offset = 2
+        y = 1
+
+        dim = curses.color_pair(CP_DIM)
+        bold = curses.A_BOLD
+
+        # Title
+        _safe_addstr(scr, y, x_offset, "P O G O F I S H  —  Replay", curses.color_pair(CP_TITLE) | bold)
+        y += 1
+
+        # Game info
+        ep = game.get("episode", "?")
+        result = game.get("result", "?")
+        total_moves = game.get("num_moves", len(game.get("moves", [])))
+        _safe_addstr(scr, y, x_offset, f"Game {game_idx + 1}/{len(games)}   Episode {ep}   Result: {result}", dim)
+        y += 1
+
+        # Turn info
+        grid_width = (CELL_WIDTH + 1) * BOARD_SIZE + 1
+        y = _draw_separator(scr, y, x_offset, grid_width)
+
+        # Player indicator
+        if not is_terminal(state):
+            p_name = "White" if state.current_player == W else "Red"
+            p_attr = (curses.color_pair(CP_WHITE_PIECE) | bold) if state.current_player == W else (curses.color_pair(CP_RED_PIECE) | bold)
+            _safe_addstr(scr, y, x_offset, f"{p_name}'s turn", p_attr)
+            _safe_addstr(scr, y, x_offset + len(f"{p_name}'s turn") + 2, f"Move {move_idx}/{total_moves}", dim)
+        else:
+            w = winner(state)
+            if w:
+                name = "White" if w == W else "Red"
+                attr = (curses.color_pair(CP_WHITE_PIECE) | bold) if w == W else (curses.color_pair(CP_RED_PIECE) | bold)
+                _safe_addstr(scr, y, x_offset, f"{name} wins!", attr)
+            else:
+                _safe_addstr(scr, y, x_offset, "Draw", dim)
+            _safe_addstr(scr, y, x_offset + 15, f"Move {move_idx}/{total_moves}", dim)
+        y += 1
+
+        y = _draw_board(scr, y, x_offset, state, ui)
+        y += 1
+        y = _draw_separator(scr, y, x_offset, grid_width)
+
+        # Show what move was played (if not at the last position).
+        if move_idx < len(game.get("moves", [])):
+            move_record = game["moves"][move_idx]
+            move_str = move_record["move"]
+            player = move_record["player"]
+            p_attr = (curses.color_pair(CP_WHITE_PIECE) | bold) if player == W else (curses.color_pair(CP_RED_PIECE) | bold)
+            _safe_addstr(scr, y, x_offset, "Next: ", dim)
+            _safe_addstr(scr, y, x_offset + 6, f"{player} plays {move_str}", p_attr)
+            y += 1
+        else:
+            _safe_addstr(scr, y, x_offset, "End of game", dim)
+            y += 1
+
+        # Controls
+        y += 1
+        _safe_addstr(scr, y, x_offset, "\u2192 next move   \u2190 prev move   n next game   p prev game   q quit", dim)
+
+        scr.refresh()
+
+        # Input
+        key = scr.getch()
+
+        if key == curses.KEY_RESIZE:
+            scr.clear()
+            continue
+
+        if key == ord("q"):
+            return
+
+        if key == curses.KEY_RIGHT or key == ord(" "):
+            if move_idx < len(game.get("moves", [])):
+                move_idx += 1
+
+        elif key == curses.KEY_LEFT:
+            if move_idx > 0:
+                move_idx -= 1
+
+        elif key == ord("n"):
+            if game_idx < len(games) - 1:
+                game_idx += 1
+                move_idx = 0
+
+        elif key == ord("p"):
+            if game_idx > 0:
+                game_idx -= 1
+                move_idx = 0
+
+
+# ---------------------------------------------------------------------------
 # Entry point
 # ---------------------------------------------------------------------------
 
 def main() -> None:
     """Launch the Pogo CLI. Uses curses by default, --ascii for fallback."""
-    use_ascii = "--ascii" in sys.argv
+    import argparse
 
-    if use_ascii:
+    parser = argparse.ArgumentParser(description="Pogofish CLI")
+    parser.add_argument("--ascii", action="store_true", help="Plain text fallback mode")
+    parser.add_argument("--replay", type=str, metavar="PATH", help="Replay sample games from JSON file")
+    args, _ = parser.parse_known_args()
+
+    if args.replay:
+        games = _load_sample_games(args.replay)
+        print(f"Loaded {len(games)} games from {args.replay}")
+        try:
+            curses.wrapper(lambda scr: _replay_curses_main(scr, games))
+        except curses.error:
+            print("Curses initialization failed.")
+        return
+
+    if args.ascii:
         _ascii_main()
         return
 
