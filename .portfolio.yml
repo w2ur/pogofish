@@ -3,10 +3,10 @@ name: Pogofish
 tagline: "Beat an AI that taught itself to play Pogo — or watch it learn"
 description: >
   Browser-based Pogo board game with an AI opponent trained via reinforcement learning.
-  Dual codebase: Python training pipeline (Q-learning, PPO, minimax verification) and
+  Dual codebase: Python training pipeline (Q-learning, DQN, AlphaZero, minimax oracle) and
   React/TS web app with client-side ONNX inference. Zero backend.
 visibility: public
-status: scaffold
+status: active
 stack:
   - Python
   - PyTorch
