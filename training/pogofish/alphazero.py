@@ -36,6 +36,14 @@ from pogofish.dqn import (
 from pogofish.encoding import state_to_key, move_to_key
 from pogofish.mcts import mcts_search, get_mcts_policy
 
+# Re-export for external use
+__all__ = [
+    "AlphaZeroNet", "AlphaZeroCNN", "create_model", "ARCHITECTURES",
+    "compute_loss", "mirror_state", "mirror_policy", "GameWindow",
+    "make_eval_fn", "play_self_play_game", "gatekeeper",
+    "evaluate", "save_model", "load_model", "export_onnx", "train",
+]
+
 
 # ---------------------------------------------------------------------------
 # Mirror augmentation (left-right symmetry)
@@ -493,3 +501,350 @@ def gatekeeper(
     win_rate = (wins + 0.5 * draws) / total if total > 0 else 0.0
 
     return {"win_rate": win_rate, "wins": wins, "losses": losses, "draws": draws}
+
+
+# ---------------------------------------------------------------------------
+# Evaluation against minimax
+# ---------------------------------------------------------------------------
+
+
+def evaluate(model: nn.Module, decisive_positions: dict) -> dict:
+    """Evaluate AlphaZero against decisive minimax positions.
+
+    Uses value head directly. Skips positions where abs(v) < 0.001.
+    Also checks move agreement via policy head.
+
+    Args:
+        model: The dual-head network.
+        decisive_positions: Mapping of GameState -> SolveResult where value != 0.
+
+    Returns:
+        Dict with coverage, accuracy, value_agreement, move_agreement, total_decisive.
+    """
+    actionable = {s: r for s, r in decisive_positions.items() if legal_moves(s)}
+    total = len(actionable)
+    if total == 0:
+        return {
+            "coverage": 0.0, "accuracy": 0.0, "value_agreement": 0.0,
+            "move_agreement": 0.0, "total_decisive": len(decisive_positions),
+        }
+
+    visited = 0
+    correct_value = 0
+    correct_move = 0
+    total_with_best_move = 0
+
+    model.eval()
+    with torch.no_grad():
+        for state, minimax_result in actionable.items():
+            state_t = encode_state(state)
+            mask = legal_move_mask(state)
+            policy_logits, value = model(state_t.unsqueeze(0))
+            v = value.item()
+
+            # Value agreement
+            if abs(v) < 0.001:
+                continue
+            visited += 1
+            minimax_sign = 1 if minimax_result.value > 0 else -1
+            if (v > 0 and minimax_sign > 0) or (v < 0 and minimax_sign < 0):
+                correct_value += 1
+
+            # Move agreement (if minimax has a best_move)
+            if minimax_result.best_move is not None:
+                total_with_best_move += 1
+                policy_logits_masked = policy_logits.squeeze(0).clone()
+                policy_logits_masked[~mask] = float("-inf")
+                predicted_action = policy_logits_masked.argmax().item()
+                predicted_move = action_to_move(predicted_action)
+                if predicted_move == minimax_result.best_move:
+                    correct_move += 1
+
+    model.train()
+    coverage = visited / total if total > 0 else 0.0
+    accuracy = correct_value / visited if visited > 0 else 0.0
+    move_agr = correct_move / total_with_best_move if total_with_best_move > 0 else 0.0
+
+    return {
+        "coverage": round(coverage, 4),
+        "accuracy": round(accuracy, 4),
+        "value_agreement": round(coverage * accuracy, 4),
+        "move_agreement": round(move_agr, 4),
+        "total_decisive": total,
+    }
+
+
+# ---------------------------------------------------------------------------
+# Save / load / export
+# ---------------------------------------------------------------------------
+
+
+def save_model(model: nn.Module, arch_name: str, path) -> None:
+    """Save model state dict and architecture name."""
+    path = Path(path)
+    path.parent.mkdir(parents=True, exist_ok=True)
+    torch.save({"arch_name": arch_name, "state_dict": model.state_dict()}, path)
+
+
+def load_model(path) -> tuple[nn.Module, str]:
+    """Load a model from a .pt file. Returns (model, arch_name)."""
+    data = torch.load(path, weights_only=False)
+    arch_name = data["arch_name"]
+    model = create_model(arch_name)
+    model.load_state_dict(data["state_dict"])
+    return model, arch_name
+
+
+def export_onnx(model: nn.Module, path: str) -> None:
+    """Export model to ONNX with dual outputs (policy, value)."""
+    model.eval()
+    dummy = torch.randn(1, STATE_SIZE)
+    torch.onnx.export(
+        model, dummy, path,
+        input_names=["state"],
+        output_names=["policy", "value"],
+        dynamic_axes={
+            "state": {0: "batch"},
+            "policy": {0: "batch"},
+            "value": {0: "batch"},
+        },
+        opset_version=17,
+        dynamo=False,
+    )
+
+
+# ---------------------------------------------------------------------------
+# Internal helpers for train()
+# ---------------------------------------------------------------------------
+
+
+def _flush_progress(training_log, sample_games, output_dir):
+    """Crash-safe write of training progress to JSON files."""
+    out = Path(output_dir)
+    out.mkdir(parents=True, exist_ok=True)
+    with open(out / "training_log.json", "w") as f:
+        json.dump(training_log, f, indent=2)
+    with open(out / "sample_games.json", "w") as f:
+        json.dump(sample_games, f, indent=2)
+
+
+# ---------------------------------------------------------------------------
+# Training loop
+# ---------------------------------------------------------------------------
+
+
+def train(
+    iterations: int = 100,
+    games_per_iteration: int = 500,
+    num_simulations: int = 50,
+    arch_name: str = "mlp_small",
+    minimax_table: dict | None = None,
+    c_puct: float = 1.5,
+    lr: float = 1e-3,
+    lr_end: float = 1e-5,
+    weight_decay: float = 1e-4,
+    batch_size: int = 256,
+    training_epochs: int = 5,
+    window_capacity: int = 5000,
+    dirichlet_alpha: float = 0.8,
+    dirichlet_epsilon: float = 0.25,
+    gatekeeper_games: int = 50,
+    gatekeeper_threshold: float = 0.55,
+    max_moves: int = 50,
+    eval_interval: int = 5,
+    snapshot_interval: int = 20,
+    patience: int = 10,
+    output_dir: str | None = None,
+) -> dict:
+    """Train an AlphaZero agent via self-play with MCTS.
+
+    Returns dict with: model, training_log, sample_games.
+    """
+    model = create_model(arch_name)
+    best_model = copy.deepcopy(model)
+    window = GameWindow(capacity=window_capacity)
+
+    optimizer = torch.optim.Adam(model.parameters(), lr=lr, weight_decay=weight_decay)
+
+    # Estimate total training steps for cosine schedule
+    est_total_steps = iterations * training_epochs * max(
+        1, (window_capacity * 15 * 2) // batch_size
+    )
+    scheduler = torch.optim.lr_scheduler.CosineAnnealingLR(
+        optimizer, T_max=est_total_steps, eta_min=lr_end
+    )
+
+    training_log: list[dict] = []
+    sample_games: list[dict] = []
+
+    best_agreement = -1.0
+    patience_counter = 0
+    start_time = time.perf_counter()
+    total_games = 0
+
+    print(f"Training config (AlphaZero):")
+    print(f"  Architecture:  {arch_name}")
+    print(f"  Iterations:    {iterations}")
+    print(f"  Games/iter:    {games_per_iteration}")
+    print(f"  MCTS sims:     {num_simulations}")
+    print(f"  Window:        {window_capacity}")
+    print(f"  Epochs/iter:   {training_epochs}")
+    print(f"  Batch size:    {batch_size}")
+    print(f"  LR:            {lr} -> {lr_end} (cosine)")
+    print(f"  c_puct:        {c_puct}")
+    print(f"  Gatekeeper:    {gatekeeper_games} games, {gatekeeper_threshold:.0%} threshold")
+    print(f"  Eval every:    {eval_interval}")
+    print(f"  Snap every:    {snapshot_interval}")
+    print(f"  Patience:      {patience}")
+    print()
+
+    for iteration in range(1, iterations + 1):
+        iter_start = time.perf_counter()
+
+        # --- 1. Self-play ---
+        model.eval()
+        for g in range(games_per_iteration):
+            game_num = total_games + g + 1
+            # Record first 10 + last 10 before each eval
+            remainder = game_num % (games_per_iteration * eval_interval)
+            should_record = (
+                game_num <= 10
+                or (remainder != 0 and remainder > games_per_iteration * eval_interval - 10)
+            )
+
+            positions, game_record = play_self_play_game(
+                model, num_simulations=num_simulations, c_puct=c_puct,
+                max_moves=max_moves, dirichlet_alpha=dirichlet_alpha,
+                dirichlet_epsilon=dirichlet_epsilon, record=should_record,
+            )
+            window.add_game(positions)
+
+            if should_record:
+                game_record["game_num"] = game_num
+                sample_games.append(game_record)
+
+        total_games += games_per_iteration
+
+        # --- 2. Train on game window ---
+        if window.num_positions() < batch_size:
+            continue
+
+        model.train()
+        epoch_losses = []
+        for epoch in range(training_epochs):
+            all_pos = window.all_positions()
+            random.shuffle(all_pos)
+
+            for i in range(0, len(all_pos), batch_size):
+                batch = all_pos[i:i + batch_size]
+                if len(batch) < 2:
+                    continue
+                states_b, policies_b, values_b = zip(*batch)
+                states_t = torch.stack(states_b)
+                policies_t = torch.stack(policies_b)
+                values_t = torch.tensor(values_b, dtype=torch.float32).unsqueeze(1)
+
+                loss, p_loss, v_loss = compute_loss(model, states_t, policies_t, values_t)
+                optimizer.zero_grad()
+                loss.backward()
+                optimizer.step()
+                scheduler.step()
+                epoch_losses.append(loss.item())
+
+        avg_loss = sum(epoch_losses) / len(epoch_losses) if epoch_losses else 0.0
+
+        # --- 3. Gatekeeper ---
+        gate_result = gatekeeper(
+            model, best_model, num_games=gatekeeper_games,
+            num_simulations=num_simulations, c_puct=c_puct, max_moves=max_moves,
+        )
+        adopted = gate_result["win_rate"] >= gatekeeper_threshold
+        if adopted:
+            best_model = copy.deepcopy(model)
+
+        # --- 4. Logging ---
+        elapsed = time.perf_counter() - start_time
+        iter_time = time.perf_counter() - iter_start
+        current_lr = scheduler.get_last_lr()[0]
+
+        entry: dict = {
+            "iteration": iteration,
+            "total_games": total_games,
+            "loss": round(avg_loss, 6),
+            "lr": round(current_lr, 8),
+            "window_positions": window.num_positions(),
+            "gatekeeper_win_rate": round(gate_result["win_rate"], 3),
+            "gatekeeper_adopted": adopted,
+            "gatekeeper_wins": gate_result["wins"],
+            "gatekeeper_losses": gate_result["losses"],
+            "gatekeeper_draws": gate_result["draws"],
+            "elapsed_seconds": round(elapsed, 1),
+            "iter_seconds": round(iter_time, 1),
+        }
+
+        # --- 5. Eval checkpoint ---
+        if iteration % eval_interval == 0 and minimax_table is not None:
+            eval_result = evaluate(best_model, minimax_table)
+            entry.update(eval_result)
+            agreement = eval_result["value_agreement"]
+
+            if agreement > best_agreement:
+                best_agreement = agreement
+                patience_counter = 0
+                if output_dir:
+                    save_model(best_model, arch_name, Path(output_dir) / "model_best.pt")
+                    print(f"  New best model saved (agreement: {agreement:.1%})")
+            else:
+                patience_counter += 1
+
+        training_log.append(entry)
+
+        # Progress output
+        rate = total_games / elapsed if elapsed > 0 else 0
+        eta_h = (iterations - iteration) * iter_time / 3600
+
+        lines = [
+            f"---- Iteration {iteration}/{iterations} ({iteration/iterations:.0%}) ----",
+            f"  Games: {total_games:,}   Loss: {avg_loss:.4f}   LR: {current_lr:.2e}",
+            f"  Window: {window.num_positions():,} positions ({window.num_games()} games)",
+            f"  Gatekeeper: {gate_result['win_rate']:.0%} ({'ADOPTED' if adopted else 'rejected'})"
+            f"  W:{gate_result['wins']} L:{gate_result['losses']} D:{gate_result['draws']}",
+            f"  Speed: {rate:.0f} games/s   Iter: {iter_time:.0f}s   ETA: {eta_h:.1f}h",
+        ]
+        if "coverage" in entry:
+            lines.append(
+                f"  Coverage: {entry['coverage']:.1%}   Accuracy: {entry['accuracy']:.1%}"
+                f"   Agreement: {entry['value_agreement']:.1%}   Move: {entry.get('move_agreement', 0):.1%}"
+            )
+            if patience_counter > 0:
+                lines.append(f"  No improvement for {patience_counter}/{patience} evals")
+        print("\n".join(lines))
+
+        # Flush to disk
+        if output_dir:
+            _flush_progress(training_log, sample_games, output_dir)
+
+        # Snapshot
+        if output_dir and iteration % snapshot_interval == 0:
+            save_model(best_model, arch_name, Path(output_dir) / f"model_checkpoint_{iteration}.pt")
+            print(f"  Checkpoint saved: model_checkpoint_{iteration}.pt")
+
+        # Early stopping
+        if minimax_table is not None and patience_counter >= patience:
+            print(f"Early stopping at iteration {iteration} (no improvement for {patience} evals)")
+            break
+
+    # Final export
+    if output_dir:
+        save_model(best_model, arch_name, Path(output_dir) / "model_final.pt")
+        best_path = Path(output_dir) / "model_best.pt"
+        if best_path.exists():
+            final_model, _ = load_model(best_path)
+        else:
+            final_model = best_model
+            save_model(best_model, arch_name, best_path)
+        export_onnx(final_model, str(Path(output_dir) / "model_best.onnx"))
+        _flush_progress(training_log, sample_games, output_dir)
+        print(f"Final artifacts saved to {output_dir}/")
+
+    return {"model": best_model, "training_log": training_log, "sample_games": sample_games}

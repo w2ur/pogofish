@@ -12,7 +12,9 @@ from pogofish.alphazero import (
     AlphaZeroNet, AlphaZeroCNN, create_model, ARCHITECTURES,
     compute_loss, mirror_state, mirror_policy, GameWindow,
     make_eval_fn, play_self_play_game, gatekeeper,
+    evaluate, save_model, load_model, export_onnx,
 )
+from pogofish.minimax import SolveResult
 
 
 def test_mlp_forward_shape():
@@ -324,3 +326,83 @@ def test_gatekeeper_returns_win_rate():
 
     assert 0.0 <= result["win_rate"] <= 1.0
     assert result["wins"] + result["losses"] + result["draws"] == 4
+
+
+# ---------------------------------------------------------------------------
+# Evaluation, save/load, ONNX export tests
+# ---------------------------------------------------------------------------
+
+
+def test_evaluate_returns_metrics():
+    """Evaluate returns coverage, accuracy, agreement."""
+    model = create_model("mlp_tiny")
+
+    # Create a small set of decisive positions for testing
+    s = initial_state()
+    # Use a fake decisive table with known values
+    decisive = {s: SolveResult(value=1.0, best_move=None)}
+
+    result = evaluate(model, decisive)
+    assert "coverage" in result
+    assert "accuracy" in result
+    assert "value_agreement" in result
+    assert "move_agreement" in result
+    assert 0.0 <= result["coverage"] <= 1.0
+    assert 0.0 <= result["accuracy"] <= 1.0
+
+
+def test_save_load_roundtrip(tmp_path):
+    """Save and load preserves model architecture and weights."""
+    model = create_model("mlp_small")
+    path = tmp_path / "test_model.pt"
+
+    save_model(model, "mlp_small", path)
+    loaded, arch_name = load_model(path)
+
+    assert arch_name == "mlp_small"
+
+    # Verify weights match
+    x = torch.randn(1, STATE_SIZE)
+    model.eval()
+    loaded.eval()
+    with torch.no_grad():
+        p1, v1 = model(x)
+        p2, v2 = loaded(x)
+    assert torch.allclose(p1, p2)
+    assert torch.allclose(v1, v2)
+
+
+def test_save_load_cnn(tmp_path):
+    """Save and load works for CNN architecture."""
+    model = create_model("cnn")
+    path = tmp_path / "test_cnn.pt"
+
+    save_model(model, "cnn", path)
+    loaded, arch_name = load_model(path)
+
+    assert arch_name == "cnn"
+    x = torch.randn(1, STATE_SIZE)
+    model.eval()
+    loaded.eval()
+    with torch.no_grad():
+        p1, v1 = model(x)
+        p2, v2 = loaded(x)
+    assert torch.allclose(p1, p2)
+    assert torch.allclose(v1, v2)
+
+
+def test_export_onnx(tmp_path):
+    """ONNX export creates a valid file with correct I/O names."""
+    model = create_model("mlp_tiny")
+    path = str(tmp_path / "test.onnx")
+    export_onnx(model, path)
+
+    import onnx
+    onnx_model = onnx.load(path)
+    onnx.checker.check_model(onnx_model)
+
+    inputs = [i.name for i in onnx_model.graph.input]
+    outputs = [o.name for o in onnx_model.graph.output]
+    assert "state" in inputs
+    assert "policy" in outputs
+    assert "value" in outputs
