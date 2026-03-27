@@ -8,7 +8,7 @@ Pogofish is a browser-based Pogo board game with an AI opponent trained via rein
 
 ### Training pipeline (`training/`)
 - Python 3.11+
-- PyTorch (DQN, future AlphaZero)
+- PyTorch (DQN, AlphaZero)
 - NumPy
 - ONNX (model export)
 - Minimax solver (depth-20 oracle, 9.85M states)
@@ -49,6 +49,11 @@ PYTHONPATH=. python -m pogofish.dqn train --arch small --minimax-table models/mi
 PYTHONPATH=. python -m pogofish.dqn train --arch tiny small medium  # multi-arch sweep
 PYTHONPATH=. python -m pogofish.dqn eval --model models/dqn/small/model_best.pt --minimax-table models/minimax_table.json.gz
 
+# AlphaZero training (100 iterations x 500 games, MCTS)
+PYTHONPATH=. python -m pogofish.alphazero train --arch mlp_small --minimax-table models/minimax_table.json.gz
+PYTHONPATH=. python -m pogofish.alphazero train --arch mlp_tiny mlp_small mlp_medium cnn  # multi-arch sweep
+PYTHONPATH=. python -m pogofish.alphazero eval --model models/alphazero/mlp_small/model_best.pt --minimax-table models/minimax_table.json.gz
+
 # Interactive CLI game
 PYTHONPATH=. python -m pogofish
 ```
@@ -70,8 +75,10 @@ training/
     encoding.py      # Shared state/move string encoding for serialization
     q_learning.py    # QTable, train, evaluate, export/import, CLI
     dqn.py           # DQNModel, train, evaluate, save/load, ONNX export, CLI
+    mcts.py          # MCTS tree search (PUCT, Dirichlet, temperature)
+    alphazero.py     # AlphaZero dual-head nets, self-play, gatekeeper, CLI
     cli.py           # Curses interactive game UI
-  tests/             # pytest (76 fast + 4 slow behind --runslow)
+  tests/             # pytest (100+ fast + slow behind --runslow)
   models/            # Training artifacts (gitignored)
 app/                 # Vite + React web app (not yet started)
 ```
