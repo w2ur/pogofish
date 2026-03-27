@@ -163,3 +163,140 @@ def test_backpropagate_three_levels():
     assert child2.visit_count == 1
     assert child1.children[a1[0]]["value_sum"] == -1.0  # negated once
     assert root.children[a0[0]]["value_sum"] == 1.0     # negated twice (back to +)
+
+
+def test_add_dirichlet_noise():
+    """Dirichlet noise modifies root priors while keeping them valid."""
+    state = initial_state()
+    node = MCTSNode(state)
+    moves = legal_moves(state)
+    actions = [move_to_action(m) for m in moves]
+
+    prior = torch.zeros(ACTION_SIZE)
+    for a in actions:
+        prior[a] = 1.0 / len(actions)
+    node.expand(prior)
+
+    original_priors = {a: node.children[a]["prior"] for a in actions}
+    node.add_dirichlet_noise(alpha=0.8, epsilon=0.25)
+
+    # Priors should be modified
+    changed = False
+    for a in actions:
+        if node.children[a]["prior"] != original_priors[a]:
+            changed = True
+        # Priors should still be non-negative
+        assert node.children[a]["prior"] >= 0.0
+    assert changed
+
+
+def test_select_move_temperature_zero():
+    """Temperature 0 selects the most-visited action."""
+    state = initial_state()
+    node = MCTSNode(state)
+    moves = legal_moves(state)
+    actions = [move_to_action(m) for m in moves]
+
+    prior = torch.zeros(ACTION_SIZE)
+    for a in actions:
+        prior[a] = 1.0 / len(actions)
+    node.expand(prior)
+
+    # Give action[2] the most visits
+    node.children[actions[2]]["visit_count"] = 100
+    for a in actions:
+        if a != actions[2]:
+            node.children[a]["visit_count"] = 1
+
+    action, policy = select_move(node, temperature=0.0)
+    assert action == actions[2]
+    # Policy should concentrate on the most-visited action
+    assert policy[actions[2]] > 0.99
+
+
+def test_select_move_temperature_one():
+    """Temperature 1 samples proportional to visit counts."""
+    state = initial_state()
+    node = MCTSNode(state)
+    moves = legal_moves(state)
+    actions = [move_to_action(m) for m in moves]
+
+    prior = torch.zeros(ACTION_SIZE)
+    for a in actions:
+        prior[a] = 1.0 / len(actions)
+    node.expand(prior)
+
+    # Give visit counts
+    for i, a in enumerate(actions):
+        node.children[a]["visit_count"] = (i + 1) * 10
+
+    _, policy = select_move(node, temperature=1.0)
+    total_visits = sum((i + 1) * 10 for i in range(len(actions)))
+    for i, a in enumerate(actions):
+        expected = (i + 1) * 10 / total_visits
+        assert policy[a] == pytest.approx(expected, abs=1e-4)
+
+
+def test_get_mcts_policy():
+    """get_mcts_policy returns normalized visit count distribution."""
+    state = initial_state()
+    node = MCTSNode(state)
+    moves = legal_moves(state)
+    actions = [move_to_action(m) for m in moves]
+
+    prior = torch.zeros(ACTION_SIZE)
+    for a in actions:
+        prior[a] = 1.0 / len(actions)
+    node.expand(prior)
+
+    node.children[actions[0]]["visit_count"] = 30
+    node.children[actions[1]]["visit_count"] = 20
+    for a in actions[2:]:
+        node.children[a]["visit_count"] = 0
+
+    policy = get_mcts_policy(node)
+    assert policy.shape == (ACTION_SIZE,)
+    assert policy.sum() == pytest.approx(1.0, abs=1e-5)
+    assert policy[actions[0]] == pytest.approx(0.6, abs=1e-5)
+    assert policy[actions[1]] == pytest.approx(0.4, abs=1e-5)
+
+
+def test_mcts_search_basic():
+    """mcts_search returns a valid action and policy for the initial state."""
+    state = initial_state()
+    moves = legal_moves(state)
+    valid_actions = {move_to_action(m) for m in moves}
+
+    def dummy_eval(s):
+        ms = legal_moves(s)
+        policy = torch.zeros(ACTION_SIZE)
+        if ms:
+            for m in ms:
+                policy[move_to_action(m)] = 1.0 / len(ms)
+        return policy, 0.0
+
+    action, policy = mcts_search(
+        state, dummy_eval, num_simulations=20,
+        c_puct=1.5, temperature=1.0, dirichlet_alpha=0.8, dirichlet_epsilon=0.25,
+    )
+    assert action in valid_actions
+    assert policy.shape == (ACTION_SIZE,)
+    assert policy.sum() == pytest.approx(1.0, abs=1e-4)
+
+
+def test_mcts_search_terminal_state():
+    """mcts_search on a terminal state returns None action and zero policy."""
+    # Construct a terminal state: all non-empty cells have W on top
+    board = (("W",),) * 9
+    state = GameState(board=board, current_player=W)
+    assert is_terminal(state)
+
+    def dummy_eval(s):
+        return torch.zeros(ACTION_SIZE), 0.0
+
+    action, policy = mcts_search(
+        state, dummy_eval, num_simulations=10,
+        c_puct=1.5, temperature=1.0,
+    )
+    assert action is None
+    assert policy.sum() == 0.0
