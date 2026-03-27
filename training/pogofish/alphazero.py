@@ -73,6 +73,65 @@ def mirror_policy(policy: torch.Tensor) -> torch.Tensor:
 
 
 # ---------------------------------------------------------------------------
+# Game Window (training data storage)
+# ---------------------------------------------------------------------------
+
+
+class GameWindow:
+    """Sliding window of recent games for training data.
+
+    Each position is stored with its mirror augmentation, doubling the data.
+    """
+
+    def __init__(self, capacity: int = 5000) -> None:
+        self._games: deque[list[tuple[torch.Tensor, torch.Tensor, float]]] = deque(
+            maxlen=capacity
+        )
+
+    def add_game(
+        self, positions: list[tuple[torch.Tensor, torch.Tensor, float]]
+    ) -> None:
+        """Add a game's positions. Each position is (state_t, mcts_policy, outcome).
+
+        Mirror augmentation is applied automatically.
+        """
+        augmented: list[tuple[torch.Tensor, torch.Tensor, float]] = []
+        for state_t, policy, outcome in positions:
+            augmented.append((state_t, policy, outcome))
+            augmented.append((mirror_state(state_t), mirror_policy(policy), outcome))
+        self._games.append(augmented)
+
+    def num_games(self) -> int:
+        return len(self._games)
+
+    def num_positions(self) -> int:
+        return sum(len(g) for g in self._games)
+
+    def all_positions(self) -> list[tuple[torch.Tensor, torch.Tensor, float]]:
+        """Return all positions as a flat list."""
+        result: list[tuple[torch.Tensor, torch.Tensor, float]] = []
+        for game in self._games:
+            result.extend(game)
+        return result
+
+    def sample_batch(
+        self, batch_size: int
+    ) -> tuple[torch.Tensor, torch.Tensor, torch.Tensor]:
+        """Sample a random batch of positions.
+
+        Returns (states, policies, values) as tensors.
+        """
+        all_pos = self.all_positions()
+        batch = random.sample(all_pos, min(batch_size, len(all_pos)))
+        states, policies, values = zip(*batch)
+        return (
+            torch.stack(states),
+            torch.stack(policies),
+            torch.tensor(values, dtype=torch.float32).unsqueeze(1),
+        )
+
+
+# ---------------------------------------------------------------------------
 # Architecture configs
 # ---------------------------------------------------------------------------
 

@@ -10,7 +10,7 @@ from pogofish.dqn import (
 )
 from pogofish.alphazero import (
     AlphaZeroNet, AlphaZeroCNN, create_model, ARCHITECTURES,
-    compute_loss, mirror_state, mirror_policy,
+    compute_loss, mirror_state, mirror_policy, GameWindow,
 )
 
 
@@ -172,3 +172,87 @@ def test_mirror_policy_preserves_num_pieces():
 
     m = mirror_policy(policy)
     assert m[mirrored] == 1.0
+
+
+# ---------------------------------------------------------------------------
+# GameWindow tests
+# ---------------------------------------------------------------------------
+
+
+def test_game_window_add_and_size():
+    """Adding games increases window size."""
+    window = GameWindow(capacity=100)
+    state_t = torch.randn(STATE_SIZE)
+    policy = torch.zeros(ACTION_SIZE)
+    policy[0] = 1.0
+
+    game_data = [(state_t, policy, 1.0)]
+    window.add_game(game_data)
+    # Each position is doubled by mirror augmentation
+    assert window.num_positions() == 2
+
+
+def test_game_window_capacity():
+    """Window evicts old games when full."""
+    window = GameWindow(capacity=3)
+    state_t = torch.randn(STATE_SIZE)
+    policy = torch.zeros(ACTION_SIZE)
+    policy[0] = 1.0
+
+    for _ in range(5):
+        window.add_game([(state_t, policy, 1.0)])
+
+    assert window.num_games() == 3  # Only 3 games retained
+
+
+def test_game_window_sample_batch():
+    """sample_batch returns tensors of correct shapes."""
+    window = GameWindow(capacity=100)
+    state_t = torch.randn(STATE_SIZE)
+    policy = torch.zeros(ACTION_SIZE)
+    policy[0] = 1.0
+
+    for _ in range(10):
+        window.add_game([(state_t, policy, 1.0), (state_t, policy, -1.0)])
+
+    states, policies, values = window.sample_batch(8)
+    assert states.shape == (8, STATE_SIZE)
+    assert policies.shape == (8, ACTION_SIZE)
+    assert values.shape == (8, 1)
+
+
+def test_game_window_all_positions():
+    """all_positions returns all stored positions."""
+    window = GameWindow(capacity=100)
+    state_t = torch.randn(STATE_SIZE)
+    policy = torch.zeros(ACTION_SIZE)
+    policy[0] = 1.0
+
+    window.add_game([(state_t, policy, 1.0)])
+    window.add_game([(state_t, policy, -1.0)])
+
+    positions = window.all_positions()
+    assert len(positions) == 4  # 2 games x 1 position x 2 (mirror)
+
+
+def test_game_window_mirror_applied():
+    """Added positions include mirrored versions."""
+    window = GameWindow(capacity=100)
+
+    # Distinctive state: only cell 0 has pieces
+    board = (("W", "R"),) + ((),) * 8
+    state = GameState(board=board, current_player=W)
+    state_t = encode_state(state)
+    policy = torch.zeros(ACTION_SIZE)
+    policy[0] = 1.0
+
+    window.add_game([(state_t, policy, 1.0)])
+
+    positions = window.all_positions()
+    assert len(positions) == 2
+
+    # One should be original, one mirrored
+    s0, _, _ = positions[0]
+    s1, _, _ = positions[1]
+    # Cell 0 index 0 vs cell 2 index 24
+    assert (s0[0] != 0 and s1[24] != 0) or (s1[0] != 0 and s0[24] != 0)
