@@ -848,3 +848,101 @@ def train(
         print(f"Final artifacts saved to {output_dir}/")
 
     return {"model": best_model, "training_log": training_log, "sample_games": sample_games}
+
+
+# ---------------------------------------------------------------------------
+# CLI entry point
+# ---------------------------------------------------------------------------
+
+
+def main() -> None:
+    import argparse
+
+    parser = argparse.ArgumentParser(description="Pogo AlphaZero")
+    subparsers = parser.add_subparsers(dest="command", required=True)
+
+    tp = subparsers.add_parser("train")
+    tp.add_argument("--arch", nargs="+", default=["mlp_small"],
+                    help="Architecture(s): mlp_tiny, mlp_small, mlp_medium, cnn")
+    tp.add_argument("--iterations", type=int, default=100)
+    tp.add_argument("--games-per-iteration", type=int, default=500)
+    tp.add_argument("--mcts-sims", type=int, default=50)
+    tp.add_argument("--minimax-table", type=str, default=None)
+    tp.add_argument("--output-dir", type=str, default="models/alphazero")
+    tp.add_argument("--lr", type=float, default=1e-3)
+    tp.add_argument("--lr-end", type=float, default=1e-5)
+    tp.add_argument("--weight-decay", type=float, default=1e-4)
+    tp.add_argument("--batch-size", type=int, default=256)
+    tp.add_argument("--training-epochs", type=int, default=5)
+    tp.add_argument("--window-capacity", type=int, default=5000)
+    tp.add_argument("--c-puct", type=float, default=1.5)
+    tp.add_argument("--dirichlet-alpha", type=float, default=0.8)
+    tp.add_argument("--dirichlet-epsilon", type=float, default=0.25)
+    tp.add_argument("--gatekeeper-games", type=int, default=50)
+    tp.add_argument("--gatekeeper-threshold", type=float, default=0.55)
+    tp.add_argument("--max-moves", type=int, default=50)
+    tp.add_argument("--eval-interval", type=int, default=5)
+    tp.add_argument("--snapshot-interval", type=int, default=20)
+    tp.add_argument("--patience", type=int, default=10)
+
+    ep = subparsers.add_parser("eval")
+    ep.add_argument("--model", type=str, required=True)
+    ep.add_argument("--minimax-table", type=str, required=True)
+
+    args = parser.parse_args()
+
+    if args.command == "train":
+        minimax = None
+        if args.minimax_table:
+            from pogofish.minimax import load_table
+            raw, _ = load_table(args.minimax_table)
+            minimax = {s: r for s, r in raw.items() if r.value != 0.0}
+            print(f"Loaded {len(minimax):,} decisive positions")
+
+        for arch in args.arch:
+            if arch not in ARCHITECTURES:
+                print(f"Unknown architecture: {arch}. Available: {list(ARCHITECTURES.keys())}")
+                continue
+            arch_dir = f"{args.output_dir}/{arch}"
+            print(f"\n{'='*60}")
+            print(f"Training architecture: {arch}")
+            print(f"{'='*60}\n")
+            train(
+                iterations=args.iterations,
+                games_per_iteration=args.games_per_iteration,
+                num_simulations=args.mcts_sims,
+                arch_name=arch,
+                minimax_table=minimax,
+                c_puct=args.c_puct,
+                lr=args.lr,
+                lr_end=args.lr_end,
+                weight_decay=args.weight_decay,
+                batch_size=args.batch_size,
+                training_epochs=args.training_epochs,
+                window_capacity=args.window_capacity,
+                dirichlet_alpha=args.dirichlet_alpha,
+                dirichlet_epsilon=args.dirichlet_epsilon,
+                gatekeeper_games=args.gatekeeper_games,
+                gatekeeper_threshold=args.gatekeeper_threshold,
+                max_moves=args.max_moves,
+                eval_interval=args.eval_interval,
+                snapshot_interval=args.snapshot_interval,
+                patience=args.patience,
+                output_dir=arch_dir,
+            )
+
+    elif args.command == "eval":
+        from pogofish.minimax import load_table
+        raw, _ = load_table(args.minimax_table)
+        decisive = {s: r for s, r in raw.items() if r.value != 0.0}
+        model, arch = load_model(args.model)
+        result = evaluate(model, decisive)
+        print(f"Architecture:     {arch}")
+        print(f"Coverage:         {result['coverage']:.1%}")
+        print(f"Accuracy:         {result['accuracy']:.1%}")
+        print(f"Value agreement:  {result['value_agreement']:.1%}")
+        print(f"Move agreement:   {result['move_agreement']:.1%}")
+
+
+if __name__ == "__main__":
+    main()

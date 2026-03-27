@@ -406,3 +406,66 @@ def test_export_onnx(tmp_path):
     assert "state" in inputs
     assert "policy" in outputs
     assert "value" in outputs
+
+
+# ---------------------------------------------------------------------------
+# Integration tests (slow)
+# ---------------------------------------------------------------------------
+
+
+@pytest.mark.slow
+def test_training_short_run(tmp_path):
+    """Short training produces artifacts and reports metrics."""
+    from pogofish.alphazero import train
+
+    result = train(
+        iterations=2,
+        games_per_iteration=5,
+        num_simulations=5,
+        arch_name="mlp_tiny",
+        minimax_table=None,
+        c_puct=1.5,
+        lr=1e-3,
+        batch_size=16,
+        training_epochs=1,
+        window_capacity=100,
+        gatekeeper_games=4,
+        max_moves=20,
+        eval_interval=1,
+        snapshot_interval=2,
+        patience=10,
+        output_dir=str(tmp_path / "alphazero_test"),
+    )
+
+    assert "model" in result
+    assert "training_log" in result
+    assert len(result["training_log"]) == 2
+
+    out = tmp_path / "alphazero_test"
+    assert (out / "model_final.pt").exists()
+    assert (out / "training_log.json").exists()
+    assert (out / "sample_games.json").exists()
+
+
+@pytest.mark.slow
+def test_onnx_export_produces_correct_output(tmp_path):
+    """ONNX model produces same outputs as PyTorch model."""
+    import numpy as np
+    import onnxruntime as ort
+
+    model = create_model("mlp_tiny")
+    model.eval()
+    path = str(tmp_path / "test.onnx")
+    export_onnx(model, path)
+
+    state = initial_state()
+    state_t = encode_state(state).unsqueeze(0).numpy()
+
+    session = ort.InferenceSession(path)
+    onnx_out = session.run(None, {"state": state_t})
+
+    with torch.no_grad():
+        pt_policy, pt_value = model(torch.from_numpy(state_t))
+
+    assert np.allclose(onnx_out[0], pt_policy.numpy(), atol=1e-5)
+    assert np.allclose(onnx_out[1], pt_value.numpy(), atol=1e-5)
