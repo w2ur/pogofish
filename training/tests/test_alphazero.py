@@ -10,7 +10,7 @@ from pogofish.dqn import (
 )
 from pogofish.alphazero import (
     AlphaZeroNet, AlphaZeroCNN, create_model, ARCHITECTURES,
-    compute_loss,
+    compute_loss, mirror_state, mirror_policy,
 )
 
 
@@ -94,3 +94,81 @@ def test_compute_loss():
     assert policy_loss.item() > 0
     assert value_loss.item() > 0
     assert loss.item() == pytest.approx((policy_loss + value_loss).item(), abs=1e-5)
+
+
+# ---------------------------------------------------------------------------
+# Mirror augmentation tests
+# ---------------------------------------------------------------------------
+
+
+def test_mirror_state_swaps_columns():
+    """Mirror swaps cell 0<->2, 3<->5, 6<->8."""
+    # Put a distinct piece pattern in cell 0
+    board = (("W", "R"),) + ((),) * 7 + ((),)
+    state = GameState(board=board, current_player=W)
+    t = encode_state(state)
+    m = mirror_state(t)
+
+    # Cell 0 (indices 0-11) should now be empty
+    assert m[0] == 0.0
+    assert m[1] == 0.0
+    # Cell 2 (indices 24-35) should have W, R
+    assert m[24] == 1.0   # W
+    assert m[25] == -1.0  # R
+    # Current player unchanged
+    assert m[108] == t[108]
+
+
+def test_mirror_state_center_column_unchanged():
+    """Center column cells (1, 4, 7) are unchanged by mirror."""
+    board = ((),) + (("W",),) + ((),) * 3 + ((),) * 4
+    state = GameState(board=board, current_player=R)
+    t = encode_state(state)
+    m = mirror_state(t)
+
+    # Cell 1 (indices 12-23) should still have W at depth 0
+    assert m[12] == t[12]
+    assert m[13] == t[13]
+
+
+def test_mirror_state_roundtrip():
+    """Mirroring twice returns the original."""
+    state = initial_state()
+    t = encode_state(state)
+    m = mirror_state(mirror_state(t))
+    assert torch.allclose(t, m)
+
+
+def test_mirror_policy_roundtrip():
+    """Mirroring a policy twice returns the original."""
+    policy = torch.randn(ACTION_SIZE)
+    m = mirror_policy(mirror_policy(policy))
+    assert torch.allclose(policy, m, atol=1e-6)
+
+
+def test_mirror_policy_swaps_actions():
+    """Mirror swaps from_cell and to_cell in action indices."""
+    # Action: from_cell=0, num_pieces=1, to_cell=1
+    # Mirror: from_cell=2, num_pieces=1, to_cell=1
+    original_action = 0 * 27 + 0 * 9 + 1  # = 1
+    mirrored_action = 2 * 27 + 0 * 9 + 1  # = 55
+
+    policy = torch.zeros(ACTION_SIZE)
+    policy[original_action] = 1.0
+
+    m = mirror_policy(policy)
+    assert m[mirrored_action] == 1.0
+    assert m[original_action] == 0.0
+
+
+def test_mirror_policy_preserves_num_pieces():
+    """Mirror does not change num_pieces."""
+    # from=3, num=2, to=4 -> mirrored from=5, num=2, to=4
+    original = 3 * 27 + 1 * 9 + 4  # 3*27 + 9 + 4 = 94
+    mirrored = 5 * 27 + 1 * 9 + 4  # 5*27 + 9 + 4 = 148
+
+    policy = torch.zeros(ACTION_SIZE)
+    policy[original] = 1.0
+
+    m = mirror_policy(policy)
+    assert m[mirrored] == 1.0

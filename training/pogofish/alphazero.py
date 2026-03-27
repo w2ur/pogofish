@@ -37,6 +37,42 @@ from pogofish.encoding import state_to_key, move_to_key
 
 
 # ---------------------------------------------------------------------------
+# Mirror augmentation (left-right symmetry)
+# ---------------------------------------------------------------------------
+
+_MIRROR_CELL = {0: 2, 1: 1, 2: 0, 3: 5, 4: 4, 5: 3, 6: 8, 7: 7, 8: 6}
+
+# Pre-compute action index remapping for mirror
+_MIRROR_ACTION = [0] * ACTION_SIZE
+for _from in range(NUM_CELLS):
+    for _np in range(3):
+        for _to in range(NUM_CELLS):
+            _orig = _from * 27 + _np * 9 + _to
+            _mir = _MIRROR_CELL[_from] * 27 + _np * 9 + _MIRROR_CELL[_to]
+            _MIRROR_ACTION[_orig] = _mir
+
+
+def mirror_state(state_tensor: torch.Tensor) -> torch.Tensor:
+    """Mirror a (109,) state tensor left-right (swap columns 0 and 2)."""
+    mirrored = torch.zeros_like(state_tensor)
+    for orig_cell, mir_cell in _MIRROR_CELL.items():
+        src_start = orig_cell * MAX_STACK
+        dst_start = mir_cell * MAX_STACK
+        mirrored[dst_start:dst_start + MAX_STACK] = state_tensor[src_start:src_start + MAX_STACK]
+    # Current player unchanged
+    mirrored[STATE_SIZE - 1] = state_tensor[STATE_SIZE - 1]
+    return mirrored
+
+
+def mirror_policy(policy: torch.Tensor) -> torch.Tensor:
+    """Mirror a (243,) policy tensor by remapping action indices."""
+    mirrored = torch.zeros_like(policy)
+    for orig, mir in enumerate(_MIRROR_ACTION):
+        mirrored[mir] = policy[orig]
+    return mirrored
+
+
+# ---------------------------------------------------------------------------
 # Architecture configs
 # ---------------------------------------------------------------------------
 
