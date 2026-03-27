@@ -34,6 +34,7 @@ from pogofish.dqn import (
     STATE_SIZE, ACTION_SIZE, MAX_STACK, NUM_CELLS,
 )
 from pogofish.encoding import state_to_key, move_to_key
+from pogofish.mcts import mcts_search, get_mcts_policy
 
 
 # ---------------------------------------------------------------------------
@@ -301,3 +302,194 @@ def compute_loss(
 
     total_loss = value_loss + policy_loss
     return total_loss, policy_loss, value_loss
+
+
+# ---------------------------------------------------------------------------
+# Neural net → MCTS eval function bridge
+# ---------------------------------------------------------------------------
+
+
+def make_eval_fn(model: nn.Module) -> Callable[[GameState], tuple[torch.Tensor, float]]:
+    """Create an eval function that wraps a neural net for MCTS.
+
+    Returns a callable(GameState) -> (policy_probs, value_scalar).
+    Policy is a probability distribution over legal actions (illegal = 0).
+    """
+    def eval_fn(state: GameState) -> tuple[torch.Tensor, float]:
+        state_t = encode_state(state)
+        with torch.no_grad():
+            policy_logits, value = model(state_t.unsqueeze(0))
+
+        # Mask illegal actions and apply softmax
+        mask = legal_move_mask(state)
+        policy_logits = policy_logits.squeeze(0)
+        policy_logits[~mask] = float("-inf")
+
+        # Handle case where no legal moves (all -inf)
+        if mask.any():
+            policy_probs = torch.softmax(policy_logits, dim=0)
+        else:
+            policy_probs = torch.zeros(ACTION_SIZE)
+
+        return policy_probs, value.item()
+
+    return eval_fn
+
+
+# ---------------------------------------------------------------------------
+# Self-play
+# ---------------------------------------------------------------------------
+
+
+def play_self_play_game(
+    model: nn.Module,
+    num_simulations: int = 50,
+    c_puct: float = 1.5,
+    max_moves: int = 50,
+    dirichlet_alpha: float = 0.8,
+    dirichlet_epsilon: float = 0.25,
+    record: bool = False,
+) -> tuple[list[tuple[torch.Tensor, torch.Tensor, float]], dict]:
+    """Play one self-play game using MCTS.
+
+    Returns:
+        positions: list of (state_tensor, mcts_policy, game_outcome)
+            game_outcome is filled in AFTER the game ends (from each player's perspective).
+        game_record: dict with keys "result", "num_moves", optionally "moves".
+    """
+    model.eval()
+    eval_fn = make_eval_fn(model)
+
+    state = initial_state()
+    history: list[tuple[torch.Tensor, torch.Tensor, str]] = []  # (state_t, policy, player)
+    moves_log: list[dict] = []
+    move_count = 0
+
+    while move_count < max_moves:
+        if is_terminal(state) or not legal_moves(state):
+            break
+
+        # Temperature: tau=1.0 for first 10 moves, then tau=0
+        temperature = 1.0 if move_count < 10 else 0.0
+
+        action, mcts_policy = mcts_search(
+            state, eval_fn, num_simulations=num_simulations,
+            c_puct=c_puct, temperature=temperature,
+            dirichlet_alpha=dirichlet_alpha, dirichlet_epsilon=dirichlet_epsilon,
+        )
+
+        if action is None:
+            break
+
+        state_t = encode_state(state)
+        history.append((state_t, mcts_policy, state.current_player))
+
+        if record:
+            move = action_to_move(action)
+            moves_log.append({
+                "state": state_to_key(state),
+                "move": move_to_key(move),
+                "player": state.current_player,
+            })
+
+        move = action_to_move(action)
+        state = apply_move(state, move)
+        move_count += 1
+
+    # Determine result
+    if is_terminal(state):
+        w = winner(state)
+        result = f"{w}_wins" if w else "draw"
+    else:
+        result = "draw"
+
+    # Fill in game outcomes from each player's perspective
+    if result == "W_wins":
+        outcome_for = {W: 1.0, R: -1.0}
+    elif result == "R_wins":
+        outcome_for = {W: -1.0, R: 1.0}
+    else:
+        outcome_for = {W: 0.0, R: 0.0}
+
+    positions = [
+        (state_t, policy, outcome_for[player])
+        for state_t, policy, player in history
+    ]
+
+    game_record: dict = {"result": result, "num_moves": move_count}
+    if record:
+        game_record["moves"] = moves_log
+
+    return positions, game_record
+
+
+# ---------------------------------------------------------------------------
+# Gatekeeper
+# ---------------------------------------------------------------------------
+
+
+def gatekeeper(
+    new_model: nn.Module,
+    best_model: nn.Module,
+    num_games: int = 50,
+    num_simulations: int = 50,
+    c_puct: float = 1.5,
+    max_moves: int = 50,
+) -> dict:
+    """Play num_games between new_model and best_model.
+
+    Alternates which model plays White. Uses tau=0 (greedy), no Dirichlet noise.
+    Returns dict with win_rate, wins, losses, draws.
+    """
+    new_model.eval()
+    best_model.eval()
+    eval_new = make_eval_fn(new_model)
+    eval_best = make_eval_fn(best_model)
+
+    wins = 0
+    losses = 0
+    draws = 0
+
+    for game_idx in range(num_games):
+        # Alternate sides
+        if game_idx % 2 == 0:
+            eval_white, eval_black = eval_new, eval_best
+            new_is_white = True
+        else:
+            eval_white, eval_black = eval_best, eval_new
+            new_is_white = False
+
+        state = initial_state()
+        move_count = 0
+
+        while move_count < max_moves:
+            if is_terminal(state) or not legal_moves(state):
+                break
+
+            eval_fn = eval_white if state.current_player == W else eval_black
+            action, _ = mcts_search(
+                state, eval_fn, num_simulations=num_simulations,
+                c_puct=c_puct, temperature=0.0,
+                dirichlet_alpha=0.0, dirichlet_epsilon=0.0,
+            )
+
+            if action is None:
+                break
+
+            move = action_to_move(action)
+            state = apply_move(state, move)
+            move_count += 1
+
+        w = winner(state)
+        if w is None:
+            draws += 1
+        elif (w == W and new_is_white) or (w == R and not new_is_white):
+            wins += 1
+        else:
+            losses += 1
+
+    total = wins + losses + draws
+    # Draws count as 0.5 for both
+    win_rate = (wins + 0.5 * draws) / total if total > 0 else 0.0
+
+    return {"win_rate": win_rate, "wins": wins, "losses": losses, "draws": draws}

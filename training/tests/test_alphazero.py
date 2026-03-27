@@ -11,6 +11,7 @@ from pogofish.dqn import (
 from pogofish.alphazero import (
     AlphaZeroNet, AlphaZeroCNN, create_model, ARCHITECTURES,
     compute_loss, mirror_state, mirror_policy, GameWindow,
+    make_eval_fn, play_self_play_game, gatekeeper,
 )
 
 
@@ -256,3 +257,70 @@ def test_game_window_mirror_applied():
     s1, _, _ = positions[1]
     # Cell 0 index 0 vs cell 2 index 24
     assert (s0[0] != 0 and s1[24] != 0) or (s1[0] != 0 and s0[24] != 0)
+
+
+# ---------------------------------------------------------------------------
+# Self-play and gatekeeper tests
+# ---------------------------------------------------------------------------
+
+
+def test_make_eval_fn():
+    """eval_fn returns valid policy and value for a state."""
+    model = AlphaZeroNet(trunk_sizes=[64, 32], policy_head_size=32, value_head_size=32)
+    eval_fn = make_eval_fn(model)
+
+    state = initial_state()
+    policy, value = eval_fn(state)
+
+    assert policy.shape == (ACTION_SIZE,)
+    # Policy should be a valid probability distribution over legal moves
+    assert policy.sum() == pytest.approx(1.0, abs=1e-4)
+    # All illegal moves should have 0 probability
+    mask = legal_move_mask(state)
+    assert (policy[~mask] == 0).all()
+    # Value should be a scalar
+    assert isinstance(value, float)
+    assert -1.0 <= value <= 1.0
+
+
+def test_play_self_play_game():
+    """Self-play game produces valid training data."""
+    model = AlphaZeroNet(trunk_sizes=[64, 32], policy_head_size=32, value_head_size=32)
+
+    positions, game_record = play_self_play_game(
+        model, num_simulations=5, c_puct=1.5, max_moves=50,
+    )
+
+    assert len(positions) > 0
+    assert game_record["num_moves"] > 0
+    assert game_record["result"] in ("W_wins", "R_wins", "draw")
+
+    # Check position format
+    state_t, policy, outcome = positions[0]
+    assert state_t.shape == (STATE_SIZE,)
+    assert policy.shape == (ACTION_SIZE,)
+    assert policy.sum() == pytest.approx(1.0, abs=1e-4)
+    assert outcome in (1.0, -1.0, 0.0)
+
+
+def test_play_self_play_game_with_record():
+    """Self-play game with record=True stores move details."""
+    model = AlphaZeroNet(trunk_sizes=[64, 32], policy_head_size=32, value_head_size=32)
+
+    positions, game_record = play_self_play_game(
+        model, num_simulations=5, c_puct=1.5, max_moves=50, record=True,
+    )
+
+    assert "moves" in game_record
+    assert len(game_record["moves"]) == game_record["num_moves"]
+
+
+def test_gatekeeper_returns_win_rate():
+    """Gatekeeper returns a win rate between 0 and 1."""
+    model1 = AlphaZeroNet(trunk_sizes=[64, 32], policy_head_size=32, value_head_size=32)
+    model2 = AlphaZeroNet(trunk_sizes=[64, 32], policy_head_size=32, value_head_size=32)
+
+    result = gatekeeper(model1, model2, num_games=4, num_simulations=5, c_puct=1.5)
+
+    assert 0.0 <= result["win_rate"] <= 1.0
+    assert result["wins"] + result["losses"] + result["draws"] == 4
