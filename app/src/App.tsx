@@ -2,7 +2,10 @@ import { useAI } from "./hooks/useAI";
 import { SettingsProvider } from "./stores/SettingsContext";
 import { GameProvider, useGameContext } from "./stores/GameContext";
 import { Layout } from "./components/shared/Layout";
+import { HomeView } from "./components/home/HomeView";
 import { GameView } from "./components/game/GameView";
+import { JourneyView } from "./components/journey/JourneyView";
+import { AboutView } from "./components/about/AboutView";
 
 function ViewSwitcher() {
   const { view } = useGameContext();
@@ -11,13 +14,13 @@ function ViewSwitcher() {
   const content = (() => {
     switch (view) {
       case "home":
-        return <div className="flex flex-1 items-center justify-center">Home — Coming Soon</div>;
+        return <HomeView />;
       case "game":
         return <GameView />;
       case "journey":
-        return <div className="flex flex-1 items-center justify-center">AI Journey — Coming Soon</div>;
+        return <JourneyView />;
       case "about":
-        return <div className="flex flex-1 items-center justify-center">About — Coming Soon</div>;
+        return <AboutView />;
     }
   })();
 
