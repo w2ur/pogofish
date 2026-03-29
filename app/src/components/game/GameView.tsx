@@ -29,10 +29,8 @@ export function GameView() {
   mctsSimsRef.current = mctsSimulations;
   const evalIdRef = useRef(0);
 
-  // Start minimax background load on mount
-  useEffect(() => {
-    aiRef.current.loadMinimax();
-  }, []);
+  // Minimax background load disabled for now — uncomment when stabilized
+  // useEffect(() => { aiRef.current.loadMinimax(); }, []);
 
   // Effect 1: AI turn — guard is in state (aiStatus), StrictMode-safe
   useEffect(() => {
