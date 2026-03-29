@@ -9,12 +9,17 @@ import {
   STATE_SIZE,
 } from "../engine/encoding";
 
+// Point ONNX Runtime to the WASM files in public/
+ort.env.wasm.wasmPaths = "/";
+
 export class OnnxModel {
   private session: ort.InferenceSession | null = null;
   private isDualHead = false;
 
   async load(url: string): Promise<void> {
-    this.session = await ort.InferenceSession.create(url);
+    this.session = await ort.InferenceSession.create(url, {
+      executionProviders: ["wasm"],
+    });
     // Dual-head (AlphaZero) has 2 outputs; single-head (DQN) has 1
     this.isDualHead = this.session.outputNames.length >= 2;
   }

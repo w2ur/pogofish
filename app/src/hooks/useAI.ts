@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useRef, useState } from "react";
+import { useCallback, useRef, useState } from "react";
 import { type GameState, type Move } from "../engine/types";
 import type {
   AIConfig,
@@ -28,7 +28,10 @@ export function useAI(): UseAI {
   const [minimaxProgress, setMinimaxProgress] = useState(0);
   const [minimaxLoaded, setMinimaxLoaded] = useState(false);
 
-  useEffect(() => {
+  // Lazy worker creation — survives StrictMode double-mount
+  const getWorker = useCallback(() => {
+    if (workerRef.current) return workerRef.current;
+
     const worker = new Worker(
       new URL("../ai/worker.ts", import.meta.url),
       { type: "module" },
@@ -69,30 +72,23 @@ export function useAI(): UseAI {
     };
 
     workerRef.current = worker;
-
-    return () => {
-      worker.terminate();
-      // Reject all pending promises
-      for (const [, pending] of pendingRef.current) {
-        pending.reject(new Error("Worker terminated"));
-      }
-      pendingRef.current.clear();
-    };
+    return worker;
   }, []);
 
   const sendRequest = useCallback(
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     <T,>(request: Record<string, any>): Promise<T> => {
       return new Promise<T>((resolve, reject) => {
+        const worker = getWorker();
         const id = nextIdRef.current++;
         pendingRef.current.set(id, {
           resolve: resolve as (val: unknown) => void,
           reject,
         });
-        workerRef.current?.postMessage({ ...request, id });
+        worker.postMessage({ ...request, id });
       });
     },
-    [],
+    [getWorker],
   );
 
   const requestMove = useCallback(

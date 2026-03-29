@@ -37,17 +37,20 @@ export function GameView() {
       return;
 
     aiMoveInFlight.current = true;
+    console.log(`[AI] Requesting move: level=${aiLevel}, mcts=${mctsSimulations}`);
     ai.requestMove(game.state, {
       level: aiLevel,
       mctsSimulations,
     })
       .then((move) => {
+        console.log(`[AI] Got move from ${aiLevel}:`, move);
         // Verify state hasn't changed (e.g., from undo/new game)
         if (!isTerminal(game.state)) {
           game.applyAIMove(move);
         }
       })
-      .catch(() => {
+      .catch((err) => {
+        console.error(`[AI] ${aiLevel} failed, falling back to random:`, err);
         // If the configured AI fails, fall back to random
         ai.requestMove(game.state, { level: "random" })
           .then((move) => {
@@ -55,8 +58,8 @@ export function GameView() {
               game.applyAIMove(move);
             }
           })
-          .catch(() => {
-            // Nothing we can do
+          .catch((err2) => {
+            console.error("[AI] Random fallback also failed:", err2);
           });
       })
       .finally(() => {
@@ -100,7 +103,7 @@ export function GameView() {
       <div className="flex flex-1 items-start justify-center gap-4 p-4 md:items-center">
         {/* Desktop: vertical eval bar */}
         {analysisEnabled && analysis.positionEval && (
-          <div className="hidden h-[340px] md:block">
+          <div className="hidden h-[420px] md:block">
             <EvalBar
               value={analysis.positionEval.value}
               proven={analysis.positionEval.proven}
