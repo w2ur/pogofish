@@ -9,12 +9,11 @@ PYTHONPATH=. python -m pogofish`;
 const AI_LEVELS = [
   { name: "Random", description: "Picks a legal move at random" },
   { name: "DQN", description: "Deep Q-Network trained on 500K episodes" },
-  { name: "AlphaZero", description: "Neural network + MCTS self-play" },
+  { name: "AlphaZero", description: "Neural network trained via MCTS self-play" },
   {
     name: "AlphaZero + MCTS",
-    description: "Same net with adjustable tree search",
+    description: "Same net with adjustable tree search at inference time — strongest AI",
   },
-  { name: "Minimax", description: "Depth-20 perfect play oracle" },
 ];
 
 export function AboutView() {
@@ -50,8 +49,9 @@ export function AboutView() {
               How it works
             </h2>
             <p className="text-zinc-600 dark:text-zinc-400">
-              5 AI opponents, from random to depth-20 minimax. All inference
-              runs in your browser — no server, no account, no data collection.
+              4 AI opponents trained through reinforcement learning, plus a
+              depth-20 minimax oracle for analysis. All inference runs in your
+              browser — no server, no account, no data collection.
             </p>
           </section>
 

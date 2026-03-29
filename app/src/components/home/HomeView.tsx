@@ -20,7 +20,6 @@ const AI_LEVEL_OPTIONS: { value: AILevel; label: string }[] = [
   { value: "dqn", label: "DQN" },
   { value: "alphazero", label: "AlphaZero" },
   { value: "alphazero-mcts", label: "AlphaZero + MCTS" },
-  { value: "minimax", label: "Minimax" },
 ];
 
 export function HomeView() {

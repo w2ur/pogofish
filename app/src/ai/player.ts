@@ -5,7 +5,6 @@ import {
   type MinimaxTable,
   type PositionEval,
   load as loadMinimaxTable,
-  bestMove as minimaxBestMove,
   evaluate as minimaxEvaluate,
 } from "./minimax";
 
@@ -90,15 +89,10 @@ export async function getMove(
       );
     }
 
-    case "minimax": {
-      const table = await startMinimaxLoad();
-      const move = minimaxBestMove(table, state);
-      if (move) return move;
-      // Position not in table or is a depth-limited draw with no best move.
-      // Fall back to AlphaZero for these positions.
-      const model = await getAlphazeroModel();
-      return model.bestMove(state);
-    }
+    case "minimax":
+      // Minimax is analysis-only (depth-20 table runs out after ~3 moves).
+      // Fall through to AlphaZero+MCTS as the strongest playable AI.
+      return getMove(state, { level: "alphazero-mcts", mctsSimulations: config.mctsSimulations ?? 100 });
   }
 }
 
