@@ -9,8 +9,9 @@ import {
   STATE_SIZE,
 } from "../engine/encoding";
 
-// Point ONNX Runtime to the WASM files in public/
-ort.env.wasm.wasmPaths = "/";
+// Disable multi-threading to avoid needing separate .mjs worker files
+// that Vite dev server can't serve from node_modules
+ort.env.wasm.numThreads = 1;
 
 export class OnnxModel {
   private session: ort.InferenceSession | null = null;
