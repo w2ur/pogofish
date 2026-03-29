@@ -17,6 +17,11 @@ export function useAnalysis(
   const [bestMoveCell, setBestMoveCell] = useState<number | null>(null);
   const [loading, setLoading] = useState(false);
   const requestIdRef = useRef(0);
+  const aiRef = useRef(ai);
+  aiRef.current = ai;
+
+  // Serialize state to a string to use as a stable dependency
+  const stateKey = JSON.stringify(state);
 
   useEffect(() => {
     if (!enabled) {
@@ -29,28 +34,13 @@ export function useAnalysis(
     const currentId = ++requestIdRef.current;
     setLoading(true);
 
-    ai.requestEval(state)
+    aiRef.current
+      .requestEval(state)
       .then((evalResult) => {
-        // Only apply if this is still the latest request
         if (currentId !== requestIdRef.current) return;
         setPositionEval(evalResult);
         setLoading(false);
-
-        // Derive best move cell from eval result
-        // The eval result itself doesn't contain best move info,
-        // but we can use the minimax table via another request
-        // For now, bestMoveCell comes from the eval source
-        // We'll compute it from the AI's move suggestion
-        ai.requestMove(state, { level: "minimax" })
-          .then((move) => {
-            if (currentId !== requestIdRef.current) return;
-            setBestMoveCell(move.fromCell);
-          })
-          .catch(() => {
-            // Minimax not loaded or failed — try random as fallback
-            if (currentId !== requestIdRef.current) return;
-            setBestMoveCell(null);
-          });
+        setBestMoveCell(null); // Best move highlighting deferred to future enhancement
       })
       .catch(() => {
         if (currentId !== requestIdRef.current) return;
@@ -58,7 +48,8 @@ export function useAnalysis(
         setBestMoveCell(null);
         setLoading(false);
       });
-  }, [state, enabled, ai]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [stateKey, enabled]);
 
   return { positionEval, bestMoveCell, loading };
 }
