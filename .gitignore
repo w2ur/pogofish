@@ -45,3 +45,4 @@ iTerm2 Session*
 
 # Jupyter
 .ipynb_checkpoints/
+.worktrees/
