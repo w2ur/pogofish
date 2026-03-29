@@ -88,9 +88,9 @@ app/
     ai/              # AI system (Random, Minimax, ONNX-based DQN/AlphaZero, MCTS)
     components/      # React UI components (Board, GameControls, panels)
     hooks/           # Custom hooks (useAI, useGame)
-    stores/          # Zustand stores (game state)
+    stores/          # React context providers (game state, settings)
   public/
-    models/          # ONNX models + minimax table (gitignored)
+    models/          # ONNX models + minimax table (committed)
     icon.svg         # PWA icon
     favicon.svg      # Favicon
 ```
