@@ -82,8 +82,7 @@ def _play_game_random_vs_random(rng: random.Random) -> tuple[list[Move], str | N
 def _dqn_move(model: torch.nn.Module, state: GameState, rng: random.Random) -> Move:
     """Choose a move using DQN (greedy). Falls back to random if all Q-values masked."""
     moves = legal_moves(state)
-    if not moves:
-        return rng.choice(moves)
+    assert moves, "No legal moves — should not reach move selection on terminal state"
     with torch.no_grad():
         enc = encode_state(state).unsqueeze(0)
         q_vals = model(enc).squeeze(0)
@@ -103,8 +102,7 @@ def _dqn_move(model: torch.nn.Module, state: GameState, rng: random.Random) -> M
 def _az_move(model: torch.nn.Module, state: GameState, rng: random.Random) -> Move:
     """Choose a move using AlphaZero policy head (greedy). Falls back to random."""
     moves = legal_moves(state)
-    if not moves:
-        return rng.choice(moves)
+    assert moves, "No legal moves — should not reach move selection on terminal state"
     with torch.no_grad():
         enc = encode_state(state).unsqueeze(0)
         policy_logits, _value = model(enc)
