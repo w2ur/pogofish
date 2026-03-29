@@ -10,7 +10,6 @@ import { MoveList } from "./MoveList";
 import { AnalysisPanel } from "./AnalysisPanel";
 import { GameControls } from "./GameControls";
 import { GameEndOverlay } from "./GameEndOverlay";
-import { isTerminal } from "../../engine/engine";
 
 export function GameView() {
   const { playerColor, setView } = useGameContext();
@@ -21,51 +20,51 @@ export function GameView() {
   const analysis = useAnalysis(game.state, analysisEnabled, ai);
   const aiMoveInFlight = useRef(false);
 
+  // Keep stable refs to avoid effect dependency issues
+  const gameRef = useRef(game);
+  gameRef.current = game;
+  const aiRef = useRef(ai);
+  aiRef.current = ai;
+  const aiLevelRef = useRef(aiLevel);
+  aiLevelRef.current = aiLevel;
+  const mctsSimsRef = useRef(mctsSimulations);
+  mctsSimsRef.current = mctsSimulations;
+
   // Start minimax background load on mount
   useEffect(() => {
-    ai.loadMinimax();
-  }, [ai.loadMinimax]);
+    aiRef.current.loadMinimax();
+  }, []);
 
-  // Request AI move after player moves
+  // Request AI move when it becomes AI's turn
   useEffect(() => {
-    if (
-      game.isPlayerTurn ||
-      game.gameOver ||
-      ai.thinking ||
-      aiMoveInFlight.current
-    )
-      return;
+    if (game.isPlayerTurn || game.gameOver || aiMoveInFlight.current) return;
 
     aiMoveInFlight.current = true;
-    console.log(`[AI] Requesting move: level=${aiLevel}, mcts=${mctsSimulations}`);
-    ai.requestMove(game.state, {
-      level: aiLevel,
-      mctsSimulations,
-    })
+    const level = aiLevelRef.current;
+    const sims = mctsSimsRef.current;
+    console.log(`[AI] Requesting move: level=${level}, mcts=${sims}`);
+
+    aiRef.current
+      .requestMove(gameRef.current.state, { level, mctsSimulations: sims })
       .then((move) => {
-        console.log(`[AI] Got move from ${aiLevel}:`, move);
-        // Verify state hasn't changed (e.g., from undo/new game)
-        if (!isTerminal(game.state)) {
-          game.applyAIMove(move);
-        }
+        console.log(`[AI] Got move from ${level}:`, move);
+        gameRef.current.applyAIMove(move);
       })
       .catch((err) => {
-        console.error(`[AI] ${aiLevel} failed, falling back to random:`, err);
-        // If the configured AI fails, fall back to random
-        ai.requestMove(game.state, { level: "random" })
+        console.error(`[AI] ${level} failed, falling back to random:`, err);
+        return aiRef.current
+          .requestMove(gameRef.current.state, { level: "random" })
           .then((move) => {
-            if (!isTerminal(game.state)) {
-              game.applyAIMove(move);
-            }
-          })
-          .catch((err2) => {
-            console.error("[AI] Random fallback also failed:", err2);
+            gameRef.current.applyAIMove(move);
           });
+      })
+      .catch((err) => {
+        console.error("[AI] Random fallback also failed:", err);
       })
       .finally(() => {
         aiMoveInFlight.current = false;
       });
-  }, [game.isPlayerTurn, game.gameOver, game.state, ai, aiLevel, mctsSimulations, game.applyAIMove]);
+  }, [game.isPlayerTurn, game.gameOver]);
 
   const handleNewGame = useCallback(() => {
     aiMoveInFlight.current = false;
