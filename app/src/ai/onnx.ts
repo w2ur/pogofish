@@ -9,8 +9,10 @@ import {
   STATE_SIZE,
 } from "../engine/encoding";
 
-// Disable multi-threading to avoid needing separate .mjs worker files
-// that Vite dev server can't serve from node_modules
+// Load WASM binary from CDN — avoids Vite dev server file-serving issues
+// where the worker can't resolve WASM files through Vite's module system.
+// The PWA service worker caches this after first load for offline use.
+ort.env.wasm.wasmPaths = "https://cdn.jsdelivr.net/npm/onnxruntime-web@1.24.3/dist/";
 ort.env.wasm.numThreads = 1;
 
 export class OnnxModel {
