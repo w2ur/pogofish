@@ -1,7 +1,6 @@
-import { useCallback, useEffect, useRef } from "react";
-import { useGame } from "../../hooks/useGame";
+import { useCallback, useEffect, useMemo, useRef } from "react";
+import { useGameMachine } from "../../hooks/useGameMachine";
 import { useAI } from "../../hooks/useAI";
-import { useAnalysis } from "../../hooks/useAnalysis";
 import { useSettings } from "../../stores/SettingsContext";
 import { useGameContext } from "../../stores/GameContext";
 import { Board } from "../board/Board";
@@ -16,84 +15,128 @@ export function GameView() {
   const { analysisEnabled, toggleAnalysis, aiLevel, mctsSimulations } =
     useSettings();
   const ai = useAI();
-  const game = useGame(playerColor);
-  const analysis = useAnalysis(game.state, analysisEnabled, ai);
-  const aiMoveInFlight = useRef(false);
+  const { state, dispatch, isPlayerTurn, gameOver, gameWinner, canUndo } =
+    useGameMachine(playerColor);
 
-  // Keep stable refs to avoid effect dependency issues
-  const gameRef = useRef(game);
-  gameRef.current = game;
+  // Stable refs for values read inside effects but not deps
   const aiRef = useRef(ai);
   aiRef.current = ai;
   const aiLevelRef = useRef(aiLevel);
   aiLevelRef.current = aiLevel;
   const mctsSimsRef = useRef(mctsSimulations);
   mctsSimsRef.current = mctsSimulations;
+  const evalIdRef = useRef(0);
 
   // Start minimax background load on mount
   useEffect(() => {
     aiRef.current.loadMinimax();
   }, []);
 
-  // Request AI move when it becomes AI's turn
+  // Effect 1: AI turn — guard is in state (aiStatus), StrictMode-safe
   useEffect(() => {
-    if (game.isPlayerTurn || game.gameOver || aiMoveInFlight.current) return;
+    if (isPlayerTurn || gameOver || state.aiStatus !== "idle") return;
 
-    aiMoveInFlight.current = true;
+    dispatch({ type: "AI_MOVE_REQUESTED" });
+
     const level = aiLevelRef.current;
     const sims = mctsSimsRef.current;
     console.log(`[AI] Requesting move: level=${level}, mcts=${sims}`);
 
     aiRef.current
-      .requestMove(gameRef.current.state, { level, mctsSimulations: sims })
+      .requestMove(state.gameState, { level, mctsSimulations: sims })
       .then((move) => {
         console.log(`[AI] Got move from ${level}:`, move);
-        gameRef.current.applyAIMove(move);
+        dispatch({ type: "AI_MOVE_RECEIVED", move });
       })
       .catch((err) => {
         console.error(`[AI] ${level} failed, falling back to random:`, err);
         return aiRef.current
-          .requestMove(gameRef.current.state, { level: "random" })
+          .requestMove(state.gameState, { level: "random" })
           .then((move) => {
-            gameRef.current.applyAIMove(move);
+            dispatch({ type: "AI_MOVE_RECEIVED", move });
           });
       })
       .catch((err) => {
         console.error("[AI] Random fallback also failed:", err);
-      })
-      .finally(() => {
-        aiMoveInFlight.current = false;
       });
-  }, [game.isPlayerTurn, game.gameOver]);
+  }, [isPlayerTurn, gameOver, state.aiStatus, state.gameState, dispatch]);
+
+  // Effect 2: Analysis — stale-response guard via evalIdRef
+  const stateKey = useMemo(
+    () => JSON.stringify(state.gameState),
+    [state.gameState],
+  );
+
+  useEffect(() => {
+    if (!analysisEnabled) return;
+
+    const id = ++evalIdRef.current;
+    aiRef.current
+      .requestEval(state.gameState)
+      .then((evalResult) => {
+        if (id === evalIdRef.current) {
+          dispatch({ type: "EVAL_RECEIVED", eval: evalResult });
+        }
+      })
+      .catch(() => {
+        if (id === evalIdRef.current) {
+          dispatch({ type: "EVAL_FAILED" });
+        }
+      });
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [stateKey, analysisEnabled]);
+
+  // Selection callbacks — dispatch with playerColor
+  const handleSelectCell = useCallback(
+    (cellIndex: number) => {
+      dispatch({ type: "SELECT_CELL", cellIndex, playerColor });
+    },
+    [dispatch, playerColor],
+  );
+
+  const handleSelectCount = useCallback(
+    (numPieces: number) => {
+      dispatch({ type: "SELECT_COUNT", numPieces });
+    },
+    [dispatch],
+  );
+
+  const handleSelectDestination = useCallback(
+    (toCell: number) => {
+      dispatch({ type: "SELECT_DESTINATION", toCell });
+    },
+    [dispatch],
+  );
+
+  const handleUndo = useCallback(() => {
+    dispatch({ type: "UNDO" });
+  }, [dispatch]);
 
   const handleNewGame = useCallback(() => {
-    aiMoveInFlight.current = false;
-    game.newGame();
-  }, [game.newGame]);
+    dispatch({ type: "NEW_GAME" });
+  }, [dispatch]);
 
   const handleChangeLevel = useCallback(() => {
-    aiMoveInFlight.current = false;
-    game.newGame();
+    dispatch({ type: "NEW_GAME" });
     setView("home");
-  }, [game.newGame, setView]);
+  }, [dispatch, setView]);
 
-  const canUndo =
-    game.isPlayerTurn && !game.gameOver && game.history.states.length >= 3;
+  const thinking = state.aiStatus === "thinking";
 
-  const turnLabel = game.gameOver
+  const turnLabel = gameOver
     ? ""
-    : game.isPlayerTurn
+    : isPlayerTurn
       ? "Your turn"
       : "Thinking...";
 
   return (
     <div className="flex flex-1 flex-col">
       {/* Mobile: horizontal eval bar */}
-      {analysisEnabled && analysis.positionEval && (
+      {analysisEnabled && state.positionEval && (
         <div className="px-4 pt-2 md:hidden">
           <EvalBar
-            value={analysis.positionEval.value}
-            proven={analysis.positionEval.proven}
+            value={state.positionEval.value}
+            proven={state.positionEval.proven}
             direction="horizontal"
           />
         </div>
@@ -101,11 +144,11 @@ export function GameView() {
 
       <div className="flex flex-1 items-start justify-center gap-4 p-4 md:items-center">
         {/* Desktop: vertical eval bar */}
-        {analysisEnabled && analysis.positionEval && (
+        {analysisEnabled && state.positionEval && (
           <div className="hidden h-[420px] md:block">
             <EvalBar
-              value={analysis.positionEval.value}
-              proven={analysis.positionEval.proven}
+              value={state.positionEval.value}
+              proven={state.positionEval.proven}
               direction="vertical"
             />
           </div>
@@ -114,21 +157,19 @@ export function GameView() {
         {/* Board (center) */}
         <div className="flex flex-col items-center gap-2">
           <div className="h-5 text-xs text-zinc-400">
-            {ai.thinking && (
+            {thinking && (
               <span className="animate-pulse">{turnLabel}</span>
             )}
-            {!ai.thinking && turnLabel}
+            {!thinking && turnLabel}
           </div>
           <Board
-            state={game.state}
-            selection={game.selection}
-            lastMove={game.lastMove}
-            bestMoveCell={
-              analysisEnabled ? analysis.bestMoveCell : null
-            }
-            onSelectCell={game.selectCell}
-            onSelectDestination={game.selectDestination}
-            onSelectCount={game.selectCount}
+            state={state.gameState}
+            selection={state.selection}
+            lastMove={state.lastMove}
+            bestMoveCell={null}
+            onSelectCell={handleSelectCell}
+            onSelectDestination={handleSelectDestination}
+            onSelectCount={handleSelectCount}
           />
         </div>
 
@@ -136,15 +177,15 @@ export function GameView() {
         <div className="hidden w-[220px] flex-col gap-3 md:flex">
           {analysisEnabled && (
             <AnalysisPanel
-              positionEval={analysis.positionEval}
-              loading={analysis.loading}
+              positionEval={state.positionEval}
+              loading={state.analysisLoading}
             />
           )}
-          <MoveList moves={game.history.moves} />
+          <MoveList moves={state.history.moves} />
           <GameControls
             canUndo={canUndo}
             analysisEnabled={analysisEnabled}
-            onUndo={game.undo}
+            onUndo={handleUndo}
             onToggleAnalysis={toggleAnalysis}
             onNewGame={handleNewGame}
           />
@@ -155,23 +196,23 @@ export function GameView() {
       <div className="flex flex-col gap-2 px-4 pb-4 md:hidden">
         {analysisEnabled && (
           <AnalysisPanel
-            positionEval={analysis.positionEval}
-            loading={analysis.loading}
+            positionEval={state.positionEval}
+            loading={state.analysisLoading}
           />
         )}
         <GameControls
           canUndo={canUndo}
           analysisEnabled={analysisEnabled}
-          onUndo={game.undo}
+          onUndo={handleUndo}
           onToggleAnalysis={toggleAnalysis}
           onNewGame={handleNewGame}
         />
       </div>
 
       {/* Game end overlay */}
-      {game.gameOver && game.gameWinner && (
+      {gameOver && gameWinner && (
         <GameEndOverlay
-          winner={game.gameWinner}
+          winner={gameWinner}
           onPlayAgain={handleNewGame}
           onChangeLevel={handleChangeLevel}
         />

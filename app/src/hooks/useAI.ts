@@ -1,4 +1,4 @@
-import { useCallback, useRef, useState } from "react";
+import { useCallback, useMemo, useRef, useState } from "react";
 import { type GameState, type Move } from "../engine/types";
 import type {
   AIConfig,
@@ -12,7 +12,6 @@ export interface UseAI {
   requestMove: (state: GameState, config: AIConfig) => Promise<Move>;
   requestEval: (state: GameState) => Promise<PositionEval>;
   loadMinimax: () => void;
-  thinking: boolean;
   minimaxProgress: number;
   minimaxLoaded: boolean;
 }
@@ -24,7 +23,6 @@ export function useAI(): UseAI {
     Map<number, { resolve: (val: unknown) => void; reject: (err: Error) => void }>
   >(new Map());
 
-  const [thinking, setThinking] = useState(false);
   const [minimaxProgress, setMinimaxProgress] = useState(0);
   const [minimaxLoaded, setMinimaxLoaded] = useState(false);
 
@@ -92,13 +90,8 @@ export function useAI(): UseAI {
   );
 
   const requestMove = useCallback(
-    async (state: GameState, config: AIConfig): Promise<Move> => {
-      setThinking(true);
-      try {
-        return await sendRequest<Move>({ type: "getMove", state, config });
-      } finally {
-        setThinking(false);
-      }
+    (state: GameState, config: AIConfig): Promise<Move> => {
+      return sendRequest<Move>({ type: "getMove", state, config });
     },
     [sendRequest],
   );
@@ -116,12 +109,11 @@ export function useAI(): UseAI {
     });
   }, [sendRequest]);
 
-  return {
+  return useMemo(() => ({
     requestMove,
     requestEval,
     loadMinimax,
-    thinking,
     minimaxProgress,
     minimaxLoaded,
-  };
+  }), [requestMove, requestEval, loadMinimax, minimaxProgress, minimaxLoaded]);
 }
