@@ -4,6 +4,9 @@ import tailwindcss from "@tailwindcss/vite";
 import { VitePWA } from "vite-plugin-pwa";
 
 export default defineConfig({
+  worker: {
+    format: "es",
+  },
   plugins: [
     react(),
     tailwindcss(),
@@ -22,7 +25,8 @@ export default defineConfig({
         ],
       },
       workbox: {
-        globPatterns: ["**/*.{js,css,html,wasm}"],
+        globPatterns: ["**/*.{js,css,html}"],
+        maximumFileSizeToCacheInBytes: 30 * 1024 * 1024,
         runtimeCaching: [
           {
             urlPattern: /\/models\/.*\.onnx$/,

@@ -1,18 +1,34 @@
+import { useAI } from "./hooks/useAI";
+import { SettingsProvider } from "./stores/SettingsContext";
+import { GameProvider, useGameContext } from "./stores/GameContext";
+import { Layout } from "./components/shared/Layout";
+
+function ViewSwitcher() {
+  const { view } = useGameContext();
+  const { minimaxProgress } = useAI();
+
+  const content = (() => {
+    switch (view) {
+      case "home":
+        return <div className="flex flex-1 items-center justify-center">Home — Coming Soon</div>;
+      case "game":
+        return <div className="flex flex-1 items-center justify-center">Game — Coming Soon</div>;
+      case "journey":
+        return <div className="flex flex-1 items-center justify-center">AI Journey — Coming Soon</div>;
+      case "about":
+        return <div className="flex flex-1 items-center justify-center">About — Coming Soon</div>;
+    }
+  })();
+
+  return <Layout minimaxProgress={minimaxProgress}>{content}</Layout>;
+}
+
 export function App() {
   return (
-    <div className="flex min-h-screen flex-col bg-white text-neutral-900 dark:bg-neutral-950 dark:text-neutral-100">
-      <main className="flex flex-1 items-center justify-center">
-        <h1 className="text-4xl font-bold">Pogofish</h1>
-      </main>
-      <footer className="py-4 text-center text-sm text-neutral-500">
-        Made with care by{" "}
-        <a
-          href="https://william.revah.paris"
-          className="underline hover:text-neutral-700 dark:hover:text-neutral-300"
-        >
-          William
-        </a>
-      </footer>
-    </div>
+    <SettingsProvider>
+      <GameProvider>
+        <ViewSwitcher />
+      </GameProvider>
+    </SettingsProvider>
   );
 }
