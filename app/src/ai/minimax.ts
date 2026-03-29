@@ -1,7 +1,13 @@
 import { type GameState, type Move } from "../engine/types";
 import { legalMoves, applyMove } from "../engine/engine";
 
-/** Shape of each entry in the minimax JSON table. */
+/** Shape of each entry in the minimax JSON table (compact format). */
+interface RawMinimaxEntry {
+  v: number;         // value: +1 (current player wins), -1 (loses), 0 (draw)
+  m?: [number, number, number]; // best move [fromCell, numPieces, toCell], absent for terminal/draw
+}
+
+/** Normalized entry for internal use. */
 interface MinimaxEntry {
   value: number;
   best_move: [number, number, number] | null;
@@ -76,11 +82,17 @@ export async function load(
   const jsonStr = decompressedChunks.map((c) => decoder.decode(c, { stream: true })).join("") +
     decoder.decode();
 
-  const raw = JSON.parse(jsonStr) as Record<string, MinimaxEntry>;
+  const raw = JSON.parse(jsonStr) as {
+    meta: Record<string, unknown>;
+    states: Record<string, RawMinimaxEntry>;
+  };
 
   const table: MinimaxTable = new Map();
-  for (const [key, entry] of Object.entries(raw)) {
-    table.set(key, entry);
+  for (const [key, entry] of Object.entries(raw.states)) {
+    table.set(key, {
+      value: entry.v,
+      best_move: entry.m ?? null,
+    });
   }
   return table;
 }

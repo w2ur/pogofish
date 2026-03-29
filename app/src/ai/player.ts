@@ -93,8 +93,11 @@ export async function getMove(
     case "minimax": {
       const table = await startMinimaxLoad();
       const move = minimaxBestMove(table, state);
-      if (!move) throw new Error("Minimax: no move found for state");
-      return move;
+      if (move) return move;
+      // Position not in table or is a depth-limited draw with no best move.
+      // Fall back to AlphaZero for these positions.
+      const model = await getAlphazeroModel();
+      return model.bestMove(state);
     }
   }
 }
