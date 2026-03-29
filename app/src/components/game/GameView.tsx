@@ -19,6 +19,8 @@ export function GameView() {
     useGameMachine(playerColor);
 
   // Stable refs for values read inside effects but not deps
+  const stateRef = useRef(state);
+  stateRef.current = state;
   const aiRef = useRef(ai);
   aiRef.current = ai;
   const aiLevelRef = useRef(aiLevel);
@@ -42,8 +44,10 @@ export function GameView() {
     const sims = mctsSimsRef.current;
     console.log(`[AI] Requesting move: level=${level}, mcts=${sims}`);
 
+    // Read gameState from ref to avoid putting it in deps
+    const currentGameState = stateRef.current.gameState;
     aiRef.current
-      .requestMove(state.gameState, { level, mctsSimulations: sims })
+      .requestMove(currentGameState, { level, mctsSimulations: sims })
       .then((move) => {
         console.log(`[AI] Got move from ${level}:`, move);
         dispatch({ type: "AI_MOVE_RECEIVED", move });
@@ -51,15 +55,19 @@ export function GameView() {
       .catch((err) => {
         console.error(`[AI] ${level} failed, falling back to random:`, err);
         return aiRef.current
-          .requestMove(state.gameState, { level: "random" })
+          .requestMove(currentGameState, { level: "random" })
           .then((move) => {
             dispatch({ type: "AI_MOVE_RECEIVED", move });
           });
       })
       .catch((err) => {
         console.error("[AI] Random fallback also failed:", err);
+        // Reset aiStatus so the game isn't stuck
+        dispatch({ type: "AI_MOVE_RECEIVED", move: { fromCell: 0, numPieces: 1, toCell: 0 } });
       });
-  }, [isPlayerTurn, gameOver, state.aiStatus, state.gameState, dispatch]);
+    // Only trigger on turn change and aiStatus — NOT on gameState
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [isPlayerTurn, gameOver, state.aiStatus]);
 
   // Effect 2: Analysis — stale-response guard via evalIdRef
   const stateKey = useMemo(
