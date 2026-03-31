@@ -154,10 +154,10 @@ export function GameView() {
         : "Thinking...";
 
   return (
-    <div className="flex flex-1 flex-col">
-      {/* Mobile: horizontal eval bar */}
+    <div className="flex flex-1 flex-col items-center justify-center gap-4 p-4">
+      {/* Eval bar — horizontal, always visible when analysis is on */}
       {analysisEnabled && state.positionEval && (
-        <div className="px-4 pt-2 md:hidden">
+        <div className="w-full max-w-[min(85vw,320px)] md:max-w-[420px]">
           <EvalBar
             value={state.positionEval.value}
             proven={state.positionEval.proven}
@@ -166,72 +166,46 @@ export function GameView() {
         </div>
       )}
 
-      <div className="flex flex-1 items-start justify-center gap-4 p-4 md:items-center">
-        {/* Desktop: vertical eval bar */}
-        {analysisEnabled && state.positionEval && (
-          <div className="hidden h-[420px] md:block">
-            <EvalBar
-              value={state.positionEval.value}
-              proven={state.positionEval.proven}
-              direction="vertical"
-            />
-          </div>
-        )}
-
-        {/* Board (center) */}
-        <div className="flex flex-col items-center gap-2">
-          <div className="h-5 text-xs text-zinc-400">
-            {thinking && (
-              <span className="animate-pulse">{turnLabel}</span>
-            )}
-            {!thinking && turnLabel}
-          </div>
-          <Board
-            state={state.gameState}
-            selection={state.selection}
-            lastMove={state.lastMove}
-            bestMoveCell={null}
-            onSelectCell={handleSelectCell}
-            onSelectDestination={handleSelectDestination}
-            onSelectCount={handleSelectCount}
-          />
-        </div>
-
-        {/* Desktop sidebar */}
-        <div className="hidden w-[220px] flex-col gap-3 md:flex">
-          {analysisEnabled && (
-            <AnalysisPanel
-              positionEval={state.positionEval}
-              loading={state.analysisLoading}
-            />
-          )}
-          <MoveList moves={state.history.moves} />
-          <GameControls
-            canUndo={canUndo}
-            analysisEnabled={analysisEnabled}
-            onUndo={handleUndo}
-            onToggleAnalysis={toggleAnalysis}
-            onNewGame={handleNewGame}
-          />
-        </div>
+      {/* Turn indicator */}
+      <div className="h-5 text-sm text-zinc-500 dark:text-zinc-400">
+        {thinking && <span className="animate-pulse">{turnLabel}</span>}
+        {!thinking && turnLabel}
       </div>
 
-      {/* Mobile controls (bottom) */}
-      <div className="flex flex-col gap-2 px-4 pb-4 md:hidden">
-        {analysisEnabled && (
-          <AnalysisPanel
-            positionEval={state.positionEval}
-            loading={state.analysisLoading}
-          />
-        )}
-        <GameControls
-          canUndo={canUndo}
-          analysisEnabled={analysisEnabled}
-          onUndo={handleUndo}
-          onToggleAnalysis={toggleAnalysis}
-          onNewGame={handleNewGame}
+      {/* Board — centered hero */}
+      <Board
+        state={state.gameState}
+        selection={state.selection}
+        lastMove={state.lastMove}
+        bestMoveCell={null}
+        onSelectCell={handleSelectCell}
+        onSelectDestination={handleSelectDestination}
+        onSelectCount={handleSelectCount}
+      />
+
+      {/* Analysis panel — below board */}
+      {analysisEnabled && (
+        <AnalysisPanel
+          positionEval={state.positionEval}
+          loading={state.analysisLoading}
         />
-      </div>
+      )}
+
+      {/* Controls — below board */}
+      <GameControls
+        canUndo={canUndo}
+        analysisEnabled={analysisEnabled}
+        onUndo={handleUndo}
+        onToggleAnalysis={toggleAnalysis}
+        onNewGame={handleNewGame}
+      />
+
+      {/* Move list — compact, below controls */}
+      {state.history.moves.length > 0 && (
+        <div className="w-full max-w-[min(85vw,320px)] md:max-w-[420px]">
+          <MoveList moves={state.history.moves} />
+        </div>
+      )}
 
       {/* Game end overlay */}
       {gameOver && gameWinner && (
