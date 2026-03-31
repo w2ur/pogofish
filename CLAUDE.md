@@ -62,7 +62,9 @@ PYTHONPATH=. python -m pogofish
 ```bash
 cd app
 npm install
-npm run dev
+npm run dev        # dev server
+npm run build      # production build
+npx vitest run     # run tests
 ```
 
 ## Project Structure
@@ -80,14 +82,24 @@ training/
     cli.py           # Curses interactive game UI
   tests/             # pytest (100+ fast + slow behind --runslow)
   models/            # Training artifacts (gitignored)
-app/                 # Vite + React web app (not yet started)
+app/
+  src/
+    engine/          # TypeScript game engine (GameState, legal moves, transitions)
+    ai/              # AI system (Random, Minimax, ONNX-based DQN/AlphaZero, MCTS)
+    components/      # React UI components (Board, GameControls, panels)
+    hooks/           # Custom hooks (useAI, useGame)
+    stores/          # React context providers (game state, settings)
+  public/
+    models/          # ONNX models + minimax table (committed)
+    icon.svg         # PWA icon
+    favicon.svg      # Favicon
 ```
 
 ## Testing
 
 - Training: `cd training && python -m pytest tests/ -v` (76 fast tests)
 - Slow tests: `python -m pytest tests/ -v --runslow` (includes full solve + integration)
-- App: Vitest (not yet set up)
+- App: `cd app && npx vitest run` (Vitest, tests colocated with source files)
 
 ## Build Warning Exceptions
 

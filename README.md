@@ -52,8 +52,11 @@ PYTHONPATH=. python -m pogofish.alphazero train --arch mlp_tiny mlp_small mlp_me
 ```bash
 cd app
 npm install
-npm run dev
+npm run dev    # dev server at http://localhost:5173
+npm run build  # production build
 ```
+
+The app features 5 AI difficulty levels (Random → Q-Learning → DQN → AlphaZero → Minimax), an analysis mode showing the AI's evaluation of each move, and an RL Journey page visualizing the training progression.
 
 ## Deployment
 
