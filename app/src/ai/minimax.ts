@@ -38,38 +38,9 @@ export async function load(
 
   onProgress?.(0, 1);
 
-  // Fetch as ArrayBuffer, then try to decompress as gzip.
-  // If that fails (browser already decompressed), decode as text directly.
-  const buffer = await response.arrayBuffer();
-  onProgress?.(1, 2);
-
-  let jsonStr: string;
-  const bytes = new Uint8Array(buffer);
-
-  // Check gzip magic bytes (1f 8b)
-  if (bytes.length >= 2 && bytes[0] === 0x1f && bytes[1] === 0x8b) {
-    // It's still gzipped — decompress manually
-    const ds = new DecompressionStream("gzip");
-    const writer = ds.writable.getWriter();
-    const reader = ds.readable.getReader();
-
-    const writePromise = writer.write(bytes).then(() => writer.close());
-
-    const chunks: Uint8Array[] = [];
-    for (;;) {
-      const { done, value } = await reader.read();
-      if (done) break;
-      if (value) chunks.push(value);
-    }
-    await writePromise;
-
-    const decoder = new TextDecoder();
-    jsonStr = chunks.map((c) => decoder.decode(c, { stream: true })).join("") +
-      decoder.decode();
-  } else {
-    // Browser already decompressed — raw JSON text
-    jsonStr = new TextDecoder().decode(bytes);
-  }
+  // The browser auto-decompresses .gz files served with Content-Encoding: gzip.
+  // Just read as text — works whether decompressed by browser or not gzipped at all.
+  const jsonStr = await response.text();
 
   onProgress?.(1, 1);
 
