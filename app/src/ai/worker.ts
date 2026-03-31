@@ -96,6 +96,7 @@ if (typeof self !== "undefined" && typeof (self as unknown as { document?: unkno
 
         case "evaluate": {
           const evaluation = await player.evaluatePosition(msg.state);
+          console.log("[Worker] Eval result:", evaluation);
           const response: EvalResponse = {
             type: "eval",
             id: msg.id,
@@ -106,6 +107,7 @@ if (typeof self !== "undefined" && typeof (self as unknown as { document?: unkno
         }
 
         case "loadMinimax": {
+          console.log("[Worker] Starting minimax load...");
           await player.startMinimaxLoad((loaded, total) => {
             const progress: MinimaxProgressResponse = {
               type: "minimaxProgress",
@@ -115,6 +117,13 @@ if (typeof self !== "undefined" && typeof (self as unknown as { document?: unkno
             };
             self.postMessage(progress);
           });
+          const table = player.getMinimaxTable();
+          console.log("[Worker] Minimax loaded:", table ? table.size + " entries" : "FAILED");
+          // Verify a known key
+          if (table) {
+            const testKey = "/WW/WW////RRWW/RR/RR:R";
+            console.log("[Worker] Test lookup:", testKey, "->", table.get(testKey));
+          }
           const response: MinimaxLoadedResponse = {
             type: "minimaxLoaded",
             id: msg.id,

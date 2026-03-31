@@ -36,58 +36,42 @@ export async function load(
   const response = await fetch(url);
   if (!response.ok) throw new Error(`Failed to fetch minimax table: ${response.status}`);
 
-  const contentLength = Number(response.headers.get("content-length") ?? 0);
+  onProgress?.(0, 1);
 
-  // Read the compressed stream with progress tracking
-  const reader = response.body?.getReader();
-  if (!reader) throw new Error("No response body");
+  // Fetch as ArrayBuffer, then try to decompress as gzip.
+  // If that fails (browser already decompressed), decode as text directly.
+  const buffer = await response.arrayBuffer();
+  onProgress?.(1, 2);
 
-  const chunks: Uint8Array[] = [];
-  let loaded = 0;
-
-  for (;;) {
-    const { done, value } = await reader.read();
-    if (done) break;
-    if (value) {
-      chunks.push(value);
-      loaded += value.byteLength;
-      onProgress?.(loaded, contentLength);
-    }
-  }
-
-  // Combine chunks
-  const combined = new Uint8Array(loaded);
-  let offset = 0;
-  for (const chunk of chunks) {
-    combined.set(chunk, offset);
-    offset += chunk.byteLength;
-  }
-
-  // Try to decompress. If the server already decompressed (Content-Encoding: gzip),
-  // the data is already plain JSON and DecompressionStream will fail.
   let jsonStr: string;
-  try {
+  const bytes = new Uint8Array(buffer);
+
+  // Check gzip magic bytes (1f 8b)
+  if (bytes.length >= 2 && bytes[0] === 0x1f && bytes[1] === 0x8b) {
+    // It's still gzipped — decompress manually
     const ds = new DecompressionStream("gzip");
     const writer = ds.writable.getWriter();
-    const decompressedReader = ds.readable.getReader();
+    const reader = ds.readable.getReader();
 
-    const writePromise = writer.write(combined).then(() => writer.close());
+    const writePromise = writer.write(bytes).then(() => writer.close());
 
-    const decompressedChunks: Uint8Array[] = [];
+    const chunks: Uint8Array[] = [];
     for (;;) {
-      const { done, value } = await decompressedReader.read();
+      const { done, value } = await reader.read();
       if (done) break;
-      if (value) decompressedChunks.push(value);
+      if (value) chunks.push(value);
     }
     await writePromise;
 
     const decoder = new TextDecoder();
-    jsonStr = decompressedChunks.map((c) => decoder.decode(c, { stream: true })).join("") +
+    jsonStr = chunks.map((c) => decoder.decode(c, { stream: true })).join("") +
       decoder.decode();
-  } catch {
-    // Already decompressed by the browser (Content-Encoding: gzip)
-    jsonStr = new TextDecoder().decode(combined);
+  } else {
+    // Browser already decompressed — raw JSON text
+    jsonStr = new TextDecoder().decode(bytes);
   }
+
+  onProgress?.(1, 1);
 
   const raw = JSON.parse(jsonStr) as {
     meta: Record<string, unknown>;
