@@ -16,6 +16,7 @@ const IDLE_SELECTION = {
 const STATIC_STATE = initialState();
 
 const AI_LEVEL_OPTIONS: { value: AILevel; label: string }[] = [
+  { value: "human", label: "Human (2 players)" },
   { value: "random", label: "Random" },
   { value: "dqn", label: "DQN" },
   { value: "alphazero", label: "AlphaZero" },
@@ -103,8 +104,8 @@ export function HomeView() {
           </div>
         )}
 
-        {/* Player color */}
-        <div className="flex flex-col gap-1">
+        {/* Player color — hidden in human vs human mode */}
+        {aiLevel !== "human" && <div className="flex flex-col gap-1">
           <span className="text-sm font-medium text-zinc-600 dark:text-zinc-400">
             Play as
           </span>
@@ -130,7 +131,7 @@ export function HomeView() {
               Red
             </button>
           </div>
-        </div>
+        </div>}
 
         {/* Play button */}
         <button

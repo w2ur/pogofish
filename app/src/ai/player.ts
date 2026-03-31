@@ -8,7 +8,7 @@ import {
   evaluate as minimaxEvaluate,
 } from "./minimax";
 
-export type AILevel = "random" | "dqn" | "alphazero" | "alphazero-mcts" | "minimax";
+export type AILevel = "human" | "random" | "dqn" | "alphazero" | "alphazero-mcts" | "minimax";
 
 export interface AIConfig {
   level: AILevel;
@@ -65,6 +65,9 @@ export async function getMove(
   config: AIConfig,
 ): Promise<Move> {
   switch (config.level) {
+    case "human":
+      throw new Error("getMove called for human player — should not happen");
+
     case "random":
       return randomMove(state);
 

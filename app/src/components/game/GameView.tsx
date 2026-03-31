@@ -14,6 +14,7 @@ export function GameView() {
   const { playerColor, setView } = useGameContext();
   const { analysisEnabled, toggleAnalysis, aiLevel, mctsSimulations } =
     useSettings();
+  const isHuman = aiLevel === "human";
   const ai = useAI();
   const { state, dispatch, isPlayerTurn, gameOver, gameWinner, canUndo } =
     useGameMachine(playerColor);
@@ -38,18 +39,28 @@ export function GameView() {
   useEffect(() => {
     if (isPlayerTurn || gameOver || state.aiStatus !== "idle") return;
 
+    const level = aiLevelRef.current;
+
+    // Human vs Human: no AI move needed — both sides are player-controlled
+    if (level === "human") return;
+
     dispatch({ type: "AI_MOVE_REQUESTED" });
 
-    const level = aiLevelRef.current;
     const sims = mctsSimsRef.current;
-    console.log(`[AI] Requesting move: level=${level}, mcts=${sims}`);
 
     // Read gameState from ref to avoid putting it in deps
     const currentGameState = stateRef.current.gameState;
+
+    // Minimum 500ms delay so the player can see the "Thinking..." state
+    // and the analysis panel can update before the AI responds
+    const startTime = Date.now();
     aiRef.current
       .requestMove(currentGameState, { level, mctsSimulations: sims })
-      .then((move) => {
-        console.log(`[AI] Got move from ${level}:`, move);
+      .then(async (move) => {
+        const elapsed = Date.now() - startTime;
+        if (elapsed < 500) {
+          await new Promise((r) => setTimeout(r, 500 - elapsed));
+        }
         dispatch({ type: "AI_MOVE_RECEIVED", move });
       })
       .catch((err) => {
@@ -94,12 +105,15 @@ export function GameView() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [stateKey, analysisEnabled]);
 
-  // Selection callbacks — dispatch with playerColor
+  // Selection callbacks — in human mode, allow both colors to play
   const handleSelectCell = useCallback(
     (cellIndex: number) => {
-      dispatch({ type: "SELECT_CELL", cellIndex, playerColor });
+      const activeColor = isHuman
+        ? stateRef.current.gameState.currentPlayer
+        : playerColor;
+      dispatch({ type: "SELECT_CELL", cellIndex, playerColor: activeColor });
     },
-    [dispatch, playerColor],
+    [dispatch, playerColor, isHuman],
   );
 
   const handleSelectCount = useCallback(
@@ -133,9 +147,11 @@ export function GameView() {
 
   const turnLabel = gameOver
     ? ""
-    : isPlayerTurn
-      ? "Your turn"
-      : "Thinking...";
+    : isHuman
+      ? `${state.gameState.currentPlayer === "W" ? "White" : "Red"}'s turn`
+      : isPlayerTurn
+        ? "Your turn"
+        : "Thinking...";
 
   return (
     <div className="flex flex-1 flex-col">
