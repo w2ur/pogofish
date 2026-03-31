@@ -103,6 +103,15 @@ export async function getMove(
 export async function evaluatePosition(
   state: GameState,
 ): Promise<PositionEval> {
+  // Wait for minimax table if it's currently loading
+  if (minimaxLoadPromise && !minimaxTable) {
+    try {
+      await minimaxLoadPromise;
+    } catch {
+      // Load failed — continue with AlphaZero
+    }
+  }
+
   // Try minimax first if table is loaded
   if (minimaxTable) {
     const result = minimaxEvaluate(minimaxTable, state);
