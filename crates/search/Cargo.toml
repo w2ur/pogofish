@@ -3,3 +3,12 @@ name = "pogofish-search"
 version.workspace = true
 edition.workspace = true
 rust-version.workspace = true
+
+[dependencies]
+pogofish-engine = { path = "../engine" }
+serde = { workspace = true }
+serde_json = { workspace = true }
+anyhow = { workspace = true }
+
+[dev-dependencies]
+proptest = { workspace = true }
