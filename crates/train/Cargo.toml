@@ -3,3 +3,12 @@ name = "pogofish-train"
 version.workspace = true
 edition.workspace = true
 rust-version.workspace = true
+
+[dependencies]
+pogofish-engine = { path = "../engine" }
+pogofish-search = { path = "../search" }
+tch = { version = "0.17", features = ["download-libtorch"] }
+rand = "0.8"
+serde = { workspace = true }
+serde_json = { workspace = true }
+anyhow = { workspace = true }
