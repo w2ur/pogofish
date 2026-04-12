@@ -5,6 +5,9 @@ import { VitePWA } from "vite-plugin-pwa";
 import { viteStaticCopy } from "vite-plugin-static-copy";
 
 export default defineConfig({
+  test: {
+    setupFiles: ["./src/test-setup.ts"],
+  },
   worker: {
     format: "es",
   },
