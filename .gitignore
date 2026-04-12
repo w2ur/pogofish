@@ -27,6 +27,8 @@ Thumbs.db
 training/models/
 training/checkpoints/
 training/logs/
+archive/**/models/
+archive/**/.claude/
 *.pt
 *.pth
 wandb/
