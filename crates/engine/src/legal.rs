@@ -90,10 +90,14 @@ pub fn apply_move(state: &GameState, m: Move) -> Result<GameState, MoveError> {
     // Push onto destination
     cells[m.to_cell as usize].extend(picked);
 
+    // Push current state key into history for repetition detection
+    let mut new_history = state.history_clone();
+    new_history.push(state.key());
+
     Ok(GameState::new(
         cells,
         state.to_move().opponent(),
         state.move_count() + 1,
-        state.history_clone(),
+        new_history,
     ))
 }

@@ -1,6 +1,8 @@
+mod encoding;
 mod legal;
 pub mod notation;
 mod state;
+pub mod testing;
 mod types;
 
 pub use legal::{apply_move, is_legal_move, legal_moves, manhattan_distance};

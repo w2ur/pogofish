@@ -72,6 +72,11 @@ impl GameState {
     pub fn cell_owner(&self, cell_idx: usize) -> Option<Color> {
         self.cells[cell_idx].last().copied()
     }
+
+    /// Compute the state key for this position.
+    pub fn key(&self) -> StateKey {
+        crate::encoding::compute_key(self)
+    }
 }
 
 pub fn initial_state() -> GameState {
