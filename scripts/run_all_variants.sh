@@ -46,7 +46,9 @@ VARIANTS+=(
 # Tempo pressure (very short — forces early confrontation)
 VARIANTS+=(
     "lc2-15"
+    "lc2-16"
     "lc3-15"
+    "lc3-16"
 )
 
 # Relaxed endgame (distant safety net — games resolve naturally)
