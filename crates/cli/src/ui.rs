@@ -6,7 +6,9 @@ use crossterm::{
     },
     terminal::{Clear, ClearType},
 };
-use pogofish_engine::{is_terminal, Color as PColor, GameState, Outcome, RuleSet, BOARD_SIZE};
+use pogofish_engine::{
+    is_terminal, legal_moves, Color as PColor, GameState, Outcome, RuleSet, BOARD_SIZE,
+};
 use std::io::{self, Write};
 
 use crate::app::{valid_pickup_counts, AppState, Phase};
@@ -275,6 +277,25 @@ fn draw_board(
         })
         .collect();
 
+    // Compute legal destinations during Move phase
+    let legal_dests: Vec<bool> = if ui.phase == Phase::Move {
+        if let Some(source) = ui.source {
+            let np = ui.num_pieces;
+            let mut dests = vec![false; NUM_CELLS];
+            let all_legal = legal_moves(state);
+            for m in &all_legal {
+                if m.from_cell == source as u8 && m.num_pieces == np {
+                    dests[m.to_cell as usize] = true;
+                }
+            }
+            dests
+        } else {
+            vec![false; NUM_CELLS]
+        }
+    } else {
+        vec![false; NUM_CELLS]
+    };
+
     let mut y = start_y;
 
     // Top border
@@ -318,20 +339,37 @@ fn draw_board(
                 let is_cursor = ci == ui.cursor;
                 let is_source_cell = matches!(ui.phase, Phase::PickCount | Phase::Move)
                     && ui.source == Some(ci);
+                let is_legal = legal_dests[ci];
+                let in_move_phase = ui.phase == Phase::Move;
                 let highlight_cursor =
                     is_cursor && ui.phase != Phase::GameOver;
+
+                // Determine cell background color
+                let bg_color: Option<Color> = if highlight_cursor {
+                    if in_move_phase && !is_source_cell {
+                        // Cursor in move phase: green if legal, red if illegal
+                        Some(if is_legal { Color::Green } else { Color::DarkRed })
+                    } else {
+                        Some(Color::Yellow) // default cursor color
+                    }
+                } else if is_source_cell {
+                    Some(Color::Green)
+                } else if in_move_phase && is_legal {
+                    Some(Color::DarkGreen) // dim hint for reachable cells
+                } else {
+                    None
+                };
 
                 if let Some(idx) = piece_row {
                     let entry = &entries[idx];
                     let pad_left = CELL_WIDTH / 2;
                     let pad_right = CELL_WIDTH - pad_left - 1;
 
-                    if highlight_cursor {
-                        // Yellow background (reverse) for cursor cell
+                    if let Some(bg) = bg_color {
                         queue!(
                             stdout,
                             MoveTo(cx, y + h as u16),
-                            SetForegroundColor(Color::Yellow),
+                            SetForegroundColor(bg),
                             SetAttribute(Attribute::Reverse),
                             Print(" ".repeat(pad_left)),
                             ResetColor,
@@ -342,39 +380,12 @@ fn draw_board(
                             cx + pad_left as u16,
                             y + h as u16,
                             entry,
-                            true,
+                            highlight_cursor,
                         )?;
                         queue!(
                             stdout,
                             MoveTo(cx + pad_left as u16 + 1, y + h as u16),
-                            SetForegroundColor(Color::Yellow),
-                            SetAttribute(Attribute::Reverse),
-                            Print(" ".repeat(pad_right)),
-                            ResetColor,
-                            SetAttribute(Attribute::Reset)
-                        )?;
-                    } else if is_source_cell {
-                        // Green background for source cell
-                        queue!(
-                            stdout,
-                            MoveTo(cx, y + h as u16),
-                            SetForegroundColor(Color::Green),
-                            SetAttribute(Attribute::Reverse),
-                            Print(" ".repeat(pad_left)),
-                            ResetColor,
-                            SetAttribute(Attribute::Reset)
-                        )?;
-                        draw_piece_entry(
-                            stdout,
-                            cx + pad_left as u16,
-                            y + h as u16,
-                            entry,
-                            false,
-                        )?;
-                        queue!(
-                            stdout,
-                            MoveTo(cx + pad_left as u16 + 1, y + h as u16),
-                            SetForegroundColor(Color::Green),
+                            SetForegroundColor(bg),
                             SetAttribute(Attribute::Reverse),
                             Print(" ".repeat(pad_right)),
                             ResetColor,
@@ -393,21 +404,11 @@ fn draw_board(
                     }
                 } else {
                     // Empty row
-                    if highlight_cursor {
+                    if let Some(bg) = bg_color {
                         queue!(
                             stdout,
                             MoveTo(cx, y + h as u16),
-                            SetForegroundColor(Color::Yellow),
-                            SetAttribute(Attribute::Reverse),
-                            Print(" ".repeat(CELL_WIDTH)),
-                            ResetColor,
-                            SetAttribute(Attribute::Reset)
-                        )?;
-                    } else if is_source_cell {
-                        queue!(
-                            stdout,
-                            MoveTo(cx, y + h as u16),
-                            SetForegroundColor(Color::Green),
+                            SetForegroundColor(bg),
                             SetAttribute(Attribute::Reverse),
                             Print(" ".repeat(CELL_WIDTH)),
                             ResetColor,
