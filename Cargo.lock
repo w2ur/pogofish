@@ -812,6 +812,7 @@ name = "pogofish-train"
 version = "0.1.0"
 dependencies = [
  "anyhow",
+ "libc",
  "pogofish-engine",
  "pogofish-search",
  "rand 0.8.5",

@@ -5,6 +5,9 @@ use crate::selfplay::{play_one_game, SelfPlayConfig, TrainingExample};
 use anyhow::Context;
 use std::collections::VecDeque;
 use std::path::PathBuf;
+use std::sync::atomic::{AtomicBool, Ordering};
+use std::sync::Arc;
+use std::time::Instant;
 use tch::{
     nn::{self, OptimizerConfig},
     Device, Kind, Tensor,
@@ -73,7 +76,6 @@ impl GameWindow {
         self.games.push_back(game);
     }
 
-    /// Collect all examples from all games into flat vecs.
     fn collect_examples(&self) -> (Vec<Tensor>, Vec<Tensor>, Vec<f32>) {
         let mut states = Vec::new();
         let mut policies = Vec::new();
@@ -93,20 +95,48 @@ impl GameWindow {
     }
 }
 
+/// Count completed iterations by reading existing metrics.jsonl lines.
+fn count_completed_iterations(metrics_path: &std::path::Path) -> u32 {
+    match std::fs::read_to_string(metrics_path) {
+        Ok(content) => content.lines().filter(|l| !l.trim().is_empty()).count() as u32,
+        Err(_) => 0,
+    }
+}
+
 /// Main AlphaZero training loop.
+///
+/// Crash-safe: metrics are appended per iteration, model_best.pt is saved on
+/// every adoption, and SIGINT triggers a graceful shutdown saving the current
+/// best model before exiting. Resumes from the last completed iteration.
 pub fn train(rules: &RuleSet, cfg: &TrainConfig) -> anyhow::Result<()> {
     std::fs::create_dir_all(&cfg.output_dir)
         .with_context(|| format!("creating output dir: {}", cfg.output_dir.display()))?;
 
     let metrics_path = cfg.output_dir.join("metrics.jsonl");
+    let best_path = cfg.output_dir.join("model_best.pt");
+
+    // --- SIGINT handler ---
+    let interrupted = Arc::new(AtomicBool::new(false));
+    let interrupted_clone = interrupted.clone();
+    ctrlc_handler(&interrupted_clone);
+
+    // --- Resume detection ---
+    let start_iteration = count_completed_iterations(&metrics_path) + 1;
+    if start_iteration > 1 {
+        println!("Resuming from iteration {start_iteration} ({} already completed)", start_iteration - 1);
+    }
 
     // Initialise best net
     let mut best_vs = make_var_store();
     let mut best_net = AzNet::from_config(&best_vs.root(), &cfg.arch);
 
-    // Save initial best
-    let best_path = cfg.output_dir.join("model_best.pt");
-    best_vs.save(&best_path).context("saving initial best model")?;
+    // Load existing best model if resuming
+    if start_iteration > 1 && best_path.exists() {
+        best_vs.load(&best_path).context("loading existing best model for resume")?;
+        println!("Loaded best model from {}", best_path.display());
+    } else {
+        best_vs.save(&best_path).context("saving initial best model")?;
+    }
 
     let mut window = GameWindow::new(cfg.window_capacity);
     let selfplay_cfg = SelfPlayConfig {
@@ -117,12 +147,29 @@ pub fn train(rules: &RuleSet, cfg: &TrainConfig) -> anyhow::Result<()> {
         dirichlet_epsilon: cfg.dirichlet_epsilon,
     };
 
-    for iteration in 1..=cfg.iterations {
+    let train_start = Instant::now();
+
+    for iteration in start_iteration..=cfg.iterations {
+        if interrupted.load(Ordering::Relaxed) {
+            println!("\nInterrupted before iteration {iteration}. Saving best model...");
+            best_vs.save(&best_path).context("saving best model on interrupt")?;
+            println!("Best model saved to {}. Safe to exit.", best_path.display());
+            return Ok(());
+        }
+
+        let iter_start = Instant::now();
         println!("=== Iteration {}/{} ===", iteration, cfg.iterations);
 
         // --- Self-play phase ---
         println!("  Self-play: {} games...", cfg.games_per_iteration);
         for game_idx in 0..cfg.games_per_iteration {
+            if interrupted.load(Ordering::Relaxed) {
+                println!("\n  Interrupted during self-play. Saving best model...");
+                best_vs.save(&best_path).context("saving best model on interrupt")?;
+                println!("  Best model saved to {}. Safe to exit.", best_path.display());
+                return Ok(());
+            }
+
             let examples = play_one_game(&best_net, rules, &selfplay_cfg);
             window.push(examples);
             if (game_idx + 1) % 10 == 0 || game_idx + 1 == cfg.games_per_iteration {
@@ -142,7 +189,6 @@ pub fn train(rules: &RuleSet, cfg: &TrainConfig) -> anyhow::Result<()> {
             continue;
         }
 
-        // Build challenger and copy best weights into it
         let mut challenger_vs = make_var_store();
         let challenger_net = AzNet::from_config(&challenger_vs.root(), &cfg.arch);
         challenger_vs.copy(&best_vs).context("copying best weights to challenger")?;
@@ -155,17 +201,14 @@ pub fn train(rules: &RuleSet, cfg: &TrainConfig) -> anyhow::Result<()> {
         let mut opt = nn::Adam::default().build(&challenger_vs, lr)?;
         opt.set_weight_decay(cfg.weight_decay);
 
-        let states_tensor =
-            Tensor::stack(&states, 0).to_kind(Kind::Float);
-        let policies_tensor =
-            Tensor::stack(&policies, 0).to_kind(Kind::Float);
-        let values_tensor =
-            Tensor::from_slice(&values).unsqueeze(1).to_kind(Kind::Float);
+        let states_tensor = Tensor::stack(&states, 0).to_kind(Kind::Float);
+        let policies_tensor = Tensor::stack(&policies, 0).to_kind(Kind::Float);
+        let values_tensor = Tensor::from_slice(&values).unsqueeze(1).to_kind(Kind::Float);
 
         println!("  Training: {} epochs on {} examples (lr={:.6})", cfg.training_epochs, n, lr);
 
+        let mut last_avg_loss = 0f64;
         for epoch in 1..=cfg.training_epochs {
-            // Shuffle indices
             let perm = Tensor::randperm(n as i64, (Kind::Int64, Device::Cpu));
             let mut total_loss = 0f64;
             let mut num_batches = 0usize;
@@ -181,14 +224,11 @@ pub fn train(rules: &RuleSet, cfg: &TrainConfig) -> anyhow::Result<()> {
 
                 let (policy_logits, value_pred) = challenger_net.forward(&s_batch);
 
-                // Policy loss: cross-entropy (target is a soft distribution)
                 let log_probs = policy_logits.log_softmax(-1, Kind::Float);
                 let policy_loss = -(p_batch * log_probs).sum_dim_intlist(&[-1i64][..], false, Kind::Float).mean(Kind::Float);
-
-                // Value loss: MSE
                 let value_loss = (value_pred - v_batch).pow_tensor_scalar(2).mean(Kind::Float);
-
                 let loss = policy_loss + value_loss;
+
                 opt.backward_step(&loss);
 
                 total_loss += f64::try_from(loss.detach()).unwrap_or(0.0);
@@ -197,7 +237,8 @@ pub fn train(rules: &RuleSet, cfg: &TrainConfig) -> anyhow::Result<()> {
             }
 
             if num_batches > 0 {
-                println!("    Epoch {}/{}: avg_loss={:.4}", epoch, cfg.training_epochs, total_loss / num_batches as f64);
+                last_avg_loss = total_loss / num_batches as f64;
+                println!("    Epoch {}/{}: avg_loss={:.4}", epoch, cfg.training_epochs, last_avg_loss);
             }
         }
 
@@ -219,44 +260,68 @@ pub fn train(rules: &RuleSet, cfg: &TrainConfig) -> anyhow::Result<()> {
 
         let adopted = result.win_rate >= cfg.gatekeeper_threshold;
         if adopted {
-            println!("  Challenger ACCEPTED (win_rate={:.3} >= threshold={:.3})", result.win_rate, cfg.gatekeeper_threshold);
-            // Adopt challenger as new best
+            println!("  Challenger ACCEPTED");
             best_vs = challenger_vs;
-            // Rebuild best_net referencing new var store (replace via copy)
             let mut new_best_vs = make_var_store();
             let new_best_net = AzNet::from_config(&new_best_vs.root(), &cfg.arch);
             new_best_vs.copy(&best_vs).context("promoting challenger to best")?;
             best_vs = new_best_vs;
             best_net = new_best_net;
-            // Save best
             best_vs.save(&best_path).context("saving best model")?;
         } else {
-            println!(
-                "  Challenger REJECTED (win_rate={:.3} < threshold={:.3})",
-                result.win_rate, cfg.gatekeeper_threshold
-            );
+            println!("  Challenger REJECTED");
         }
 
-        // Save checkpoint
+        // Save checkpoint (always, so we can resume even without adoption)
         let checkpoint_path = cfg.output_dir.join(format!("checkpoint_{iteration:04}.pt"));
-        if adopted {
-            best_vs.save(&checkpoint_path).context("saving checkpoint")?;
-        }
+        best_vs.save(&checkpoint_path).context("saving checkpoint")?;
 
-        // Log metrics
+        // --- Metrics ---
+        let iter_secs = iter_start.elapsed().as_secs_f64();
+        let total_secs = train_start.elapsed().as_secs_f64();
+        let remaining = (cfg.iterations - iteration) as f64 * iter_secs;
+        let eta_h = remaining / 3600.0;
+
         let entry = serde_json::json!({
             "iteration": iteration,
             "window_examples": window.total_examples(),
+            "avg_loss": (last_avg_loss * 10000.0).round() / 10000.0,
+            "lr": (lr * 1e8).round() / 1e8,
             "gatekeeper_win_rate": result.win_rate,
             "gatekeeper_wins": result.wins,
             "gatekeeper_losses": result.losses,
             "gatekeeper_draws": result.draws,
             "adopted": adopted,
-            "lr": lr,
+            "iter_seconds": (iter_secs * 10.0).round() / 10.0,
+            "total_seconds": (total_secs * 10.0).round() / 10.0,
+            "eta_hours": (eta_h * 100.0).round() / 100.0,
         });
         append_metrics(&metrics_path, &entry).context("writing metrics")?;
+
+        println!("  Iter: {iter_secs:.0}s | Total: {total_secs:.0}s | ETA: {eta_h:.1}h");
     }
 
     println!("Training complete. Best model saved to {}", best_path.display());
     Ok(())
+}
+
+/// Register a Ctrl+C handler that sets the flag instead of killing the process.
+fn ctrlc_handler(flag: &Arc<AtomicBool>) {
+    let f = flag.clone();
+    let _ = unsafe {
+        libc::signal(libc::SIGINT, sigint_handler as libc::sighandler_t)
+    };
+    // Store the flag in a static so the signal handler can access it
+    INTERRUPTED.store(flag.as_ref() as *const AtomicBool as usize, Ordering::SeqCst);
+    let _ = f; // keep the arc alive
+}
+
+static INTERRUPTED: std::sync::atomic::AtomicUsize = std::sync::atomic::AtomicUsize::new(0);
+
+extern "C" fn sigint_handler(_sig: libc::c_int) {
+    let ptr = INTERRUPTED.load(Ordering::SeqCst);
+    if ptr != 0 {
+        let flag = unsafe { &*(ptr as *const AtomicBool) };
+        flag.store(true, Ordering::SeqCst);
+    }
 }
