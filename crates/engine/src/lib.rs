@@ -1,3 +1,4 @@
+pub mod notation;
 mod state;
 mod types;
 
