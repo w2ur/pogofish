@@ -8,6 +8,14 @@ export default defineConfig({
   worker: {
     format: "es",
   },
+  optimizeDeps: {
+    exclude: ["pogofish-wasm"],
+  },
+  server: {
+    fs: {
+      allow: [".."],
+    },
+  },
   plugins: [
     react(),
     tailwindcss(),

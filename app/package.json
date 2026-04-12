@@ -12,6 +12,7 @@
   },
   "dependencies": {
     "onnxruntime-web": "^1.21.0",
+    "pogofish-wasm": "file:../wasm-pkg",
     "react": "^19.0.0",
     "react-dom": "^19.0.0"
   },
