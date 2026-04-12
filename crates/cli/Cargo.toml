@@ -3,3 +3,14 @@ name = "pogofish-cli"
 version.workspace = true
 edition.workspace = true
 rust-version.workspace = true
+
+[[bin]]
+name = "pogofish"
+path = "src/main.rs"
+
+[dependencies]
+pogofish-engine = { path = "../engine" }
+pogofish-search = { path = "../search" }
+ratatui = "0.30"
+crossterm = "0.29"
+anyhow = { workspace = true }
