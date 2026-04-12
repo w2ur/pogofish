@@ -85,3 +85,51 @@ fn apply_move_same_cell_rejected() {
     let m = Move { from_cell: 0, num_pieces: 1, to_cell: 0 };
     assert!(apply_move(&s, m).is_err());
 }
+
+/// Regression test: picking pieces from a stack must take from the TOP,
+/// including any opponent-colored pieces below the top. A prior implementation
+/// incorrectly restricted pickup to only same-colored pieces.
+#[test]
+fn pickup_includes_mixed_color_pieces() {
+    // Build a mixed-color stack using a test helper, then verify we can pick
+    // mixed-color groups from the top.
+    let s = pogofish_engine::testing::mixed_stack_position();
+
+    // State: cell 4 = [W, R, W] (White-topped, height 3), White to move.
+    assert_eq!(s.to_move(), Color::White);
+    assert_eq!(s.cells()[4], vec![Color::White, Color::Red, Color::White]);
+    assert_eq!(s.cell_owner(4), Some(Color::White));
+
+    // Pick 2 from cell 4: should take [R, W] (the top 2 pieces).
+    // 2 pieces → distance 2. Cell 4 (row=1,col=1) → cell 0 (row=0,col=0): d=2. Valid.
+    let m = Move { from_cell: 4, num_pieces: 2, to_cell: 0 };
+    let legal = legal_moves(&s);
+    assert!(legal.contains(&m), "picking 2 mixed-color pieces must be legal");
+
+    let s2 = apply_move(&s, m).unwrap();
+
+    // Source cell 4: was [W, R, W], removed top 2 [R, W] → [W]
+    assert_eq!(s2.cells()[4], vec![Color::White]);
+    assert_eq!(s2.cell_owner(4), Some(Color::White));
+
+    // Destination cell 0: received [R, W] on top of whatever was there.
+    // The R piece is in the middle — this proves mixed-color pickup works.
+    let dest = &s2.cells()[0];
+    assert!(dest.len() >= 2);
+    // The top 2 pieces of destination must be [R, W] (the group we moved)
+    let top_two = &dest[dest.len() - 2..];
+    assert_eq!(top_two, &[Color::Red, Color::White]);
+
+    // Pick 3 from cell 4 in original state: should take [W, R, W] (all 3).
+    // 3 pieces → distance 1 or 3. Cell 4 → cell 1 (d=1). Valid.
+    let m3 = Move { from_cell: 4, num_pieces: 3, to_cell: 1 };
+    assert!(legal.contains(&m3), "picking 3 mixed-color pieces must be legal");
+
+    let s3 = apply_move(&s, m3).unwrap();
+    // Source cell 4: emptied
+    assert!(s3.cells()[4].is_empty());
+    // Destination cell 1: received [W, R, W] — mixed colors in a single pickup
+    let dest1 = &s3.cells()[1];
+    let top_three = &dest1[dest1.len() - 3..];
+    assert_eq!(top_three, &[Color::White, Color::Red, Color::White]);
+}

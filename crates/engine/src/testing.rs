@@ -60,6 +60,18 @@ pub fn near_mate_in_one(mover: Color) -> GameState {
     GameState::new(cells, mover, 5, Vec::new())
 }
 
+/// A position with a mixed-color stack at cell 4: [W, R, W].
+/// White to move. Used to test that pickup takes pieces of any color
+/// from the top of the stack, not just same-colored pieces.
+pub fn mixed_stack_position() -> GameState {
+    let mut cells: [Cell; NUM_CELLS] = std::array::from_fn(|_| Vec::new());
+    cells[4] = vec![Color::White, Color::Red, Color::White];
+    // Some other pieces so the game isn't trivially terminal
+    cells[0] = vec![Color::White];
+    cells[8] = vec![Color::Red];
+    GameState::new(cells, Color::White, 10, Vec::new())
+}
+
 pub fn state_at_move_count_with_equal_towers(count: u16) -> GameState {
     let mut cells: [Cell; NUM_CELLS] = std::array::from_fn(|_| Vec::new());
     for cell in cells.iter_mut().take(4) {
