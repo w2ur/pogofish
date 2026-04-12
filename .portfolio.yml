@@ -2,15 +2,15 @@ slug: pogofish
 name: Pogofish
 tagline: "Beat an AI that taught itself to play Pogo — or watch it learn"
 description: >
-  Browser-based Pogo board game with an AI opponent trained via reinforcement learning.
-  Dual codebase: Python training pipeline (Q-learning, DQN, AlphaZero, minimax oracle) and
-  React/TS web app with client-side ONNX inference. Zero backend.
+  Browser-based Pogo board game with AI opponents trained via AlphaZero RL.
+  Single Rust engine compiles to native (training, CLI) and WASM (web app).
+  Client-side ONNX inference, zero backend.
 visibility: public
 status: active
 stack:
-  - Python
-  - PyTorch
-  - ONNX
+  - Rust
+  - tch-rs
+  - WASM
   - React
   - TypeScript
   - Vite
@@ -19,6 +19,6 @@ stack:
 deploy_platform: netlify
 deploy_url: null
 domain: null
-portfolio_card: false # TODO: set to true when ready to publish
-sort_order: 99 # TODO: assign final sort_order
-icon_file: null
+portfolio_card: false
+sort_order: 99
+icon_file: app/public/icon.svg

@@ -2,16 +2,17 @@
 
 ## Project Overview
 
-Pogofish is a browser-based Pogo board game with an AI opponent trained via reinforcement learning. The AI learns through self-play (tabular Q-learning → DQN → AlphaZero), verified against a minimax oracle. Users can play against the AI at various difficulty levels, visualize the RL training process, and explore the game's strategy. Dual codebase: Python training pipeline + React/TS web app. All inference runs client-side via ONNX Runtime Web — zero backend.
+Pogofish is a browser-based Pogo board game with AI opponents trained via AlphaZero reinforcement learning. Single Rust engine compiled to both native (training, solver, CLI) and WASM (web app), eliminating the prior Python/TypeScript engine-drift risk. The project explores multiple losing-condition rule variants (LC1/LC2/LC3) through staged RL experiments. All inference runs client-side via ONNX Runtime Web — zero backend.
 
 ## Tech Stack
 
-### Training pipeline (`training/`)
-- Python 3.11+
-- PyTorch (DQN, AlphaZero)
-- NumPy
-- ONNX (model export)
-- Minimax solver (depth-20 oracle, 9.85M states)
+### Rust workspace (`crates/`)
+- Rust 1.79+ (stable toolchain)
+- `pogofish-engine` — Game rules, state, legal moves, rule variants (LC1/LC2/LC3)
+- `pogofish-search` — Minimax (alpha-beta + TT), MCTS (PUCT), checkpointer
+- `pogofish-train` — AlphaZero training (tch-rs/libtorch), self-play, gatekeeper
+- `pogofish-cli` — Curses-style terminal UI (crossterm)
+- `pogofish-wasm` — wasm-bindgen wrappers for browser use
 
 ### Web app (`app/`)
 - Vite
@@ -19,6 +20,11 @@ Pogofish is a browser-based Pogo board game with an AI opponent trained via rein
 - TypeScript
 - Tailwind CSS v4
 - ONNX Runtime Web (client-side inference)
+- Rust WASM engine (via `pogofish-wasm`)
+
+### Tools (`tools/`)
+- Python 3.11+ — ONNX export sidecar (`export_onnx.py`)
+- Node.js — ONNX verification (`verify_onnx.js`)
 
 ## User-Facing Language
 
@@ -26,36 +32,41 @@ Bilingual FR/EN.
 
 ## Development
 
-### Training pipeline
+### Rust workspace
 ```bash
-cd training
-python -m venv .venv
-source .venv/bin/activate
-pip install -r requirements.txt
+cargo check --workspace       # type check all crates
+cargo test --workspace        # run all tests (74 tests)
+cargo build --release -p pogofish-cli --bin pogofish   # CLI game
+cargo build --release -p pogofish-train --bin train     # training binary
 ```
 
-Note: most scripts require `PYTHONPATH=.` when running from the `training/` directory.
-
-### Key CLI commands
+### CLI game
 ```bash
-# Minimax solve (depth 20, ~4 min on M2)
-PYTHONPATH=. python -m pogofish.minimax solve --max-ply 20
+cargo run --release -p pogofish-cli
+# Arrow keys navigate, Enter selects, 1/2/3 piece count, Esc cancels
+# u undo, Shift+R redo, q quit
+```
 
-# Q-learning training (2M episodes, ~2-5 hours)
-PYTHONPATH=. python -m pogofish.q_learning train --minimax-table models/minimax_table.json.gz
+### Training
+```bash
+# Requires libtorch — tch-rs downloads it automatically during build.
+# At runtime, set DYLD_LIBRARY_PATH to the downloaded libtorch lib dir:
+DYLD_LIBRARY_PATH=$(find target/release/build -path "*/torch-sys-*/out/libtorch/libtorch/lib" | head -1) \
+  ./target/release/train lc2-30 models/lc2-30 mlp_small
 
-# DQN training (500k episodes, verifies against minimax)
-PYTHONPATH=. python -m pogofish.dqn train --arch small --minimax-table models/minimax_table.json.gz
-PYTHONPATH=. python -m pogofish.dqn train --arch tiny small medium  # multi-arch sweep
-PYTHONPATH=. python -m pogofish.dqn eval --model models/dqn/small/model_best.pt --minimax-table models/minimax_table.json.gz
+# Training resumes automatically if interrupted (reads metrics.jsonl).
+# Ctrl+C triggers graceful shutdown saving the best model.
+```
 
-# AlphaZero training (100 iterations x 500 games, MCTS)
-PYTHONPATH=. python -m pogofish.alphazero train --arch mlp_small --minimax-table models/minimax_table.json.gz
-PYTHONPATH=. python -m pogofish.alphazero train --arch mlp_tiny mlp_small mlp_medium cnn  # multi-arch sweep
-PYTHONPATH=. python -m pogofish.alphazero eval --model models/alphazero/mlp_small/model_best.pt --minimax-table models/minimax_table.json.gz
+### WASM build
+```bash
+wasm-pack build crates/wasm --target web --out-dir ../../wasm-pkg
+```
 
-# Interactive CLI game
-PYTHONPATH=. python -m pogofish
+### ONNX export
+```bash
+pip install -r tools/requirements.txt
+python tools/export_onnx.py models/lc2-30/model_best.pt models/lc2-30/model_best.onnx --arch mlp_small
 ```
 
 ### Web app
@@ -64,46 +75,45 @@ cd app
 npm install
 npm run dev        # dev server
 npm run build      # production build
-npx vitest run     # run tests
+npx vitest run     # run tests (7 tests)
 ```
 
 ## Project Structure
 
 ```
-training/
-  pogofish/
-    engine.py        # GameState, Move, legal_moves, apply_move, is_terminal
-    minimax.py       # Negamax + alpha-beta, CLI with --max-ply, export/import
-    encoding.py      # Shared state/move string encoding for serialization
-    q_learning.py    # QTable, train, evaluate, export/import, CLI
-    dqn.py           # DQNModel, train, evaluate, save/load, ONNX export, CLI
-    mcts.py          # MCTS tree search (PUCT, Dirichlet, temperature)
-    alphazero.py     # AlphaZero dual-head nets, self-play, gatekeeper, CLI
-    cli.py           # Curses interactive game UI
-  tests/             # pytest (100+ fast + slow behind --runslow)
-  models/            # Training artifacts (gitignored)
+crates/
+  engine/            # Game engine: types, state, legal moves, rules (LC1/LC2/LC3)
+  search/            # Minimax (alpha-beta + TT), MCTS (PUCT), checkpointer
+  train/             # AlphaZero: net, encoding, self-play, gatekeeper, training loop
+  cli/               # Terminal UI (crossterm, curses-style)
+  wasm/              # wasm-bindgen wrappers for browser
+wasm-pkg/            # Built WASM package (committed for web app)
+tools/
+  export_onnx.py     # Python ONNX export sidecar
+  verify_onnx.js     # Node.js ONNX load verification
 app/
   src/
-    engine/          # TypeScript game engine (GameState, legal moves, transitions)
+    engine/          # TS shim over WASM (adapts Rust serde format to old TS API)
     ai/              # AI system (Random, Minimax, ONNX-based DQN/AlphaZero, MCTS)
-    components/      # React UI components (Board, GameControls, panels)
+    components/      # React UI components
     hooks/           # Custom hooks (useAI, useGame)
-    stores/          # React context providers (game state, settings)
+    stores/          # React context providers
   public/
     models/          # ONNX models + minimax table (committed)
-    icon.svg         # PWA icon
-    favicon.svg      # Favicon
+archive/
+  2026-04-phase5-snapshot/  # Pre-rewrite Python + TS code (reference only)
 ```
 
 ## Testing
 
-- Training: `cd training && python -m pytest tests/ -v` (76 fast tests)
-- Slow tests: `python -m pytest tests/ -v --runslow` (includes full solve + integration)
-- App: `cd app && npx vitest run` (Vitest, tests colocated with source files)
+- Rust workspace: `cargo test --workspace` (74 tests: engine, search, train)
+- Web app: `cd app && npx vitest run` (7 tests)
+- Property tests: engine invariants via proptest (piece conservation, no stalemate, legal moves apply)
 
 ## Build Warning Exceptions
 
-- `DeprecationWarning: You are using the legacy TorchScript-based ONNX export` — emitted by PyTorch 2.9+ when `dynamo=False`. The dynamo exporter (default) requires the `onnxscript` package which is not in requirements.txt. Using the legacy path intentionally until `onnxscript` is added as a dependency. Tracked: add `onnxscript` to requirements.txt when upgrading ONNX export path.
+- `DeprecationWarning: You are using the legacy TorchScript-based ONNX export` — emitted by PyTorch 2.9+ in `tools/export_onnx.py`. Using the legacy path intentionally until `onnxscript` is added.
+- `warning: method cells_mut is never used` in engine crate — `pub(crate)` accessor reserved for future use by testing helpers.
 
 ## Deployment
 
@@ -111,6 +121,8 @@ Netlify — static deploy of the `app/` build output. No server-side code.
 
 ## Project-Specific Rules
 
-- State space is ~10M+ positions. Tabular methods hit a wall at ~2% coverage. Deep RL (DQN, AlphaZero) is required for meaningful AI play.
-- Minimax `full_solve()` uses MAX_PLY=50 by default — always pass `--max-ply 20` for practical solves (~4 min vs hours/days).
-- Training artifacts go in `training/models/` (gitignored). 8 GB RAM M2 Mac — keep neural nets small.
+- State space is ~10M+ positions. Tabular methods hit a wall. Deep RL (AlphaZero) is required.
+- Three rule variants under experiment: LC1 (repetition loss), LC2 (hard move cap), LC3 (soft cap with draws).
+- Training artifacts go in `models/` (gitignored). 8 GB RAM M2 Mac — keep neural nets small.
+- The WASM shim at `app/src/engine/` translates between Rust serde format (snake_case, "White"/"Red") and old TS format (camelCase, "W"/"R"). Do not modify the Rust serialization to match TS — the shim handles it.
+- tch-rs uses `|` as path separator in saved .pt files. The Python export script remaps to `.` when loading.

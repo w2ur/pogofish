@@ -1,62 +1,61 @@
 # Pogofish
 
-A browser-based Pogo board game with an AI opponent trained via reinforcement learning. The AI learns through self-play — from random chaos to structured strategy — verified against a minimax oracle. Watch the training process, play against agents at different skill levels, and explore the game's decision landscape.
+A browser-based Pogo board game with AI opponents trained via AlphaZero reinforcement learning. Single Rust engine compiles to both native (training, solver, CLI) and WASM (web app) — one source of truth, no engine drift. Play against agents at different skill levels, explore rule variants, and watch the AI learn.
 
 ## Tech Stack
 
-**Training pipeline** — Python 3.11+, PyTorch, NumPy, ONNX
+**Rust workspace** — Engine, search (minimax + MCTS), AlphaZero training (tch-rs/libtorch), terminal CLI (crossterm), WASM bridge
 
 **Web app** — Vite, React 19, TypeScript, Tailwind CSS v4, ONNX Runtime Web
 
+**Tools** — Python ONNX export sidecar, Node.js verification
+
 All inference runs client-side. Zero backend.
 
-## Training Pipeline
+## The Game
 
-The RL pipeline progresses through increasingly sophisticated approaches:
+Pogo is played on a 3×3 grid. Each player starts with 6 pieces in 3 stacks of 2. Pick 1–3 pieces from the top of a stack you own, jump them a Manhattan distance determined by the count (1→d1, 2→d2, 3→d1|d3), and land on any cell — stacking on top. The top piece owns the stack. Win by topping every remaining stack.
 
-1. **Minimax solver** — Exhaustive depth-20 oracle (9.85M states, 975K decisive positions)
-2. **Tabular Q-learning** — Self-play baseline. 99% accuracy but only 2% coverage — proves the algorithm works, motivates neural networks
-3. **DQN** — Deep Q-Network with 3 architecture sizes. 100% coverage, 33.8% agreement — neural net generalizes but evaluates imperfectly
-4. **AlphaZero** — MCTS + dual-head neural net (policy + value). Compares MLP vs CNN architectures. Gatekeeper prevents regression. Search at inference time compensates for imperfect evaluation
+Three rule variants prevent draws:
+- **LC1** — Repeating a board position loses
+- **LC2** — Hard move cap; player to move at cap must own all stacks or loses
+- **LC3** — Soft move cap; most stacks wins, ties are draws
 
 ## Getting Started
 
-### Training pipeline
+### Play in the terminal
 
 ```bash
-cd training
-python -m venv .venv
-source .venv/bin/activate
-pip install -r requirements.txt
+cargo run --release -p pogofish-cli
 ```
+
+Arrow keys to navigate, Enter to select, 1/2/3 for piece count, Esc to cancel, u/R for undo/redo.
+
+### Train an AI
 
 ```bash
-# Play interactively
-PYTHONPATH=. python -m pogofish
+cargo build --release -p pogofish-train --bin train
 
-# Solve the game (depth 20, ~4 min)
-PYTHONPATH=. python -m pogofish.minimax solve --max-ply 20
+# Set libtorch path (auto-downloaded during build)
+export DYLD_LIBRARY_PATH=$(find target/release/build -path "*/torch-sys-*/out/libtorch/libtorch/lib" | head -1)
 
-# Train Q-learning agent (2M episodes)
-PYTHONPATH=. python -m pogofish.q_learning train --minimax-table models/minimax_table.json.gz
-
-# Train DQN (500k episodes, multi-arch sweep)
-PYTHONPATH=. python -m pogofish.dqn train --arch tiny small medium --minimax-table models/minimax_table.json.gz
-
-# Train AlphaZero (MCTS + neural net, multi-arch sweep)
-PYTHONPATH=. python -m pogofish.alphazero train --arch mlp_tiny mlp_small mlp_medium cnn --minimax-table models/minimax_table.json.gz
+./target/release/train lc2-30 models/lc2-30 mlp_small
 ```
+
+Training is crash-safe: Ctrl+C saves the best model, rerunning resumes from the last completed iteration.
 
 ### Web app
 
 ```bash
-cd app
-npm install
-npm run dev    # dev server at http://localhost:5173
-npm run build  # production build
+cd app && npm install && npm run dev
 ```
 
-The app features 5 AI difficulty levels (Random → Q-Learning → DQN → AlphaZero → Minimax), an analysis mode showing the AI's evaluation of each move, and an RL Journey page visualizing the training progression.
+### Run tests
+
+```bash
+cargo test --workspace        # 74 Rust tests
+cd app && npx vitest run      # 7 web app tests
+```
 
 ## Deployment
 

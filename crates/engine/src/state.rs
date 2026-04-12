@@ -52,10 +52,6 @@ impl GameState {
         Self { cells, to_move, move_count, history }
     }
 
-    pub(crate) fn cells_mut(&mut self) -> &mut [Cell; NUM_CELLS] {
-        &mut self.cells
-    }
-
     pub(crate) fn set_to_move(&mut self, c: Color) {
         self.to_move = c;
     }
