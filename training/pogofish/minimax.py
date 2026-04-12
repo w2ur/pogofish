@@ -112,6 +112,7 @@ def _ordered_moves(state: GameState) -> list[Move]:
 def _solve(
     state: GameState,
     table: dict[GameState, SolveResult],
+    depth_cache: dict[GameState, int],
     path: set[GameState],
     depth: int,
     alpha: float,
@@ -119,14 +120,25 @@ def _solve(
 ) -> SolveResult:
     """
     Recursive negamax with alpha-beta pruning, per-branch cycle
-    detection (mutable set with backtracking), and global memoization.
+    detection (mutable set with backtracking), and depth-aware
+    memoization.
+
+    The depth_cache tracks the depth at which each entry was computed.
+    A cached result is only reused if it was computed at equal or
+    shallower depth (i.e., with at least as much remaining search).
+    This prevents depth-limited draws from poisoning shallower lookups.
     """
-    # Global cache hit.
+    # Depth-aware cache hit: only trust results computed with enough
+    # remaining search depth.
     if state in table:
-        return table[state]
+        cached_depth = depth_cache[state]
+        if cached_depth <= depth:
+            return table[state]
 
     # Draw by move limit.
     if depth >= MAX_PLY:
+        # Do NOT cache depth-limited draws — they may be incorrect
+        # at shallower depths where more search is available.
         return SolveResult(value=0.0, best_move=None)
 
     # Draw by repetition (state already on the current search path).
@@ -143,6 +155,7 @@ def _solve(
         else:
             result = SolveResult(value=0.0, best_move=None)
         table[state] = result
+        depth_cache[state] = 0  # terminal: valid at any depth
         return result
 
     moves = _ordered_moves(state)
@@ -151,6 +164,7 @@ def _solve(
     if not moves:
         result = SolveResult(value=-1.0, best_move=None)
         table[state] = result
+        depth_cache[state] = 0  # definitive: valid at any depth
         return result
 
     # Add current state to the path (backtracking — removed after loop).
@@ -161,7 +175,7 @@ def _solve(
 
     for move in moves:
         child = apply_move(state, move)
-        child_result = _solve(child, table, path, depth + 1, -beta, -alpha)
+        child_result = _solve(child, table, depth_cache, path, depth + 1, -beta, -alpha)
 
         # Negamax: negate child's value.
         move_value = -child_result.value
@@ -181,7 +195,10 @@ def _solve(
     path.discard(state)
 
     result = SolveResult(value=best_value, best_move=best_move)
-    table[state] = result
+    # Only overwrite if we computed at a shallower (better) depth.
+    if state not in depth_cache or depth <= depth_cache[state]:
+        table[state] = result
+        depth_cache[state] = depth
     return result
 
 
@@ -201,7 +218,7 @@ def solve(
     if table is None:
         table = {}
 
-    return _solve(state, table, set(), 0, -2.0, 2.0)
+    return _solve(state, table, {}, set(), 0, -2.0, 2.0)
 
 
 def best_move(state: GameState, table: dict[GameState, SolveResult] | None = None) -> Move:
@@ -216,6 +233,7 @@ def full_solve(
     state: GameState | None = None,
     max_ply: int | None = None,
     progress_interval: float = 10.0,
+    _expose_table: dict | None = None,
 ) -> tuple[dict[GameState, SolveResult], SolveStats]:
     """
     Solve the entire game tree from the given state (default: initial state).
@@ -239,6 +257,9 @@ def full_solve(
         MAX_PLY = max_ply
 
     table: dict[GameState, SolveResult] = {}
+    depth_cache: dict[GameState, int] = {}
+    if _expose_table is not None:
+        _expose_table["table"] = table
     start = time.perf_counter()
 
     import threading
@@ -249,7 +270,7 @@ def full_solve(
         while not stop_event.wait(progress_interval):
             elapsed = time.perf_counter() - start
             n = len(table)
-            decisive = sum(1 for r in table.values() if r.value != 0.0)
+            decisive = sum(1 for r in list(table.values()) if r.value != 0.0)
             rate = n / elapsed if elapsed > 0 else 0
             print(
                 f"  [{elapsed:6.0f}s] {n:>12,} states "
@@ -262,7 +283,7 @@ def full_solve(
         reporter.start()
 
     try:
-        _solve(state, table, set(), 0, -2.0, 2.0)
+        _solve(state, table, depth_cache, set(), 0, -2.0, 2.0)
     finally:
         stop_event.set()
         MAX_PLY = old_max_ply
@@ -364,7 +385,30 @@ def main() -> None:
 
     if args.command == "solve":
         print(f"Minimax solve: max_ply={args.max_ply}, output={args.output}")
-        table, stats = full_solve(max_ply=args.max_ply, progress_interval=args.progress)
+
+        # Graceful shutdown: Ctrl+C exports partial results instead of losing them.
+        import signal
+
+        solve_state = {"table": None, "interrupted": False}
+
+        def _handle_sigint(signum, frame):
+            if solve_state["interrupted"]:
+                print("\nForce quit.")
+                raise SystemExit(1)
+            solve_state["interrupted"] = True
+            print("\n\nInterrupted — exporting partial results...")
+            if solve_state["table"] is not None:
+                t = solve_state["table"]
+                decisive = sum(1 for r in t.values() if r.value != 0.0)
+                print(f"Partial: {len(t):,} states ({decisive:,} decisive)")
+                export_table(t, args.output, max_ply=args.max_ply)
+                print(f"Exported to {args.output}")
+            raise SystemExit(0)
+
+        signal.signal(signal.SIGINT, _handle_sigint)
+
+        table, stats = full_solve(max_ply=args.max_ply, progress_interval=args.progress,
+                                  _expose_table=solve_state)
         decisive = sum(1 for r in table.values() if r.value != 0.0)
         print(f"\nDone: {stats.unique_states:,} states ({decisive:,} decisive) in {stats.elapsed_seconds:.0f}s")
         export_table(table, args.output, stats)
