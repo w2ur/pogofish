@@ -49,6 +49,17 @@ pub fn state_at_move_count_with_tower_lead(count: u16, color: Color) -> GameStat
     GameState::new(cells, color, count, Vec::new())
 }
 
+/// A position where `mover` can win in one move by jumping onto the
+/// opponent's only remaining stack.
+pub fn near_mate_in_one(mover: Color) -> GameState {
+    let opp = mover.opponent();
+    let mut cells: [Cell; NUM_CELLS] = std::array::from_fn(|_| Vec::new());
+    // mover at cell 0, opponent at cell 1 (manhattan distance 1)
+    cells[0] = vec![mover];
+    cells[1] = vec![opp];
+    GameState::new(cells, mover, 5, Vec::new())
+}
+
 pub fn state_at_move_count_with_equal_towers(count: u16) -> GameState {
     let mut cells: [Cell; NUM_CELLS] = std::array::from_fn(|_| Vec::new());
     for cell in cells.iter_mut().take(4) {
