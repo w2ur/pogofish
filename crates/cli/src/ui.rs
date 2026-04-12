@@ -26,12 +26,12 @@ const BOX_LJ: &str = "\u{251c}"; // ├
 const BOX_RJ: &str = "\u{2524}"; // ┤
 const BOX_X: &str = "\u{253c}";  // ┼
 
-const PIECE_CHAR: &str = "\u{25cf}"; // ●
-const GHOST_CHAR: &str = "\u{254c}"; // ╌
+const PIECE_CHAR: &str = "\u{2b24}"; // ⬤
+const GHOST_CHAR: &str = "\u{25cb}"; // ○
 const EMPTY_CHAR: &str = "\u{00b7}"; // ·
 
 const TITLE: &str = "P O G O F I S H";
-const CELL_WIDTH: usize = 5;
+const CELL_WIDTH: usize = 7;
 const NUM_CELLS: usize = 9;
 const BOARD: usize = BOARD_SIZE as usize;
 
@@ -227,7 +227,7 @@ fn draw_board(
     } else {
         max_stack
     };
-    let cell_height = max_stack.max(3);
+    let cell_height = max_stack.max(4);
 
     // Determine ghost/picked state
     let ghost_cell = if ui.phase == Phase::Move { ui.source } else { None };
