@@ -1,0 +1,15 @@
+{
+  "name": "pogofish-wasm",
+  "type": "module",
+  "version": "0.1.0",
+  "files": [
+    "pogofish_wasm_bg.wasm",
+    "pogofish_wasm.js",
+    "pogofish_wasm.d.ts"
+  ],
+  "main": "pogofish_wasm.js",
+  "types": "pogofish_wasm.d.ts",
+  "sideEffects": [
+    "./snippets/*"
+  ]
+}
