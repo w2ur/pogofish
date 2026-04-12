@@ -21,7 +21,7 @@ export DYLD_LIBRARY_PATH="$LIBTORCH_LIB"
 
 TRAIN=./target/release/train
 
-# All Stage 1 variants
+# Stage 1 core variants
 VARIANTS=(
     "lc1-1"
     "lc2-30"
@@ -30,12 +30,32 @@ VARIANTS=(
     "lc3-50"
 )
 
-# Additional variants worth exploring (uncomment to add)
-# VARIANTS+=(
-#     "lc1-2"    # LC1 with 2 repetitions before loss (more forgiving)
-#     "lc2-40"   # LC2 with 40 move cap (middle ground)
-#     "lc3-40"   # LC3 with 40 move cap
-# )
+# First-mover edge (odd caps flip who faces the cap)
+VARIANTS+=(
+    "lc2-29"
+    "lc2-31"
+    "lc3-29"
+    "lc3-31"
+)
+
+# Repetition forgiveness
+VARIANTS+=(
+    "lc1-2"     # 2nd repetition loses — allows positional probing
+)
+
+# Tempo pressure (very short — forces early confrontation)
+VARIANTS+=(
+    "lc2-15"
+    "lc3-15"
+)
+
+# Relaxed endgame (distant safety net — games resolve naturally)
+VARIANTS+=(
+    "lc2-99"
+    "lc3-99"
+    "lc2-100"
+    "lc3-100"
+)
 
 ARCH="mlp_small"
 TOTAL=${#VARIANTS[@]}

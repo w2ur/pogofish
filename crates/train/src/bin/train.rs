@@ -6,7 +6,7 @@ use std::path::PathBuf;
 fn print_usage(prog: &str) {
     eprintln!("Usage: {prog} <variant> <output_dir> [arch]");
     eprintln!();
-    eprintln!("  variant:    lc1-1 | lc2-30 | lc2-50 | lc3-30 | lc3-50");
+    eprintln!("  variant:    lc1-N | lc2-N | lc3-N  (e.g. lc1-1, lc2-30, lc3-99)");
     eprintln!("  output_dir: directory to write models and metrics");
     eprintln!("  arch:       mlp_tiny | mlp_small (default) | mlp_medium");
     eprintln!();
@@ -16,13 +16,18 @@ fn print_usage(prog: &str) {
 }
 
 fn parse_ruleset(variant: &str) -> anyhow::Result<RuleSet> {
-    match variant {
-        "lc1-1" => Ok(RuleSet::LC1 { repetitions: 1 }),
-        "lc2-30" => Ok(RuleSet::LC2 { cap: 30 }),
-        "lc2-50" => Ok(RuleSet::LC2 { cap: 50 }),
-        "lc3-30" => Ok(RuleSet::LC3 { cap: 30 }),
-        "lc3-50" => Ok(RuleSet::LC3 { cap: 50 }),
-        other => anyhow::bail!("unknown variant: '{other}'"),
+    // Parse patterns: lc1-N, lc2-N, lc3-N where N is a number
+    let parts: Vec<&str> = variant.splitn(2, '-').collect();
+    if parts.len() != 2 {
+        anyhow::bail!("variant must be in format lc1-N, lc2-N, or lc3-N, got: '{variant}'");
+    }
+    let n: u16 = parts[1].parse()
+        .map_err(|_| anyhow::anyhow!("invalid number in variant: '{variant}'"))?;
+    match parts[0] {
+        "lc1" => Ok(RuleSet::LC1 { repetitions: n as u8 }),
+        "lc2" => Ok(RuleSet::LC2 { cap: n }),
+        "lc3" => Ok(RuleSet::LC3 { cap: n }),
+        other => anyhow::bail!("unknown rule type: '{other}' (expected lc1, lc2, or lc3)"),
     }
 }
 
