@@ -45,6 +45,15 @@ PLAN.md
 # Terminal session logs
 iTerm2 Session*
 
+# Rust
+/target/
+**/*.rs.bk
+Cargo.lock.bak
+# tch-rs libtorch cache
+/libtorch/
+# Model artifacts
+/models/
+
 # Jupyter
 .ipynb_checkpoints/
 .worktrees/
