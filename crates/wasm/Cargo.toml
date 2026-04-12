@@ -3,3 +3,12 @@ name = "pogofish-wasm"
 version.workspace = true
 edition.workspace = true
 rust-version.workspace = true
+
+[lib]
+crate-type = ["cdylib", "rlib"]
+
+[dependencies]
+pogofish-engine = { path = "../engine" }
+wasm-bindgen = "0.2"
+serde = { workspace = true }
+serde-wasm-bindgen = "0.6"
