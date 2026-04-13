@@ -65,11 +65,17 @@ pub fn solve(state: &GameState, rules: &RuleSet, cfg: SolveConfig) -> SolveResul
 ///
 /// This is the efficient way to solve all reachable positions: one call
 /// populates the entire TT via the recursive search. No redundant work.
+/// Solve the full game tree from `state` with a shared transposition table.
+/// Returns (root result, TT containing all visited positions).
+///
+/// If `interrupted` is provided and becomes true, the search aborts early
+/// and returns a partial TT (value 0 = "unknown" for incomplete positions).
 pub fn solve_full(
     state: &GameState,
     rules: &RuleSet,
     cfg: SolveConfig,
     progress: Option<&dyn Fn(u64, usize)>,
+    interrupted: Option<&std::sync::atomic::AtomicBool>,
 ) -> (SolveResult, TranspositionTable) {
     let mut tt: TranspositionTable = HashMap::new();
     let mut nodes = 0u64;
@@ -83,6 +89,7 @@ pub fn solve_full(
         cfg.use_tt,
         &mut nodes,
         progress,
+        interrupted,
     );
     let result = SolveResult { value, best_move, nodes_explored: nodes };
     (result, tt)
@@ -177,12 +184,19 @@ fn negamax_with_progress(
     use_tt: bool,
     nodes: &mut u64,
     progress: Option<&dyn Fn(u64, usize)>,
+    interrupted: Option<&std::sync::atomic::AtomicBool>,
 ) -> (i8, Option<Move>) {
     *nodes += 1;
 
     if *nodes % 100_000 == 0 {
         if let Some(cb) = progress {
             cb(*nodes, tt.len());
+        }
+        // Check interrupt every 100k nodes
+        if let Some(flag) = interrupted {
+            if flag.load(std::sync::atomic::Ordering::Relaxed) {
+                return (0, None); // Abort — value 0 = "unknown"
+            }
         }
     }
 
@@ -226,6 +240,7 @@ fn negamax_with_progress(
             use_tt,
             nodes,
             progress,
+            interrupted,
         );
         let value = -child_value;
         if value > best_value {
