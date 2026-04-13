@@ -58,15 +58,23 @@ impl DqnNet {
         q.squeeze_dim(0)
     }
 
-    /// Save the variable store to a file.
+    /// Save the variable store to a file (cross-process compatible).
     pub fn save(&self, vs: &nn::VarStore, path: &std::path::Path) -> anyhow::Result<()> {
-        vs.save(path)?;
+        let vars = vs.variables();
+        let named: Vec<(&str, &Tensor)> = vars.iter().map(|(k, v)| (k.as_str(), v)).collect();
+        Tensor::save_multi(&named, path)?;
         Ok(())
     }
 
     /// Load weights from a file into the variable store.
     pub fn load(&self, vs: &mut nn::VarStore, path: &std::path::Path) -> anyhow::Result<()> {
-        vs.load(path)?;
+        let named = Tensor::load_multi(path)?;
+        let mut var_map = vs.variables();
+        for (name, tensor) in named {
+            if let Some(var) = var_map.get_mut(&name) {
+                tch::no_grad(|| var.copy_(&tensor));
+            }
+        }
         Ok(())
     }
 }
