@@ -801,6 +801,7 @@ name = "pogofish-search"
 version = "0.1.0"
 dependencies = [
  "anyhow",
+ "flate2",
  "pogofish-engine",
  "proptest",
  "serde",

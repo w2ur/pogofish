@@ -9,6 +9,11 @@ pogofish-engine = { path = "../engine" }
 serde = { workspace = true }
 serde_json = { workspace = true }
 anyhow = { workspace = true }
+flate2 = "1"
 
 [dev-dependencies]
 proptest = { workspace = true }
+
+[[bin]]
+name = "solve"
+path = "src/bin/solve.rs"
