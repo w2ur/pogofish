@@ -1,3 +1,4 @@
+pub mod dqn;
 pub mod encoding;
 pub mod gatekeeper;
 pub mod metrics;

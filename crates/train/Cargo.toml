@@ -12,6 +12,10 @@ path = "src/bin/train.rs"
 name = "tournament"
 path = "src/bin/tournament.rs"
 
+[[bin]]
+name = "dqn_train"
+path = "src/bin/dqn_train.rs"
+
 [dependencies]
 pogofish-engine = { path = "../engine" }
 pogofish-search = { path = "../search" }
