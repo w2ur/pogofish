@@ -1,5 +1,6 @@
 use crate::net::AzNet;
 use pogofish_engine::{apply_move, initial_state, is_terminal, Color, Outcome, RuleSet};
+use rand::Rng;
 
 pub struct GatekeeperResult {
     pub win_rate: f64,
@@ -9,7 +10,9 @@ pub struct GatekeeperResult {
 }
 
 /// Play `num_games` between `challenger` and `best`, alternating who plays White.
-/// Uses neural MCTS with tau=0 (greedy) and no Dirichlet noise.
+/// Uses neural MCTS with `temperature` for move selection (use tau=0.1 to break
+/// determinism while still mostly picking the best move; tau=0.0 is fully greedy).
+/// No Dirichlet noise is added.
 /// Returns the challenger's win rate.
 pub fn gatekeeper(
     challenger: &AzNet,
@@ -19,15 +22,20 @@ pub fn gatekeeper(
     num_simulations: u32,
     c_puct: f32,
     max_moves: u16,
+    temperature: f32,
 ) -> GatekeeperResult {
     let mut wins = 0u32;
     let mut losses = 0u32;
     let mut draws = 0u32;
+    let mut rng = rand::thread_rng();
 
     for game_idx in 0..num_games {
         // Alternate sides each game: even games → challenger plays White
         let challenger_color = if game_idx % 2 == 0 { Color::White } else { Color::Red };
-        let outcome = play_greedy_game(challenger, best, rules, num_simulations, c_puct, max_moves, challenger_color);
+        let outcome = play_game_with_tau(
+            challenger, best, rules, num_simulations, c_puct, max_moves,
+            challenger_color, temperature, &mut rng,
+        );
         match outcome {
             None => draws += 1,
             Some(Outcome::DrawEarned) => draws += 1,
@@ -49,9 +57,9 @@ pub fn gatekeeper(
     GatekeeperResult { win_rate, wins, losses, draws }
 }
 
-/// Play a single game between two nets using greedy (tau=0) MCTS.
+/// Play a single game between two nets using MCTS with the given temperature.
 /// `challenger_color` determines which net plays which side.
-fn play_greedy_game(
+fn play_game_with_tau(
     challenger: &AzNet,
     best: &AzNet,
     rules: &RuleSet,
@@ -59,7 +67,18 @@ fn play_greedy_game(
     c_puct: f32,
     max_moves: u16,
     challenger_color: Color,
+    temperature: f32,
+    rng: &mut impl Rng,
 ) -> Option<Outcome> {
+    use crate::selfplay::{neural_mcts_move_with_tau, SelfPlayConfig};
+    let cfg = SelfPlayConfig {
+        num_simulations,
+        c_puct,
+        max_moves: u16::MAX,
+        dirichlet_alpha: 0.3,
+        dirichlet_epsilon: 0.0, // no noise in gatekeeper
+    };
+
     let mut state = initial_state();
     for _ in 0..max_moves {
         if let Some(outcome) = is_terminal(&state, rules) {
@@ -67,29 +86,8 @@ fn play_greedy_game(
         }
         let current = state.to_move();
         let net = if current == challenger_color { challenger } else { best };
-        let mv = greedy_mcts_move(net, &state, rules, num_simulations, c_puct);
+        let mv = neural_mcts_move_with_tau(net, &state, rules, &cfg, temperature, rng);
         state = apply_move(&state, mv).expect("legal move");
     }
     is_terminal(&state, rules)
-}
-
-/// Run MCTS with the given net and return the most-visited move.
-fn greedy_mcts_move(
-    net: &AzNet,
-    state: &pogofish_engine::GameState,
-    rules: &RuleSet,
-    num_simulations: u32,
-    c_puct: f32,
-) -> pogofish_engine::Move {
-    use crate::selfplay::SelfPlayConfig;
-    let cfg = SelfPlayConfig {
-        num_simulations,
-        c_puct,
-        max_moves: u16::MAX,
-        dirichlet_alpha: 0.3,
-        dirichlet_epsilon: 0.0, // no noise
-    };
-    // Reuse the neural MCTS from selfplay
-    use crate::selfplay::neural_mcts_greedy_move;
-    neural_mcts_greedy_move(net, state, rules, &cfg)
 }

@@ -241,6 +241,22 @@ pub fn neural_mcts_greedy_move(
     mcts.select_move(state, 0.0, &mut rng) // tau=0: greedy
 }
 
+/// Run MCTS from `state` and return a move sampled with the given temperature.
+/// tau=0.0 → greedy; tau=0.1 → slight randomness to break determinism.
+/// No Dirichlet noise is added (used for evaluation/gatekeeper).
+pub fn neural_mcts_move_with_tau(
+    net: &AzNet,
+    state: &pogofish_engine::GameState,
+    rules: &RuleSet,
+    cfg: &SelfPlayConfig,
+    tau: f32,
+    rng: &mut impl Rng,
+) -> pogofish_engine::Move {
+    let mut mcts = NeuralMcts::new(net, cfg);
+    let _dist = mcts.run(state, rules, false); // no Dirichlet noise
+    mcts.select_move(state, tau, rng)
+}
+
 /// Play one full self-play game using neural MCTS.
 ///
 /// Returns one `TrainingExample` per position in the game.

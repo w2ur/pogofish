@@ -50,7 +50,7 @@ impl Default for TrainConfig {
             window_capacity: 500,
             dirichlet_alpha: 0.3,
             dirichlet_epsilon: 0.25,
-            gatekeeper_games: 40,
+            gatekeeper_games: 80,
             gatekeeper_threshold: 0.55,
             max_moves: 200,
             output_dir: PathBuf::from("models/alphazero"),
@@ -92,6 +92,16 @@ impl GameWindow {
 
     fn total_examples(&self) -> usize {
         self.games.iter().map(|g| g.len()).sum()
+    }
+
+    /// Evict the oldest 50% of games from the window.
+    /// Called after a gatekeeper adoption to flush stale self-play data from
+    /// earlier model generations, so the challenger trains on fresher examples.
+    fn evict_oldest_half(&mut self) {
+        let half = self.games.len() / 2;
+        for _ in 0..half {
+            self.games.pop_front();
+        }
     }
 }
 
@@ -148,6 +158,8 @@ pub fn train(rules: &RuleSet, cfg: &TrainConfig) -> anyhow::Result<()> {
     };
 
     let train_start = Instant::now();
+    let mut last_adoption_iter: u32 = 0;
+    let mut best_loss: f64 = f64::MAX;
 
     for iteration in start_iteration..=cfg.iterations {
         if interrupted.load(Ordering::Relaxed) {
@@ -193,10 +205,14 @@ pub fn train(rules: &RuleSet, cfg: &TrainConfig) -> anyhow::Result<()> {
         let challenger_net = AzNet::from_config(&challenger_vs.root(), &cfg.arch);
         challenger_vs.copy(&best_vs).context("copying best weights to challenger")?;
 
-        // Cosine LR decay
-        let t = (iteration - 1) as f64 / cfg.iterations.max(1) as f64;
+        // Cosine LR with warm restart after each adoption.
+        // After adoption, reset the cycle so the new model gets a full LR burst
+        // on fresh self-play data. Cap each mini-cycle at 30 iterations.
+        let cycle_len = 30u32;
+        let t_since_adopt =
+            (iteration - 1 - last_adoption_iter).min(cycle_len) as f64 / cycle_len as f64;
         let lr = cfg.lr_end
-            + 0.5 * (cfg.lr - cfg.lr_end) * (1.0 + (std::f64::consts::PI * t).cos());
+            + 0.5 * (cfg.lr - cfg.lr_end) * (1.0 + (std::f64::consts::PI * t_since_adopt).cos());
 
         let mut opt = nn::Adam::default().build(&challenger_vs, lr)?;
         opt.set_weight_decay(cfg.weight_decay);
@@ -242,6 +258,10 @@ pub fn train(rules: &RuleSet, cfg: &TrainConfig) -> anyhow::Result<()> {
             }
         }
 
+        if last_avg_loss < best_loss {
+            best_loss = last_avg_loss;
+        }
+
         // --- Gatekeeper phase ---
         println!("  Gatekeeper: {} games...", cfg.gatekeeper_games);
         let result = gatekeeper(
@@ -252,6 +272,7 @@ pub fn train(rules: &RuleSet, cfg: &TrainConfig) -> anyhow::Result<()> {
             cfg.num_simulations,
             cfg.c_puct,
             cfg.max_moves,
+            0.1, // slight randomness to break determinism; still mostly picks best move
         );
         println!(
             "  Challenger: win_rate={:.3} (W:{} L:{} D:{})",
@@ -268,6 +289,11 @@ pub fn train(rules: &RuleSet, cfg: &TrainConfig) -> anyhow::Result<()> {
             best_vs = new_best_vs;
             best_net = new_best_net;
             best_vs.save(&best_path).context("saving best model")?;
+            // Flush stale examples from earlier generations so the new model
+            // trains primarily on data it generated.
+            window.evict_oldest_half();
+            last_adoption_iter = iteration;
+            println!("  Window after eviction: {} examples", window.total_examples());
         } else {
             println!("  Challenger REJECTED");
         }
@@ -286,6 +312,7 @@ pub fn train(rules: &RuleSet, cfg: &TrainConfig) -> anyhow::Result<()> {
             "iteration": iteration,
             "window_examples": window.total_examples(),
             "avg_loss": (last_avg_loss * 10000.0).round() / 10000.0,
+            "best_loss": if best_loss == f64::MAX { serde_json::Value::Null } else { serde_json::json!((best_loss * 10000.0).round() / 10000.0) },
             "lr": (lr * 1e8).round() / 1e8,
             "gatekeeper_win_rate": result.win_rate,
             "gatekeeper_wins": result.wins,
