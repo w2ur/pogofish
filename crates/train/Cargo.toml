@@ -8,6 +8,10 @@ rust-version.workspace = true
 name = "train"
 path = "src/bin/train.rs"
 
+[[bin]]
+name = "tournament"
+path = "src/bin/tournament.rs"
+
 [dependencies]
 pogofish-engine = { path = "../engine" }
 pogofish-search = { path = "../search" }
