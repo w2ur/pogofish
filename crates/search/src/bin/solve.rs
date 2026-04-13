@@ -94,29 +94,29 @@ fn main() -> anyhow::Result<()> {
 
     let mut total = 0usize;
     let mut decisive = 0usize;
+    let mut white_wins = 0usize;
+    let mut red_wins = 0usize;
+    let mut draws = 0usize;
     let mut initial_value: i8 = 0;
-
-    // Write opening: first line is meta placeholder (updated at end via separate file)
-    // Format: one JSON object per line (JSONL)
-    // First line: {"type":"position", "key":"...", "value":N, "best_move":...}
+    let mut total_nodes = 0u64;
+    let mut last_report = Instant::now();
 
     println!("Solving positions (BFS + minimax)...");
+    println!();
 
     while let Some(state) = frontier.pop_front() {
         let key = state.key();
         let hex = state_key_hex(&key);
 
-        // Solve this position
-        let result = if is_terminal(&state, &rules).is_some() {
-            // Terminal positions: solve returns the terminal value directly
-            solve(&state, &rules, cfg)
-        } else {
-            solve(&state, &rules, cfg)
-        };
+        let result = solve(&state, &rules, cfg);
 
-        if result.value != 0 {
-            decisive += 1;
+        match result.value {
+            1 => { decisive += 1; white_wins += 1; }
+            -1 => { decisive += 1; red_wins += 1; }
+            0 => { draws += 1; }
+            _ => {}
         }
+        total_nodes += result.nodes_explored;
         if total == 0 {
             initial_value = result.value;
         }
@@ -136,14 +136,20 @@ fn main() -> anyhow::Result<()> {
         )?;
 
         total += 1;
-        if total % 5000 == 0 {
+
+        // Progress every 2 seconds
+        if last_report.elapsed().as_secs_f64() >= 2.0 {
             let elapsed = start.elapsed().as_secs_f64();
             let rate = total as f64 / elapsed;
-            println!(
-                "  {total} positions solved ({decisive} decisive) [{rate:.0}/s] frontier={} visited={}",
-                frontier.len(),
-                visited.len()
+            let pct_decisive = if total > 0 { decisive as f64 / total as f64 * 100.0 } else { 0.0 };
+            eprint!(
+                "\r  {:>8} solved | {:>6} frontier | {:>6} visited | {:.0}/s | {:.0}% decisive | W:{} R:{} D:{} | {:.0}s  ",
+                total, frontier.len(), visited.len(), rate, pct_decisive,
+                white_wins, red_wins, draws, elapsed
             );
+            use std::io::Write as _;
+            let _ = std::io::stderr().flush();
+            last_report = Instant::now();
         }
 
         // Expand children (only if non-terminal)
@@ -171,14 +177,19 @@ fn main() -> anyhow::Result<()> {
         _ => "unknown",
     };
 
+    eprintln!(); // clear the progress line
     println!();
     println!("=== Summary ===");
     println!("  Total positions: {total}");
-    println!("  Decisive:        {decisive}");
+    println!("  Decisive:        {decisive} ({:.1}%)", decisive as f64 / total.max(1) as f64 * 100.0);
+    println!("    White wins:    {white_wins}");
+    println!("    Red wins:      {red_wins}");
+    println!("    Draws:         {draws}");
     println!("  Initial result:  {game_result}");
+    println!("  Minimax nodes:   {total_nodes}");
     println!("  Elapsed:         {elapsed:.1}s");
     println!("  Rate:            {:.0} positions/s", total as f64 / elapsed);
-    println!("  Peak memory:     visited set ({} keys)", visited.len());
+    println!("  Visited keys:    {}", visited.len());
 
     // Write a separate meta file alongside the main output
     let meta_path = output_path.with_extension("meta.json");
