@@ -52,13 +52,8 @@ for variant in "${VARIANTS[@]}"; do
         "$DQN" "$variant" "$outdir/dqn" 200000 2>&1 | tee "$outdir/dqn_run.log"
     fi
 
-    # 3. Minimax solve (streaming — memory safe)
-    if [ -f "$outdir/minimax.jsonl.gz" ]; then
-        echo "[3/4] Minimax: already done. Skipping."
-    else
-        echo "[3/4] Minimax solve (streaming)..."
-        "$SOLVE" "$variant" "$outdir/minimax.jsonl.gz" 2>&1 | tee "$outdir/solve.log"
-    fi
+    # 3. Minimax — skipped (run separately overnight with solve binary)
+    echo "[3/4] Minimax: skipped (run separately: $SOLVE $variant $outdir/minimax.jsonl.gz)"
 
     # 4. Tournaments
     if [ -f "$outdir/tournament_az_vs_random.json" ]; then
