@@ -45,7 +45,7 @@ for variant in "${VARIANTS[@]}"; do
     echo ""
 
     elapsed=$(( $(date +%s) - START ))
-    echo "  Cumulative time: $((elapsed / 60))m ${((elapsed % 60))}s"
+    echo "  Cumulative time: $((elapsed / 60))m $((elapsed % 60))s"
     echo ""
 done
 
