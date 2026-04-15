@@ -12,12 +12,14 @@ import { GameEndOverlay } from "./GameEndOverlay";
 
 export function GameView() {
   const { playerColor, setView } = useGameContext();
-  const { analysisEnabled, toggleAnalysis, aiLevel, mctsSimulations } =
+  const { analysisEnabled, toggleAnalysis, aiLevel, mctsSimulations, ruleSet } =
     useSettings();
   const isHuman = aiLevel === "human";
   const ai = useAI();
-  const { state, dispatch, isPlayerTurn, gameOver, gameWinner, canUndo } =
-    useGameMachine(playerColor);
+  const { state, dispatch, isPlayerTurn, gameOver, gameWinner, isDraw, canUndo, repetitionCount } =
+    useGameMachine(playerColor, ruleSet);
+  const isLC1 = "LC1" in ruleSet;
+  const isLC3 = "LC3" in ruleSet;
 
   // Stable refs for values read inside effects but not deps
   const stateRef = useRef(state);
@@ -55,7 +57,7 @@ export function GameView() {
     // and the analysis panel can update before the AI responds
     const startTime = Date.now();
     aiRef.current
-      .requestMove(currentGameState, { level, mctsSimulations: sims })
+      .requestMove(currentGameState, { level, mctsSimulations: sims, ruleSet })
       .then(async (move) => {
         const elapsed = Date.now() - startTime;
         if (elapsed < 500) {
@@ -66,7 +68,7 @@ export function GameView() {
       .catch((err) => {
         console.error(`[AI] ${level} failed, falling back to random:`, err);
         return aiRef.current
-          .requestMove(currentGameState, { level: "random" })
+          .requestMove(currentGameState, { level: "random", ruleSet })
           .then((move) => {
             dispatch({ type: "AI_MOVE_RECEIVED", move });
           });
@@ -91,7 +93,7 @@ export function GameView() {
 
     const id = ++evalIdRef.current;
     aiRef.current
-      .requestEval(state.gameState)
+      .requestEval(state.gameState, ruleSet)
       .then((evalResult) => {
         if (id === evalIdRef.current) {
           dispatch({ type: "EVAL_RECEIVED", eval: evalResult });
@@ -111,9 +113,9 @@ export function GameView() {
       const activeColor = isHuman
         ? stateRef.current.gameState.currentPlayer
         : playerColor;
-      dispatch({ type: "SELECT_CELL", cellIndex, playerColor: activeColor });
+      dispatch({ type: "SELECT_CELL", cellIndex, playerColor: activeColor, ruleSet });
     },
-    [dispatch, playerColor, isHuman],
+    [dispatch, playerColor, isHuman, ruleSet],
   );
 
   const handleSelectCount = useCallback(
@@ -166,10 +168,26 @@ export function GameView() {
         </div>
       )}
 
-      {/* Turn indicator */}
-      <div className="h-5 text-sm text-zinc-500 dark:text-zinc-400">
-        {thinking && <span className="animate-pulse">{turnLabel}</span>}
-        {!thinking && turnLabel}
+      {/* Turn indicator + variant status */}
+      <div className="flex flex-col items-center gap-1">
+        <div className="h-5 text-sm text-zinc-500 dark:text-zinc-400">
+          {thinking && <span className="animate-pulse">{turnLabel}</span>}
+          {!thinking && turnLabel}
+        </div>
+
+        {/* LC1: repetition warning */}
+        {isLC1 && !gameOver && repetitionCount > 0 && (
+          <div className="rounded-full bg-amber-500/20 px-3 py-0.5 text-xs font-medium text-amber-600 dark:text-amber-400">
+            Position seen {repetitionCount}x — one more repeat loses!
+          </div>
+        )}
+
+        {/* LC3: move counter */}
+        {isLC3 && !gameOver && (
+          <div className="text-xs text-zinc-400 dark:text-zinc-500">
+            Move {state.gameState.moveCount} / {(ruleSet as { LC3: { cap: number } }).LC3.cap}
+          </div>
+        )}
       </div>
 
       {/* Board — centered hero */}
@@ -208,9 +226,10 @@ export function GameView() {
       )}
 
       {/* Game end overlay */}
-      {gameOver && gameWinner && (
+      {gameOver && (
         <GameEndOverlay
           winner={gameWinner}
+          isDraw={isDraw}
           onPlayAgain={handleNewGame}
           onChangeLevel={handleChangeLevel}
         />

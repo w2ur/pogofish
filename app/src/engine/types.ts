@@ -18,6 +18,10 @@ export type Board = readonly Cell[];
 export interface GameState {
   readonly board: Board;
   readonly currentPlayer: Player;
+  /** Move counter — needed by LC2/LC3 cap rules. Preserved from Rust engine. */
+  readonly moveCount: number;
+  /** Position history keys — needed by LC1 repetition detection. Opaque to TS. */
+  readonly positionHistory: readonly unknown[];
 }
 
 /** A move: pick numPieces from fromCell, place on toCell. */
@@ -36,3 +40,18 @@ export const DISTANCES: Record<number, readonly number[]> = {
   2: [2],
   3: [1, 3],
 };
+
+/**
+ * Rule variant — must match Rust serde format exactly.
+ * LC1: loss on Nth repetition of the (board, to_move) tuple.
+ * LC2: hard move cap — player who hasn't consolidated all towers by cap loses.
+ * LC3: soft cap — player with more towers at cap wins; ties are earned draws.
+ */
+export type RuleSet =
+  | { LC1: { repetitions: number } }
+  | { LC2: { cap: number } }
+  | { LC3: { cap: number } };
+
+export const RULES_LC1_2: RuleSet = { LC1: { repetitions: 2 } };
+export const RULES_LC2_50: RuleSet = { LC2: { cap: 50 } };
+export const RULES_LC3_30: RuleSet = { LC3: { cap: 30 } };

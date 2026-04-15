@@ -5,7 +5,7 @@
  * No Dirichlet noise (inference only). Temperature = 0 (greedy).
  */
 
-import { type GameState, type Move } from "../engine/types";
+import { type GameState, type Move, type RuleSet } from "../engine/types";
 import { legalMoves, applyMove, isTerminal, winner } from "../engine/engine";
 import { actionToIndex, indexToAction, ACTION_SIZE } from "../engine/encoding";
 
@@ -90,8 +90,8 @@ export type EvalFn = (
  * Compute terminal reward from the perspective of state's current player.
  * +1 if current player wins, -1 if opponent wins, 0 otherwise.
  */
-function terminalReward(state: GameState): number {
-  const w = winner(state);
+function terminalReward(state: GameState, rules?: RuleSet): number {
+  const w = winner(state, rules);
   if (w === null) return 0;
   return w === state.currentPlayer ? 1 : -1;
 }
@@ -103,12 +103,14 @@ function terminalReward(state: GameState): number {
  * @param evalFn - Neural net evaluation: state -> { policy[ACTION_SIZE], value }
  * @param numSimulations - Number of MCTS simulations (default 50)
  * @param cPuct - Exploration constant (default 1.5)
+ * @param rules - Rule variant for terminal detection (optional, defaults to engine default)
  */
 export async function mctsSearch(
   state: GameState,
   evalFn: EvalFn,
   numSimulations = 50,
   cPuct = 1.5,
+  rules?: RuleSet,
 ): Promise<Move> {
   const moves = legalMoves(state);
   if (moves.length === 0) throw new Error("No legal moves");
@@ -143,8 +145,8 @@ export async function mctsSearch(
 
     // Evaluate leaf
     let value: number;
-    if (isTerminal(node.state)) {
-      value = terminalReward(node.state);
+    if (isTerminal(node.state, rules)) {
+      value = terminalReward(node.state, rules);
     } else if (node.isLeaf()) {
       const result = await evalFn(node.state);
       node.expand(result.policy);

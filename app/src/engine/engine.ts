@@ -8,11 +8,13 @@ import {
   initial_state,
   legal_moves,
   apply_move,
+  is_terminal,
   is_terminal_default,
   winner as wasm_winner,
+  winner_with_rules as wasm_winner_with_rules,
 } from "pogofish-wasm";
 
-import { type Player, type Cell, type Board, type GameState, type Move, BOARD_SIZE } from "./types";
+import { type Player, type Cell, type Board, type GameState, type Move, type RuleSet, BOARD_SIZE } from "./types";
 
 // ── Color conversion ─────────────────────────────────────────────────────────
 
@@ -39,8 +41,8 @@ function toRustState(ts: GameState): RustState {
   return {
     cells: (ts.board as Cell[]).map((cell) => cell.map(toRustColor)),
     to_move: toRustColor(ts.currentPlayer),
-    move_count: 0,
-    history: [],
+    move_count: ts.moveCount,
+    history: ts.positionHistory as unknown[],
   };
 }
 
@@ -49,7 +51,12 @@ function fromRustState(rust: RustState): GameState {
     (cell) => cell.map(fromRustColor) as string[],
   ) as Board;
   const currentPlayer = fromRustColor(rust.to_move) as Player;
-  return { board, currentPlayer };
+  return {
+    board,
+    currentPlayer,
+    moveCount: rust.move_count,
+    positionHistory: rust.history,
+  };
 }
 
 // ── Move conversion ──────────────────────────────────────────────────────────
@@ -93,18 +100,27 @@ export function applyMove(state: GameState, move: Move): GameState {
   return fromRustState(rust);
 }
 
-export function isTerminal(state: GameState): boolean {
-  const outcome = is_terminal_default(toRustState(state));
+export function isTerminal(state: GameState, rules?: RuleSet): boolean {
+  const rustState = toRustState(state);
+  const outcome = rules
+    ? is_terminal(rustState, rules)
+    : is_terminal_default(rustState);
   return outcome !== null && outcome !== undefined;
 }
 
-export function winner(state: GameState): Player | null {
-  const w = wasm_winner(toRustState(state)) as string | null;
+export function winner(state: GameState, rules?: RuleSet): Player | null {
+  const rustState = toRustState(state);
+  const w = rules
+    ? (wasm_winner_with_rules(rustState, rules) as string | null)
+    : (wasm_winner(rustState) as string | null);
   if (w === null || w === undefined) return null;
-  // WASM returns "White" | "Red" | "Draw"
-  if (w === "White") return "W";
-  if (w === "Red") return "R";
+  if (w === "W") return "W";
+  if (w === "R") return "R";
   return null; // Draw maps to null (no single winner)
+}
+
+export function winnerWithRules(state: GameState, rules: RuleSet): Player | null {
+  return winner(state, rules);
 }
 
 export function manhattanDistance(a: number, b: number): number {

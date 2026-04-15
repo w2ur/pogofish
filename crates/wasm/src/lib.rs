@@ -33,6 +33,14 @@ pub fn is_terminal(state_js: JsValue, rules_js: JsValue) -> JsValue {
     serde_wasm_bindgen::to_value(&engine_terminal(&s, &r)).unwrap()
 }
 
+/// Return the state key as a hex string (for repetition detection in JS).
+#[wasm_bindgen]
+pub fn state_key(state_js: JsValue) -> String {
+    let s: GameState = serde_wasm_bindgen::from_value(state_js).unwrap();
+    let key = s.key();
+    key.0.iter().map(|b| format!("{b:02x}")).collect()
+}
+
 /// Convenience: check terminal with default LC2(50) rules.
 #[wasm_bindgen]
 pub fn is_terminal_default(state_js: JsValue) -> JsValue {
@@ -41,12 +49,27 @@ pub fn is_terminal_default(state_js: JsValue) -> JsValue {
     serde_wasm_bindgen::to_value(&engine_terminal(&s, &rules)).unwrap()
 }
 
-/// Get the winner from a terminal state. Returns "White", "Red", "Draw", or null.
+/// Get the winner from a terminal state using default LC2(50) rules.
+/// Returns "W", "R", "Draw", or null.
 #[wasm_bindgen]
 pub fn winner(state_js: JsValue) -> JsValue {
     let s: GameState = serde_wasm_bindgen::from_value(state_js).unwrap();
     let rules = RuleSet::LC2 { cap: 50 };
     match engine_terminal(&s, &rules) {
+        Some(pogofish_engine::Outcome::WinWhite) => JsValue::from_str("W"),
+        Some(pogofish_engine::Outcome::WinRed) => JsValue::from_str("R"),
+        Some(pogofish_engine::Outcome::DrawEarned) => JsValue::from_str("Draw"),
+        None => JsValue::NULL,
+    }
+}
+
+/// Get the winner from a terminal state with explicit rules.
+/// Returns "W", "R", "Draw", or null.
+#[wasm_bindgen]
+pub fn winner_with_rules(state_js: JsValue, rules_js: JsValue) -> JsValue {
+    let s: GameState = serde_wasm_bindgen::from_value(state_js).unwrap();
+    let r: RuleSet = serde_wasm_bindgen::from_value(rules_js).unwrap();
+    match engine_terminal(&s, &r) {
         Some(pogofish_engine::Outcome::WinWhite) => JsValue::from_str("W"),
         Some(pogofish_engine::Outcome::WinRed) => JsValue::from_str("R"),
         Some(pogofish_engine::Outcome::DrawEarned) => JsValue::from_str("Draw"),

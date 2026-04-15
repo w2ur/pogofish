@@ -3,6 +3,7 @@ import {
   type GameState,
   type Move,
   type Player,
+  type RuleSet,
 } from "../engine/types";
 import {
   initialState,
@@ -11,7 +12,7 @@ import {
   isTerminal,
   winner,
 } from "../engine/engine";
-import type { PositionEval } from "../ai/minimax";
+import { type PositionEval, stateToKey } from "../ai/minimax";
 
 // ---- Selection types (ported from useGame) ----
 
@@ -53,7 +54,7 @@ export interface GameMachineState {
 // ---- Actions ----
 
 type GameAction =
-  | { type: "SELECT_CELL"; cellIndex: number; playerColor: Player }
+  | { type: "SELECT_CELL"; cellIndex: number; playerColor: Player; ruleSet: RuleSet }
   | { type: "SELECT_COUNT"; numPieces: number }
   | { type: "SELECT_DESTINATION"; toCell: number }
   | { type: "CANCEL_SELECTION" }
@@ -80,12 +81,12 @@ function createInitialState(): GameMachineState {
 function reducer(state: GameMachineState, action: GameAction): GameMachineState {
   switch (action.type) {
     case "SELECT_CELL": {
-      const { cellIndex, playerColor } = action;
+      const { cellIndex, playerColor, ruleSet } = action;
       const gs = state.gameState;
 
       // Guard: only current player can select
       if (gs.currentPlayer !== playerColor) return state;
-      if (isTerminal(gs)) return state;
+      if (isTerminal(gs, ruleSet)) return state;
 
       const cell = gs.board[cellIndex];
       if (!cell || cell.length === 0) return state;
@@ -256,16 +257,29 @@ function reducer(state: GameMachineState, action: GameAction): GameMachineState 
   }
 }
 
-export function useGameMachine(playerColor: Player) {
+export function useGameMachine(playerColor: Player, ruleSet: RuleSet) {
   const [state, dispatch] = useReducer(reducer, undefined, createInitialState);
 
   const isPlayerTurn = state.gameState.currentPlayer === playerColor;
-  const gameOver = isTerminal(state.gameState);
-  const gameWinner = winner(state.gameState);
+  const gameOver = isTerminal(state.gameState, ruleSet);
+  const gameWinner = winner(state.gameState, ruleSet);
+  const isDraw = gameOver && gameWinner === null;
   const canUndo = isPlayerTurn && !gameOver && state.history.states.length >= 3;
 
+  // For LC1: count how many times the current position appeared earlier in this game
+  const repetitionCount = useMemo(() => {
+    if (!("LC1" in ruleSet)) return 0;
+    const currentKey = stateToKey(state.gameState);
+    let count = 0;
+    // History includes all states from the start; skip the current one (last entry)
+    for (let i = 0; i < state.history.states.length - 1; i++) {
+      if (stateToKey(state.history.states[i]!) === currentKey) count++;
+    }
+    return count;
+  }, [state.gameState, state.history.states, ruleSet]);
+
   return useMemo(
-    () => ({ state, dispatch, isPlayerTurn, gameOver, gameWinner, canUndo }),
-    [state, dispatch, isPlayerTurn, gameOver, gameWinner, canUndo],
+    () => ({ state, dispatch, isPlayerTurn, gameOver, gameWinner, isDraw, canUndo, ruleSet, repetitionCount }),
+    [state, dispatch, isPlayerTurn, gameOver, gameWinner, isDraw, canUndo, ruleSet, repetitionCount],
   );
 }

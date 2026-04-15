@@ -55,6 +55,8 @@ describe("stateToKey", () => {
     const state = {
       board: Array.from({ length: 9 }, () => [] as string[]),
       currentPlayer: "R" as const,
+      moveCount: 0,
+      positionHistory: [],
     };
     const key = stateToKey(state);
     expect(key).toBe("////////:R");
@@ -64,7 +66,7 @@ describe("stateToKey", () => {
     const board = Array.from({ length: 9 }, () => [] as string[]);
     board[0] = ["W", "R", "W"];
     board[4] = ["R"];
-    const state = { board, currentPlayer: "W" as const };
+    const state = { board, currentPlayer: "W" as const, moveCount: 0, positionHistory: [] };
     const key = stateToKey(state);
     expect(key).toBe("WRW////R////:W");
   });

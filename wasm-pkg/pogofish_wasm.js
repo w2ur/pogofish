@@ -51,12 +51,43 @@ export function legal_moves(state_js) {
 }
 
 /**
- * Get the winner from a terminal state. Returns "White", "Red", "Draw", or null.
+ * Return the state key as a hex string (for repetition detection in JS).
+ * @param {any} state_js
+ * @returns {string}
+ */
+export function state_key(state_js) {
+    let deferred1_0;
+    let deferred1_1;
+    try {
+        const ret = wasm.state_key(state_js);
+        deferred1_0 = ret[0];
+        deferred1_1 = ret[1];
+        return getStringFromWasm0(ret[0], ret[1]);
+    } finally {
+        wasm.__wbindgen_free(deferred1_0, deferred1_1, 1);
+    }
+}
+
+/**
+ * Get the winner from a terminal state using default LC2(50) rules.
+ * Returns "W", "R", "Draw", or null.
  * @param {any} state_js
  * @returns {any}
  */
 export function winner(state_js) {
     const ret = wasm.winner(state_js);
+    return ret;
+}
+
+/**
+ * Get the winner from a terminal state with explicit rules.
+ * Returns "W", "R", "Draw", or null.
+ * @param {any} state_js
+ * @param {any} rules_js
+ * @returns {any}
+ */
+export function winner_with_rules(state_js, rules_js) {
+    const ret = wasm.winner_with_rules(state_js, rules_js);
     return ret;
 }
 function __wbg_get_imports() {

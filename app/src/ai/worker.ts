@@ -4,7 +4,7 @@
  * Runs ONNX inference and minimax lookups off the main thread.
  */
 
-import { type GameState } from "../engine/types";
+import { type GameState, type RuleSet } from "../engine/types";
 import { type AIConfig, type AILevel } from "./player";
 import { type PositionEval } from "./minimax";
 
@@ -21,6 +21,7 @@ export interface EvaluateRequest {
   type: "evaluate";
   id: number;
   state: GameState;
+  ruleSet?: RuleSet;
 }
 
 export interface LoadMinimaxRequest {
@@ -95,7 +96,7 @@ if (typeof self !== "undefined" && typeof (self as unknown as { document?: unkno
         }
 
         case "evaluate": {
-          const evaluation = await player.evaluatePosition(msg.state);
+          const evaluation = await player.evaluatePosition(msg.state, msg.ruleSet);
           console.log("[Worker] Eval result:", evaluation);
           const response: EvalResponse = {
             type: "eval",

@@ -3,20 +3,27 @@ import {
   useCallback,
   useContext,
   useEffect,
+  useMemo,
   useState,
   type ReactNode,
 } from "react";
 import type { AILevel } from "../ai/player";
+import { type RuleSet, RULES_LC1_2, RULES_LC3_30 } from "../engine/types";
+
+export type GameVariant = "sudden-death" | "classic";
 
 interface SettingsContextValue {
   theme: "dark" | "light";
   analysisEnabled: boolean;
   aiLevel: AILevel;
   mctsSimulations: number;
+  variant: GameVariant;
+  ruleSet: RuleSet;
   setTheme: (theme: "dark" | "light") => void;
   toggleAnalysis: () => void;
   setAILevel: (level: AILevel) => void;
   setMctsSimulations: (n: number) => void;
+  setVariant: (variant: GameVariant) => void;
 }
 
 const SettingsContext = createContext<SettingsContextValue | null>(null);
@@ -40,6 +47,12 @@ export function SettingsProvider({ children }: { children: ReactNode }) {
   const [analysisEnabled, setAnalysisEnabled] = useState(false);
   const [aiLevel, setAILevelState] = useState<AILevel>("alphazero");
   const [mctsSimulations, setMctsSimulationsState] = useState(50);
+  const [variant, setVariantState] = useState<GameVariant>("sudden-death");
+
+  const ruleSet = useMemo<RuleSet>(
+    () => (variant === "sudden-death" ? RULES_LC1_2 : RULES_LC3_30),
+    [variant],
+  );
 
   // Apply initial theme
   useEffect(() => {
@@ -75,6 +88,10 @@ export function SettingsProvider({ children }: { children: ReactNode }) {
     setMctsSimulationsState(n);
   }, []);
 
+  const setVariant = useCallback((v: GameVariant) => {
+    setVariantState(v);
+  }, []);
+
   return (
     <SettingsContext.Provider
       value={{
@@ -82,10 +99,13 @@ export function SettingsProvider({ children }: { children: ReactNode }) {
         analysisEnabled,
         aiLevel,
         mctsSimulations,
+        variant,
+        ruleSet,
         setTheme,
         toggleAnalysis,
         setAILevel,
         setMctsSimulations,
+        setVariant,
       }}
     >
       {children}

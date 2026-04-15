@@ -1,5 +1,5 @@
 import { useCallback, useMemo, useRef, useState } from "react";
-import { type GameState, type Move } from "../engine/types";
+import { type GameState, type Move, type RuleSet } from "../engine/types";
 import type {
   AIConfig,
   WorkerResponse,
@@ -10,7 +10,7 @@ export type { AIConfig, PositionEval };
 
 export interface UseAI {
   requestMove: (state: GameState, config: AIConfig) => Promise<Move>;
-  requestEval: (state: GameState) => Promise<PositionEval>;
+  requestEval: (state: GameState, ruleSet?: RuleSet) => Promise<PositionEval>;
   loadMinimax: () => void;
   minimaxProgress: number;
   minimaxLoaded: boolean;
@@ -97,8 +97,8 @@ export function useAI(): UseAI {
   );
 
   const requestEval = useCallback(
-    (state: GameState): Promise<PositionEval> => {
-      return sendRequest<PositionEval>({ type: "evaluate", state });
+    (state: GameState, ruleSet?: RuleSet): Promise<PositionEval> => {
+      return sendRequest<PositionEval>({ type: "evaluate", state, ruleSet });
     },
     [sendRequest],
   );

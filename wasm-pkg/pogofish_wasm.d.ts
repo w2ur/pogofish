@@ -15,9 +15,21 @@ export function is_terminal_default(state_js: any): any;
 export function legal_moves(state_js: any): any;
 
 /**
- * Get the winner from a terminal state. Returns "White", "Red", "Draw", or null.
+ * Return the state key as a hex string (for repetition detection in JS).
+ */
+export function state_key(state_js: any): string;
+
+/**
+ * Get the winner from a terminal state using default LC2(50) rules.
+ * Returns "W", "R", "Draw", or null.
  */
 export function winner(state_js: any): any;
+
+/**
+ * Get the winner from a terminal state with explicit rules.
+ * Returns "W", "R", "Draw", or null.
+ */
+export function winner_with_rules(state_js: any, rules_js: any): any;
 
 export type InitInput = RequestInfo | URL | Response | BufferSource | WebAssembly.Module;
 
@@ -28,13 +40,16 @@ export interface InitOutput {
     readonly is_terminal: (a: any, b: any) => any;
     readonly is_terminal_default: (a: any) => any;
     readonly legal_moves: (a: any) => any;
+    readonly state_key: (a: any) => [number, number];
     readonly winner: (a: any) => any;
+    readonly winner_with_rules: (a: any, b: any) => any;
     readonly __wbindgen_malloc: (a: number, b: number) => number;
     readonly __wbindgen_realloc: (a: number, b: number, c: number, d: number) => number;
     readonly __wbindgen_exn_store: (a: number) => void;
     readonly __externref_table_alloc: () => number;
     readonly __wbindgen_externrefs: WebAssembly.Table;
     readonly __externref_table_dealloc: (a: number) => void;
+    readonly __wbindgen_free: (a: number, b: number, c: number) => void;
     readonly __wbindgen_start: () => void;
 }
 

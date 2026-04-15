@@ -1,8 +1,8 @@
-import { useState } from "react";
+import { useMemo, useState } from "react";
 import { Board } from "../board/Board";
 import { initialState } from "../../engine/engine";
 import { useGameContext } from "../../stores/GameContext";
-import { useSettings } from "../../stores/SettingsContext";
+import { useSettings, type GameVariant } from "../../stores/SettingsContext";
 import type { AILevel } from "../../ai/player";
 
 const IDLE_SELECTION = {
@@ -13,8 +13,6 @@ const IDLE_SELECTION = {
   validDestinations: [],
 };
 
-const STATIC_STATE = initialState();
-
 const AI_LEVEL_OPTIONS: { value: AILevel; label: string }[] = [
   { value: "human", label: "Human (2 players)" },
   { value: "random", label: "Random" },
@@ -24,8 +22,9 @@ const AI_LEVEL_OPTIONS: { value: AILevel; label: string }[] = [
 ];
 
 export function HomeView() {
+  const staticState = useMemo(() => initialState(), []);
   const { setView, setPlayerColor } = useGameContext();
-  const { aiLevel, setAILevel, mctsSimulations, setMctsSimulations } =
+  const { aiLevel, setAILevel, mctsSimulations, setMctsSimulations, variant, setVariant } =
     useSettings();
   const [pendingColor, setPendingColor] = useState<"W" | "R">("W");
 
@@ -42,7 +41,7 @@ export function HomeView() {
 
       {/* Static board preview */}
       <Board
-        state={STATIC_STATE}
+        state={staticState}
         selection={IDLE_SELECTION}
         lastMove={null}
         bestMoveCell={null}
@@ -53,6 +52,36 @@ export function HomeView() {
 
       {/* Controls */}
       <div className="flex w-full max-w-[340px] flex-col gap-4">
+        {/* Variant selector */}
+        <div className="flex flex-col gap-1">
+          <span className="text-sm font-medium text-zinc-600 dark:text-zinc-400">
+            Game mode
+          </span>
+          <div className="flex gap-2">
+            {([
+              { value: "sudden-death" as GameVariant, label: "Sudden Death", desc: "No repeats" },
+              { value: "classic" as GameVariant, label: "Classic", desc: "Move limit" },
+            ]).map((opt) => (
+              <button
+                key={opt.value}
+                onClick={() => setVariant(opt.value)}
+                className={`flex-1 rounded-md border px-3 py-2 text-center transition-colors ${
+                  variant === opt.value
+                    ? "border-zinc-800 bg-zinc-800 text-zinc-100 dark:border-zinc-200 dark:bg-zinc-100 dark:text-zinc-900"
+                    : "border-zinc-300 bg-white text-zinc-700 hover:bg-zinc-50 dark:border-zinc-700 dark:bg-zinc-800 dark:text-zinc-300 dark:hover:bg-zinc-700"
+                }`}
+              >
+                <div className="text-sm font-medium">{opt.label}</div>
+                <div className={`text-xs ${
+                  variant === opt.value
+                    ? "text-zinc-400 dark:text-zinc-500"
+                    : "text-zinc-500 dark:text-zinc-500"
+                }`}>{opt.desc}</div>
+              </button>
+            ))}
+          </div>
+        </div>
+
         {/* AI level selector */}
         <div className="flex flex-col gap-1">
           <label

@@ -1,18 +1,20 @@
 import type { Player } from "../../engine/types";
 
 interface GameEndOverlayProps {
-  winner: Player;
+  winner: Player | null;
+  isDraw?: boolean;
   onPlayAgain: () => void;
   onChangeLevel: () => void;
 }
 
 export function GameEndOverlay({
   winner,
+  isDraw,
   onPlayAgain,
   onChangeLevel,
 }: GameEndOverlayProps) {
-  const winnerText = winner === "W" ? "White wins!" : "Red wins!";
-  const winnerColor = winner === "W" ? "text-zinc-100" : "text-red-400";
+  const winnerText = isDraw ? "Draw!" : winner === "W" ? "White wins!" : "Red wins!";
+  const winnerColor = isDraw ? "text-amber-400" : winner === "W" ? "text-zinc-100" : "text-red-400";
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm">
