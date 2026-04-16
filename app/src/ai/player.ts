@@ -34,7 +34,7 @@ function isLC2_50(rules?: RuleSet): boolean {
 /** Resolve ONNX model path for a given model name and rule variant. */
 function modelPath(rules: RuleSet | undefined, name: string): string {
   if (isLC1(rules)) return `/models/lc1-2/${name}`;
-  // Default: root models directory (LC2/LC3 models will be added later)
+  if (rules && "LC3" in rules) return `/models/lc3-29/${name}`;
   return `/models/${name}`;
 }
 
@@ -54,7 +54,7 @@ async function getDqnModel(rules?: RuleSet): Promise<OnnxModel> {
 }
 
 async function getAlphazeroModel(rules?: RuleSet): Promise<OnnxModel> {
-  const name = isLC1(rules) ? "alphazero.onnx" : "alphazero_cnn.onnx";
+  const name = (isLC1(rules) || (rules && "LC3" in rules)) ? "alphazero.onnx" : "alphazero_cnn.onnx";
   const path = modelPath(rules, name);
   return getModel(path);
 }

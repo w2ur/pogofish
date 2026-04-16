@@ -54,4 +54,4 @@ export type RuleSet =
 
 export const RULES_LC1_2: RuleSet = { LC1: { repetitions: 2 } };
 export const RULES_LC2_50: RuleSet = { LC2: { cap: 50 } };
-export const RULES_LC3_30: RuleSet = { LC3: { cap: 30 } };
+export const RULES_LC3_29: RuleSet = { LC3: { cap: 29 } };

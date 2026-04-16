@@ -8,7 +8,7 @@ import {
   type ReactNode,
 } from "react";
 import type { AILevel } from "../ai/player";
-import { type RuleSet, RULES_LC1_2, RULES_LC3_30 } from "../engine/types";
+import { type RuleSet, RULES_LC1_2, RULES_LC3_29 } from "../engine/types";
 
 export type GameVariant = "sudden-death" | "classic";
 
@@ -50,7 +50,7 @@ export function SettingsProvider({ children }: { children: ReactNode }) {
   const [variant, setVariantState] = useState<GameVariant>("sudden-death");
 
   const ruleSet = useMemo<RuleSet>(
-    () => (variant === "sudden-death" ? RULES_LC1_2 : RULES_LC3_30),
+    () => (variant === "sudden-death" ? RULES_LC1_2 : RULES_LC3_29),
     [variant],
   );
 
