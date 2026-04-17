@@ -37,6 +37,15 @@ wandb/
 docs/plans/
 PLAN.md
 .superpowers/
+.claude/
+.playwright-mcp/
+
+# Build artifacts
+*.tsbuildinfo
+
+# Root-level debug screenshots
+/story-*.png
+/screenshot-*.png
 
 # Backups and exports
 *.bak

@@ -1,3 +1,350 @@
 @import "tailwindcss";
 
 @custom-variant dark (&:where(.dark, .dark *));
+
+@theme {
+  --font-display: "Instrument Serif", ui-serif, Georgia, serif;
+  --font-body: "Newsreader", ui-serif, Georgia, serif;
+  --font-mono: "JetBrains Mono", ui-monospace, "SF Mono", Menlo, monospace;
+
+  --color-ink: #121010;
+  --color-ink-2: #1a1613;
+  --color-ink-3: #28231e;
+  --color-paper: #ece2cb;
+  --color-paper-2: #c9bfa9;
+  --color-paper-3: #8d8472;
+  --color-hair: #2a2420;
+  --color-vermilion: #d94f2c;
+  --color-vermilion-deep: #a83719;
+  --color-vermilion-soft: #f0825f;
+  --color-graphite: #5a5344;
+}
+
+/* ---------------- story surface ---------------- */
+
+.story {
+  background: var(--color-ink);
+  color: var(--color-paper);
+  font-family: var(--font-body);
+  font-variation-settings: "opsz" 18;
+  font-size: 1.0625rem;
+  line-height: 1.7;
+  overflow-x: clip;
+}
+
+.story ::selection {
+  background: var(--color-vermilion);
+  color: var(--color-ink);
+}
+
+.story-grain {
+  background:
+    radial-gradient(ellipse at 50% 0%, rgba(217, 79, 44, 0.08), transparent 60%),
+    radial-gradient(ellipse at 90% 100%, rgba(217, 79, 44, 0.05), transparent 55%),
+    var(--color-ink);
+}
+
+/* subtle film grain via SVG noise */
+.story-noise::before {
+  content: "";
+  position: fixed;
+  inset: 0;
+  pointer-events: none;
+  opacity: 0.05;
+  mix-blend-mode: overlay;
+  z-index: 1;
+  background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='200' height='200'><filter id='n'><feTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='2' stitchTiles='stitch'/><feColorMatrix values='0 0 0 0 0.9  0 0 0 0 0.88  0 0 0 0 0.8  0 0 0 0.55 0'/></filter><rect width='100%' height='100%' filter='url(%23n)'/></svg>");
+}
+
+/* ---------------- type utilities ---------------- */
+
+.display {
+  font-family: var(--font-display);
+  font-weight: 400;
+  letter-spacing: -0.015em;
+  line-height: 1;
+}
+
+.display-italic {
+  font-family: var(--font-display);
+  font-style: italic;
+  font-weight: 400;
+  letter-spacing: -0.018em;
+  line-height: 1.02;
+}
+
+.mono {
+  font-family: var(--font-mono);
+  letter-spacing: -0.01em;
+}
+
+.kicker {
+  font-family: var(--font-mono);
+  font-size: 0.68rem;
+  letter-spacing: 0.28em;
+  text-transform: uppercase;
+  color: var(--color-vermilion);
+}
+
+.pullquote {
+  font-family: var(--font-display);
+  font-style: italic;
+  font-size: clamp(2.25rem, 5vw, 4.25rem);
+  line-height: 1.02;
+  letter-spacing: -0.02em;
+  color: var(--color-paper);
+}
+
+.smallcaps {
+  font-family: var(--font-body);
+  font-feature-settings: "smcp", "c2sc";
+  letter-spacing: 0.14em;
+  text-transform: lowercase;
+}
+
+.dropcap::first-letter {
+  font-family: var(--font-display);
+  float: left;
+  font-size: 5.2rem;
+  line-height: 0.82;
+  padding: 0.4rem 0.6rem 0 0;
+  color: var(--color-vermilion);
+  font-weight: 400;
+}
+
+/* ---------------- reveal animations ---------------- */
+
+@keyframes fade-up {
+  from {
+    opacity: 0;
+    transform: translateY(28px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes fade-in {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+@keyframes draw-line {
+  from { transform: scaleX(0); }
+  to { transform: scaleX(1); }
+}
+
+@keyframes piece-breathe {
+  0%, 100% { transform: translateY(0); opacity: 0.98; }
+  50% { transform: translateY(-2px); opacity: 1; }
+}
+
+@keyframes ember {
+  0%, 100% { box-shadow: 0 0 0 0 rgba(217, 79, 44, 0); }
+  50% { box-shadow: 0 0 22px 2px rgba(217, 79, 44, 0.25); }
+}
+
+@keyframes count-up-1 {
+  0% { opacity: 0; }
+  100% { opacity: 1; }
+}
+
+.reveal {
+  opacity: 0;
+  transform: translateY(28px);
+  transition: none;
+}
+.reveal.is-visible {
+  animation: fade-up 1.2s cubic-bezier(0.2, 0.65, 0.3, 1) forwards;
+}
+.reveal.delay-1.is-visible { animation-delay: 0.12s; }
+.reveal.delay-2.is-visible { animation-delay: 0.24s; }
+.reveal.delay-3.is-visible { animation-delay: 0.38s; }
+.reveal.delay-4.is-visible { animation-delay: 0.52s; }
+
+.fade-line {
+  display: block;
+  height: 1px;
+  background: var(--color-vermilion);
+  transform-origin: left;
+  transform: scaleX(0);
+}
+.fade-line.is-visible {
+  animation: draw-line 1.4s cubic-bezier(0.6, 0, 0.2, 1) forwards;
+}
+
+/* ---------------- pogo board primitives ---------------- */
+
+.pogo-board {
+  --cell: clamp(56px, 8.5vw, 96px);
+  display: grid;
+  grid-template-columns: repeat(3, var(--cell));
+  gap: 6px;
+  background: transparent;
+}
+
+.pogo-cell {
+  width: var(--cell);
+  height: var(--cell);
+  display: flex;
+  flex-direction: column-reverse;
+  align-items: center;
+  justify-content: center;
+  padding: 6px;
+  border-radius: 4px;
+  position: relative;
+  background: linear-gradient(180deg, var(--color-ink-2) 0%, var(--color-ink) 100%);
+  box-shadow:
+    inset 0 0 0 1px var(--color-hair),
+    inset 0 1px 0 rgba(236, 226, 203, 0.03),
+    0 8px 24px -12px rgba(0, 0, 0, 0.8);
+}
+
+.pogo-cell::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  border-radius: 4px;
+  background:
+    radial-gradient(120% 60% at 50% 0%, rgba(236, 226, 203, 0.04), transparent 60%);
+  pointer-events: none;
+}
+
+.pogo-coord {
+  position: absolute;
+  bottom: 4px;
+  right: 6px;
+  font-family: var(--font-mono);
+  font-size: 8px;
+  letter-spacing: 0.15em;
+  color: var(--color-paper-3);
+  opacity: 0.55;
+}
+
+.pogo-piece {
+  width: 78%;
+  height: 13px;
+  border-radius: 50%;
+  margin-top: -6px;
+  position: relative;
+  z-index: 1;
+}
+
+.pogo-piece:first-child {
+  margin-top: 0;
+}
+
+.pogo-piece.white {
+  background: linear-gradient(180deg, #f4ecd5 0%, #d9cfb3 100%);
+  box-shadow:
+    0 1px 0 rgba(255, 255, 255, 0.4) inset,
+    0 -1px 0 rgba(0, 0, 0, 0.2) inset,
+    0 2px 3px rgba(0, 0, 0, 0.35);
+}
+.pogo-piece.red {
+  background: linear-gradient(180deg, #e46140 0%, #a8341a 100%);
+  box-shadow:
+    0 1px 0 rgba(255, 180, 160, 0.35) inset,
+    0 -1px 0 rgba(0, 0, 0, 0.25) inset,
+    0 2px 3px rgba(0, 0, 0, 0.4);
+}
+
+.pogo-piece.ghost {
+  opacity: 0.35;
+  filter: saturate(0.6);
+}
+
+/* mini boards for scene 7 */
+.pogo-board.mini {
+  --cell: clamp(28px, 3.6vw, 42px);
+  gap: 3px;
+}
+.pogo-board.mini .pogo-piece { height: 7px; margin-top: -3px; }
+.pogo-board.mini .pogo-piece:first-child { margin-top: 0; }
+.pogo-board.mini .pogo-coord { display: none; }
+
+/* ---------------- inline term (glossary trigger) ---------------- */
+
+.term {
+  position: relative;
+  display: inline;
+  cursor: help;
+  color: var(--color-paper);
+  border-bottom: 1px dotted var(--color-vermilion);
+  padding-bottom: 1px;
+  transition: color 0.2s ease, border-color 0.2s ease;
+}
+
+.term:hover,
+.term[data-open="true"] {
+  color: var(--color-vermilion);
+  border-bottom-color: var(--color-vermilion-soft);
+}
+
+.term-popover {
+  position: absolute;
+  left: 50%;
+  bottom: calc(100% + 10px);
+  transform: translateX(-50%);
+  z-index: 30;
+  width: min(320px, 80vw);
+  padding: 12px 14px;
+  background: var(--color-ink-2);
+  color: var(--color-paper-2);
+  border: 1px solid var(--color-hair);
+  border-left: 2px solid var(--color-vermilion);
+  border-radius: 2px;
+  font-family: var(--font-body);
+  font-size: 0.88rem;
+  font-variation-settings: "opsz" 14;
+  line-height: 1.55;
+  text-align: left;
+  white-space: normal;
+  box-shadow: 0 12px 30px -10px rgba(0, 0, 0, 0.8);
+  pointer-events: none;
+  opacity: 0;
+  transform-origin: center bottom;
+  transform: translateX(-50%) translateY(6px);
+  transition: opacity 0.18s ease, transform 0.18s ease;
+}
+
+.term[data-open="true"] .term-popover {
+  opacity: 1;
+  pointer-events: auto;
+  transform: translateX(-50%) translateY(0);
+}
+
+.term-popover::after {
+  content: "";
+  position: absolute;
+  top: 100%;
+  left: 50%;
+  transform: translateX(-50%);
+  border: 5px solid transparent;
+  border-top-color: var(--color-hair);
+}
+
+.term-popover-head {
+  font-family: var(--font-mono);
+  font-size: 0.62rem;
+  letter-spacing: 0.28em;
+  text-transform: uppercase;
+  color: var(--color-vermilion);
+  margin-bottom: 4px;
+}
+
+/* ---------------- reduced motion ---------------- */
+
+@media (prefers-reduced-motion: reduce) {
+  .reveal,
+  .fade-line {
+    animation: none !important;
+    opacity: 1 !important;
+    transform: none !important;
+  }
+  .pogo-cell,
+  .pogo-piece {
+    animation: none !important;
+  }
+}

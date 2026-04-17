@@ -2,19 +2,21 @@ import { useAI } from "./hooks/useAI";
 import { SettingsProvider } from "./stores/SettingsContext";
 import { GameProvider, useGameContext } from "./stores/GameContext";
 import { Layout } from "./components/shared/Layout";
-import { HomeView } from "./components/home/HomeView";
 import { GameView } from "./components/game/GameView";
 import { JourneyView } from "./components/journey/JourneyView";
 import { AboutView } from "./components/about/AboutView";
+import { StoryView } from "./story/StoryView";
 
 function ViewSwitcher() {
   const { view } = useGameContext();
   const { minimaxProgress } = useAI();
 
+  if (view === "home") {
+    return <StoryView />;
+  }
+
   const content = (() => {
     switch (view) {
-      case "home":
-        return <HomeView />;
       case "game":
         return <GameView />;
       case "journey":
