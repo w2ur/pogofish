@@ -1,12 +1,24 @@
+name: "Pogofish"
 slug: pogofish
-name: Pogofish
 tagline: "Beat an AI that taught itself to play Pogo — or watch it learn"
-description: >
-  Browser-based Pogo board game with AI opponents trained via AlphaZero RL.
-  Single Rust engine compiles to native (training, CLI) and WASM (web app).
-  Client-side ONNX inference, zero backend.
+description: "Browser-based Pogo board game with AI opponents trained via AlphaZero RL. Single Rust engine compiles to native (training, CLI) and WASM (web app). Client-side ONNX inference, zero backend."
+
+audience: public
 visibility: public
 status: active
+
+url: null
+domain: null
+deploy: netlify
+
+portfolio_card: false
+portfolio_link: false
+badge: null
+sort_order: 99
+
+icon_emoji: "🐟"
+icon_file: app/public/icon.svg
+
 stack:
   - Rust
   - tch-rs
@@ -16,9 +28,3 @@ stack:
   - Vite
   - Tailwind CSS
   - ONNX Runtime Web
-deploy_platform: netlify
-deploy_url: null
-domain: null
-portfolio_card: false
-sort_order: 99
-icon_file: app/public/icon.svg
