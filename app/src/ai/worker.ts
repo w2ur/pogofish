@@ -75,8 +75,17 @@ export type { PositionEval, AIConfig, AILevel };
 
 // Only run worker logic if we're in a Worker context
 if (typeof self !== "undefined" && typeof (self as unknown as { document?: unknown }).document === "undefined") {
-  // Dynamic import to avoid loading player.ts at module scope in tests
-  const playerPromise = import("./player");
+  // The worker runs in a separate thread with its own WASM module instance —
+  // main.tsx's init doesn't reach here. Init once per worker, in parallel
+  // with loading the player module.
+  const playerPromise = (async () => {
+    const [{ ensureEngineReady }, player] = await Promise.all([
+      import("../engine/init"),
+      import("./player"),
+    ]);
+    await ensureEngineReady();
+    return player;
+  })();
 
   self.onmessage = async (e: MessageEvent<WorkerRequest>) => {
     const msg = e.data;
