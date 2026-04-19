@@ -1,10 +1,9 @@
 import { useEffect, useState } from "react";
-import { useGameContext } from "../stores/GameContext";
-import { useSettings, type GameVariant } from "../stores/SettingsContext";
-import type { AILevel } from "../ai/player";
 import { StoryBoard } from "./StoryBoard";
 import { Term } from "./Term";
 import { TryYourself } from "./TryYourself";
+import { PlayScene } from "./PlayScene";
+import { PlayCTA } from "./PlayCTA";
 import { useReveal, useActiveIndex } from "./useReveal";
 import {
   HERO_SEQUENCE,
@@ -27,10 +26,11 @@ export function StoryView() {
       <PinnedStory />
       <Scene7Experiments />
       <Scene8Verdict />
-      <Scene9Play />
+      <PlayScene />
       <Scene11Glossary />
       <Scene10Epilogue />
       <StoryFooter />
+      <PlayCTA />
     </div>
   );
 }
@@ -927,211 +927,6 @@ function VerdictBadge({ verdict }: { verdict: "pass" | "fail" | "warn" }) {
   );
 }
 
-/* ---------------- scene 9: play ---------------- */
-
-function Scene9Play() {
-  const { setPlayerColor } = useGameContext();
-  const { variant, setVariant, aiLevel, setAILevel, mctsSimulations, setMctsSimulations } = useSettings();
-  const [pendingColor, setPendingColor] = useState<"W" | "R">("W");
-  const ref = useReveal<HTMLDivElement>();
-
-  // Launch is a no-op until Slice 4 wires the inline game into this scene.
-  // Player color is committed when the reader changes it so the inline game
-  // (once added) will pick it up immediately.
-  function launch() {
-    setPlayerColor(pendingColor);
-  }
-
-  return (
-    <section id="play" className="relative py-28 md:py-40 px-6 md:px-10 border-t border-hair overflow-hidden">
-      <div
-        aria-hidden
-        className="absolute inset-0 pointer-events-none opacity-80"
-        style={{
-          background: "radial-gradient(60% 50% at 50% 50%, rgba(217,79,44,0.08), transparent 75%)",
-        }}
-      />
-      <div className="relative mx-auto max-w-5xl space-y-12">
-        <div ref={ref} className="reveal space-y-4 text-center">
-          <div className="kicker justify-center">{CHAPTERS[8]!.numeral} &middot; {CHAPTERS[8]!.kicker}</div>
-          <h2 className="display text-[clamp(2.25rem,5vw,4rem)] text-paper max-w-3xl mx-auto leading-[1.05]">
-            Against an opponent that learned this{" "}
-            <span className="display-italic text-vermilion">rewritten</span> game
-            from a million games of itself.
-          </h2>
-          <p className="text-paper-2 max-w-xl mx-auto">
-            Pick a rule. Pick a side. The network running in your browser is the
-            same one that won the tournament &mdash; exported through{" "}
-            <Term term="ONNX">ONNX</Term> and loaded client-side, no server in the
-            loop.
-          </p>
-        </div>
-
-        <div className="grid md:grid-cols-[1fr_1fr] gap-10 md:gap-16 items-start">
-          <div className="flex flex-col gap-8 border border-hair bg-ink-2 p-6 md:p-8 rounded-sm">
-            <SettingRow label="Rule" hint="The losing condition the game is played under.">
-              <VariantToggle variant={variant} setVariant={setVariant} />
-            </SettingRow>
-
-            <SettingRow label="Opponent" hint="Which network evaluates positions.">
-              <OpponentSelect value={aiLevel} onChange={setAILevel} />
-            </SettingRow>
-
-            {aiLevel === "alphazero-mcts" && (
-              <SettingRow label="MCTS simulations" hint="Rollouts per move. More = slower, stronger.">
-                <div className="flex flex-col gap-2">
-                  <input
-                    type="range"
-                    min={10} max={200} step={10}
-                    value={mctsSimulations}
-                    onChange={(e) => setMctsSimulations(Number(e.target.value))}
-                    className="w-full accent-vermilion"
-                  />
-                  <div className="flex justify-between mono text-[10px] text-paper-3">
-                    <span>10</span>
-                    <span className="text-vermilion">{mctsSimulations}</span>
-                    <span>200</span>
-                  </div>
-                </div>
-              </SettingRow>
-            )}
-
-            {aiLevel !== "human" && (
-              <SettingRow label="Play as" hint="Your color on the board.">
-                <ColorToggle color={pendingColor} setColor={setPendingColor} />
-              </SettingRow>
-            )}
-
-            <button
-              onClick={launch}
-              className="group relative mt-2 inline-flex items-center justify-center overflow-hidden px-6 py-4 mono text-[12px] tracking-[0.35em] uppercase bg-vermilion text-ink hover:bg-vermilion-soft transition-colors rounded-sm"
-            >
-              <span className="relative z-10">Begin the game &rarr;</span>
-            </button>
-          </div>
-
-          <div className="flex flex-col items-center justify-center py-6">
-            <div className="relative" style={{ animation: "ember 4s ease-in-out infinite" }}>
-              <StoryBoard board={PINNED_BOARDS[0]!} size="large" showCoords />
-            </div>
-            <div className="kicker mt-6">your board, your variant</div>
-          </div>
-        </div>
-      </div>
-    </section>
-  );
-}
-
-function SettingRow({ label, hint, children }: { label: string; hint: string; children: React.ReactNode }) {
-  return (
-    <div className="flex flex-col gap-3">
-      <div className="flex items-baseline justify-between">
-        <div className="mono text-[10px] tracking-[0.25em] uppercase text-vermilion">{label}</div>
-        <div className="mono text-[10px] text-paper-3 max-w-[60%] text-right">{hint}</div>
-      </div>
-      {children}
-    </div>
-  );
-}
-
-function VariantToggle({ variant, setVariant }: { variant: GameVariant; setVariant: (v: GameVariant) => void }) {
-  const opts: { id: GameVariant; title: string; sub: string }[] = [
-    { id: "sudden-death", title: "Sudden Death", sub: "repeat → lose" },
-    { id: "classic", title: "Classic", sub: "29-move cap" },
-  ];
-  return (
-    <div className="grid grid-cols-2 gap-3">
-      {opts.map((o) => {
-        const active = variant === o.id;
-        return (
-          <button
-            key={o.id}
-            onClick={() => setVariant(o.id)}
-            className={`text-left px-4 py-3 border rounded-sm transition-all ${
-              active ? "border-vermilion bg-vermilion/10 text-paper" : "border-hair text-paper-2 hover:border-paper-3"
-            }`}
-          >
-            <div className="display text-xl">{o.title}</div>
-            <div className="mono text-[10px] tracking-[0.15em] uppercase text-paper-3 mt-1">{o.sub}</div>
-          </button>
-        );
-      })}
-    </div>
-  );
-}
-
-function OpponentSelect({ value, onChange }: { value: AILevel; onChange: (v: AILevel) => void }) {
-  const opts: { id: AILevel; label: string; hint: string }[] = [
-    { id: "human", label: "Human (hot-seat)", hint: "no AI" },
-    { id: "random", label: "Random", hint: "noise" },
-    { id: "dqn", label: "DQN", hint: "first try" },
-    { id: "alphazero", label: "AlphaZero", hint: "current best" },
-    { id: "alphazero-mcts", label: "AlphaZero + MCTS", hint: "strongest" },
-  ];
-  return (
-    <div className="flex flex-col gap-1">
-      {opts.map((o) => {
-        const active = value === o.id;
-        return (
-          <button
-            key={o.id}
-            onClick={() => onChange(o.id)}
-            className={`flex items-baseline justify-between px-4 py-2.5 rounded-sm transition-colors text-left ${
-              active ? "bg-vermilion/10 text-paper" : "text-paper-2 hover:bg-ink-3"
-            }`}
-          >
-            <span className="flex items-baseline gap-3">
-              <span
-                className="inline-block w-2 h-2 rounded-full"
-                style={{ background: active ? "var(--color-vermilion)" : "var(--color-graphite)" }}
-              />
-              <span className="body text-[15px]">{o.label}</span>
-            </span>
-            <span className="mono text-[10px] tracking-[0.2em] uppercase text-paper-3">{o.hint}</span>
-          </button>
-        );
-      })}
-    </div>
-  );
-}
-
-function ColorToggle({ color, setColor }: { color: "W" | "R"; setColor: (c: "W" | "R") => void }) {
-  return (
-    <div className="grid grid-cols-2 gap-3">
-      {(
-        [
-          { id: "W" as const, label: "White", hint: "moves first" },
-          { id: "R" as const, label: "Red", hint: "responds" },
-        ]
-      ).map((o) => {
-        const active = color === o.id;
-        return (
-          <button
-            key={o.id}
-            onClick={() => setColor(o.id)}
-            className={`flex items-center gap-3 px-4 py-3 border rounded-sm transition-colors ${
-              active ? "border-vermilion bg-vermilion/10 text-paper" : "border-hair text-paper-2 hover:border-paper-3"
-            }`}
-          >
-            <span
-              className="pogo-piece"
-              style={{
-                width: 28, height: 10, marginTop: 0,
-                background: o.id === "W"
-                  ? "linear-gradient(180deg, #f4ecd5 0%, #d9cfb3 100%)"
-                  : "linear-gradient(180deg, #e46140 0%, #a8341a 100%)",
-              }}
-            />
-            <span className="flex flex-col text-left">
-              <span className="display text-lg">{o.label}</span>
-              <span className="mono text-[10px] tracking-[0.18em] uppercase text-paper-3">{o.hint}</span>
-            </span>
-          </button>
-        );
-      })}
-    </div>
-  );
-}
 
 /* ---------------- scene 11: glossary ---------------- */
 

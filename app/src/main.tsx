@@ -10,4 +10,11 @@ ensureEngineReady().then(() => {
       <App />
     </StrictMode>,
   );
+
+  // Honor #play hash on cold load: smooth-scroll once layout has settled.
+  if (window.location.hash === "#play") {
+    requestAnimationFrame(() => {
+      document.getElementById("play")?.scrollIntoView({ behavior: "smooth" });
+    });
+  }
 });
