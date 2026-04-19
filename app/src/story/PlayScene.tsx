@@ -12,7 +12,8 @@ import type { AILevel } from "../ai/player";
 import type { Player } from "../engine/types";
 import { Term } from "./Term";
 import { useReveal } from "./useReveal";
-import { CHAPTERS } from "./data";
+import { useLang } from "./LangContext";
+import { STRINGS, tf } from "./i18n";
 
 /* -------------------------------------------------------------------------- */
 /* Settings UI — reused from the prior Scene9Play                             */
@@ -49,9 +50,10 @@ function VariantToggle({
   variant: GameVariant;
   setVariant: (v: GameVariant) => void;
 }) {
+  const { lang } = useLang();
   const opts: { id: GameVariant; title: string; sub: string }[] = [
-    { id: "sudden-death", title: "Sudden Death", sub: "repeat → lose" },
-    { id: "classic", title: "Classic", sub: "29-move cap" },
+    { id: "sudden-death", title: STRINGS.play.variantSD[lang],      sub: STRINGS.play.variantSDSub[lang] },
+    { id: "classic",      title: STRINGS.play.variantClassic[lang], sub: STRINGS.play.variantClassicSub[lang] },
   ];
   return (
     <div className="grid grid-cols-2 gap-3">
@@ -78,14 +80,6 @@ function VariantToggle({
   );
 }
 
-const OPPONENTS: { id: AILevel; label: string; hint: string }[] = [
-  { id: "human", label: "Human (hot-seat)", hint: "no AI" },
-  { id: "random", label: "Random", hint: "noise" },
-  { id: "dqn", label: "DQN", hint: "first try" },
-  { id: "alphazero", label: "AlphaZero", hint: "current best" },
-  { id: "alphazero-mcts", label: "AlphaZero + MCTS", hint: "strongest" },
-];
-
 function OpponentSelect({
   value,
   onChange,
@@ -93,6 +87,14 @@ function OpponentSelect({
   value: AILevel;
   onChange: (v: AILevel) => void;
 }) {
+  const { lang } = useLang();
+  const OPPONENTS: { id: AILevel; label: string; hint: string }[] = [
+    { id: "human",          label: STRINGS.play.oppHuman[lang],  hint: STRINGS.play.oppHumanHint[lang] },
+    { id: "random",         label: STRINGS.play.oppRandom[lang], hint: STRINGS.play.oppRandomHint[lang] },
+    { id: "dqn",            label: STRINGS.play.oppDqn[lang],    hint: STRINGS.play.oppDqnHint[lang] },
+    { id: "alphazero",      label: STRINGS.play.oppAz[lang],     hint: STRINGS.play.oppAzHint[lang] },
+    { id: "alphazero-mcts", label: STRINGS.play.oppAzMcts[lang], hint: STRINGS.play.oppAzMctsHint[lang] },
+  ];
   return (
     <div className="flex flex-col gap-1">
       {OPPONENTS.map((o) => {
@@ -123,11 +125,12 @@ function ColorToggle({
   color: Player;
   setColor: (c: Player) => void;
 }) {
+  const { lang } = useLang();
   return (
     <div className="grid grid-cols-2 gap-3">
       {(["W", "R"] as const).map((c) => {
         const active = color === c;
-        const label = c === "W" ? "White (first)" : "Red";
+        const label = c === "W" ? STRINGS.play.whitePlays[lang] : STRINGS.play.red[lang];
         return (
           <button
             key={c}
@@ -278,14 +281,17 @@ function PlaySession({
 
   const handleUndo = useCallback(() => dispatch({ type: "UNDO" }), [dispatch]);
 
+  const { lang } = useLang();
   const thinking = state.aiStatus === "thinking";
   const turnLabel = gameOver
     ? ""
     : isHuman
-      ? `${state.gameState.currentPlayer === "W" ? "White" : "Red"}'s turn`
+      ? (state.gameState.currentPlayer === "W"
+          ? STRINGS.play.whitesTurn[lang]
+          : STRINGS.play.redsTurn[lang])
       : isPlayerTurn
-        ? "Your turn"
-        : "Thinking…";
+        ? STRINGS.play.yourTurn[lang]
+        : STRINGS.play.thinking[lang];
 
   return (
     <div className="flex flex-col items-center gap-5">
@@ -305,13 +311,15 @@ function PlaySession({
         </div>
         {isLC1 && !gameOver && repetitionCount > 0 && (
           <div className="rounded-full bg-vermilion/15 px-3 py-0.5 text-xs font-medium text-vermilion">
-            Position seen {repetitionCount}× — one more repeat loses.
+            {tf(STRINGS.play.repetitionBadge[lang], { n: repetitionCount })}
           </div>
         )}
         {isLC3 && !gameOver && (
           <div className="mono text-[10px] text-paper-3">
-            Move {state.gameState.moveCount} /{" "}
-            {(ruleSet as { LC3: { cap: number } }).LC3.cap}
+            {tf(STRINGS.play.moveCounter[lang], {
+              n: state.gameState.moveCount,
+              cap: (ruleSet as { LC3: { cap: number } }).LC3.cap,
+            })}
           </div>
         )}
       </div>
@@ -350,26 +358,30 @@ function PlaySession({
       {gameOver && (
         <div className="mt-4 flex flex-col items-center gap-4 rounded-sm border border-hair bg-ink-2 px-8 py-6">
           <div className="display text-2xl text-paper">
-            {isDraw ? "Draw." : gameWinner === "W" ? "White wins." : "Red wins."}
+            {isDraw
+              ? STRINGS.play.draw[lang]
+              : gameWinner === "W"
+                ? STRINGS.play.whiteWins[lang]
+                : STRINGS.play.redWins[lang]}
           </div>
           <div className="flex flex-wrap items-center gap-3">
             <button
               onClick={onPlayAgain}
               className="mono text-[11px] tracking-[0.25em] uppercase bg-vermilion text-ink px-5 py-2.5 rounded-sm hover:bg-vermilion-soft transition-colors"
             >
-              Play again
+              {STRINGS.play.playAgain[lang]}
             </button>
             <button
               onClick={onChangeSettings}
               className="mono text-[11px] tracking-[0.25em] uppercase border border-hair text-paper-2 px-5 py-2.5 rounded-sm hover:border-paper-3 transition-colors"
             >
-              Change settings
+              {STRINGS.play.changeSettings[lang]}
             </button>
             <a
               href="#chapter-x"
               className="mono text-[11px] tracking-[0.25em] uppercase text-paper-3 px-5 py-2.5 hover:text-vermilion transition-colors"
             >
-              ↓ continue reading
+              {STRINGS.play.continue[lang]}
             </a>
           </div>
         </div>
@@ -383,6 +395,7 @@ function PlaySession({
 /* -------------------------------------------------------------------------- */
 
 export function PlayScene() {
+  const { lang } = useLang();
   const { playerColor, setPlayerColor } = useGameContext();
   const { variant, setVariant, aiLevel, setAILevel, mctsSimulations, setMctsSimulations } =
     useSettings();
@@ -420,41 +433,40 @@ export function PlayScene() {
       <div className="relative mx-auto max-w-5xl space-y-12">
         <div ref={ref} className="reveal space-y-4 text-center">
           <div className="kicker justify-center">
-            {CHAPTERS[9]!.numeral} &middot; {CHAPTERS[9]!.kicker}
+            X &middot; {STRINGS.chapters.X[lang]}
           </div>
           <h2 className="display text-[clamp(2.25rem,5vw,4rem)] text-paper max-w-3xl mx-auto leading-[1.05]">
-            Against an opponent that learned this{" "}
-            <span className="display-italic text-vermilion">rewritten</span> game from a
-            million games of itself.
+            {STRINGS.play.h2A[lang]}
+            <span className="display-italic text-vermilion">{STRINGS.play.h2B[lang]}</span>
+            {STRINGS.play.h2C[lang]}
           </h2>
           <p className="text-paper-2 max-w-xl mx-auto">
-            Pick a rule. Pick a side. The network running in your browser is the same
-            one that won the tournament — exported through{" "}
-            <Term term="ONNX">ONNX</Term> and loaded client-side, no server in the
-            loop.
+            {STRINGS.play.intro[lang]}
+            <Term term="ONNX">ONNX</Term>
+            {STRINGS.play.introTail[lang]}
           </p>
         </div>
 
         {!started ? (
           <div className="mx-auto max-w-xl flex flex-col gap-8 border border-hair bg-ink-2 p-6 md:p-8 rounded-sm">
             <SettingRow
-              label="Rule"
-              hint="The losing condition the game is played under."
+              label={STRINGS.play.settingsRule[lang]}
+              hint={STRINGS.play.settingsRuleHint[lang]}
             >
               <VariantToggle variant={variant} setVariant={setVariant} />
             </SettingRow>
 
             <SettingRow
-              label="Opponent"
-              hint="Which network evaluates positions."
+              label={STRINGS.play.settingsOpponent[lang]}
+              hint={STRINGS.play.settingsOppHint[lang]}
             >
               <OpponentSelect value={aiLevel} onChange={setAILevel} />
             </SettingRow>
 
             {aiLevel === "alphazero-mcts" && (
               <SettingRow
-                label="MCTS simulations"
-                hint="Rollouts per move. More = slower, stronger."
+                label={STRINGS.play.settingsMcts[lang]}
+                hint={STRINGS.play.settingsMctsHint[lang]}
               >
                 <div className="flex flex-col gap-2">
                   <input
@@ -476,7 +488,7 @@ export function PlayScene() {
             )}
 
             {aiLevel !== "human" && (
-              <SettingRow label="Play as" hint="Your color on the board.">
+              <SettingRow label={STRINGS.play.settingsPlayAs[lang]} hint={STRINGS.play.settingsPlayAsHint[lang]}>
                 <ColorToggle color={playerColor} setColor={setPlayerColor} />
               </SettingRow>
             )}
@@ -485,7 +497,7 @@ export function PlayScene() {
               onClick={handleBegin}
               className="mt-2 mono text-[12px] tracking-[0.35em] uppercase bg-vermilion text-ink px-6 py-4 rounded-sm hover:bg-vermilion-soft transition-colors"
             >
-              Begin the game →
+              {STRINGS.play.begin[lang]}
             </button>
           </div>
         ) : (

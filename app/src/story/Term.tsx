@@ -1,5 +1,6 @@
 import { useEffect, useRef, useState, type ReactNode } from "react";
 import { GLOSSARY, type GlossaryEntry } from "./data";
+import { useLang } from "./LangContext";
 
 const LOOKUP: Record<string, GlossaryEntry> = Object.fromEntries(
   GLOSSARY.map((entry) => [entry.term.toLowerCase(), entry]),
@@ -19,7 +20,10 @@ interface Props {
 export function Term({ term, children }: Props) {
   const [open, setOpen] = useState(false);
   const ref = useRef<HTMLSpanElement | null>(null);
+  const { lang } = useLang();
   const entry = LOOKUP[term.toLowerCase()];
+  const displayTerm = entry ? (lang === "fr" && entry.termFr ? entry.termFr : entry.term) : term;
+  const shortText = entry ? entry.short[lang] : "";
 
   useEffect(() => {
     if (!open || !entry) return;
@@ -57,12 +61,12 @@ export function Term({ term, children }: Props) {
       }}
       tabIndex={0}
       role="button"
-      aria-label={`${entry.term}. ${entry.short}`}
+      aria-label={`${displayTerm}. ${shortText}`}
     >
-      {children ?? entry.term}
+      {children ?? displayTerm}
       <span className="term-popover" role="tooltip">
-        <span className="term-popover-head">{entry.term}</span>
-        {entry.short}
+        <span className="term-popover-head">{displayTerm}</span>
+        {shortText}
       </span>
     </span>
   );

@@ -4,7 +4,8 @@ import { useGameMachine } from "../hooks/useGameMachine";
 import { legalMoves } from "../engine/engine";
 import type { GameState, Move } from "../engine/types";
 import { RULES_LC1_2 } from "../engine/types";
-import { CHAPTERS } from "./data";
+import { useLang } from "./LangContext";
+import { STRINGS, tf } from "./i18n";
 
 export const TRY_YOURSELF_MAX_PLIES = 5;
 
@@ -101,12 +102,13 @@ export function TryYourself() {
     [dispatch, drillComplete],
   );
 
+  const { lang } = useLang();
   const statusLabel = drillComplete
-    ? "Drill complete."
+    ? STRINGS.tryYourself.drillDone[lang]
     : isPlayerTurn
-      ? "Your move."
+      ? STRINGS.tryYourself.yourMove[lang]
       : thinking
-        ? "Red is thinking…"
+        ? STRINGS.tryYourself.redThinking[lang]
         : "";
 
   return (
@@ -116,15 +118,13 @@ export function TryYourself() {
     >
       <div className="w-full max-w-3xl text-center space-y-4">
         <div className="kicker justify-center">
-          {CHAPTERS[1]!.numeral} &middot; {CHAPTERS[1]!.kicker}
+          II &middot; {STRINGS.chapters.II[lang]}
         </div>
         <h2 className="display text-[clamp(2rem,4.5vw,3.5rem)] text-paper leading-[1.1]">
-          Try a few moves before we go on.
+          {STRINGS.tryYourself.h2[lang]}
         </h2>
         <p className="body text-paper-2 max-w-xl mx-auto">
-          You play <span className="text-paper">White</span>. Red answers with a
-          fixed rule: capture if it can, otherwise stack, otherwise pick the
-          first legal move. After five of your plies, the article scrolls on.
+          {STRINGS.tryYourself.body[lang]}
         </p>
       </div>
 
@@ -140,7 +140,7 @@ export function TryYourself() {
 
       <div className="flex flex-col items-center gap-2">
         <div className="mono text-[11px] tracking-[0.25em] uppercase text-paper-3">
-          ply {whitePlies} / {TRY_YOURSELF_MAX_PLIES}
+          {tf(STRINGS.tryYourself.ply[lang], { n: whitePlies, m: TRY_YOURSELF_MAX_PLIES })}
         </div>
         <div className="mono text-[11px] tracking-[0.2em] uppercase text-vermilion h-4">
           {statusLabel}
@@ -152,7 +152,7 @@ export function TryYourself() {
           href="#chapter-iv"
           className="kicker text-vermilion underline underline-offset-4 hover:text-paper transition-colors"
         >
-          ↓ continue reading
+          {STRINGS.tryYourself.continue[lang]}
         </a>
       )}
     </section>

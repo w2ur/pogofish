@@ -1,8 +1,10 @@
 import { useEffect, useState } from "react";
 import { StoryBoard } from "./StoryBoard";
 import type { StoryBoard as StoryBoardData } from "./data";
-import { CHAPTERS } from "./data";
 import { useReveal } from "./useReveal";
+import { useLang } from "./LangContext";
+import { EnFr } from "./EnFr";
+import { STRINGS } from "./i18n";
 import {
   cellLabel,
   findProbe,
@@ -16,6 +18,7 @@ import {
 /* -------------------------------------------------------------------------- */
 
 export function LearningsScene() {
+  const { lang } = useLang();
   const [data, setData] = useState<InsightsPayload | null>(null);
   const [err, setErr] = useState<string | null>(null);
   const ref = useReveal<HTMLDivElement>();
@@ -40,7 +43,7 @@ export function LearningsScene() {
         id="chapter-x"
         className="relative px-6 py-24 min-h-[40vh] flex items-center justify-center"
       >
-        <p className="mono text-paper-3 text-sm">Could not load insights: {err}</p>
+        <p className="mono text-paper-3 text-sm">{STRINGS.learnings.loadError[lang]}{err}</p>
       </section>
     );
   }
@@ -51,7 +54,7 @@ export function LearningsScene() {
         id="chapter-x"
         className="relative px-6 py-24 min-h-[40vh] flex items-center justify-center"
       >
-        <p className="mono text-paper-3 text-sm">Loading what the AI learned…</p>
+        <p className="mono text-paper-3 text-sm">{STRINGS.learnings.loading[lang]}</p>
       </section>
     );
   }
@@ -77,16 +80,17 @@ export function LearningsScene() {
     >
       <div ref={ref} className="reveal mx-auto max-w-5xl space-y-4 text-center mb-16">
         <div className="kicker justify-center">
-          {CHAPTERS[10]!.numeral} &middot; {CHAPTERS[10]!.kicker}
+          XI &middot; {STRINGS.chapters.XI[lang]}
         </div>
         <h2 className="display text-[clamp(2.25rem,5vw,4rem)] text-paper max-w-3xl mx-auto leading-[1.05]">
-          After <span className="display-italic text-vermilion">{data.games_played}</span>{" "}
-          games against itself, the network had opinions.
+          {STRINGS.learnings.h2A[lang]}
+          <span className="display-italic text-vermilion">{data.games_played}</span>
+          {STRINGS.learnings.h2B[lang]}
         </h2>
         <p className="body text-paper-2 max-w-2xl mx-auto">
-          These come from the same model you just played against — LC3-29, at 200{" "}
-          <abbr title="Monte Carlo Tree Search">MCTS</abbr> simulations per move.
-          Stats are empirical; diagrams are real positions from the sweep.
+          {STRINGS.learnings.intro[lang]}
+          <abbr title="Monte Carlo Tree Search">MCTS</abbr>
+          {STRINGS.learnings.introMid[lang]}
         </p>
       </div>
 
@@ -96,24 +100,37 @@ export function LearningsScene() {
           <Insight
             number="01"
             claim={
-              <>
-                White&apos;s first move is nearly predetermined. {cellLabel(topOpening.from_cell)}{" "}
-                → {cellLabel(topOpening.to_cell)} in{" "}
-                <span className="text-vermilion">
-                  {formatPercent(topOpening.frequency)}
-                </span>{" "}
-                of games.
-              </>
+              <EnFr
+                en={<>
+                  White&apos;s first move is nearly predetermined. {cellLabel(topOpening.from_cell)}{" "}
+                  → {cellLabel(topOpening.to_cell)} in{" "}
+                  <span className="text-vermilion">{formatPercent(topOpening.frequency)}</span>{" "}
+                  of games.
+                </>}
+                fr={<>
+                  Le premier coup des Blancs est presque prédéterminé. {cellLabel(topOpening.from_cell)}{" "}
+                  → {cellLabel(topOpening.to_cell)} dans{" "}
+                  <span className="text-vermilion">{formatPercent(topOpening.frequency)}</span>{" "}
+                  des parties.
+                </>}
+              />
             }
             detail={
-              <>
-                Across {data.games_played} self-play games the network tried only{" "}
-                {data.opening_move_distribution.length} distinct first moves. It knows
-                which square it wants.
-              </>
+              <EnFr
+                en={<>
+                  Across {data.games_played} self-play games the network tried only{" "}
+                  {data.opening_move_distribution.length} distinct first moves. It knows
+                  which square it wants.
+                </>}
+                fr={<>
+                  Sur {data.games_played} parties de self-play, le réseau n'a essayé que{" "}
+                  {data.opening_move_distribution.length} premiers coups distincts. Il sait
+                  quelle case il veut.
+                </>}
+              />
             }
             board={openingProbe.board}
-            boardLabel="initial position"
+            boardLabel={STRINGS.learnings.initialPosition[lang]}
           />
         )}
 
@@ -121,17 +138,30 @@ export function LearningsScene() {
         <Insight
           number="02"
           claim={
-            <>
-              Captures peak at <span className="text-vermilion">ply {capturePeakPly.i}</span>,
-              then taper as the position locks.
-            </>
+            <EnFr
+              en={<>
+                Captures peak at <span className="text-vermilion">ply {capturePeakPly.i}</span>,
+                then taper as the position locks.
+              </>}
+              fr={<>
+                Les captures culminent au <span className="text-vermilion">demi-coup {capturePeakPly.i}</span>,
+                puis s'estompent à mesure que la position se fige.
+              </>}
+            />
           }
           detail={
-            <>
-              {capturesInWindow} of {data.games_played} games record a capture in plies
-              6–10. After move 15, captures are rare — the network trades early, then
-              plays for tempo.
-            </>
+            <EnFr
+              en={<>
+                {capturesInWindow} of {data.games_played} games record a capture in plies
+                6–10. After move 15, captures are rare — the network trades early, then
+                plays for tempo.
+              </>}
+              fr={<>
+                {capturesInWindow} parties sur {data.games_played} enregistrent une capture
+                entre les demi-coups 6 et 10. Après le coup 15, les captures sont rares —
+                le réseau échange tôt, puis joue pour le tempo.
+              </>}
+            />
           }
           chart={<CaptureChart histogram={data.capture_timing_histogram} />}
         />
@@ -141,26 +171,34 @@ export function LearningsScene() {
           <Insight
             number="03"
             claim={
-              <>
-                The network&apos;s confidence swings hard on small trades.
-              </>
+              <EnFr
+                en={<>The network&apos;s confidence swings hard on small trades.</>}
+                fr={<>La confiance du réseau bascule fort sur de petits échanges.</>}
+              />
             }
             detail={
-              <>
-                Same game, twelve plies apart. In the first position the value head says{" "}
-                <span className="text-vermilion">
-                  +{developmentProbe.value_estimate.toFixed(2)}
-                </span>{" "}
-                (White wins). Twelve plies later, after a forced trade sequence, it says{" "}
-                <span className="text-vermilion">
-                  {midgameProbe.value_estimate.toFixed(2)}
-                </span>{" "}
-                (Red wins). Pogo has tactical cliffs, and AlphaZero sees them.
-              </>
+              <EnFr
+                en={<>
+                  Same game, twelve plies apart. In the first position the value head says{" "}
+                  <span className="text-vermilion">+{developmentProbe.value_estimate.toFixed(2)}</span>{" "}
+                  (White wins). Twelve plies later, after a forced trade sequence, it says{" "}
+                  <span className="text-vermilion">{midgameProbe.value_estimate.toFixed(2)}</span>{" "}
+                  (Red wins). Pogo has tactical cliffs, and AlphaZero sees them.
+                </>}
+                fr={<>
+                  Même partie, à douze demi-coups d'écart. Dans la première position, la
+                  tête valeur annonce{" "}
+                  <span className="text-vermilion">+{developmentProbe.value_estimate.toFixed(2)}</span>{" "}
+                  (Blanc gagne). Douze demi-coups plus tard, après une séquence d'échanges
+                  forcés, elle dit{" "}
+                  <span className="text-vermilion">{midgameProbe.value_estimate.toFixed(2)}</span>{" "}
+                  (Rouge gagne). Pogo a des falaises tactiques, et AlphaZero les voit.
+                </>}
+              />
             }
             twoBoards={{
-              left: { board: developmentProbe.board, label: "+0.55 — White wins" },
-              right: { board: midgameProbe.board, label: "-0.47 — Red wins" },
+              left:  { board: developmentProbe.board, label: `+0.55 — ${STRINGS.learnings.whiteWinsShort[lang]}` },
+              right: { board: midgameProbe.board,     label: `-0.47 — ${STRINGS.learnings.redWinsShort[lang]}` },
             }}
           />
         )}
@@ -169,21 +207,35 @@ export function LearningsScene() {
         <Insight
           number="04"
           claim={
-            <>
-              First player wins by design:{" "}
-              <span className="text-vermilion">
-                {formatPercent(data.white_win_rate)} White
-              </span>
-              , {formatPercent(data.red_win_rate)} Red,{" "}
-              {formatPercent(data.draw_rate)} draws.
-            </>
+            <EnFr
+              en={<>
+                First player wins by design:{" "}
+                <span className="text-vermilion">{formatPercent(data.white_win_rate)} White</span>,{" "}
+                {formatPercent(data.red_win_rate)} Red,{" "}
+                {formatPercent(data.draw_rate)} draws.
+              </>}
+              fr={<>
+                Le premier joueur gagne par construction :{" "}
+                <span className="text-vermilion">{formatPercent(data.white_win_rate)} Blanc</span>,{" "}
+                {formatPercent(data.red_win_rate)} Rouge,{" "}
+                {formatPercent(data.draw_rate)} nuls.
+              </>}
+            />
           }
           detail={
-            <>
-              Against itself, the network produces a 2:1 first-player advantage. The
-              Classic variant (LC3-29) softens this with draws but doesn&apos;t erase
-              it — move order matters more than any strategic subtlety.
-            </>
+            <EnFr
+              en={<>
+                Against itself, the network produces a 2:1 first-player advantage. The
+                Classic variant (LC3-29) softens this with draws but doesn&apos;t erase
+                it — move order matters more than any strategic subtlety.
+              </>}
+              fr={<>
+                Contre lui-même, le réseau produit un avantage 2:1 pour le premier joueur.
+                La variante Classique (LC3-29) atténue cet écart avec des nuls mais ne
+                l'efface pas — l'ordre des coups pèse plus que n'importe quelle subtilité
+                stratégique.
+              </>}
+            />
           }
         />
       </div>
@@ -264,12 +316,13 @@ function Insight({
 }
 
 function CaptureChart({ histogram }: { histogram: number[] }) {
+  const { lang } = useLang();
   const maxVal = Math.max(1, ...histogram);
   const bars = histogram.slice(0, 30);
   return (
     <div className="w-full max-w-[360px]">
       <div className="mono text-[10px] tracking-[0.22em] uppercase text-paper-3 mb-2">
-        captures by ply
+        {STRINGS.learnings.capturesByPly[lang]}
       </div>
       <div className="flex items-end gap-[2px] h-28 border-b border-hair">
         {bars.map((v, i) => {
