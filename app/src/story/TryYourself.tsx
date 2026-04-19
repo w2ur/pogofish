@@ -1,4 +1,4 @@
-import { useCallback, useEffect } from "react";
+import { useCallback, useEffect, useRef } from "react";
 import { Board } from "../components/board/Board";
 import { useGameMachine } from "../hooks/useGameMachine";
 import { legalMoves } from "../engine/engine";
@@ -49,26 +49,28 @@ export function TryYourself() {
   // indices 0, 2, 4, … are White plies.
   const whitePlies = Math.ceil(state.history.moves.length / 2);
   const drillComplete = whitePlies >= TRY_YOURSELF_MAX_PLIES || gameOver;
-  const thinking = state.aiStatus === "thinking";
 
-  // Red's move scheduler — mirrors PlayScene's AI effect. The reducer's
-  // aiStatus is the guard (flipped to "thinking" by AI_MOVE_REQUESTED and
-  // back to "idle" by AI_MOVE_RECEIVED), so there's no extra local state
-  // and no StrictMode double-scheduling.
+  // Red's move scheduler. Uses a ref guard rather than `state.aiStatus` +
+  // cleanup because a cleanup on a dep change would cancel our own pending
+  // timer. The ref is flipped on schedule and reset when the timer fires.
+  const scheduledRef = useRef(false);
+  const thinking = scheduledRef.current;
+
   useEffect(() => {
-    if (isPlayerTurn || drillComplete || state.aiStatus !== "idle") return;
+    if (isPlayerTurn || drillComplete) return;
+    if (scheduledRef.current) return;
 
     const legal = legalMoves(state.gameState);
     const move = selectGuidedRedMove(state.gameState, legal);
     if (!move) return;
 
-    dispatch({ type: "AI_MOVE_REQUESTED" });
-    const handle = window.setTimeout(() => {
+    scheduledRef.current = true;
+    window.setTimeout(() => {
       dispatch({ type: "AI_MOVE_RECEIVED", move });
+      scheduledRef.current = false;
     }, 450);
-    return () => window.clearTimeout(handle);
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [isPlayerTurn, drillComplete, state.aiStatus]);
+  }, [isPlayerTurn, drillComplete, state.history.moves.length]);
 
   const handleSelectCell = useCallback(
     (cellIndex: number) => {
