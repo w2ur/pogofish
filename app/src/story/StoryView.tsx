@@ -4,6 +4,7 @@ import { Term } from "./Term";
 import { TryYourself } from "./TryYourself";
 import { PlayScene } from "./PlayScene";
 import { PlayCTA } from "./PlayCTA";
+import { LearningsScene } from "./LearningsScene";
 import { useReveal, useActiveIndex } from "./useReveal";
 import {
   HERO_SEQUENCE,
@@ -27,8 +28,9 @@ export function StoryView() {
       <Scene7Experiments />
       <Scene8Verdict />
       <PlayScene />
-      <Scene11Glossary />
+      <LearningsScene />
       <Scene10Epilogue />
+      <Scene11Glossary />
       <StoryFooter />
       <PlayCTA />
     </div>
