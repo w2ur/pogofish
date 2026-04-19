@@ -218,20 +218,20 @@ function PinnedStory() {
               condition fires. The game fits on a napkin.
             </p>
             <p>
-              That napkin was what made it look like a good problem for a small
-              experiment. I had been reading about <Term term="RL">reinforcement
-              learning</Term> and wanted to train an agent on something I could verify
-              by brute force. Pogo looked perfect: small enough to solve exactly with
+              The napkin made it look like a good problem for a small experiment. I
+              had been reading about <Term term="RL">reinforcement learning</Term>
+              {" "}and wanted to train an agent on something I could verify by brute
+              force. Pogo looked perfect: small enough to solve exactly with
               <Term term="Minimax"> minimax</Term>, small enough to run self-play in
               a corner of a laptop, and novel enough that no public code would leak
               into training.
             </p>
             <p>
-              The experiment I pictured was a neat parallel run. Build the solver,
-              compute the true value of every reachable state, then train a neural
-              network and measure how quickly it caught up. A thesis-sized question
-              on a kitchen-table board. I started, as I often do, by asking an AI how
-              big the problem was.
+              I pictured a neat parallel run. Build the solver, compute the true
+              value of every reachable state, then train a neural network and
+              measure how quickly it caught up. A thesis-sized question on a
+              kitchen-table board. I started, as I often do, by asking an AI how big
+              the problem was.
             </p>
           </NarrativePanel>
 
@@ -270,8 +270,8 @@ function PinnedStory() {
             </p>
             <p>
               I accepted the number and started building. The model had not hedged,
-              and I had not pushed. It is possible to read that exchange now as two
-              collaborators skipping a step together, each one assuming the other had
+              and I had not pushed. Read that exchange now and you see two
+              collaborators skipping a step together, each assuming the other had
               done the arithmetic. The step we skipped was the one that mattered:
               asking whether the game actually <em className="text-paper">ends</em>.
             </p>
@@ -355,9 +355,9 @@ function PinnedStory() {
               So the solver was doing honest work on a dishonest problem. It was
               searching an infinite tree, and every time a cycle came back around I
               was paying full price to store the position again under a different
-              path. The transposition table, which in most games saves you from that
-              exact mistake, was being defeated by the fact that I was folding the
-              same state into it along dozens of routes.
+              path. The transposition table, which usually saves you from that exact
+              mistake, was defeated because I was folding the same state into it
+              along dozens of routes.
             </p>
             <p>
               When I dropped an artificial cap on search depth, the solver stopped
@@ -375,9 +375,9 @@ function PinnedStory() {
             kicker={CHAPTERS[6]!.kicker}
           >
             <p>
-              There was a second problem underneath the first. Even in the finite
-              games that did end — the ones where someone stacked all six of their
-              colour — the play patterns leading to those endings were strange.
+              A second problem lay underneath the first. Even in the finite games
+              that did end — the ones where someone stacked all six of their colour
+              — the play patterns leading to those endings were strange.
               Stronger players learned to avoid forming towers at all. Pieces would
               distribute themselves into mixed stacks across the middle row and sit
               there, neither side willing to commit. The game would drift toward
@@ -396,11 +396,11 @@ function PinnedStory() {
             <p>
               The rewrite began here. Instead of trying to solve Pogo I started
               asking what minimum repair would make it a game that could actually
-              be solved and played. A losing condition, something that fires when
-              the state is cycling or when the budget of moves runs out, and that is
-              tight enough that good play is forced to commit. Not a patch stapled
-              onto the board — a variable to test. Three families of candidates came
-              out of an afternoon with a notebook.
+              be solved and played. A losing condition that fires when the state
+              cycles or the move budget runs out — tight enough to force good play
+              into commitment. Not a patch stapled onto the board: a variable to
+              test. Three families of candidates came out of an afternoon with a
+              notebook.
             </p>
             <PullQuote>
               Somebody, eventually, has to lose.
@@ -685,8 +685,8 @@ function Scene7Experiments() {
               per variant before any meaningful number comes out the other end.
             </p>
             <p>
-              The three skill tiers are the ones I learned to build, in order, while
-              this project was happening. The first is <Term term="RL">random</Term>
+              The three skill tiers are the ones I learned to build, in order, over
+              the run of this project. The first is <Term term="RL">random</Term>
               play &mdash; a baseline, a floor, a control. The second is{" "}
               <Term term="DQN">DQN</Term>, a neural network trained by playing
               itself and nudging its move preferences toward whichever moves tended
@@ -705,8 +705,8 @@ function Scene7Experiments() {
               every tier against every other tier. Three measurements mattered:
               is White's win rate between 45 and 55 % (balance), does the strong
               opponent beat the weak one at least 75 % of the time (skill
-              matters), and when draws happen, do they happen between strong
-              players against weak ones, or only between equals (earned draws)?
+              matters), and when draws happen, do they land between strong and weak
+              players, or only between equals (earned draws)?
             </p>
             <p>
               The five cards below are the survivors I narrowed the slate to after
