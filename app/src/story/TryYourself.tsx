@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useRef, useState } from "react";
+import { useCallback, useEffect } from "react";
 import { Board } from "../components/board/Board";
 import { useGameMachine } from "../hooks/useGameMachine";
 import { legalMoves } from "../engine/engine";
@@ -40,58 +40,35 @@ export function selectGuidedRedMove(state: GameState, legal: Move[]): Move | nul
 }
 
 export function TryYourself() {
-  const [whitePlies, setWhitePlies] = useState(0);
-  const [redThinking, setRedThinking] = useState(false);
-  const lastMovesLenRef = useRef(0);
+  const { state, dispatch, isPlayerTurn, gameOver } = useGameMachine(
+    "W",
+    RULES_LC1_2,
+  );
 
-  const {
-    state,
-    dispatch,
-    isPlayerTurn,
-    gameOver,
-  } = useGameMachine("W", RULES_LC1_2);
-
+  // Count White plies directly from the move history. White moves first, so
+  // indices 0, 2, 4, … are White plies.
+  const whitePlies = Math.ceil(state.history.moves.length / 2);
   const drillComplete = whitePlies >= TRY_YOURSELF_MAX_PLIES || gameOver;
+  const thinking = state.aiStatus === "thinking";
 
-  // Watch move history. When a new move lands, (a) if it was White's, bump the
-  // ply counter; (b) if it's now Red's turn and the drill isn't over, schedule
-  // Red's scripted response.
+  // Red's move scheduler — mirrors PlayScene's AI effect. The reducer's
+  // aiStatus is the guard (flipped to "thinking" by AI_MOVE_REQUESTED and
+  // back to "idle" by AI_MOVE_RECEIVED), so there's no extra local state
+  // and no StrictMode double-scheduling.
   useEffect(() => {
-    const movesLen = state.history.moves.length;
-    if (movesLen === lastMovesLenRef.current) return;
+    if (isPlayerTurn || drillComplete || state.aiStatus !== "idle") return;
 
-    const lastMove = state.history.moves[movesLen - 1];
-    const movesByWhiteSoFar = Math.ceil(movesLen / 2);
-    if (lastMove && movesLen % 2 === 1) {
-      // Odd-length → White just moved (W moves first).
-      setWhitePlies(movesByWhiteSoFar);
-    }
-    lastMovesLenRef.current = movesLen;
-  }, [state.history.moves.length]);
-
-  useEffect(() => {
-    if (drillComplete) return;
-    if (isPlayerTurn) return;
-    if (redThinking) return;
-
-    setRedThinking(true);
     const legal = legalMoves(state.gameState);
     const move = selectGuidedRedMove(state.gameState, legal);
-    if (!move) {
-      setRedThinking(false);
-      return;
-    }
+    if (!move) return;
 
+    dispatch({ type: "AI_MOVE_REQUESTED" });
     const handle = window.setTimeout(() => {
       dispatch({ type: "AI_MOVE_RECEIVED", move });
-      setRedThinking(false);
     }, 450);
-
-    return () => {
-      window.clearTimeout(handle);
-      setRedThinking(false);
-    };
-  }, [isPlayerTurn, drillComplete, state.gameState, dispatch, redThinking]);
+    return () => window.clearTimeout(handle);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [isPlayerTurn, drillComplete, state.aiStatus]);
 
   const handleSelectCell = useCallback(
     (cellIndex: number) => {
@@ -126,7 +103,7 @@ export function TryYourself() {
     ? "Drill complete."
     : isPlayerTurn
       ? "Your move."
-      : redThinking
+      : thinking
         ? "Red is thinking…"
         : "";
 
