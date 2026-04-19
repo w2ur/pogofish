@@ -689,7 +689,7 @@ function Scene7Experiments() {
             </p>
             <p>
               The three skill tiers are the ones I learned to build, in order, over
-              the run of this project. The first is <Term term="RL">random</Term>
+              the run of this project. The first is <Term term="RL">random</Term>{" "}
               play &mdash; a baseline, a floor, a control. The second is{" "}
               <Term term="DQN">DQN</Term>, a neural network trained by playing
               itself and nudging its move preferences toward whichever moves tended
