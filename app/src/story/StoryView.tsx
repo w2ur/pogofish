@@ -4,6 +4,7 @@ import { useSettings, type GameVariant } from "../stores/SettingsContext";
 import type { AILevel } from "../ai/player";
 import { StoryBoard } from "./StoryBoard";
 import { Term } from "./Term";
+import { TryYourself } from "./TryYourself";
 import { useReveal, useActiveIndex } from "./useReveal";
 import {
   HERO_SEQUENCE,
@@ -22,6 +23,7 @@ export function StoryView() {
     <div className="story story-grain story-noise min-h-screen">
       <StoryChrome />
       <Scene1Hook />
+      <TryYourself />
       <PinnedStory />
       <Scene7Experiments />
       <Scene8Verdict />

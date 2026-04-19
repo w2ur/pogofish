@@ -1,0 +1,462 @@
+{
+  "model_id": "lc3-29",
+  "variant": "LC3-29",
+  "games_played": 500,
+  "avg_game_length": 19.742,
+  "draw_rate": 0.04,
+  "white_win_rate": 0.652,
+  "red_win_rate": 0.308,
+  "opening_move_distribution": [
+    {
+      "from_cell": 0,
+      "to_cell": 1,
+      "num_pieces": 1,
+      "count": 360,
+      "frequency": 0.72
+    },
+    {
+      "from_cell": 2,
+      "to_cell": 0,
+      "num_pieces": 2,
+      "count": 64,
+      "frequency": 0.128
+    },
+    {
+      "from_cell": 0,
+      "to_cell": 2,
+      "num_pieces": 2,
+      "count": 38,
+      "frequency": 0.076
+    },
+    {
+      "from_cell": 2,
+      "to_cell": 5,
+      "num_pieces": 1,
+      "count": 19,
+      "frequency": 0.038
+    },
+    {
+      "from_cell": 2,
+      "to_cell": 1,
+      "num_pieces": 1,
+      "count": 7,
+      "frequency": 0.014
+    },
+    {
+      "from_cell": 0,
+      "to_cell": 3,
+      "num_pieces": 1,
+      "count": 7,
+      "frequency": 0.014
+    },
+    {
+      "from_cell": 1,
+      "to_cell": 0,
+      "num_pieces": 1,
+      "count": 5,
+      "frequency": 0.01
+    }
+  ],
+  "capture_timing_histogram": [
+    0,
+    34,
+    180,
+    275,
+    289,
+    232,
+    311,
+    299,
+    302,
+    210,
+    231,
+    230,
+    217,
+    193,
+    191,
+    153,
+    169,
+    158,
+    126,
+    118,
+    97,
+    104,
+    84,
+    79,
+    56,
+    67,
+    59,
+    59,
+    59
+  ],
+  "stack_size_at_endgame": [
+    2818,
+    529,
+    188,
+    197,
+    262,
+    118,
+    121,
+    129,
+    69,
+    32,
+    21,
+    5,
+    11
+  ],
+  "policy_probes": [
+    {
+      "label": "opening",
+      "board": [
+        [
+          "W",
+          "W"
+        ],
+        [
+          "W",
+          "W"
+        ],
+        [
+          "W",
+          "W"
+        ],
+        [],
+        [],
+        [],
+        [
+          "R",
+          "R"
+        ],
+        [
+          "R",
+          "R"
+        ],
+        [
+          "R",
+          "R"
+        ]
+      ],
+      "top_moves": [
+        {
+          "from_cell": 2,
+          "to_cell": 0,
+          "num_pieces": 2,
+          "probability": 0.34487736
+        },
+        {
+          "from_cell": 0,
+          "to_cell": 1,
+          "num_pieces": 1,
+          "probability": 0.33760518
+        },
+        {
+          "from_cell": 0,
+          "to_cell": 2,
+          "num_pieces": 2,
+          "probability": 0.11667395
+        },
+        {
+          "from_cell": 2,
+          "to_cell": 5,
+          "num_pieces": 1,
+          "probability": 0.06989197
+        },
+        {
+          "from_cell": 0,
+          "to_cell": 3,
+          "num_pieces": 1,
+          "probability": 0.03447335
+        }
+      ],
+      "value_estimate": 0.034207612
+    },
+    {
+      "label": "early",
+      "board": [
+        [
+          "W",
+          "W",
+          "W",
+          "W"
+        ],
+        [
+          "W"
+        ],
+        [
+          "R"
+        ],
+        [],
+        [
+          "W"
+        ],
+        [],
+        [
+          "R",
+          "R"
+        ],
+        [
+          "R",
+          "R"
+        ],
+        [
+          "R"
+        ]
+      ],
+      "top_moves": [
+        {
+          "from_cell": 4,
+          "to_cell": 7,
+          "num_pieces": 1,
+          "probability": 0.30835795
+        },
+        {
+          "from_cell": 4,
+          "to_cell": 1,
+          "num_pieces": 1,
+          "probability": 0.21820743
+        },
+        {
+          "from_cell": 0,
+          "to_cell": 7,
+          "num_pieces": 3,
+          "probability": 0.10447799
+        },
+        {
+          "from_cell": 4,
+          "to_cell": 3,
+          "num_pieces": 1,
+          "probability": 0.06880423
+        },
+        {
+          "from_cell": 4,
+          "to_cell": 5,
+          "num_pieces": 1,
+          "probability": 0.06857753
+        }
+      ],
+      "value_estimate": 0.025555916
+    },
+    {
+      "label": "development",
+      "board": [
+        [
+          "W"
+        ],
+        [
+          "W"
+        ],
+        [
+          "R"
+        ],
+        [],
+        [],
+        [],
+        [
+          "R"
+        ],
+        [
+          "R",
+          "R",
+          "W",
+          "R",
+          "W",
+          "W",
+          "W",
+          "R"
+        ],
+        []
+      ],
+      "top_moves": [
+        {
+          "from_cell": 1,
+          "to_cell": 4,
+          "num_pieces": 1,
+          "probability": 0.59352165
+        },
+        {
+          "from_cell": 1,
+          "to_cell": 2,
+          "num_pieces": 1,
+          "probability": 0.19166031
+        },
+        {
+          "from_cell": 1,
+          "to_cell": 0,
+          "num_pieces": 1,
+          "probability": 0.18292713
+        },
+        {
+          "from_cell": 0,
+          "to_cell": 3,
+          "num_pieces": 1,
+          "probability": 0.021496713
+        },
+        {
+          "from_cell": 0,
+          "to_cell": 1,
+          "num_pieces": 1,
+          "probability": 0.010394188
+        }
+      ],
+      "value_estimate": 0.5478964
+    },
+    {
+      "label": "midgame",
+      "board": [
+        [],
+        [
+          "W"
+        ],
+        [
+          "R",
+          "W"
+        ],
+        [
+          "W",
+          "W",
+          "R"
+        ],
+        [],
+        [],
+        [
+          "R"
+        ],
+        [
+          "R"
+        ],
+        [
+          "W",
+          "R",
+          "W",
+          "R"
+        ]
+      ],
+      "top_moves": [
+        {
+          "from_cell": 1,
+          "to_cell": 0,
+          "num_pieces": 1,
+          "probability": 0.4776984
+        },
+        {
+          "from_cell": 1,
+          "to_cell": 4,
+          "num_pieces": 1,
+          "probability": 0.31738833
+        },
+        {
+          "from_cell": 1,
+          "to_cell": 2,
+          "num_pieces": 1,
+          "probability": 0.19076954
+        },
+        {
+          "from_cell": 2,
+          "to_cell": 0,
+          "num_pieces": 2,
+          "probability": 0.007805388
+        },
+        {
+          "from_cell": 2,
+          "to_cell": 5,
+          "num_pieces": 1,
+          "probability": 0.002281619
+        }
+      ],
+      "value_estimate": -0.466843
+    },
+    {
+      "label": "deep midgame",
+      "board": [
+        [],
+        [],
+        [
+          "R",
+          "W"
+        ],
+        [],
+        [
+          "W",
+          "W",
+          "W",
+          "R",
+          "R",
+          "W",
+          "R"
+        ],
+        [],
+        [
+          "R"
+        ],
+        [],
+        [
+          "W",
+          "R"
+        ]
+      ],
+      "top_moves": [
+        {
+          "from_cell": 2,
+          "to_cell": 4,
+          "num_pieces": 2,
+          "probability": 0.38905853
+        },
+        {
+          "from_cell": 2,
+          "to_cell": 0,
+          "num_pieces": 2,
+          "probability": 0.23201746
+        },
+        {
+          "from_cell": 2,
+          "to_cell": 8,
+          "num_pieces": 2,
+          "probability": 0.20520596
+        },
+        {
+          "from_cell": 2,
+          "to_cell": 5,
+          "num_pieces": 1,
+          "probability": 0.09745122
+        },
+        {
+          "from_cell": 2,
+          "to_cell": 1,
+          "num_pieces": 1,
+          "probability": 0.076266795
+        }
+      ],
+      "value_estimate": 0.073252216
+    },
+    {
+      "label": "endgame",
+      "board": [
+        [],
+        [],
+        [],
+        [],
+        [
+          "W",
+          "W",
+          "W",
+          "R",
+          "R",
+          "W",
+          "R"
+        ],
+        [],
+        [
+          "R"
+        ],
+        [
+          "W",
+          "R",
+          "W",
+          "R"
+        ],
+        []
+      ],
+      "top_moves": [],
+      "value_estimate": -0.8048328
+    }
+  ]
+}
