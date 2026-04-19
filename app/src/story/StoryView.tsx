@@ -928,14 +928,16 @@ function VerdictBadge({ verdict }: { verdict: "pass" | "fail" | "warn" }) {
 /* ---------------- scene 9: play ---------------- */
 
 function Scene9Play() {
-  const { setView, setPlayerColor } = useGameContext();
+  const { setPlayerColor } = useGameContext();
   const { variant, setVariant, aiLevel, setAILevel, mctsSimulations, setMctsSimulations } = useSettings();
   const [pendingColor, setPendingColor] = useState<"W" | "R">("W");
   const ref = useReveal<HTMLDivElement>();
 
+  // Launch is a no-op until Slice 4 wires the inline game into this scene.
+  // Player color is committed when the reader changes it so the inline game
+  // (once added) will pick it up immediately.
   function launch() {
     setPlayerColor(pendingColor);
-    setView("game");
   }
 
   return (
