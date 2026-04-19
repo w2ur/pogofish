@@ -31,15 +31,30 @@ impl DqnNet {
         let mut in_size = STATE_SIZE as i64;
         for (i, &out_size) in trunk_sizes.iter().enumerate() {
             trunk = trunk
-                .add(nn::linear(vs / format!("trunk_{i}"), in_size, out_size, Default::default()))
+                .add(nn::linear(
+                    vs / format!("trunk_{i}"),
+                    in_size,
+                    out_size,
+                    Default::default(),
+                ))
                 .add_fn(|x| x.relu());
             in_size = out_size;
         }
 
         let head = nn::seq()
-            .add(nn::linear(vs / "head_fc1", in_size, head_size, Default::default()))
+            .add(nn::linear(
+                vs / "head_fc1",
+                in_size,
+                head_size,
+                Default::default(),
+            ))
             .add_fn(|x| x.relu())
-            .add(nn::linear(vs / "head_fc2", head_size, ACTION_SIZE as i64, Default::default()));
+            .add(nn::linear(
+                vs / "head_fc2",
+                head_size,
+                ACTION_SIZE as i64,
+                Default::default(),
+            ));
 
         Self { trunk, head }
     }
@@ -98,7 +113,10 @@ struct ReplayBuffer {
 
 impl ReplayBuffer {
     fn new(capacity: usize) -> Self {
-        Self { buffer: VecDeque::with_capacity(capacity), capacity }
+        Self {
+            buffer: VecDeque::with_capacity(capacity),
+            capacity,
+        }
     }
 
     fn push(&mut self, t: Transition) {
@@ -209,7 +227,9 @@ pub fn train_dqn(rules: &RuleSet, cfg: &DqnConfig) -> anyhow::Result<()> {
     // --- Target (frozen copy) network ---
     let mut target_vs = make_var_store();
     let target_net = DqnNet::new(&target_vs.root(), &[256, 128], 128);
-    target_vs.copy(&q_vs).context("initialising target network")?;
+    target_vs
+        .copy(&q_vs)
+        .context("initialising target network")?;
 
     let mut opt = nn::Adam::default().build(&q_vs, cfg.lr)?;
 
@@ -224,8 +244,8 @@ pub fn train_dqn(rules: &RuleSet, cfg: &DqnConfig) -> anyhow::Result<()> {
     for episode in 1..=cfg.episodes {
         // Linear epsilon decay
         let epsilon = {
-            let t = (episode - 1).min(cfg.epsilon_decay_steps) as f32
-                / cfg.epsilon_decay_steps as f32;
+            let t =
+                (episode - 1).min(cfg.epsilon_decay_steps) as f32 / cfg.epsilon_decay_steps as f32;
             cfg.epsilon_start + (cfg.epsilon_end - cfg.epsilon_start) * t
         };
 
@@ -331,21 +351,24 @@ pub fn train_dqn(rules: &RuleSet, cfg: &DqnConfig) -> anyhow::Result<()> {
                     .iter()
                     .zip(max_q_next.iter())
                     .zip(dones.iter())
-                    .map(|((&r, &max_q), &done)| {
-                        if done { r } else { r + cfg.gamma * max_q }
-                    })
+                    .map(
+                        |((&r, &max_q), &done)| {
+                            if done {
+                                r
+                            } else {
+                                r + cfg.gamma * max_q
+                            }
+                        },
+                    )
                     .collect()
             };
-            let targets_t =
-                Tensor::from_slice(&td_targets).to_kind(Kind::Float);
+            let targets_t = Tensor::from_slice(&td_targets).to_kind(Kind::Float);
 
             // Q(s, a) for the taken actions
             let q_all = q_net.forward(&states_t);
             let action_indices_t =
-                Tensor::from_slice(
-                    &actions.iter().map(|&a| a as i64).collect::<Vec<_>>(),
-                )
-                .to_device(Device::Cpu);
+                Tensor::from_slice(&actions.iter().map(|&a| a as i64).collect::<Vec<_>>())
+                    .to_device(Device::Cpu);
             let q_taken = q_all
                 .gather(1, &action_indices_t.unsqueeze(1), false)
                 .squeeze_dim(1);
@@ -391,11 +414,17 @@ pub fn train_dqn(rules: &RuleSet, cfg: &DqnConfig) -> anyhow::Result<()> {
         // --- Periodic model save ---
         if episode % save_interval == 0 || episode == cfg.episodes {
             q_net.save(&q_vs, &best_path).context("saving model")?;
-            println!("  Saved model at episode {episode} → {}", best_path.display());
+            println!(
+                "  Saved model at episode {episode} → {}",
+                best_path.display()
+            );
         }
     }
 
-    println!("DQN training complete. Model saved to {}", best_path.display());
+    println!(
+        "DQN training complete. Model saved to {}",
+        best_path.display()
+    );
     Ok(())
 }
 

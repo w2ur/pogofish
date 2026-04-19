@@ -39,7 +39,11 @@ pub fn index_to_move(index: usize) -> Move {
     let rem = index % 27;
     let num_pieces = (rem / 9 + 1) as u8;
     let to_cell = (rem % 9) as u8;
-    Move { from_cell, num_pieces, to_cell }
+    Move {
+        from_cell,
+        num_pieces,
+        to_cell,
+    }
 }
 
 /// Create a boolean mask of legal actions for a given state.
@@ -71,7 +75,11 @@ mod tests {
         for from in 0u8..9 {
             for pieces in 1u8..=3 {
                 for to in 0u8..9 {
-                    let m = Move { from_cell: from, num_pieces: pieces, to_cell: to };
+                    let m = Move {
+                        from_cell: from,
+                        num_pieces: pieces,
+                        to_cell: to,
+                    };
                     let idx = move_to_index(&m);
                     let m2 = index_to_move(idx);
                     assert_eq!(m, m2);

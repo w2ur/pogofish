@@ -13,8 +13,7 @@ pub fn append_metrics(path: &Path, entry: &serde_json::Value) -> anyhow::Result<
         .append(true)
         .open(path)
         .with_context(|| format!("opening metrics file: {}", path.display()))?;
-    let line = serde_json::to_string(entry)
-        .context("serialising metrics entry")?;
+    let line = serde_json::to_string(entry).context("serialising metrics entry")?;
     writeln!(file, "{}", line).context("writing metrics line")?;
     Ok(())
 }

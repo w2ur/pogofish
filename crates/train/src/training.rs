@@ -3,6 +3,7 @@ use crate::metrics::append_metrics;
 use crate::net::{make_var_store, ArchConfig, AzNet};
 use crate::selfplay::{play_one_game, SelfPlayConfig, TrainingExample};
 use anyhow::Context;
+use pogofish_engine::RuleSet;
 use std::collections::VecDeque;
 use std::path::PathBuf;
 use std::sync::atomic::{AtomicBool, Ordering};
@@ -12,7 +13,6 @@ use tch::{
     nn::{self, OptimizerConfig},
     Device, Kind, Tensor,
 };
-use pogofish_engine::RuleSet;
 
 pub struct TrainConfig {
     pub iterations: u32,
@@ -66,7 +66,10 @@ struct GameWindow {
 
 impl GameWindow {
     fn new(capacity: usize) -> Self {
-        Self { games: VecDeque::new(), capacity }
+        Self {
+            games: VecDeque::new(),
+            capacity,
+        }
     }
 
     fn push(&mut self, game: Vec<TrainingExample>) {
@@ -153,7 +156,10 @@ pub fn train(rules: &RuleSet, cfg: &TrainConfig) -> anyhow::Result<()> {
     // --- Resume detection ---
     let start_iteration = count_completed_iterations(&metrics_path) + 1;
     if start_iteration > 1 {
-        println!("Resuming from iteration {start_iteration} ({} already completed)", start_iteration - 1);
+        println!(
+            "Resuming from iteration {start_iteration} ({} already completed)",
+            start_iteration - 1
+        );
     }
 
     // Initialise best net
@@ -198,7 +204,10 @@ pub fn train(rules: &RuleSet, cfg: &TrainConfig) -> anyhow::Result<()> {
             if interrupted.load(Ordering::Relaxed) {
                 println!("\n  Interrupted during self-play. Saving best model...");
                 save_vs(&best_vs, &best_path).context("saving best model on interrupt")?;
-                println!("  Best model saved to {}. Safe to exit.", best_path.display());
+                println!(
+                    "  Best model saved to {}. Safe to exit.",
+                    best_path.display()
+                );
                 return Ok(());
             }
 
@@ -223,7 +232,9 @@ pub fn train(rules: &RuleSet, cfg: &TrainConfig) -> anyhow::Result<()> {
 
         let mut challenger_vs = make_var_store();
         let challenger_net = AzNet::from_config(&challenger_vs.root(), &cfg.arch);
-        challenger_vs.copy(&best_vs).context("copying best weights to challenger")?;
+        challenger_vs
+            .copy(&best_vs)
+            .context("copying best weights to challenger")?;
 
         // Cosine LR with warm restart after each adoption.
         // After adoption, reset the cycle so the new model gets a full LR burst
@@ -239,9 +250,14 @@ pub fn train(rules: &RuleSet, cfg: &TrainConfig) -> anyhow::Result<()> {
 
         let states_tensor = Tensor::stack(&states, 0).to_kind(Kind::Float);
         let policies_tensor = Tensor::stack(&policies, 0).to_kind(Kind::Float);
-        let values_tensor = Tensor::from_slice(&values).unsqueeze(1).to_kind(Kind::Float);
+        let values_tensor = Tensor::from_slice(&values)
+            .unsqueeze(1)
+            .to_kind(Kind::Float);
 
-        println!("  Training: {} epochs on {} examples (lr={:.6})", cfg.training_epochs, n, lr);
+        println!(
+            "  Training: {} epochs on {} examples (lr={:.6})",
+            cfg.training_epochs, n, lr
+        );
 
         let mut last_avg_loss = 0f64;
         for epoch in 1..=cfg.training_epochs {
@@ -261,8 +277,12 @@ pub fn train(rules: &RuleSet, cfg: &TrainConfig) -> anyhow::Result<()> {
                 let (policy_logits, value_pred) = challenger_net.forward(&s_batch);
 
                 let log_probs = policy_logits.log_softmax(-1, Kind::Float);
-                let policy_loss = -(p_batch * log_probs).sum_dim_intlist(&[-1i64][..], false, Kind::Float).mean(Kind::Float);
-                let value_loss = (value_pred - v_batch).pow_tensor_scalar(2).mean(Kind::Float);
+                let policy_loss = -(p_batch * log_probs)
+                    .sum_dim_intlist(&[-1i64][..], false, Kind::Float)
+                    .mean(Kind::Float);
+                let value_loss = (value_pred - v_batch)
+                    .pow_tensor_scalar(2)
+                    .mean(Kind::Float);
                 let loss = policy_loss + value_loss;
 
                 opt.backward_step(&loss);
@@ -274,7 +294,10 @@ pub fn train(rules: &RuleSet, cfg: &TrainConfig) -> anyhow::Result<()> {
 
             if num_batches > 0 {
                 last_avg_loss = total_loss / num_batches as f64;
-                println!("    Epoch {}/{}: avg_loss={:.4}", epoch, cfg.training_epochs, last_avg_loss);
+                println!(
+                    "    Epoch {}/{}: avg_loss={:.4}",
+                    epoch, cfg.training_epochs, last_avg_loss
+                );
             }
         }
 
@@ -305,7 +328,9 @@ pub fn train(rules: &RuleSet, cfg: &TrainConfig) -> anyhow::Result<()> {
             best_vs = challenger_vs;
             let mut new_best_vs = make_var_store();
             let new_best_net = AzNet::from_config(&new_best_vs.root(), &cfg.arch);
-            new_best_vs.copy(&best_vs).context("promoting challenger to best")?;
+            new_best_vs
+                .copy(&best_vs)
+                .context("promoting challenger to best")?;
             best_vs = new_best_vs;
             best_net = new_best_net;
             save_vs(&best_vs, &best_path).context("saving best model")?;
@@ -313,7 +338,10 @@ pub fn train(rules: &RuleSet, cfg: &TrainConfig) -> anyhow::Result<()> {
             // trains primarily on data it generated.
             window.evict_oldest_half();
             last_adoption_iter = iteration;
-            println!("  Window after eviction: {} examples", window.total_examples());
+            println!(
+                "  Window after eviction: {} examples",
+                window.total_examples()
+            );
         } else {
             println!("  Challenger REJECTED");
         }
@@ -348,18 +376,22 @@ pub fn train(rules: &RuleSet, cfg: &TrainConfig) -> anyhow::Result<()> {
         println!("  Iter: {iter_secs:.0}s | Total: {total_secs:.0}s | ETA: {eta_h:.1}h");
     }
 
-    println!("Training complete. Best model saved to {}", best_path.display());
+    println!(
+        "Training complete. Best model saved to {}",
+        best_path.display()
+    );
     Ok(())
 }
 
 /// Register a Ctrl+C handler that sets the flag instead of killing the process.
 fn ctrlc_handler(flag: &Arc<AtomicBool>) {
     let f = flag.clone();
-    let _ = unsafe {
-        libc::signal(libc::SIGINT, sigint_handler as libc::sighandler_t)
-    };
+    let _ = unsafe { libc::signal(libc::SIGINT, sigint_handler as libc::sighandler_t) };
     // Store the flag in a static so the signal handler can access it
-    INTERRUPTED.store(flag.as_ref() as *const AtomicBool as usize, Ordering::SeqCst);
+    INTERRUPTED.store(
+        flag.as_ref() as *const AtomicBool as usize,
+        Ordering::SeqCst,
+    );
     let _ = f; // keep the arc alive
 }
 

@@ -31,10 +31,21 @@ pub fn gatekeeper(
 
     for game_idx in 0..num_games {
         // Alternate sides each game: even games → challenger plays White
-        let challenger_color = if game_idx % 2 == 0 { Color::White } else { Color::Red };
+        let challenger_color = if game_idx % 2 == 0 {
+            Color::White
+        } else {
+            Color::Red
+        };
         let outcome = play_game_with_tau(
-            challenger, best, rules, num_simulations, c_puct, max_moves,
-            challenger_color, temperature, &mut rng,
+            challenger,
+            best,
+            rules,
+            num_simulations,
+            c_puct,
+            max_moves,
+            challenger_color,
+            temperature,
+            &mut rng,
         );
         match outcome {
             None => draws += 1,
@@ -54,7 +65,12 @@ pub fn gatekeeper(
         0.0
     };
 
-    GatekeeperResult { win_rate, wins, losses, draws }
+    GatekeeperResult {
+        win_rate,
+        wins,
+        losses,
+        draws,
+    }
 }
 
 /// Play a single game between two nets using MCTS with the given temperature.
@@ -85,7 +101,11 @@ fn play_game_with_tau(
             return Some(outcome);
         }
         let current = state.to_move();
-        let net = if current == challenger_color { challenger } else { best };
+        let net = if current == challenger_color {
+            challenger
+        } else {
+            best
+        };
         let mv = neural_mcts_move_with_tau(net, &state, rules, &cfg, temperature, rng);
         state = apply_move(&state, mv).expect("legal move");
     }

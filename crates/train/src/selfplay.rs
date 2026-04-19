@@ -1,6 +1,8 @@
 use crate::encoding::{legal_move_mask, move_to_index, state_to_tensor, ACTION_SIZE};
 use crate::net::AzNet;
-use pogofish_engine::{apply_move, is_terminal, legal_moves, Color, GameState, Move, Outcome, RuleSet, StateKey};
+use pogofish_engine::{
+    apply_move, is_terminal, legal_moves, Color, GameState, Move, Outcome, RuleSet, StateKey,
+};
 use rand::Rng;
 use std::collections::HashMap;
 use tch::{Kind, Tensor};
@@ -58,7 +60,11 @@ struct NeuralMcts<'a> {
 
 impl<'a> NeuralMcts<'a> {
     fn new(net: &'a AzNet, cfg: &'a SelfPlayConfig) -> Self {
-        Self { net, cfg, nodes: HashMap::new() }
+        Self {
+            net,
+            cfg,
+            nodes: HashMap::new(),
+        }
     }
 
     /// Run `num_simulations` from `root`, then return the visit-count distribution
@@ -117,7 +123,12 @@ impl<'a> NeuralMcts<'a> {
             .iter()
             .map(|m| {
                 let idx = move_to_index(m);
-                Edge { mv: *m, visits: 0, value_sum: 0.0, prior: priors[idx] }
+                Edge {
+                    mv: *m,
+                    visits: 0,
+                    value_sum: 0.0,
+                    prior: priors[idx],
+                }
             })
             .collect();
         self.nodes.insert(key, Node { edges });
@@ -161,8 +172,14 @@ impl<'a> NeuralMcts<'a> {
         }
 
         // Selection: PUCT
-        let total_visits: u32 =
-            self.nodes.get(&key).unwrap().edges.iter().map(|e| e.visits).sum();
+        let total_visits: u32 = self
+            .nodes
+            .get(&key)
+            .unwrap()
+            .edges
+            .iter()
+            .map(|e| e.visits)
+            .sum();
         let parent_sqrt = ((total_visits + 1) as f32).sqrt();
         let best_idx = {
             let node = self.nodes.get(&key).unwrap();
@@ -298,7 +315,11 @@ pub fn play_one_game(net: &AzNet, rules: &RuleSet, cfg: &SelfPlayConfig) -> Vec<
                 },
             };
             let policy = Tensor::from_slice(&dist);
-            TrainingExample { state: state_tensor, policy, value }
+            TrainingExample {
+                state: state_tensor,
+                policy,
+                value,
+            }
         })
         .collect()
 }
@@ -391,7 +412,10 @@ mod tests {
         let (_vs, net, cfg) = make_net_and_cfg();
         let rules = RuleSet::LC1 { repetitions: 1 };
         let examples = play_one_game(&net, &rules, &cfg);
-        assert!(!examples.is_empty(), "game should produce at least one training example");
+        assert!(
+            !examples.is_empty(),
+            "game should produce at least one training example"
+        );
     }
 
     #[test]

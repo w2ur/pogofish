@@ -14,15 +14,27 @@ pub struct ArchConfig {
 
 impl ArchConfig {
     pub fn mlp_tiny() -> Self {
-        Self { name: "mlp_tiny".into(), trunk_sizes: vec![128, 64], head_size: 64 }
+        Self {
+            name: "mlp_tiny".into(),
+            trunk_sizes: vec![128, 64],
+            head_size: 64,
+        }
     }
 
     pub fn mlp_small() -> Self {
-        Self { name: "mlp_small".into(), trunk_sizes: vec![256, 128], head_size: 128 }
+        Self {
+            name: "mlp_small".into(),
+            trunk_sizes: vec![256, 128],
+            head_size: 128,
+        }
     }
 
     pub fn mlp_medium() -> Self {
-        Self { name: "mlp_medium".into(), trunk_sizes: vec![512, 256, 128], head_size: 128 }
+        Self {
+            name: "mlp_medium".into(),
+            trunk_sizes: vec![512, 256, 128],
+            head_size: 128,
+        }
     }
 
     /// Parse an arch name string into a config.
@@ -58,7 +70,12 @@ impl AzNet {
         let mut in_size = STATE_SIZE as i64;
         for (i, &out_size) in trunk_sizes.iter().enumerate() {
             trunk = trunk
-                .add(nn::linear(vs / format!("trunk_{i}"), in_size, out_size, Default::default()))
+                .add(nn::linear(
+                    vs / format!("trunk_{i}"),
+                    in_size,
+                    out_size,
+                    Default::default(),
+                ))
                 .add_fn(|x| x.relu());
             in_size = out_size;
         }
@@ -86,10 +103,19 @@ impl AzNet {
                 Default::default(),
             ))
             .add_fn(|x| x.relu())
-            .add(nn::linear(vs / "value_fc2", value_head_size, 1, Default::default()))
+            .add(nn::linear(
+                vs / "value_fc2",
+                value_head_size,
+                1,
+                Default::default(),
+            ))
             .add_fn(|x| x.tanh());
 
-        Self { trunk, policy_head, value_head }
+        Self {
+            trunk,
+            policy_head,
+            value_head,
+        }
     }
 
     /// Forward pass.
