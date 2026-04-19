@@ -4,6 +4,7 @@ import { Term } from "./Term";
 import { TryYourself } from "./TryYourself";
 import { PlayScene } from "./PlayScene";
 import { PlayCTA } from "./PlayCTA";
+import { Callout } from "./Callout";
 import { LearningsScene } from "./LearningsScene";
 import { useReveal, useActiveIndex } from "./useReveal";
 import {
@@ -229,9 +230,11 @@ function PinnedStory() {
             <p>
               I pictured a neat parallel run. Build the solver, compute the true
               value of every reachable state, then train a neural network and
-              measure how quickly it caught up. A thesis-sized question on a
-              kitchen-table board. I started, as I often do, by asking an AI how big
-              the problem was.
+              measure how quickly it caught up.
+            </p>
+            <Callout>A thesis-sized question on a kitchen-table board.</Callout>
+            <p>
+              I started, as I often do, by asking an AI how big the problem was.
             </p>
           </NarrativePanel>
 
@@ -824,10 +827,13 @@ function Scene8Verdict() {
             on the capping turn loses, so whichever colour's parity lines up with
             the cap wins regardless of play. AlphaZero learned this within an
             afternoon of self-play, and from then on its moves mostly tried to
-            burn tempo. A rule that makes{" "}
+            burn tempo.
+          </p>
+          <Callout>
+            A rule that makes{" "}
             <Term term="RL">reinforcement learning</Term> converge on a trick is a
             rule that is not about the board.
-          </p>
+          </Callout>
         </div>
       </div>
     </section>
@@ -1014,10 +1020,12 @@ function Scene10Epilogue() {
             The lesson is not that AIs are untrustworthy. It is that fluent
             wrongness sounds exactly like fluent rightness, and the only defence
             is to keep a version of the problem in your own head detailed enough to
-            notice when the answer is off by an order of magnitude. You cannot
-            outsource the part of the thinking that tells you whether the
-            thinking is working.
+            notice when the answer is off by an order of magnitude.
           </p>
+          <Callout>
+            You cannot outsource the part of the thinking that tells you whether
+            the thinking is working.
+          </Callout>
           <p>
             So the rewrite happened: one <Term term="Rust">Rust</Term> engine
             feeding both the training loop and the browser, no drift between
