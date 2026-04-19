@@ -1,5 +1,6 @@
 import { useEffect, useState } from "react";
 import { useLang } from "./LangContext";
+import { usePrefersReducedMotion } from "./usePrefersReducedMotion";
 import { STRINGS } from "./i18n";
 
 /**
@@ -9,6 +10,7 @@ import { STRINGS } from "./i18n";
 export function PlayCTA() {
   const [visible, setVisible] = useState(false);
   const { lang } = useLang();
+  const reducedMotion = usePrefersReducedMotion();
 
   useEffect(() => {
     const hookEl = document.querySelector("section:first-of-type");
@@ -43,9 +45,11 @@ export function PlayCTA() {
       aria-label={STRINGS.playCta.ariaLabel[lang]}
       className={`fixed bottom-6 right-6 z-50 mono text-[10px] tracking-[0.28em] uppercase
         rounded-full bg-vermilion text-ink px-5 py-3 shadow-lg shadow-black/40
-        transition-all duration-300 ease-out
         hover:bg-vermilion-soft
-        ${visible ? "opacity-100 translate-y-0" : "opacity-0 translate-y-4 pointer-events-none"}`}
+        ${reducedMotion ? "" : "transition-all duration-300 ease-out"}
+        ${visible
+          ? "opacity-100 translate-y-0"
+          : `opacity-0 pointer-events-none ${reducedMotion ? "" : "translate-y-4"}`}`}
     >
       {STRINGS.playCta.label[lang]}
     </a>

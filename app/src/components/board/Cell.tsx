@@ -43,6 +43,19 @@ export function Cell({
     }
   };
 
+  const handleKeyDown = (e: React.KeyboardEvent<HTMLDivElement>) => {
+    if (e.key === "Enter" || e.key === " ") {
+      e.preventDefault();
+      handleClick();
+    }
+  };
+
+  const file = "abc"[cellIndex % 3];
+  const rank = 3 - Math.floor(cellIndex / 3);
+  const cellLabel = `${file}${rank}`;
+  const pieceLabel = cell.length === 0 ? "empty" : cell.join(" over ");
+  const ariaLabel = `${cellLabel}, ${pieceLabel}`;
+
   let borderClass = "border-zinc-700";
   if (isSelected) {
     borderClass = "border-white";
@@ -58,8 +71,13 @@ export function Cell({
 
   return (
     <div
-      className={`relative flex aspect-square cursor-pointer flex-col items-center justify-center rounded border-2 bg-zinc-900 ${borderClass} transition-colors`}
+      className={`relative flex aspect-square cursor-pointer flex-col items-center justify-center rounded border-2 bg-zinc-900 ${borderClass} transition-colors focus:outline-none focus-visible:ring-2 focus-visible:ring-vermilion focus-visible:ring-offset-2 focus-visible:ring-offset-ink`}
       onClick={handleClick}
+      onKeyDown={handleKeyDown}
+      role="button"
+      tabIndex={0}
+      aria-label={ariaLabel}
+      aria-pressed={isSelected || undefined}
     >
       {showCountSelector && (
         <PieceCountSelector

@@ -115,6 +115,7 @@ function Scene1Hook() {
   const { lang } = useLang();
   const [frame, setFrame] = useState(0);
   useEffect(() => {
+    if (window.matchMedia("(prefers-reduced-motion: reduce)").matches) return;
     const id = setInterval(() => {
       setFrame((f) => (f + 1) % HERO_SEQUENCE.length);
     }, 2400);

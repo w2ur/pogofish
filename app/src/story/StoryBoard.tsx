@@ -26,9 +26,17 @@ export function StoryBoard({
 }: Props) {
   const sizeClass = size === "mini" ? "mini" : size === "large" ? "large" : "";
 
+  const white = board.reduce((n, cell) => n + cell.filter((p) => p === "W").length, 0);
+  const red = board.reduce((n, cell) => n + cell.filter((p) => p === "R").length, 0);
+  const ariaLabel = label
+    ? `${label}: Pogo board, ${white} white and ${red} red pieces.`
+    : `Pogo board, ${white} white and ${red} red pieces.`;
+
   return (
     <div className={`inline-flex flex-col items-center gap-3 ${className}`} style={style}>
       <div
+        role="img"
+        aria-label={ariaLabel}
         className={`pogo-board ${sizeClass} transition-[opacity,filter] duration-700`}
         style={{
           opacity: dim ? 0.5 : 1,

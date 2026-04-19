@@ -12,9 +12,15 @@ ensureEngineReady().then(() => {
   );
 
   // Honor #play hash on cold load: smooth-scroll once layout has settled.
+  // Respect prefers-reduced-motion: no smooth animation for users who asked for less.
   if (window.location.hash === "#play") {
+    const behavior: ScrollBehavior = window.matchMedia(
+      "(prefers-reduced-motion: reduce)",
+    ).matches
+      ? "auto"
+      : "smooth";
     requestAnimationFrame(() => {
-      document.getElementById("play")?.scrollIntoView({ behavior: "smooth" });
+      document.getElementById("play")?.scrollIntoView({ behavior });
     });
   }
 });

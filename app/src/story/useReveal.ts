@@ -1,14 +1,16 @@
 import { useEffect, useRef, useState } from "react";
+import { usePrefersReducedMotion } from "./usePrefersReducedMotion";
 
 export function useReveal<T extends HTMLElement = HTMLDivElement>(
   options: IntersectionObserverInit = { threshold: 0.18, rootMargin: "0px 0px -10% 0px" },
 ) {
   const ref = useRef<T | null>(null);
+  const reducedMotion = usePrefersReducedMotion();
 
   useEffect(() => {
     const el = ref.current;
     if (!el) return;
-    if (typeof IntersectionObserver === "undefined") {
+    if (reducedMotion || typeof IntersectionObserver === "undefined") {
       el.classList.add("is-visible");
       return;
     }
@@ -25,7 +27,7 @@ export function useReveal<T extends HTMLElement = HTMLDivElement>(
     );
     observer.observe(el);
     return () => observer.disconnect();
-  }, []);
+  }, [reducedMotion]);
 
   return ref;
 }
