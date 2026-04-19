@@ -420,7 +420,7 @@ export function PlayScene() {
       <div className="relative mx-auto max-w-5xl space-y-12">
         <div ref={ref} className="reveal space-y-4 text-center">
           <div className="kicker justify-center">
-            {CHAPTERS[8]!.numeral} &middot; {CHAPTERS[8]!.kicker}
+            {CHAPTERS[9]!.numeral} &middot; {CHAPTERS[9]!.kicker}
           </div>
           <h2 className="display text-[clamp(2.25rem,5vw,4rem)] text-paper max-w-3xl mx-auto leading-[1.05]">
             Against an opponent that learned this{" "}

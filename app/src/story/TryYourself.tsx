@@ -4,6 +4,7 @@ import { useGameMachine } from "../hooks/useGameMachine";
 import { legalMoves } from "../engine/engine";
 import type { GameState, Move } from "../engine/types";
 import { RULES_LC1_2 } from "../engine/types";
+import { CHAPTERS } from "./data";
 
 export const TRY_YOURSELF_MAX_PLIES = 5;
 
@@ -135,7 +136,9 @@ export function TryYourself() {
       className="relative px-6 py-28 md:py-36 min-h-screen flex flex-col items-center justify-center gap-8"
     >
       <div className="w-full max-w-3xl text-center space-y-4">
-        <div className="kicker justify-center">III &middot; Five moves</div>
+        <div className="kicker justify-center">
+          {CHAPTERS[1]!.numeral} &middot; {CHAPTERS[1]!.kicker}
+        </div>
         <h2 className="display text-[clamp(2rem,4.5vw,3.5rem)] text-paper leading-[1.1]">
           Try a few moves before we go on.
         </h2>

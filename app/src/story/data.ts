@@ -121,18 +121,23 @@ export const HERO_SEQUENCE: StoryBoard[] = [
   GAME_FRAMES[6]!,
 ];
 
-/** Chapter titles the reader actually sees. */
+/**
+ * Chapter titles the reader actually sees. Twelve scenes in total.
+ * Indices map 1:1 to the narrative order in StoryView.
+ */
 export const CHAPTERS: { numeral: string; kicker: string }[] = [
-  { numeral: "I",    kicker: "Before a single line of code" },
-  { numeral: "II",   kicker: "Nine cells, a game I did not invent" },
-  { numeral: "III",  kicker: "\u201CNo more than a million.\u201D" },
-  { numeral: "IV",   kicker: "Thirty-six gigabytes at dawn" },
-  { numeral: "V",    kicker: "The tree had no leaves" },
-  { numeral: "VI",   kicker: "The rules became the variable" },
-  { numeral: "VII",  kicker: "Five candidate endings" },
-  { numeral: "VIII", kicker: "One survives all three axes" },
-  { numeral: "IX",   kicker: "Now it is your move" },
-  { numeral: "X",    kicker: "Keep the problem in your head" },
+  { numeral: "I",    kicker: "Before a single line of code" },            // 0 — Hook
+  { numeral: "II",   kicker: "Five moves to feel the rules" },            // 1 — TryYourself
+  { numeral: "III",  kicker: "Nine cells, a game I did not invent" },     // 2 — Pinned: what is Pogo
+  { numeral: "IV",   kicker: "\u201CNo more than a million.\u201D" },     // 3 — Pinned: the claim
+  { numeral: "V",    kicker: "Thirty-six gigabytes at dawn" },            // 4 — Pinned: minimax wall
+  { numeral: "VI",   kicker: "The tree had no leaves" },                  // 5 — Pinned: DQN
+  { numeral: "VII",  kicker: "The rules became the variable" },           // 6 — Pinned: AlphaZero
+  { numeral: "VIII", kicker: "Five candidate endings" },                  // 7 — Experiments
+  { numeral: "IX",   kicker: "One survives all three axes" },             // 8 — Verdict
+  { numeral: "X",    kicker: "Now it is your move" },                     // 9 — Play
+  { numeral: "XI",   kicker: "What it learned about winning" },           // 10 — Learnings
+  { numeral: "XII",  kicker: "Keep the problem in your head" },           // 11 — Epilogue
 ];
 
 /** Boards pinned beside the narrative panels (scenes 2–6). */

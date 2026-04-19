@@ -197,8 +197,8 @@ function PinnedStory() {
           {/* II — a game I found */}
           <NarrativePanel
             sectionRef={(el) => { refs.current[0] = el; }}
-            chapter={CHAPTERS[1]!.numeral}
-            kicker={CHAPTERS[1]!.kicker}
+            chapter={CHAPTERS[2]!.numeral}
+            kicker={CHAPTERS[2]!.kicker}
           >
             <p className="dropcap">
               Pogo is a real board game. I did not invent it; I found it on a shelf in
@@ -238,8 +238,8 @@ function PinnedStory() {
           {/* III — the confident AI */}
           <NarrativePanel
             sectionRef={(el) => { refs.current[1] = el; }}
-            chapter={CHAPTERS[2]!.numeral}
-            kicker={CHAPTERS[2]!.kicker}
+            chapter={CHAPTERS[3]!.numeral}
+            kicker={CHAPTERS[3]!.kicker}
           >
             <p>
               Before writing a single line, I had a conversation with a chat model
@@ -292,8 +292,8 @@ function PinnedStory() {
           {/* IV — six days */}
           <NarrativePanel
             sectionRef={(el) => { refs.current[2] = el; }}
-            chapter={CHAPTERS[3]!.numeral}
-            kicker={CHAPTERS[3]!.kicker}
+            chapter={CHAPTERS[4]!.numeral}
+            kicker={CHAPTERS[4]!.kicker}
           >
             <p>
               I wrote the solver in a weekend. Alpha-beta search. A{" "}
@@ -331,8 +331,8 @@ function PinnedStory() {
           {/* V — the tree had no leaves */}
           <NarrativePanel
             sectionRef={(el) => { refs.current[3] = el; }}
-            chapter={CHAPTERS[4]!.numeral}
-            kicker={CHAPTERS[4]!.kicker}
+            chapter={CHAPTERS[5]!.numeral}
+            kicker={CHAPTERS[5]!.kicker}
           >
             <p>
               Minimax is a search algorithm with a strict requirement: every branch
@@ -371,8 +371,8 @@ function PinnedStory() {
           {/* VI — the rules became the variable */}
           <NarrativePanel
             sectionRef={(el) => { refs.current[4] = el; }}
-            chapter={CHAPTERS[5]!.numeral}
-            kicker={CHAPTERS[5]!.kicker}
+            chapter={CHAPTERS[6]!.numeral}
+            kicker={CHAPTERS[6]!.kicker}
           >
             <p>
               There was a second problem underneath the first. Even in the finite
@@ -667,11 +667,11 @@ function Scene7Experiments() {
         <div ref={ref} className="reveal space-y-6 max-w-[58ch]">
           <div className="flex items-baseline gap-4">
             <span className="display italic text-3xl md:text-4xl text-vermilion">
-              {CHAPTERS[6]!.numeral}
+              {CHAPTERS[7]!.numeral}
             </span>
             <span className="fade-line is-visible flex-1 origin-left" />
           </div>
-          <div className="kicker">{CHAPTERS[6]!.kicker}</div>
+          <div className="kicker">{CHAPTERS[7]!.kicker}</div>
           <h2 className="display text-[clamp(2rem,4vw,3.25rem)] text-paper leading-[1.08]">
             If the rules were the variable, which rule was the{" "}
             <span className="display-italic text-vermilion">good</span> one?
@@ -766,11 +766,11 @@ function Scene8Verdict() {
         <div ref={ref} className="reveal space-y-6 max-w-[58ch]">
           <div className="flex items-baseline gap-4">
             <span className="display italic text-3xl md:text-4xl text-vermilion">
-              {CHAPTERS[7]!.numeral}
+              {CHAPTERS[8]!.numeral}
             </span>
             <span className="fade-line is-visible flex-1 origin-left" />
           </div>
-          <div className="kicker">{CHAPTERS[7]!.kicker}</div>
+          <div className="kicker">{CHAPTERS[8]!.kicker}</div>
           <h2 className="display text-[clamp(2rem,4vw,3.25rem)] text-paper leading-[1.08]">
             Two survive all three{" "}
             <span className="display-italic text-vermilion">axes</span>. Three do
@@ -992,11 +992,11 @@ function Scene10Epilogue() {
       <div ref={ref} className="reveal mx-auto max-w-[60ch] space-y-8">
         <div className="flex items-baseline gap-4">
           <span className="display italic text-3xl md:text-4xl text-vermilion">
-            {CHAPTERS[9]!.numeral}
+            {CHAPTERS[11]!.numeral}
           </span>
           <span className="fade-line is-visible flex-1 origin-left" />
         </div>
-        <div className="kicker">{CHAPTERS[9]!.kicker}</div>
+        <div className="kicker">{CHAPTERS[11]!.kicker}</div>
 
         <h2 className="display text-[clamp(2rem,4vw,3rem)] text-paper leading-[1.08]">
           Keep enough of the problem in your own head to know when something is{" "}

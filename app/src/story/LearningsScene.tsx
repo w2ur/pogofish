@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 import { StoryBoard } from "./StoryBoard";
 import type { StoryBoard as StoryBoardData } from "./data";
+import { CHAPTERS } from "./data";
 import { useReveal } from "./useReveal";
 import {
   cellLabel,
@@ -75,7 +76,9 @@ export function LearningsScene() {
       style={{ scrollMarginTop: 80 }}
     >
       <div ref={ref} className="reveal mx-auto max-w-5xl space-y-4 text-center mb-16">
-        <div className="kicker justify-center">X &middot; What it learned</div>
+        <div className="kicker justify-center">
+          {CHAPTERS[10]!.numeral} &middot; {CHAPTERS[10]!.kicker}
+        </div>
         <h2 className="display text-[clamp(2.25rem,5vw,4rem)] text-paper max-w-3xl mx-auto leading-[1.05]">
           After <span className="display-italic text-vermilion">{data.games_played}</span>{" "}
           games against itself, the network had opinions.
