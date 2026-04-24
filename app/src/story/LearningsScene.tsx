@@ -108,8 +108,9 @@ export function LearningsScene() {
                   of games.
                 </>}
                 fr={<>
-                  Le premier coup des Blancs est presque prédéterminé. {cellLabel(topOpening.from_cell)}{" "}
-                  → {cellLabel(topOpening.to_cell)} dans{" "}
+                  Le premier coup des Blancs, à peu de chose près, est écrit
+                  d'avance : {cellLabel(topOpening.from_cell)}{" "}
+                  → {cellLabel(topOpening.to_cell)}, dans{" "}
                   <span className="text-vermilion">{formatPercent(topOpening.frequency)}</span>{" "}
                   des parties.
                 </>}
@@ -123,9 +124,9 @@ export function LearningsScene() {
                   which square it wants.
                 </>}
                 fr={<>
-                  Sur {data.games_played} parties de self-play, le réseau n'a essayé que{" "}
-                  {data.opening_move_distribution.length} premiers coups distincts. Il sait
-                  quelle case il veut.
+                  Sur {data.games_played} parties qu'il a jouées contre lui-même,
+                  le réseau n'a essayé que {data.opening_move_distribution.length}{" "}
+                  premiers coups distincts. Il sait la case qu'il veut atteindre.
                 </>}
               />
             }
@@ -145,7 +146,7 @@ export function LearningsScene() {
               </>}
               fr={<>
                 Les captures culminent au <span className="text-vermilion">demi-coup {capturePeakPly.i}</span>,
-                puis s'estompent à mesure que la position se fige.
+                puis s'espacent à mesure que la position se fige.
               </>}
             />
           }
@@ -157,9 +158,10 @@ export function LearningsScene() {
                 plays for tempo.
               </>}
               fr={<>
-                {capturesInWindow} parties sur {data.games_played} enregistrent une capture
-                entre les demi-coups 6 et 10. Après le coup 15, les captures sont rares —
-                le réseau échange tôt, puis joue pour le tempo.
+                {capturesInWindow} parties sur {data.games_played} voient une
+                capture se produire entre les demi-coups 6 et 10. Passé le
+                coup 15, les captures se raréfient : le réseau règle ses
+                échanges tôt, puis joue pour le tempo.
               </>}
             />
           }
@@ -173,7 +175,7 @@ export function LearningsScene() {
             claim={
               <EnFr
                 en={<>The network&apos;s confidence swings hard on small trades.</>}
-                fr={<>La confiance du réseau bascule fort sur de petits échanges.</>}
+                fr={<>La confiance du réseau bascule brutalement sur de tout petits échanges.</>}
               />
             }
             detail={
@@ -186,13 +188,14 @@ export function LearningsScene() {
                   (Red wins). Pogo has tactical cliffs, and AlphaZero sees them.
                 </>}
                 fr={<>
-                  Même partie, à douze demi-coups d'écart. Dans la première position, la
-                  tête valeur annonce{" "}
+                  Même partie, à douze demi-coups d'écart. À la première
+                  position, la tête valeur annonce{" "}
                   <span className="text-vermilion">+{developmentProbe.value_estimate.toFixed(2)}</span>{" "}
-                  (Blanc gagne). Douze demi-coups plus tard, après une séquence d'échanges
-                  forcés, elle dit{" "}
+                  — Blanc gagne. Douze demi-coups plus tard, après une séquence
+                  d'échanges forcés, elle dit{" "}
                   <span className="text-vermilion">{midgameProbe.value_estimate.toFixed(2)}</span>{" "}
-                  (Rouge gagne). Pogo a des falaises tactiques, et AlphaZero les voit.
+                  — Rouge gagne. Pogo a ses falaises tactiques, et AlphaZero les
+                  voit venir.
                 </>}
               />
             }
@@ -215,10 +218,10 @@ export function LearningsScene() {
                 {formatPercent(data.draw_rate)} draws.
               </>}
               fr={<>
-                Le premier joueur gagne par construction :{" "}
-                <span className="text-vermilion">{formatPercent(data.white_win_rate)} Blanc</span>,{" "}
-                {formatPercent(data.red_win_rate)} Rouge,{" "}
-                {formatPercent(data.draw_rate)} nuls.
+                Le premier joueur l'emporte par construction :{" "}
+                <span className="text-vermilion">{formatPercent(data.white_win_rate)} au Blanc</span>,{" "}
+                {formatPercent(data.red_win_rate)} au Rouge,{" "}
+                {formatPercent(data.draw_rate)} de nuls.
               </>}
             />
           }
@@ -230,10 +233,11 @@ export function LearningsScene() {
                 it — move order matters more than any strategic subtlety.
               </>}
               fr={<>
-                Contre lui-même, le réseau produit un avantage 2:1 pour le premier joueur.
-                La variante Classique (LC3-29) atténue cet écart avec des nuls mais ne
-                l'efface pas — l'ordre des coups pèse plus que n'importe quelle subtilité
-                stratégique.
+                Face à lui-même, le réseau creuse un avantage de deux contre
+                un en faveur du premier joueur. La variante Classique (LC3-29)
+                atténue cet écart par la possibilité du nul, mais elle ne
+                l'efface pas — l'ordre de jeu pèse, en définitive, plus lourd
+                que toute subtilité stratégique.
               </>}
             />
           }
