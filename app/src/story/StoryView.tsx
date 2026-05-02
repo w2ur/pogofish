@@ -1081,50 +1081,165 @@ function SixDaysChart() {
 /* ---------------- scene 5 tree diagram ---------------- */
 
 function TreeDiagram() {
-  const ref = useReveal<HTMLDivElement>();
   const { lang } = useLang();
+  // Edges of the binary tree — drawn level by level with stagger.
+  const finiteEdges = [
+    { x1: 80, y1: 14, x2: 40, y2: 46, level: 0 },
+    { x1: 80, y1: 14, x2: 120, y2: 46, level: 0 },
+    { x1: 40, y1: 46, x2: 20, y2: 78, level: 1 },
+    { x1: 40, y1: 46, x2: 60, y2: 78, level: 1 },
+    { x1: 120, y1: 46, x2: 100, y2: 78, level: 1 },
+    { x1: 120, y1: 46, x2: 140, y2: 78, level: 1 },
+    { x1: 20, y1: 78, x2: 14, y2: 106, level: 2 },
+    { x1: 20, y1: 78, x2: 26, y2: 106, level: 2 },
+    { x1: 60, y1: 78, x2: 54, y2: 106, level: 2 },
+    { x1: 60, y1: 78, x2: 66, y2: 106, level: 2 },
+    { x1: 100, y1: 78, x2: 94, y2: 106, level: 2 },
+    { x1: 100, y1: 78, x2: 106, y2: 106, level: 2 },
+    { x1: 140, y1: 78, x2: 134, y2: 106, level: 2 },
+    { x1: 140, y1: 78, x2: 146, y2: 106, level: 2 },
+  ];
+  const leafXs = [14, 26, 54, 66, 94, 106, 134, 146];
+
+  // The infinite-tree edges fade out at the bottom (no leaves).
+  const infiniteEdges: Array<typeof finiteEdges[number] & { fade?: boolean }> =
+    finiteEdges.map((e) =>
+      e.level === 2 ? { ...e, y2: 110, fade: true } : e,
+    );
+
   return (
-    <div ref={ref} className="reveal delay-1 my-10 grid grid-cols-2 gap-8 border-t border-b border-hair py-6">
+    <motion.div
+      initial={{ opacity: 0, y: 20 }}
+      whileInView={{ opacity: 1, y: 0 }}
+      viewport={{ once: true, margin: "-10%" }}
+      transition={{ duration: 0.7, ease: "easeOut" }}
+      className="my-10 grid grid-cols-2 gap-8 border-t border-b border-hair py-6"
+    >
       <div className="space-y-3">
-        <div className="kicker" style={{ color: "var(--color-paper-3)" }}>{STRINGS.charts.whatIDrew[lang]}</div>
+        <div className="kicker" style={{ color: "var(--color-paper-3)" }}>
+          {STRINGS.charts.whatIDrew[lang]}
+        </div>
         <svg viewBox="0 0 160 120" className="w-full h-auto">
-          <g stroke="#ece2cb" strokeWidth="1" fill="none">
-            <line x1="80" y1="14" x2="40" y2="46" /><line x1="80" y1="14" x2="120" y2="46" />
-            <line x1="40" y1="46" x2="20" y2="78" /><line x1="40" y1="46" x2="60" y2="78" />
-            <line x1="120" y1="46" x2="100" y2="78" /><line x1="120" y1="46" x2="140" y2="78" />
-            <line x1="20" y1="78" x2="14" y2="106" /><line x1="20" y1="78" x2="26" y2="106" />
-            <line x1="60" y1="78" x2="54" y2="106" /><line x1="60" y1="78" x2="66" y2="106" />
-            <line x1="100" y1="78" x2="94" y2="106" /><line x1="100" y1="78" x2="106" y2="106" />
-            <line x1="140" y1="78" x2="134" y2="106" /><line x1="140" y1="78" x2="146" y2="106" />
-          </g>
-          <g fill="#ece2cb"><circle cx="80" cy="14" r="3" /></g>
-          <g fill="#d94f2c">
-            {[14, 26, 54, 66, 94, 106, 134, 146].map((x) => (<circle key={x} cx={x} cy="106" r="2.2" />))}
-          </g>
+          {/* root */}
+          <motion.circle
+            cx={80}
+            cy={14}
+            r={3}
+            fill="#ece2cb"
+            initial={{ scale: 0 }}
+            whileInView={{ scale: 1 }}
+            viewport={{ once: true, margin: "-10%" }}
+            transition={{ duration: 0.4, type: "spring", stiffness: 280 }}
+          />
+          {/* edges grow level by level */}
+          {finiteEdges.map((e, i) => (
+            <motion.line
+              key={i}
+              x1={e.x1}
+              y1={e.y1}
+              x2={e.x2}
+              y2={e.y2}
+              stroke="#ece2cb"
+              strokeWidth="1"
+              initial={{ pathLength: 0, opacity: 0 }}
+              whileInView={{ pathLength: 1, opacity: 1 }}
+              viewport={{ once: true, margin: "-10%" }}
+              transition={{
+                duration: 0.45,
+                ease: "easeOut",
+                delay: 0.3 + e.level * 0.35 + (i % 4) * 0.05,
+              }}
+            />
+          ))}
+          {/* leaves pop in last */}
+          {leafXs.map((x, i) => (
+            <motion.circle
+              key={x}
+              cx={x}
+              cy={106}
+              r={2.2}
+              fill="#d94f2c"
+              initial={{ scale: 0, opacity: 0 }}
+              whileInView={{ scale: 1, opacity: 1 }}
+              viewport={{ once: true, margin: "-10%" }}
+              transition={{
+                duration: 0.4,
+                type: "spring",
+                stiffness: 300,
+                damping: 18,
+                delay: 1.6 + i * 0.06,
+              }}
+              style={{ filter: "drop-shadow(0 0 4px rgba(217,79,44,0.7))" }}
+            />
+          ))}
         </svg>
         <div className="mono text-[11px] text-paper-2">{STRINGS.charts.finiteLeaves[lang]}</div>
       </div>
       <div className="space-y-3">
         <div className="kicker">{STRINGS.charts.whatIWasSolving[lang]}</div>
         <svg viewBox="0 0 160 120" className="w-full h-auto">
-          <g stroke="#ece2cb" strokeWidth="1" fill="none">
-            <line x1="80" y1="14" x2="40" y2="46" /><line x1="80" y1="14" x2="120" y2="46" />
-            <line x1="40" y1="46" x2="20" y2="78" /><line x1="40" y1="46" x2="60" y2="78" />
-            <line x1="120" y1="46" x2="100" y2="78" /><line x1="120" y1="46" x2="140" y2="78" />
-            <line x1="20" y1="78" x2="14" y2="110" opacity="0.6" /><line x1="20" y1="78" x2="26" y2="110" opacity="0.6" />
-            <line x1="60" y1="78" x2="54" y2="110" opacity="0.6" /><line x1="60" y1="78" x2="66" y2="110" opacity="0.6" />
-            <line x1="100" y1="78" x2="94" y2="110" opacity="0.6" /><line x1="100" y1="78" x2="106" y2="110" opacity="0.6" />
-            <line x1="140" y1="78" x2="134" y2="110" opacity="0.6" /><line x1="140" y1="78" x2="146" y2="110" opacity="0.6" />
-          </g>
-          <g fill="#ece2cb"><circle cx="80" cy="14" r="3" /></g>
-          <line x1="0" y1="112" x2="160" y2="112" stroke="#d94f2c" strokeDasharray="3 3" strokeWidth="0.8" />
-          <text x="80" y="120" textAnchor="middle" fontFamily="JetBrains Mono" fontSize="8" fill="#d94f2c">
+          <motion.circle
+            cx={80}
+            cy={14}
+            r={3}
+            fill="#ece2cb"
+            initial={{ scale: 0 }}
+            whileInView={{ scale: 1 }}
+            viewport={{ once: true, margin: "-10%" }}
+            transition={{ duration: 0.4, type: "spring", stiffness: 280 }}
+          />
+          {infiniteEdges.map((e, i) => (
+            <motion.line
+              key={i}
+              x1={e.x1}
+              y1={e.y1}
+              x2={e.x2}
+              y2={e.y2}
+              stroke="#ece2cb"
+              strokeWidth="1"
+              opacity={e.fade ? 0.6 : 1}
+              initial={{ pathLength: 0 }}
+              whileInView={{ pathLength: 1 }}
+              viewport={{ once: true, margin: "-10%" }}
+              transition={{
+                duration: 0.45,
+                ease: "easeOut",
+                delay: 0.3 + e.level * 0.35 + (i % 4) * 0.05,
+              }}
+            />
+          ))}
+          {/* artificial horizon — pulses to show "this isn't a real terminator" */}
+          <motion.line
+            x1={0}
+            y1={112}
+            x2={160}
+            y2={112}
+            stroke="#d94f2c"
+            strokeDasharray="3 3"
+            strokeWidth="0.8"
+            initial={{ pathLength: 0, opacity: 0 }}
+            whileInView={{ pathLength: 1, opacity: [0, 1, 0.5, 1] }}
+            viewport={{ once: true, margin: "-10%" }}
+            transition={{ duration: 1.2, delay: 1.5, ease: "easeOut" }}
+          />
+          <motion.text
+            x={80}
+            y={120}
+            textAnchor="middle"
+            fontFamily="JetBrains Mono"
+            fontSize={8}
+            fill="#d94f2c"
+            initial={{ opacity: 0 }}
+            whileInView={{ opacity: 1 }}
+            viewport={{ once: true, margin: "-10%" }}
+            transition={{ duration: 0.5, delay: 2.0 }}
+          >
             {STRINGS.charts.artificialHorizon[lang]}
-          </text>
+          </motion.text>
         </svg>
         <div className="mono text-[11px] text-vermilion">{STRINGS.charts.infiniteCycles[lang]}</div>
       </div>
-    </div>
+    </motion.div>
   );
 }
 
