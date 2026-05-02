@@ -280,19 +280,53 @@ function useScrollProgress(ref: React.RefObject<HTMLElement | null>) {
 function BigNumeral({ numeral, sub, isFirst }: { numeral: string; sub: number; isFirst: boolean }) {
   const enter = isFirst ? 1 : Math.min(1, sub / 0.3);
   const exit = sub > 0.7 ? 1 - (sub - 0.7) / 0.3 : 1;
-  const opacity = Math.max(0, Math.min(1, enter)) * Math.max(0, Math.min(1, exit));
+  const aliveness = Math.max(0, Math.min(1, enter)) * Math.max(0, Math.min(1, exit));
+  // Subtle "breath" — the numeral scales 1 → 1.02 → 1 over the beat.
+  const breath = 1 + Math.sin(sub * Math.PI) * 0.02;
   const y = (1 - enter) * 18;
   return (
-    <div
-      aria-hidden
-      className="cinema-numeral display-italic"
-      style={{
-        opacity: opacity * 0.32,
-        transform: `translate3d(0, ${y}px, 0)`,
-      }}
-    >
-      {numeral}
-    </div>
+    <>
+      {/* outline ghost — sits behind the filled numeral, slightly larger */}
+      <div
+        aria-hidden
+        className="cinema-numeral display-italic"
+        style={{
+          opacity: aliveness * 0.18,
+          transform: `translate3d(0, ${y}px, 0) scale(${breath * 1.04})`,
+          color: "transparent",
+          WebkitTextStroke: "1px var(--color-vermilion-deep)",
+          mixBlendMode: "normal",
+          filter: "blur(1.4px)",
+        }}
+      >
+        {numeral}
+      </div>
+      {/* main filled vermilion numeral */}
+      <div
+        aria-hidden
+        className="cinema-numeral display-italic"
+        style={{
+          opacity: aliveness * 0.36,
+          transform: `translate3d(0, ${y}px, 0) scale(${breath})`,
+        }}
+      >
+        {numeral}
+      </div>
+      {/* highlight wash — a brighter copy that pulses at peak sub */}
+      <div
+        aria-hidden
+        className="cinema-numeral display-italic"
+        style={{
+          opacity: aliveness * Math.max(0, Math.sin(sub * Math.PI)) * 0.15,
+          transform: `translate3d(0, ${y}px, 0) scale(${breath * 0.99})`,
+          color: "rgba(255,180,140,1)",
+          mixBlendMode: "screen",
+          filter: "blur(2px)",
+        }}
+      >
+        {numeral}
+      </div>
+    </>
   );
 }
 
