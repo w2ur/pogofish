@@ -13,30 +13,38 @@ export function PlayCTA() {
   const reducedMotion = usePrefersReducedMotion();
 
   useEffect(() => {
-    const hookEl = document.querySelector("section:first-of-type");
+    // Show once the user has scrolled past the cinematic overture, hide
+    // again when the play section enters the viewport.
+    const sentinel = document.querySelector("[data-overture-end]");
     const playEl = document.getElementById("play");
-    if (!hookEl || !playEl) return;
+    if (!sentinel) return;
 
-    const observer = new IntersectionObserver(
-      (entries) => {
-        for (const entry of entries) {
-          if (entry.target === hookEl && !entry.isIntersecting) {
-            setVisible(true);
-          }
-          if (entry.target === hookEl && entry.isIntersecting) {
-            setVisible(false);
-          }
-          if (entry.target === playEl && entry.isIntersecting) {
-            setVisible(false);
-          }
-        }
-      },
-      { threshold: 0.1 },
-    );
+    let playInView = false;
+    const update = () => {
+      const top = sentinel.getBoundingClientRect().top;
+      const pastOverture = top <= 0;
+      setVisible(pastOverture && !playInView);
+    };
+    update();
+    window.addEventListener("scroll", update, { passive: true });
+    window.addEventListener("resize", update);
 
-    observer.observe(hookEl);
-    observer.observe(playEl);
-    return () => observer.disconnect();
+    let playObs: IntersectionObserver | null = null;
+    if (playEl) {
+      playObs = new IntersectionObserver(
+        (entries) => {
+          for (const e of entries) playInView = e.isIntersecting;
+          update();
+        },
+        { threshold: 0 },
+      );
+      playObs.observe(playEl);
+    }
+    return () => {
+      window.removeEventListener("scroll", update);
+      window.removeEventListener("resize", update);
+      playObs?.disconnect();
+    };
   }, []);
 
   return (

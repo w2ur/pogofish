@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { StoryBoard } from "./StoryBoard";
 import { Term } from "./Term";
 import { TryYourself } from "./TryYourself";
@@ -8,12 +8,13 @@ import { Callout } from "./Callout";
 import { EnFr } from "./EnFr";
 import { LearningsScene } from "./LearningsScene";
 import { LangToggle } from "./LangToggle";
+import { CinematicOverture } from "./CinematicOverture";
 import { useLang } from "./LangContext";
 import { STRINGS, tf } from "./i18n";
 import { useReveal, useActiveIndex } from "./useReveal";
+import { StageProvider, useStage, StageBinder } from "./stage/StageContext";
+import { Stage } from "./stage/Stage";
 import {
-  HERO_SEQUENCE,
-  PINNED_BOARDS,
   VARIANTS,
   FAILED_RUN_DAYS,
   VERDICT,
@@ -31,22 +32,31 @@ const CHAPTER_NUMERAL: Record<ChapterKey, string> = {
 export function StoryView() {
   usePageTitle();
   return (
-    <div className="story story-grain story-noise min-h-screen">
-      <StoryChrome />
-      <Scene1Hook />
-      <TryYourself />
-      <PinnedStory />
-      <Scene7Experiments />
-      <Scene8Verdict />
-      <PlayScene />
-      <LearningsScene />
-      <Scene10Epilogue />
-      <Scene11Glossary />
-      <StoryFooter />
-      <PlayCTA />
-      <LangToggle />
-    </div>
+    <StageProvider>
+      <div className="story story-grain story-noise min-h-screen">
+        <PersistentStage />
+        <StoryChrome />
+        <CinematicOverture />
+        <StageBinder view={null}><TryYourself /></StageBinder>
+        <PinnedStory />
+        <StageBinder view={null}><Scene7Experiments /></StageBinder>
+        <StageBinder view={null}><Scene8Verdict /></StageBinder>
+        <StageBinder view={null}><PlayScene /></StageBinder>
+        <StageBinder view={null}><LearningsScene /></StageBinder>
+        <StageBinder view={null}><Scene10Epilogue /></StageBinder>
+        <StageBinder view={null}><Scene11Glossary /></StageBinder>
+        <StoryFooter />
+        <PlayCTA />
+        <LangToggle />
+      </div>
+    </StageProvider>
   );
+}
+
+/** Reads the stage view from context and renders the persistent board. */
+function PersistentStage() {
+  const { view } = useStage();
+  return <Stage view={view} z="back" />;
 }
 
 function usePageTitle() {
@@ -60,14 +70,35 @@ function usePageTitle() {
 
 function StoryChrome() {
   const { lang } = useLang();
+  // Hide chrome while the cinematic overture is on-screen — the overture
+  // carries its own opus title bar. Reveal once the reader has scrolled past.
+  const [pastOverture, setPastOverture] = useState(false);
+  useEffect(() => {
+    const sentinel = document.querySelector("[data-overture-end]");
+    if (!sentinel) return;
+    const update = () => {
+      const top = sentinel.getBoundingClientRect().top;
+      setPastOverture(top <= 0);
+    };
+    update();
+    window.addEventListener("scroll", update, { passive: true });
+    window.addEventListener("resize", update);
+    return () => {
+      window.removeEventListener("scroll", update);
+      window.removeEventListener("resize", update);
+    };
+  }, []);
+
   return (
     <header
-      className="fixed top-0 left-0 right-0 z-40 flex items-center justify-between px-5 py-4 md:px-10 md:py-5 pointer-events-none"
+      className="fixed top-0 left-0 right-0 z-40 flex items-center justify-between px-5 py-4 md:px-10 md:py-5 pointer-events-none transition-opacity duration-500"
       style={{
         background:
           "linear-gradient(180deg, rgba(18,16,14,0.92) 0%, rgba(18,16,14,0.6) 60%, rgba(18,16,14,0) 100%)",
         backdropFilter: "blur(4px)",
         WebkitBackdropFilter: "blur(4px)",
+        opacity: pastOverture ? 1 : 0,
+        pointerEvents: pastOverture ? undefined : "none",
       }}
     >
       <div className="pointer-events-auto flex items-baseline gap-3 text-paper">
@@ -109,120 +140,77 @@ function StoryFooter() {
   );
 }
 
-/* ---------------- scene 1: hook ---------------- */
-
-function Scene1Hook() {
-  const { lang } = useLang();
-  const [frame, setFrame] = useState(0);
-  useEffect(() => {
-    if (window.matchMedia("(prefers-reduced-motion: reduce)").matches) return;
-    const id = setInterval(() => {
-      setFrame((f) => (f + 1) % HERO_SEQUENCE.length);
-    }, 2400);
-    return () => clearInterval(id);
-  }, []);
-
-  const current = HERO_SEQUENCE[frame] ?? HERO_SEQUENCE[0]!;
-
-  return (
-    <section className="relative flex min-h-screen w-full flex-col items-center justify-center px-6 pt-24 pb-16 overflow-hidden">
-      <div
-        aria-hidden
-        className="pointer-events-none absolute inset-0 opacity-70"
-        style={{
-          background:
-            "radial-gradient(50% 40% at 50% 35%, rgba(217,79,44,0.10), transparent 75%)",
-        }}
-      />
-
-      <div className="relative z-10 w-full max-w-6xl mx-auto grid grid-cols-1 lg:grid-cols-[1fr_auto_1fr] items-center gap-10 lg:gap-16">
-        <div className="order-2 lg:order-1 text-left lg:text-right space-y-6">
-          <div className="kicker">{CHAPTER_NUMERAL.I} &middot; {STRINGS.chapters.I[lang]}</div>
-          <h1 className="display text-[clamp(2.6rem,6.5vw,5.2rem)] text-paper">
-            {STRINGS.hero.titleA[lang]}
-            <span className="display-italic text-vermilion">{STRINGS.hero.titleB[lang]}</span>
-            {STRINGS.hero.titleC[lang]}
-          </h1>
-          <p className="body text-paper-2 max-w-md lg:ml-auto">
-            <EnFr
-              en={<>A question a human asked me. I gave a plausible answer. It was wrong. What follows is the story of six days, one overconfident sentence, and the rewrite that came out the other end.</>}
-              fr={<>Une question qu'un humain m'a posée, un soir, à peu près en passant. J'ai donné une réponse plausible. Elle était fausse. Ce qui suit est le récit de six jours, d'une phrase trop confiante, et de la réécriture qui en est sortie.</>}
-            />
-          </p>
-          <p className="mono text-[10px] tracking-[0.28em] uppercase text-paper-3 lg:ml-auto max-w-md">
-            <EnFr
-              en={<>loosely based on true events</>}
-              fr={<>librement inspiré de faits réels</>}
-            />
-          </p>
-        </div>
-
-        <div className="order-1 lg:order-2 relative">
-          <div className="relative" style={{ animation: "fade-in 1.4s ease-out both" }}>
-            <StoryBoard board={current} size="large" showCoords={false} />
-            <div
-              aria-hidden
-              className="absolute -inset-8 rounded-2xl pointer-events-none"
-              style={{
-                background:
-                  "radial-gradient(60% 60% at 50% 50%, rgba(217,79,44,0.10), transparent 70%)",
-                animation: "piece-breathe 5s ease-in-out infinite",
-              }}
-            />
-          </div>
-          <div className="mt-6 flex items-center justify-center gap-1.5" aria-hidden>
-            {HERO_SEQUENCE.map((_, i) => (
-              <span
-                key={i}
-                className="h-[2px] transition-all duration-500"
-                style={{
-                  width: i === frame ? 22 : 8,
-                  background: i === frame ? "var(--color-vermilion)" : "var(--color-graphite)",
-                }}
-              />
-            ))}
-          </div>
-        </div>
-
-        <div className="order-3 hidden lg:block" aria-hidden />
-      </div>
-
-      <div
-        className="absolute bottom-8 left-1/2 -translate-x-1/2 mono text-[10px] tracking-[0.35em] uppercase text-paper-3 flex flex-col items-center gap-2"
-      >
-        <span>{STRINGS.chrome.scroll[lang]}</span>
-        <span className="h-8 w-px bg-paper-3 opacity-60" />
-      </div>
-    </section>
-  );
-}
-
 /* ---------------- scenes 2–6: pinned sidecar ---------------- */
 
 function PinnedStory() {
   const { lang } = useLang();
   const { refs, active } = useActiveIndex(5);
-  const board = PINNED_BOARDS[active] ?? PINNED_BOARDS[0]!;
+  const stage = useStage();
+  const sectionRef = useRef<HTMLElement>(null);
   const pinLabelKeys: (keyof typeof STRINGS.pinned.labels)[] = [
     "opening", "theClaim", "sixDays", "theRules", "equilibrium",
   ];
   const pinLabelKey = pinLabelKeys[active] ?? pinLabelKeys[0]!;
   const pinLabel = STRINGS.pinned.labels[pinLabelKey][lang];
 
+  // Each pinned panel drives the persistent stage to a different game frame.
+  // Frames mirror PINNED_BOARDS in data.ts.
+  const panelToFrame = [0, 2, 8, 11, 10];
+
+  // Apply the view whenever active changes OR the section enters viewport
+  // (scroll listener). The latter handles the case where active hasn't
+  // changed but a previous section hid the stage.
+  useEffect(() => {
+    const apply = () => {
+      const frame = panelToFrame[active] ?? 0;
+      stage.setView({
+        frameIdx: frame,
+        x: 0.22,
+        y: 0.5,
+        scale: 0.55,
+        rotate: 0,
+        opacity: 1,
+        mode: "standard",
+        focusCell: null,
+        glow: 0.3 + active * 0.08,
+      });
+    };
+
+    let frame = 0;
+    const evaluate = () => {
+      frame = 0;
+      const el = sectionRef.current;
+      if (!el) return;
+      const rect = el.getBoundingClientRect();
+      const vh = window.innerHeight;
+      const isActive = rect.top < vh * 0.7 && rect.bottom > vh * 0.3;
+      if (isActive) apply();
+    };
+    const onScroll = () => {
+      if (frame) return;
+      frame = requestAnimationFrame(evaluate);
+    };
+    evaluate();
+    window.addEventListener("scroll", onScroll, { passive: true });
+    window.addEventListener("resize", onScroll);
+    return () => {
+      if (frame) cancelAnimationFrame(frame);
+      window.removeEventListener("scroll", onScroll);
+      window.removeEventListener("resize", onScroll);
+    };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [active]);
+
   return (
-    <section className="relative">
+    <section ref={sectionRef} className="relative">
       <div className="mx-auto max-w-6xl px-6 md:px-10 grid grid-cols-1 lg:grid-cols-[minmax(280px,_340px)_minmax(0,_1fr)] gap-10 lg:gap-20">
-        {/* sticky board column */}
+        {/* the persistent <Stage> renders the board behind us; we keep this
+            column as a layout placeholder so the prose stays right-aligned. */}
         <aside className="hidden lg:block">
-          <div className="sticky top-0 h-screen flex flex-col items-center justify-center gap-6">
+          <div className="sticky top-0 h-screen flex flex-col items-center justify-center gap-6 pointer-events-none">
             <div className="kicker">{tf(STRINGS.pinned.positionOf[lang], { n: active + 1 })}</div>
-            <StoryBoard
-              key={active}
-              board={board}
-              size="default"
-              showCoords
-              style={{ animation: "fade-in 0.9s ease both" }}
-            />
+            {/* spacer matches old board area so the layout is stable */}
+            <div className="w-[clamp(220px,28vw,320px)] aspect-square" aria-hidden />
             <div className="mono text-[10px] tracking-[0.28em] uppercase text-paper-3">
               {pinLabel}
             </div>

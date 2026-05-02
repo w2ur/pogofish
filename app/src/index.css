@@ -334,6 +334,88 @@
   margin-bottom: 4px;
 }
 
+/* ---------------- cinematic overture ---------------- */
+
+.cinema-section {
+  /* sits flush against the top of the page, above the rest of the prose */
+  background: var(--color-ink);
+  isolation: isolate;
+}
+
+.cinema-stage {
+  /* a clean black stage; the radial gradients in JSX provide the atmosphere */
+  background: linear-gradient(180deg, #0c0a09 0%, #100d0b 60%, #16110d 100%);
+}
+
+.cinema-halo {
+  width: clamp(420px, 62vw, 980px);
+  height: clamp(420px, 62vw, 980px);
+  border-radius: 50%;
+  background:
+    radial-gradient(closest-side, rgba(217, 79, 44, 0.18), transparent 70%);
+  filter: blur(8px);
+  transition: opacity 600ms ease, transform 800ms ease;
+}
+
+.cinema-numeral {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  pointer-events: none;
+  z-index: 0;
+  color: var(--color-vermilion);
+  font-size: clamp(14rem, 36vw, 32rem);
+  line-height: 0.82;
+  letter-spacing: -0.05em;
+  user-select: none;
+  mix-blend-mode: screen;
+  filter: blur(0.4px);
+  transition: opacity 380ms ease, transform 380ms ease;
+}
+
+.cinema-board-wrap {
+  position: relative;
+  filter: drop-shadow(0 60px 80px rgba(0, 0, 0, 0.55));
+}
+
+/* a subtle entry animation on every fresh board frame */
+.cinema-board-anim {
+  animation: cinema-pop 540ms cubic-bezier(0.18, 0.7, 0.2, 1.05) both;
+}
+
+@keyframes cinema-pop {
+  0% { opacity: 0; transform: translateY(8px) scale(0.985); }
+  100% { opacity: 1; transform: translateY(0) scale(1); }
+}
+
+/* a stronger glow on cinema cells than regular boards */
+.cinema-board-wrap .pogo-cell {
+  background: linear-gradient(180deg, #1a1410 0%, #0b0807 100%);
+  box-shadow:
+    inset 0 0 0 1px rgba(217, 79, 44, 0.08),
+    inset 0 1px 0 rgba(236, 226, 203, 0.04),
+    0 14px 30px -14px rgba(0, 0, 0, 0.85),
+    0 0 60px -28px rgba(217, 79, 44, 0.5);
+}
+
+.cinema-board-wrap .pogo-piece.white {
+  background: linear-gradient(180deg, #fbf2da 0%, #d6cba8 100%);
+  box-shadow:
+    0 1px 0 rgba(255, 255, 255, 0.55) inset,
+    0 -1px 0 rgba(0, 0, 0, 0.22) inset,
+    0 3px 5px rgba(0, 0, 0, 0.5);
+}
+.cinema-board-wrap .pogo-piece.red {
+  background: linear-gradient(180deg, #ec6f4c 0%, #971f08 100%);
+  box-shadow:
+    0 1px 0 rgba(255, 188, 168, 0.45) inset,
+    0 -1px 0 rgba(0, 0, 0, 0.32) inset,
+    0 3px 6px rgba(0, 0, 0, 0.55),
+    0 0 12px -2px rgba(217, 79, 44, 0.45);
+}
+
 /* ---------------- reduced motion ---------------- */
 
 @media (prefers-reduced-motion: reduce) {

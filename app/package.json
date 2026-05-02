@@ -11,6 +11,9 @@
     "test:watch": "vitest"
   },
   "dependencies": {
+    "gsap": "^3.15.0",
+    "lenis": "^1.3.23",
+    "motion": "^12.38.0",
     "onnxruntime-web": "^1.21.0",
     "pogofish-wasm": "file:../wasm-pkg",
     "react": "^19.0.0",
