@@ -9,6 +9,7 @@ import { useStage } from "./stage/StageContext";
 import type { StageView } from "./stage/Stage";
 import { Board as AnimatedBoard } from "./stage/Board";
 import { SearchTreeFX } from "./SearchTreeFX";
+import { SelfPlayFX } from "./SelfPlayFX";
 
 /**
  * The cold open. A 12-beat scroll-locked cinematic overture: the actual
@@ -28,7 +29,7 @@ type Beat = {
   /** preset camera composition; see camFor() */
   camera: "center" | "left" | "right" | "tight" | "wide" | "tilt";
   /** optional special effect at peak of this beat */
-  fx?: "claim" | "fractal" | "fanout" | "verdict" | "softclose" | "tree";
+  fx?: "claim" | "fractal" | "fanout" | "verdict" | "softclose" | "tree" | "selfplay";
   /** the running ticker value at this beat (states explored) */
   states: number;
   /** day on the failed minimax run, 0 means N/A */
@@ -165,6 +166,7 @@ const BEATS: Beat[] = [
       fr: "AlphaZero sur un plateau 3×3. Un empilement résiduel. Recherche PUCT. Aucune partie humaine.",
     },
     camera: "tilt",
+    fx: "selfplay",
     states: 49_000_000,
     day: 6,
   },
@@ -650,6 +652,8 @@ function ColorBurst({ beat, sub }: { beat: Beat; sub: number }) {
     verdict: 0.42,
     fractal: 0.22,
     softclose: 0.14,
+    tree: 0.20,
+    selfplay: 0.16,
   };
   const peak = peakByFx[beat.fx ?? ""] ?? 0;
   if (peak <= 0) return null;
@@ -711,6 +715,19 @@ function beatToStageView(beat: Beat): Partial<StageView> {
     // shrink the board to a tiny "root" at the top so the search tree
     // visualization can grow outward from it.
     cam = { x: 0.5, y: 0.12, scale: 0.22, rotate: 0 };
+  }
+  if (beat.fx === "selfplay") {
+    // hide the persistent stage; the SelfPlayFX renders two of its own boards.
+    return {
+      frameIdx: beat.frame,
+      x: 0.5,
+      y: 0.5,
+      scale: 0.4,
+      rotate: 0,
+      mode: "standard",
+      focusCell: null,
+      opacity: 0,
+    };
   }
   return {
     frameIdx: beat.frame,
@@ -844,6 +861,7 @@ export function CinematicOverture() {
         {beat.fx === "verdict" && <VerdictFX sub={sub} lang={lang} />}
         {beat.fx === "softclose" && <SoftcloseFX sub={sub} lang={lang} />}
         {beat.fx === "tree" && <SearchTreeFX sub={sub} />}
+        {beat.fx === "selfplay" && <SelfPlayFX sub={sub} />}
 
         {/* color release: a brief vermilion wash at peak FX moments. */}
         <ColorBurst beat={beat} sub={sub} />

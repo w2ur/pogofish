@@ -1,6 +1,6 @@
 import { motion, AnimatePresence } from "motion/react";
 import type { Transition } from "motion/react";
-import { useMemo } from "react";
+import { useMemo, useRef } from "react";
 import {
   ALL_PIECE_IDS,
   TRACKED_FRAMES,
@@ -80,7 +80,6 @@ function pieceCoords(p: TrackedPiece) {
 
 /* ---------------- the board ---------------- */
 
-const SPRING: Transition = { type: "spring", stiffness: 130, damping: 20, mass: 1.1 };
 const QUICK: Transition = { duration: 0.35, ease: [0.22, 0.6, 0.2, 1] };
 
 export function Board({
@@ -97,7 +96,8 @@ export function Board({
   const frame = TRACKED_FRAMES[Math.max(0, Math.min(TRACKED_FRAMES.length - 1, frameIdx))]!;
   const map = useMemo(() => pieceMap(frame), [frame]);
 
-  const transition = instant ? { duration: 0 } : SPRING;
+  // transition for non-piece elements (board halo, cells)
+
 
   return (
     <svg
@@ -183,48 +183,123 @@ export function Board({
             const focusScale =
               mode === "exploded" && focusCell != null && p.cell === focusCell ? 1.15 : 1;
             return (
-              <motion.g
+              <Piece
                 key={id}
-                initial={false}
-                animate={{
-                  x: cx,
-                  y: cy,
-                  scale: focusScale,
-                }}
-                transition={transition}
-                style={{ originX: "0px", originY: "0px" } as React.CSSProperties}
-              >
-                {/* shadow disc */}
-                <ellipse
-                  cx={0}
-                  cy={PIECE_RY * 0.6}
-                  rx={PIECE_RX * 0.92}
-                  ry={PIECE_RY * 0.5}
-                  fill="rgba(0,0,0,0.45)"
-                />
-                {/* body — ellipse top */}
-                <ellipse
-                  cx={0}
-                  cy={0}
-                  rx={PIECE_RX}
-                  ry={PIECE_RY}
-                  fill={isWhite ? "url(#pf-white)" : "url(#pf-red)"}
-                  filter="url(#pf-piece-shadow)"
-                />
-                {/* highlight strip */}
-                <ellipse
-                  cx={0}
-                  cy={-PIECE_RY * 0.6}
-                  rx={PIECE_RX * 0.7}
-                  ry={PIECE_RY * 0.25}
-                  fill={isWhite ? "rgba(255,255,255,0.55)" : "rgba(255,180,160,0.4)"}
-                />
-              </motion.g>
+                cx={cx}
+                cy={cy}
+                isWhite={isWhite}
+                focusScale={focusScale}
+                instant={instant}
+              />
             );
           })}
         </AnimatePresence>
       </g>
     </svg>
+  );
+}
+
+/* ---------------- the piece (hop animation) ---------------- */
+
+const HOP_HEIGHT = 36;        // pixels in viewBox space the piece lifts mid-arc
+const HOP_DURATION = 0.55;    // seconds for full hop
+const SETTLE_SPRING: Transition = { type: "spring", stiffness: 180, damping: 18, mass: 1 };
+
+function Piece({
+  cx,
+  cy,
+  isWhite,
+  focusScale,
+  instant,
+}: {
+  cx: number;
+  cy: number;
+  isWhite: boolean;
+  focusScale: number;
+  instant: boolean;
+}) {
+  // track previous (rendered) position so we can build an arc on each move
+  const prev = useRef({ x: cx, y: cy });
+  const px = prev.current.x;
+  const py = prev.current.y;
+  const moved = !instant && (Math.abs(px - cx) > 0.5 || Math.abs(py - cy) > 0.5);
+  // commit the new "previous" for next render — runs after this animate target
+  // is captured by Motion.
+  prev.current = { x: cx, y: cy };
+
+  // The peak of the arc: lift over the higher endpoint by HOP_HEIGHT.
+  // For pure stack changes (same cell), use a shorter lift so it feels like
+  // a settle rather than a leap.
+  const sameCell = Math.abs(px - cx) < 0.5;
+  const peakY = Math.min(py, cy) - (sameCell ? HOP_HEIGHT * 0.3 : HOP_HEIGHT);
+
+  return (
+    <motion.g
+      initial={false}
+      animate={
+        moved
+          ? {
+              x: [px, cx],
+              y: [py, peakY, cy],
+              scale: [1, 1.06, focusScale],
+            }
+          : { x: cx, y: cy, scale: focusScale }
+      }
+      transition={
+        moved
+          ? {
+              x: { duration: HOP_DURATION, ease: [0.45, 0.05, 0.55, 0.95] },
+              y: { duration: HOP_DURATION, times: [0, 0.5, 1], ease: ["easeOut", "easeIn"] },
+              scale: { duration: HOP_DURATION, times: [0, 0.5, 1] },
+            }
+          : SETTLE_SPRING
+      }
+      style={{ originX: "0px", originY: "0px" } as React.CSSProperties}
+    >
+      {/* contact shadow under piece — softens when piece is mid-arc (lift illusion) */}
+      <motion.ellipse
+        cx={0}
+        cy={PIECE_RY * 0.6}
+        ry={PIECE_RY * 0.5}
+        fill="rgba(0,0,0,0.5)"
+        initial={{ rx: PIECE_RX * 0.92, opacity: 0.5 }}
+        animate={
+          moved
+            ? { rx: [PIECE_RX * 0.92, PIECE_RX * 1.3, PIECE_RX * 0.92], opacity: [0.5, 0.18, 0.5] }
+            : { rx: PIECE_RX * 0.92, opacity: 0.5 }
+        }
+        transition={
+          moved
+            ? { duration: HOP_DURATION, times: [0, 0.5, 1] }
+            : { duration: 0.2 }
+        }
+      />
+      {/* body — ellipse top */}
+      <ellipse
+        cx={0}
+        cy={0}
+        rx={PIECE_RX}
+        ry={PIECE_RY}
+        fill={isWhite ? "url(#pf-white)" : "url(#pf-red)"}
+        filter="url(#pf-piece-shadow)"
+      />
+      {/* rim highlight — subtle 3D lip */}
+      <ellipse
+        cx={0}
+        cy={-PIECE_RY * 0.7}
+        rx={PIECE_RX * 0.85}
+        ry={PIECE_RY * 0.18}
+        fill={isWhite ? "rgba(255,255,255,0.65)" : "rgba(255,200,180,0.5)"}
+      />
+      {/* lower rim shadow — gives volume */}
+      <ellipse
+        cx={0}
+        cy={PIECE_RY * 0.55}
+        rx={PIECE_RX * 0.85}
+        ry={PIECE_RY * 0.16}
+        fill={isWhite ? "rgba(80,70,50,0.35)" : "rgba(40,15,5,0.5)"}
+      />
+    </motion.g>
   );
 }
 
