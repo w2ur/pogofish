@@ -32,6 +32,9 @@ const CHAPTER_NUMERAL: Record<ChapterKey, string> = {
   I: "I", II: "II", III: "III", IV: "IV", V: "V", VI: "VI",
   VII: "VII", VIII: "VIII", IX: "IX", X: "X", XI: "XI", XII: "XII",
 };
+/** Numerals shown in the PinnedStory aside, indexed by panel 0..4
+ *  (which maps to chapters III..VII). */
+const CHAPTER_NUMERAL_PIN = ["III", "IV", "V", "VI", "VII"];
 
 export function StoryView() {
   usePageTitle();
@@ -211,15 +214,62 @@ function PinnedStory() {
   return (
     <section ref={sectionRef} className="relative">
       <div className="mx-auto max-w-6xl px-6 md:px-10 grid grid-cols-1 lg:grid-cols-[minmax(280px,_340px)_minmax(0,_1fr)] gap-10 lg:gap-20">
-        {/* the persistent <Stage> renders the board behind us; we keep this
-            column as a layout placeholder so the prose stays right-aligned. */}
+        {/* the persistent <Stage> renders the board behind us; this column
+            holds a chapter card (numeral + progress dots + label) and a
+            spacer the size of the board for layout stability. */}
         <aside className="hidden lg:block">
-          <div className="sticky top-0 h-screen flex flex-col items-center justify-center gap-6 pointer-events-none">
-            <div className="kicker">{tf(STRINGS.pinned.positionOf[lang], { n: active + 1 })}</div>
-            {/* spacer matches old board area so the layout is stable */}
+          <div className="sticky top-0 h-screen flex flex-col items-center justify-center gap-4 pointer-events-none">
+            {/* numeral, drops in on chapter change via key+motion */}
+            <motion.div
+              key={`pin-numeral-${active}`}
+              initial={{ opacity: 0, y: -10, scale: 0.85 }}
+              animate={{ opacity: 1, y: 0, scale: 1 }}
+              transition={{ duration: 0.6, ease: [0.16, 1, 0.3, 1] }}
+              className="flex flex-col items-center gap-1"
+            >
+              <span
+                className="display-italic text-vermilion select-none leading-none"
+                style={{ fontSize: "clamp(3.2rem, 5.5vw, 5.5rem)" }}
+              >
+                {CHAPTER_NUMERAL_PIN[active] ?? "III"}
+              </span>
+              <span className="mono text-[9px] tracking-[0.35em] uppercase text-paper-3">
+                {tf(STRINGS.pinned.positionOf[lang], { n: active + 1 })}
+              </span>
+            </motion.div>
+
+            {/* spacer: where the persistent stage paints the board */}
             <div className="w-[clamp(220px,28vw,320px)] aspect-square" aria-hidden />
-            <div className="mono text-[10px] tracking-[0.28em] uppercase text-paper-3">
+
+            <motion.div
+              key={`pin-label-${active}`}
+              initial={{ opacity: 0, y: 6, clipPath: "inset(0 100% 0 0)" }}
+              animate={{ opacity: 1, y: 0, clipPath: "inset(0 0% 0 0)" }}
+              transition={{ duration: 0.55, ease: [0.16, 1, 0.3, 1], delay: 0.15 }}
+              className="display-italic text-2xl text-paper-2"
+            >
               {pinLabel}
+            </motion.div>
+
+            {/* progress dots */}
+            <div className="flex items-center gap-2 mt-2">
+              {[0, 1, 2, 3, 4].map((i) => (
+                <motion.span
+                  key={i}
+                  className="block rounded-full"
+                  animate={{
+                    width: i === active ? 22 : 6,
+                    height: 2,
+                    backgroundColor:
+                      i < active
+                        ? "var(--color-vermilion-deep)"
+                        : i === active
+                        ? "var(--color-vermilion)"
+                        : "var(--color-graphite)",
+                  }}
+                  transition={{ type: "spring", stiffness: 280, damping: 24 }}
+                />
+              ))}
             </div>
           </div>
         </aside>
