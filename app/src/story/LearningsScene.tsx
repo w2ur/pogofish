@@ -1,10 +1,12 @@
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
+import { motion } from "motion/react";
 import { StoryBoard } from "./StoryBoard";
 import type { StoryBoard as StoryBoardData } from "./data";
 import { useReveal } from "./useReveal";
 import { useLang } from "./LangContext";
 import { EnFr } from "./EnFr";
 import { STRINGS } from "./i18n";
+import { Board as AnimatedBoard } from "./stage/Board";
 import {
   cellLabel,
   findProbe,
@@ -95,6 +97,8 @@ export function LearningsScene() {
       </div>
 
       <div className="mx-auto max-w-5xl space-y-20">
+        <HeatmapHero data={data} />
+
         {/* Insight 1: opening is memorized */}
         {topOpening && openingProbe && (
           <Insight
@@ -347,5 +351,108 @@ function CaptureChart({ histogram }: { histogram: number[] }) {
         <span>29</span>
       </div>
     </div>
+  );
+}
+
+/* ---------------- heatmap hero ---------------- */
+
+/**
+ * Renders the persistent-board's "heatmap" mode, weighted by how often the
+ * trained network plays into each cell as White's first ply. Visualises the
+ * "where the network looks first" insight before the prose digs in.
+ */
+function HeatmapHero({ data }: { data: InsightsPayload }) {
+  const { lang } = useLang();
+  const ref = useReveal<HTMLDivElement>();
+
+  // Build a 9-cell intensity vector from opening_move_distribution.
+  // Weight by both source and destination cell, normalised to 0..1.
+  const heatmap = useMemo(() => {
+    const counts = new Array<number>(9).fill(0);
+    for (const m of data.opening_move_distribution) {
+      // emphasise destination (where the piece goes); add a faint trace at source.
+      counts[m.to_cell] = (counts[m.to_cell] ?? 0) + m.frequency;
+      counts[m.from_cell] = (counts[m.from_cell] ?? 0) + m.frequency * 0.4;
+    }
+    const max = Math.max(...counts);
+    if (max <= 0) return new Array<number>(9).fill(0);
+    return counts.map((c) => c / max);
+  }, [data]);
+
+  const top = data.opening_move_distribution[0];
+
+  return (
+    <motion.div
+      ref={ref}
+      initial={{ opacity: 0, y: 24 }}
+      whileInView={{ opacity: 1, y: 0 }}
+      viewport={{ once: true, margin: "-10%" }}
+      transition={{ duration: 0.7, ease: [0.16, 1, 0.3, 1] }}
+      className="relative mb-16 mx-auto max-w-4xl grid md:grid-cols-[auto_1fr] gap-10 items-center px-4 py-10 border border-hair bg-ink-2/40"
+    >
+      {/* heatmap board */}
+      <div className="flex justify-center">
+        <div style={{ width: "min(40vmin, 320px)", height: "min(40vmin, 320px)" }}>
+          <AnimatedBoard
+            frameIdx={0}
+            mode="heatmap"
+            heatmap={heatmap}
+            glow={0.25}
+            instant
+            className="w-full h-full"
+          />
+        </div>
+      </div>
+
+      {/* legend + summary */}
+      <div className="space-y-4">
+        <div className="mono text-[10px] tracking-[0.32em] uppercase text-vermilion">
+          {lang === "fr" ? "carte de chaleur — coups d'ouverture" : "heatmap — opening moves"}
+        </div>
+        <h3 className="display text-[clamp(1.4rem,2.5vw,2rem)] text-paper leading-tight">
+          {lang === "fr"
+            ? "Là où le réseau regarde en premier."
+            : "Where the network looks first."}
+        </h3>
+        <p className="text-paper-2 text-[0.96rem] leading-[1.65]">
+          {lang === "fr" ? (
+            <>
+              Plus une case est saturée, plus le réseau y joue souvent au
+              tout début de la partie. Les Blancs ne jouent presque jamais
+              en dehors d'un petit ensemble de cases — la diagonale et le
+              centre. La meilleure ouverture observée :{" "}
+              <span className="text-vermilion">
+                {top ? `${cellLabel(top.from_cell)} → ${cellLabel(top.to_cell)}` : "—"}
+              </span>
+              {top && <> dans <span className="text-vermilion">{formatPercent(top.frequency)}</span> des parties.</>}
+            </>
+          ) : (
+            <>
+              The brighter the cell, the more often the network plays there
+              in the very first ply. White almost never plays outside a
+              tiny set of squares — the diagonal and the centre. Most-
+              played first move:{" "}
+              <span className="text-vermilion">
+                {top ? `${cellLabel(top.from_cell)} → ${cellLabel(top.to_cell)}` : "—"}
+              </span>
+              {top && <> in <span className="text-vermilion">{formatPercent(top.frequency)}</span> of games.</>}
+            </>
+          )}
+        </p>
+        {/* gradient legend */}
+        <div className="pt-2 flex items-center gap-3">
+          <div
+            className="h-1.5 w-32 rounded-full"
+            style={{
+              background:
+                "linear-gradient(90deg, rgba(20,16,13,1) 0%, rgba(217,79,44,0.45) 50%, var(--color-vermilion) 100%)",
+            }}
+          />
+          <span className="mono text-[10px] tracking-[0.25em] uppercase text-paper-3">
+            {lang === "fr" ? "rare → fréquent" : "rare → frequent"}
+          </span>
+        </div>
+      </div>
+    </motion.div>
   );
 }

@@ -11,11 +11,13 @@ import { LearningsScene } from "./LearningsScene";
 import { LangToggle } from "./LangToggle";
 import { CinematicOverture } from "./CinematicOverture";
 import { GlossaryConstellation } from "./GlossaryConstellation";
+import { ScrollProgress } from "./ScrollProgress";
 import { useLang } from "./LangContext";
 import { STRINGS, tf } from "./i18n";
 import { useReveal, useActiveIndex } from "./useReveal";
 import { StageProvider, useStage, StageBinder } from "./stage/StageContext";
 import { Stage } from "./stage/Stage";
+import { Board as FinaleSvgBoard } from "./stage/Board";
 import {
   VARIANTS,
   FAILED_RUN_DAYS,
@@ -35,6 +37,7 @@ export function StoryView() {
   return (
     <StageProvider>
       <div className="story story-grain story-noise min-h-screen">
+        <ScrollProgress />
         <PersistentStage />
         <StoryChrome />
         <CinematicOverture />
@@ -1596,6 +1599,88 @@ function Scene10Epilogue() {
           </p>
         </div>
       </div>
+      <FinaleFreeze />
     </section>
+  );
+}
+
+/** Closing freeze-frame: the board returns to the opening position, all
+ *  twelve chapter numerals scattered around it like constellation stars,
+ *  rotating slowly. The article's last image. */
+function FinaleFreeze() {
+  return (
+    <div className="relative mt-24 md:mt-32 mb-8 mx-auto" style={{ height: "min(80vh, 720px)" }}>
+      <motion.div
+        initial={{ opacity: 0, scale: 0.9 }}
+        whileInView={{ opacity: 1, scale: 1 }}
+        viewport={{ once: true, margin: "-15%" }}
+        transition={{ duration: 1.2, ease: [0.16, 1, 0.3, 1] }}
+        className="absolute inset-0 flex items-center justify-center"
+      >
+        {/* the board, dim, contemplative */}
+        <div
+          className="relative"
+          style={{ width: "min(40vmin, 360px)", height: "min(40vmin, 360px)" }}
+        >
+          <FinaleBoard />
+        </div>
+      </motion.div>
+      {/* numerals arranged in a circle */}
+      <FinaleNumerals />
+    </div>
+  );
+}
+
+function FinaleBoard() {
+  // Frame 0 — the opening position. Full circle to where we started.
+  return (
+    <FinaleSvgBoard
+      frameIdx={0}
+      mode="standard"
+      glow={0.5}
+      instant
+      className="w-full h-full"
+    />
+  );
+}
+
+function FinaleNumerals() {
+  const numerals = ["I", "II", "III", "IV", "V", "VI", "VII", "VIII", "IX", "X", "XI", "XII"];
+  return (
+    <motion.div
+      className="absolute inset-0 flex items-center justify-center pointer-events-none"
+      initial={{ rotate: 0 }}
+      animate={{ rotate: 360 }}
+      transition={{ duration: 200, repeat: Infinity, ease: "linear" }}
+    >
+      <div className="relative" style={{ width: "min(70vmin, 640px)", height: "min(70vmin, 640px)" }}>
+        {numerals.map((n, i) => {
+          const angle = (i / numerals.length) * Math.PI * 2 - Math.PI / 2;
+          const radius = 45; // % of container
+          const x = 50 + Math.cos(angle) * radius;
+          const y = 50 + Math.sin(angle) * radius;
+          return (
+            <motion.span
+              key={n}
+              className="display-italic absolute select-none"
+              style={{
+                left: `${x}%`,
+                top: `${y}%`,
+                transform: "translate(-50%, -50%)",
+                color: "var(--color-vermilion)",
+                fontSize: "clamp(20px, 2.4vw, 30px)",
+                opacity: 0.65,
+              }}
+              initial={{ opacity: 0, scale: 0 }}
+              whileInView={{ opacity: 0.65, scale: 1 }}
+              viewport={{ once: true }}
+              transition={{ delay: 0.5 + i * 0.06, duration: 0.5, ease: "easeOut" }}
+            >
+              {n}
+            </motion.span>
+          );
+        })}
+      </div>
+    </motion.div>
   );
 }
