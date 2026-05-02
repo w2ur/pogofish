@@ -872,6 +872,52 @@ type PanelProps = {
   sectionRef?: (el: HTMLElement | null) => void;
 };
 
+/** A reusable cinematic chapter head used at the top of full-width sections.
+ *  Massive italic numeral drops in, vermilion hairline draws across, kicker
+ *  wipes from left. Same visual language as NarrativePanel's intro. */
+function SectionChapterHead({
+  numeral,
+  kicker,
+}: {
+  numeral: string;
+  kicker: string;
+}) {
+  return (
+    <div className="space-y-3 mb-8">
+      <motion.span
+        initial={{ opacity: 0, y: 24, scale: 0.9 }}
+        whileInView={{ opacity: 1, y: 0, scale: 1 }}
+        viewport={{ once: true, margin: "-15%" }}
+        transition={{ duration: 0.85, ease: [0.16, 1, 0.3, 1] }}
+        className="display-italic block leading-[0.85] text-vermilion select-none"
+        style={{
+          fontSize: "clamp(4rem, 9vw, 8rem)",
+          letterSpacing: "-0.04em",
+        }}
+      >
+        {numeral}
+      </motion.span>
+      <motion.span
+        aria-hidden
+        className="block h-px bg-vermilion origin-left"
+        initial={{ scaleX: 0 }}
+        whileInView={{ scaleX: 1 }}
+        viewport={{ once: true, margin: "-15%" }}
+        transition={{ duration: 1.0, ease: [0.6, 0, 0.2, 1], delay: 0.25 }}
+      />
+      <motion.div
+        initial={{ opacity: 0, y: 6, clipPath: "inset(0 100% 0 0)" }}
+        whileInView={{ opacity: 1, y: 0, clipPath: "inset(0 0% 0 0)" }}
+        viewport={{ once: true, margin: "-15%" }}
+        transition={{ duration: 0.6, ease: [0.16, 1, 0.3, 1], delay: 0.4 }}
+        className="kicker"
+      >
+        {kicker}
+      </motion.div>
+    </div>
+  );
+}
+
 function NarrativePanel({ chapter, kicker, children, sectionRef }: PanelProps) {
   return (
     <section ref={sectionRef} className="min-h-screen flex items-center py-28">
@@ -1304,13 +1350,7 @@ function Scene7Experiments() {
     <section className="relative py-28 md:py-40 px-6 md:px-10">
       <div className="mx-auto max-w-6xl space-y-14">
         <div ref={ref} className="reveal space-y-6 max-w-[58ch]">
-          <div className="flex items-baseline gap-4">
-            <span className="display italic text-3xl md:text-4xl text-vermilion">
-              {CHAPTER_NUMERAL.VIII}
-            </span>
-            <span className="fade-line is-visible flex-1 origin-left" />
-          </div>
-          <div className="kicker">{STRINGS.chapters.VIII[lang]}</div>
+          <SectionChapterHead numeral={CHAPTER_NUMERAL.VIII} kicker={STRINGS.chapters.VIII[lang]} />
           <h2 className="display text-[clamp(2rem,4vw,3.25rem)] text-paper leading-[1.08]">
             {STRINGS.scene7.h2A[lang]}
             <span className="display-italic text-vermilion">{STRINGS.scene7.h2B[lang]}</span>
@@ -1477,13 +1517,7 @@ function Scene8Verdict() {
     <section className="relative py-28 md:py-40 px-6 md:px-10 border-t border-hair">
       <div className="mx-auto max-w-6xl space-y-14">
         <div ref={ref} className="reveal space-y-6 max-w-[58ch]">
-          <div className="flex items-baseline gap-4">
-            <span className="display italic text-3xl md:text-4xl text-vermilion">
-              {CHAPTER_NUMERAL.IX}
-            </span>
-            <span className="fade-line is-visible flex-1 origin-left" />
-          </div>
-          <div className="kicker">{STRINGS.chapters.IX[lang]}</div>
+          <SectionChapterHead numeral={CHAPTER_NUMERAL.IX} kicker={STRINGS.chapters.IX[lang]} />
           <h2 className="display text-[clamp(2rem,4vw,3.25rem)] text-paper leading-[1.08]">
             {STRINGS.scene8.h2A[lang]}
             <span className="display-italic text-vermilion">{STRINGS.scene8.h2B[lang]}</span>
@@ -1703,13 +1737,7 @@ function Scene10Epilogue() {
   return (
     <section className="relative py-32 md:py-48 px-6 md:px-10 border-t border-hair">
       <div ref={ref} className="reveal mx-auto max-w-[60ch] space-y-8">
-        <div className="flex items-baseline gap-4">
-          <span className="display italic text-3xl md:text-4xl text-vermilion">
-            {CHAPTER_NUMERAL.XII}
-          </span>
-          <span className="fade-line is-visible flex-1 origin-left" />
-        </div>
-        <div className="kicker">{STRINGS.chapters.XII[lang]}</div>
+        <SectionChapterHead numeral={CHAPTER_NUMERAL.XII} kicker={STRINGS.chapters.XII[lang]} />
 
         <h2 className="display text-[clamp(2rem,4vw,3rem)] text-paper leading-[1.08]">
           {STRINGS.scene12.h2A[lang]}
