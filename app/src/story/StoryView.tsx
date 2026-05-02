@@ -9,6 +9,7 @@ import { EnFr } from "./EnFr";
 import { LearningsScene } from "./LearningsScene";
 import { LangToggle } from "./LangToggle";
 import { CinematicOverture } from "./CinematicOverture";
+import { GlossaryConstellation } from "./GlossaryConstellation";
 import { useLang } from "./LangContext";
 import { STRINGS, tf } from "./i18n";
 import { useReveal, useActiveIndex } from "./useReveal";
@@ -18,7 +19,6 @@ import {
   VARIANTS,
   FAILED_RUN_DAYS,
   VERDICT,
-  GLOSSARY,
   FMT,
 } from "./data";
 
@@ -44,7 +44,7 @@ export function StoryView() {
         <StageBinder view={null}><PlayScene /></StageBinder>
         <StageBinder view={null}><LearningsScene /></StageBinder>
         <StageBinder view={null}><Scene10Epilogue /></StageBinder>
-        <StageBinder view={null}><Scene11Glossary /></StageBinder>
+        <StageBinder view={null}><GlossaryConstellation /></StageBinder>
         <StoryFooter />
         <PlayCTA />
         <LangToggle />
@@ -1396,57 +1396,7 @@ function VerdictBadge({ verdict }: { verdict: "pass" | "fail" | "warn" }) {
 }
 
 
-/* ---------------- scene 11: glossary ---------------- */
-
-function Scene11Glossary() {
-  const ref = useReveal<HTMLDivElement>();
-  const { lang } = useLang();
-  const groups = (["AI", "Infra", "Pogo"] as const).map((key) => ({
-    key,
-    name: STRINGS.scene11.groups[key].name[lang],
-    blurb: STRINGS.scene11.groups[key].blurb[lang],
-  }));
-  return (
-    <section className="relative py-28 md:py-36 px-6 md:px-10 border-t border-hair">
-      <div className="mx-auto max-w-6xl space-y-12">
-        <div ref={ref} className="reveal space-y-4 max-w-[60ch]">
-          <div className="kicker">{STRINGS.scene11.kicker[lang]}</div>
-          <h2 className="display text-[clamp(1.9rem,3.8vw,3rem)] text-paper leading-[1.1]">
-            {STRINGS.scene11.h2A[lang]}
-            <span className="display-italic text-vermilion">{STRINGS.scene11.h2B[lang]}</span>
-            {STRINGS.scene11.h2C[lang]}
-          </h2>
-          <p className="text-paper-2">{STRINGS.scene11.intro[lang]}</p>
-        </div>
-
-        <div className="grid md:grid-cols-3 gap-10">
-          {groups.map((g) => (
-            <div key={g.key} className="space-y-6">
-              <div className="space-y-1 pb-3 border-b border-hair">
-                <div className="display italic text-2xl text-vermilion">{g.name}</div>
-                <div className="mono text-[10px] tracking-[0.2em] uppercase text-paper-3">
-                  {g.blurb}
-                </div>
-              </div>
-              <dl className="space-y-5">
-                {GLOSSARY.filter((e) => e.group === g.key).map((e) => (
-                  <div key={e.term} className="space-y-1.5">
-                    <dt className="display text-lg text-paper">
-                      {lang === "fr" && e.termFr ? e.termFr : e.term}
-                    </dt>
-                    <dd className="text-paper-2 text-[0.95rem] leading-[1.65]">
-                      {e.long[lang]}
-                    </dd>
-                  </div>
-                ))}
-              </dl>
-            </div>
-          ))}
-        </div>
-      </div>
-    </section>
-  );
-}
+/* scene 11 glossary moved to GlossaryConstellation.tsx (interactive graph). */
 
 /* ---------------- scene 10: epilogue ---------------- */
 

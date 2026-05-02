@@ -1,5 +1,6 @@
 import { useEffect, useRef, useState } from "react";
 import type { CSSProperties } from "react";
+import { motion } from "motion/react";
 import { GAME_FRAMES, FMT } from "./data";
 import { useLang } from "./LangContext";
 import { usePrefersReducedMotion } from "./usePrefersReducedMotion";
@@ -327,22 +328,42 @@ function BeatText({
       ? "absolute top-1/2 -translate-y-1/2 right-[5vw] md:right-[8vw] max-w-[44ch] text-right"
       : "absolute top-[14vh] left-1/2 -translate-x-1/2 max-w-[60ch] text-center px-6";
 
+  // The kicker / headline / caption each remount on beat-or-language change,
+  // and animate in with a clip-path wipe + slide. This gives every beat a
+  // proper "curtain rise" instead of plain opacity fades.
+  const remountKey = `${beat.numeral}-${lang}`;
   return (
     <div className={`pointer-events-none z-20 ${positionClass}`} style={base}>
-      <div
+      <motion.div
+        key={`kicker-${remountKey}`}
+        initial={{ opacity: 0, y: -8, clipPath: "inset(0 100% 0 0)" }}
+        animate={{ opacity: 1, y: 0, clipPath: "inset(0 0% 0 0)" }}
+        transition={{ duration: 0.6, ease: [0.16, 1, 0.3, 1] }}
         className="kicker mb-4"
         style={{ letterSpacing: "0.32em" }}
       >
         <span className="text-vermilion">{beat.numeral}</span>
         <span className="text-paper-3 mx-3">·</span>
         <span className="text-paper-3">{beat.kicker[lang]}</span>
-      </div>
-      <h2 className="display text-[clamp(2.4rem,5.4vw,5.6rem)] leading-[0.98] text-paper">
+      </motion.div>
+      <motion.h2
+        key={`headline-${remountKey}`}
+        initial={{ opacity: 0, y: 22, clipPath: "inset(0 100% 0 0)" }}
+        animate={{ opacity: 1, y: 0, clipPath: "inset(0 0% 0 0)" }}
+        transition={{ duration: 0.95, ease: [0.16, 1, 0.3, 1], delay: 0.12 }}
+        className="display text-[clamp(2.4rem,5.4vw,5.6rem)] leading-[0.98] text-paper"
+      >
         {beat.headline[lang]}
-      </h2>
-      <p className="mt-6 text-paper-2 text-[clamp(0.95rem,1.15vw,1.15rem)] leading-[1.6] max-w-[42ch] mx-auto md:mx-0">
+      </motion.h2>
+      <motion.p
+        key={`caption-${remountKey}`}
+        initial={{ opacity: 0, y: 12 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.7, ease: "easeOut", delay: 0.45 }}
+        className="mt-6 text-paper-2 text-[clamp(0.95rem,1.15vw,1.15rem)] leading-[1.6] max-w-[42ch] mx-auto md:mx-0"
+      >
         {beat.caption[lang]}
-      </p>
+      </motion.p>
     </div>
   );
 }
