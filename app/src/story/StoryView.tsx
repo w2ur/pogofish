@@ -12,6 +12,7 @@ import { LangToggle } from "./LangToggle";
 import { CinematicOverture } from "./CinematicOverture";
 import { GlossaryConstellation } from "./GlossaryConstellation";
 import { ScrollProgress } from "./ScrollProgress";
+import { CountUp } from "./CountUp";
 import { useLang } from "./LangContext";
 import { STRINGS, tf } from "./i18n";
 import { useReveal, useActiveIndex } from "./useReveal";
@@ -820,38 +821,88 @@ type PanelProps = {
 };
 
 function NarrativePanel({ chapter, kicker, children, sectionRef }: PanelProps) {
-  const ref = useReveal<HTMLDivElement>();
   return (
     <section ref={sectionRef} className="min-h-screen flex items-center py-28">
-      <div ref={ref} className="reveal space-y-6 w-full max-w-[58ch]">
-        <div className="flex items-baseline gap-4">
-          <span className="display italic text-3xl md:text-4xl text-vermilion leading-none">
+      <div className="space-y-6 w-full max-w-[58ch]">
+        {/* dramatic chapter head: oversized Roman numeral drops in,
+            kicker wipes from the left, hairline draws across. */}
+        <div className="relative">
+          <motion.span
+            initial={{ opacity: 0, y: 24, scale: 0.9 }}
+            whileInView={{ opacity: 1, y: 0, scale: 1 }}
+            viewport={{ once: true, margin: "-15%" }}
+            transition={{ duration: 0.9, ease: [0.16, 1, 0.3, 1] }}
+            className="display-italic block leading-[0.85] text-vermilion select-none"
+            style={{
+              fontSize: "clamp(5rem, 12vw, 10rem)",
+              letterSpacing: "-0.04em",
+            }}
+          >
             {chapter}
-          </span>
-          <span className="fade-line is-visible flex-1 origin-left" />
+          </motion.span>
+          <motion.span
+            aria-hidden
+            className="block h-px bg-vermilion origin-left mt-3"
+            initial={{ scaleX: 0 }}
+            whileInView={{ scaleX: 1 }}
+            viewport={{ once: true, margin: "-15%" }}
+            transition={{ duration: 1.2, ease: [0.6, 0, 0.2, 1], delay: 0.3 }}
+          />
         </div>
-        <div className="kicker">{kicker}</div>
-        <div className="space-y-5 text-paper text-[1.0625rem] md:text-[1.125rem] leading-[1.75]">
+        <motion.div
+          initial={{ opacity: 0, y: 8, clipPath: "inset(0 100% 0 0)" }}
+          whileInView={{ opacity: 1, y: 0, clipPath: "inset(0 0% 0 0)" }}
+          viewport={{ once: true, margin: "-15%" }}
+          transition={{ duration: 0.7, ease: [0.16, 1, 0.3, 1], delay: 0.45 }}
+          className="kicker"
+        >
+          {kicker}
+        </motion.div>
+        <motion.div
+          initial={{ opacity: 0, y: 16 }}
+          whileInView={{ opacity: 1, y: 0 }}
+          viewport={{ once: true, margin: "-15%" }}
+          transition={{ duration: 0.7, ease: "easeOut", delay: 0.6 }}
+          className="space-y-5 text-paper text-[1.0625rem] md:text-[1.125rem] leading-[1.75]"
+        >
           {children}
-        </div>
+        </motion.div>
       </div>
     </section>
   );
 }
 
 function TranscriptCard({ header, body }: { header: string; body: React.ReactNode }) {
-  const ref = useReveal<HTMLDivElement>();
   return (
-    <div
-      ref={ref}
-      className="reveal delay-1 border border-hair bg-ink-2 rounded-sm px-5 py-4 my-8 relative"
+    <motion.div
+      initial={{ opacity: 0, y: 24, scale: 0.98 }}
+      whileInView={{ opacity: 1, y: 0, scale: 1 }}
+      viewport={{ once: true, margin: "-10%" }}
+      transition={{ duration: 0.7, ease: [0.16, 1, 0.3, 1] }}
+      className="border border-hair bg-ink-2 rounded-sm px-5 py-4 my-8 relative shadow-2xl"
+      style={{
+        boxShadow: "0 28px 50px -30px rgba(0,0,0,0.7), 0 0 50px -28px rgba(217,79,44,0.35)",
+      }}
     >
-      <div aria-hidden className="absolute -left-[1px] top-0 bottom-0 w-[2px] bg-vermilion" />
-      <div className="mono text-[10px] tracking-[0.22em] uppercase text-paper-3 mb-3">
+      <motion.div
+        aria-hidden
+        initial={{ scaleY: 0 }}
+        whileInView={{ scaleY: 1 }}
+        viewport={{ once: true, margin: "-10%" }}
+        transition={{ duration: 0.6, ease: "easeOut", delay: 0.2 }}
+        className="absolute -left-[1px] top-0 bottom-0 w-[2px] bg-vermilion origin-top"
+      />
+      <div className="flex items-center gap-2 mono text-[10px] tracking-[0.22em] uppercase text-paper-3 mb-3">
+        <motion.span
+          aria-hidden
+          className="inline-block h-1.5 w-1.5 rounded-full bg-vermilion"
+          animate={{ opacity: [1, 0.3, 1] }}
+          transition={{ duration: 1.4, repeat: Infinity, ease: "easeInOut" }}
+        />
         {header}
       </div>
       <div className="mono text-[13px] text-paper-2 leading-[1.7]">{body}</div>
-    </div>
+    </motion.div>
   );
 }
 
@@ -866,23 +917,47 @@ function AnnotatedCompare({
   claimedLabel: string;
   actualLabel: string;
 }) {
-  const ref = useReveal<HTMLDivElement>();
   return (
-    <div
-      ref={ref}
-      className="reveal delay-2 my-10 grid grid-cols-2 gap-8 border-t border-b border-hair py-8"
+    <motion.div
+      initial={{ opacity: 0, y: 16 }}
+      whileInView={{ opacity: 1, y: 0 }}
+      viewport={{ once: true, margin: "-15%" }}
+      transition={{ duration: 0.7, ease: "easeOut" }}
+      className="my-10 grid grid-cols-2 gap-8 border-t border-b border-hair py-8 relative"
     >
       <div>
-        <div className="kicker mb-2" style={{ color: "var(--color-paper-3)" }}>{claimedLabel}</div>
-        <div className="display text-[clamp(2rem,4vw,3rem)] text-paper-3 line-through decoration-vermilion decoration-2">
+        <div className="kicker mb-2" style={{ color: "var(--color-paper-3)" }}>
+          {claimedLabel}
+        </div>
+        <div className="display text-[clamp(2rem,4vw,3rem)] text-paper-3 relative inline-block">
           {claimed}
+          {/* vermilion strikethrough drawing across the wrong number */}
+          <motion.span
+            className="absolute left-0 right-0 top-1/2 h-[3px] bg-vermilion origin-left"
+            initial={{ scaleX: 0 }}
+            whileInView={{ scaleX: 1 }}
+            viewport={{ once: true, margin: "-15%" }}
+            transition={{ duration: 0.7, ease: [0.6, 0, 0.2, 1], delay: 0.4 }}
+            aria-hidden
+          />
         </div>
       </div>
       <div>
         <div className="kicker mb-2">{actualLabel}</div>
-        <div className="display text-[clamp(2rem,4vw,3rem)] text-vermilion">{actual}</div>
+        <motion.div
+          className="display text-[clamp(2rem,4vw,3rem)] text-vermilion"
+          initial={{ opacity: 0, y: 8 }}
+          whileInView={{ opacity: 1, y: 0 }}
+          viewport={{ once: true, margin: "-15%" }}
+          transition={{ duration: 0.6, ease: "easeOut", delay: 0.95 }}
+          style={{
+            textShadow: "0 0 24px rgba(217,79,44,0.4)",
+          }}
+        >
+          {actual}
+        </motion.div>
       </div>
-    </div>
+    </motion.div>
   );
 }
 
@@ -898,7 +973,6 @@ function PullQuote({ children }: { children: React.ReactNode }) {
 /* ---------------- scene 4 chart ---------------- */
 
 function SixDaysChart() {
-  const ref = useReveal<HTMLDivElement>();
   const max = Math.max(...FAILED_RUN_DAYS.map((d) => d.states));
   const width = 560;
   const height = 200;
@@ -917,10 +991,22 @@ function SixDaysChart() {
 
   const { lang } = useLang();
   return (
-    <div ref={ref} className="reveal delay-1 my-8 border border-hair bg-ink-2 rounded-sm p-5">
+    <motion.div
+      initial={{ opacity: 0, y: 24 }}
+      whileInView={{ opacity: 1, y: 0 }}
+      viewport={{ once: true, margin: "-10%" }}
+      transition={{ duration: 0.7, ease: "easeOut" }}
+      className="my-8 border border-hair bg-ink-2 rounded-sm p-5"
+    >
       <div className="mono text-[10px] tracking-[0.25em] uppercase text-paper-3 mb-4 flex justify-between">
         <span>{STRINGS.charts.statesVisited[lang]}</span>
-        <span className="text-vermilion">{STRINGS.charts.oomDay6[lang]}</span>
+        <span className="text-vermilion">
+          <CountUp to={49} suffix="M" />
+          <span className="mx-1">·</span>
+          <CountUp to={36} suffix=" GB" />
+          <span className="mx-2 text-paper-3">·</span>
+          {lang === "fr" ? "JOUR 6" : "DAY 6"}
+        </span>
       </div>
       <svg viewBox={`0 0 ${width} ${height}`} className="w-full h-auto">
         <defs>
@@ -988,7 +1074,7 @@ function SixDaysChart() {
         </span>
       </div>
       <style>{`@keyframes dash { to { stroke-dashoffset: 0; } }`}</style>
-    </div>
+    </motion.div>
   );
 }
 
