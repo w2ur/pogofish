@@ -1452,11 +1452,80 @@ function Scene7Experiments() {
           </div>
         </div>
 
-        <div className="grid grid-cols-2 md:grid-cols-5 gap-6 md:gap-5">
-          {VARIANTS.map((v, i) => <VariantCard key={v.id} variant={v} index={i} />)}
+        <div className="relative">
+          <TournamentArcs count={VARIANTS.length} />
+          <div className="grid grid-cols-2 md:grid-cols-5 gap-6 md:gap-5 relative z-10">
+            {VARIANTS.map((v, i) => <VariantCard key={v.id} variant={v} index={i} />)}
+          </div>
         </div>
       </div>
     </section>
+  );
+}
+
+/** Vermilion arcs above the variant cards — each pair connected by a
+ *  curved bracket suggesting a round-robin tournament. Arcs fade in
+ *  after the cards settle. Hidden on small screens (cards stack). */
+function TournamentArcs({ count }: { count: number }) {
+  // x position of each card's top center, in 0..100 viewBox units
+  const nodes = Array.from({ length: count }, (_, i) => 5 + (i + 0.5) * (90 / count));
+  const pairs: Array<[number, number]> = [];
+  for (let i = 0; i < count; i++) {
+    for (let j = i + 1; j < count; j++) pairs.push([i, j]);
+  }
+  // Each pair gets an arc whose height is proportional to the distance —
+  // longer pairs arc higher, like a fan over the row of cards.
+  return (
+    <svg
+      aria-hidden
+      viewBox="0 0 100 30"
+      preserveAspectRatio="none"
+      className="hidden md:block absolute left-0 right-0 w-full pointer-events-none"
+      style={{ height: 80, top: -56 }}
+    >
+      {pairs.map(([a, b], idx) => {
+        const xa = nodes[a]!;
+        const xb = nodes[b]!;
+        const dx = Math.abs(xb - xa);
+        // higher arc for longer pairs; clamp so closest pairs aren't flat
+        const peakY = Math.max(2, 28 - dx * 1.0);
+        const midX = (xa + xb) / 2;
+        const path = `M ${xa} 28 Q ${midX} ${peakY} ${xb} 28`;
+        return (
+          <motion.path
+            key={idx}
+            d={path}
+            fill="none"
+            stroke="rgba(217,79,44,0.55)"
+            strokeWidth={0.4}
+            vectorEffect="non-scaling-stroke"
+            strokeLinecap="round"
+            initial={{ pathLength: 0, opacity: 0 }}
+            whileInView={{ pathLength: 1, opacity: 1 }}
+            viewport={{ once: true, margin: "-5%" }}
+            transition={{
+              delay: 0.9 + idx * 0.06,
+              duration: 0.7,
+              ease: [0.22, 0.6, 0.2, 1],
+            }}
+          />
+        );
+      })}
+      {/* tiny vermilion dots at each card's anchor */}
+      {nodes.map((x, i) => (
+        <motion.circle
+          key={i}
+          cx={x}
+          cy={28}
+          r={0.4}
+          fill="var(--color-vermilion)"
+          initial={{ scale: 0 }}
+          whileInView={{ scale: 1 }}
+          viewport={{ once: true, margin: "-5%" }}
+          transition={{ delay: 0.7 + i * 0.05, duration: 0.3, type: "spring", stiffness: 280 }}
+        />
+      ))}
+    </svg>
   );
 }
 
