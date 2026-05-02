@@ -158,27 +158,29 @@ function PinnedStory() {
   const pinLabelKey = pinLabelKeys[active] ?? pinLabelKeys[0]!;
   const pinLabel = STRINGS.pinned.labels[pinLabelKey][lang];
 
-  // Each pinned panel drives the persistent stage to a different game frame.
+  // Each pinned panel drives the persistent stage to a different game frame
+  // AND a different camera/mode/glow so chapters feel distinct.
   // Frames mirror PINNED_BOARDS in data.ts.
-  const panelToFrame = [0, 2, 8, 11, 10];
+  const panelStageViews: Array<Parameters<typeof stage.setView>[0]> = [
+    // III · opening — clean, wide, contemplative
+    { frameIdx: 0,  x: 0.22, y: 0.5,  scale: 0.55, rotate: 0,    mode: "standard", focusCell: null, glow: 0.30 },
+    // IV · the claim — slight tilt, warmer glow (the bad answer is being given)
+    { frameIdx: 2,  x: 0.22, y: 0.5,  scale: 0.58, rotate: -1.5, mode: "standard", focusCell: null, glow: 0.45 },
+    // V · six days — board pushed up slightly, brighter glow (peak stress)
+    { frameIdx: 8,  x: 0.22, y: 0.46, scale: 0.55, rotate: 0,    mode: "standard", focusCell: null, glow: 0.62 },
+    // VI · the tree had no leaves — exploded mode focuses on b2 (the equilibrium cell)
+    { frameIdx: 11, x: 0.22, y: 0.5,  scale: 0.55, rotate: 0,    mode: "exploded", focusCell: 4,    glow: 0.45 },
+    // VII · rules became variable — fanout: ghost copies fan behind the main board
+    { frameIdx: 10, x: 0.22, y: 0.5,  scale: 0.55, rotate: 0.8,  mode: "fanout",   focusCell: null, glow: 0.50 },
+  ];
 
   // Apply the view whenever active changes OR the section enters viewport
   // (scroll listener). The latter handles the case where active hasn't
   // changed but a previous section hid the stage.
   useEffect(() => {
     const apply = () => {
-      const frame = panelToFrame[active] ?? 0;
-      stage.setView({
-        frameIdx: frame,
-        x: 0.22,
-        y: 0.5,
-        scale: 0.55,
-        rotate: 0,
-        opacity: 1,
-        mode: "standard",
-        focusCell: null,
-        glow: 0.3 + active * 0.08,
-      });
+      const view = panelStageViews[active] ?? panelStageViews[0]!;
+      stage.setView({ ...view, opacity: 1 });
     };
 
     let frame = 0;

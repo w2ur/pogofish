@@ -3,12 +3,16 @@ interface PieceCountSelectorProps {
   onSelect: (count: number) => void;
 }
 
+/**
+ * Pop-up that asks "how many pieces from this stack?" — vermilion accent
+ * matches the rest of the article's editorial palette.
+ */
 export function PieceCountSelector({
   validCounts,
   onSelect,
 }: PieceCountSelectorProps) {
   return (
-    <div className="absolute -top-9 left-1/2 z-10 flex -translate-x-1/2 gap-1">
+    <div className="absolute -top-10 left-1/2 z-10 flex -translate-x-1/2 gap-1.5">
       {validCounts.map((count) => (
         <button
           key={count}
@@ -16,7 +20,10 @@ export function PieceCountSelector({
             e.stopPropagation();
             onSelect(count);
           }}
-          className="flex h-7 w-7 items-center justify-center rounded border border-zinc-500 bg-zinc-800 text-xs font-bold text-zinc-100 hover:border-white hover:bg-zinc-700"
+          className="flex h-8 w-8 items-center justify-center rounded-sm display text-[15px] text-paper hover:text-ink hover:bg-vermilion border border-vermilion/60 hover:border-vermilion bg-ink-2 transition-colors"
+          style={{
+            boxShadow: "0 6px 16px -8px rgba(0,0,0,0.6)",
+          }}
         >
           {count}
         </button>
