@@ -359,14 +359,16 @@
 
 .cinema-numeral {
   position: absolute;
-  inset: 0;
+  /* sit in the lower-half band of the viewport, behind the board, never
+     reaching up into the headline's territory at the top. */
+  inset: 38vh 0 0 0;
   display: flex;
   align-items: center;
   justify-content: center;
   pointer-events: none;
   z-index: 0;
   color: var(--color-vermilion);
-  font-size: clamp(14rem, 36vw, 32rem);
+  font-size: clamp(8rem, 18vw, 18rem);
   line-height: 0.82;
   letter-spacing: -0.05em;
   user-select: none;

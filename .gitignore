@@ -46,6 +46,21 @@ PLAN.md
 # Root-level debug screenshots
 /story-*.png
 /screenshot-*.png
+/audit-*.png
+/audit-*.jpeg
+/fix-*.png
+/fix-*.jpeg
+/final-*.png
+/final-*.jpeg
+/page-*.jpeg
+/page-*.png
+/overture-*.png
+/overture-*.jpeg
+/phase*-*.png
+/phase*-*.jpeg
+/show-*.png
+/show-*.jpeg
+/past-overture.png
 
 # Backups and exports
 *.bak

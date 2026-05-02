@@ -289,7 +289,7 @@ function BigNumeral({ numeral, sub, isFirst }: { numeral: string; sub: number; i
       {/* outline ghost — sits behind the filled numeral, slightly larger */}
       <div
         aria-hidden
-        className="cinema-numeral display-italic"
+        className="cinema-numeral display"
         style={{
           opacity: aliveness * 0.18,
           transform: `translate3d(0, ${y}px, 0) scale(${breath * 1.04})`,
@@ -304,7 +304,7 @@ function BigNumeral({ numeral, sub, isFirst }: { numeral: string; sub: number; i
       {/* main filled vermilion numeral */}
       <div
         aria-hidden
-        className="cinema-numeral display-italic"
+        className="cinema-numeral display"
         style={{
           opacity: aliveness * 0.36,
           transform: `translate3d(0, ${y}px, 0) scale(${breath})`,
@@ -315,7 +315,7 @@ function BigNumeral({ numeral, sub, isFirst }: { numeral: string; sub: number; i
       {/* highlight wash — a brighter copy that pulses at peak sub */}
       <div
         aria-hidden
-        className="cinema-numeral display-italic"
+        className="cinema-numeral display"
         style={{
           opacity: aliveness * Math.max(0, Math.sin(sub * Math.PI)) * 0.15,
           transform: `translate3d(0, ${y}px, 0) scale(${breath * 0.99})`,
@@ -357,11 +357,15 @@ function BeatText({
     transition: "opacity 220ms ease, transform 220ms ease",
   };
 
+  // Text always lives in the upper third of the viewport, leaving the lower
+  // band to the persistent stage (board) and the BigNumeral wash. Kicker /
+  // chapter / headline / caption stack at top-[14vh] so the EdgeTickers
+  // (header strip) sits cleanly above with breathing room.
   const positionClass =
     variant === "left"
-      ? "absolute top-1/2 -translate-y-1/2 left-[5vw] md:left-[8vw] max-w-[44ch]"
+      ? "absolute top-[14vh] left-[5vw] md:left-[8vw] max-w-[44ch]"
       : variant === "right"
-      ? "absolute top-1/2 -translate-y-1/2 right-[5vw] md:right-[8vw] max-w-[44ch] text-right"
+      ? "absolute top-[14vh] right-[5vw] md:right-[8vw] max-w-[44ch] text-right"
       : "absolute top-[14vh] left-1/2 -translate-x-1/2 max-w-[60ch] text-center px-6";
 
   // The kicker / headline / caption each remount on beat-or-language change,
@@ -730,12 +734,15 @@ function SoftcloseFX({ sub, lang }: { sub: number; lang: "en" | "fr" }) {
 function beatToStageView(beat: Beat): Partial<StageView> {
   let cam = { x: 0.5, y: 0.5, scale: 0.55, rotate: 0 };
   switch (beat.camera) {
-    case "wide":   cam = { x: 0.5,  y: 0.78, scale: 0.45, rotate: 0    }; break;
-    case "center": cam = { x: 0.5,  y: 0.62, scale: 0.55, rotate: 0    }; break;
-    case "left":   cam = { x: 0.26, y: 0.55, scale: 0.50, rotate: -1.2 }; break;
-    case "right":  cam = { x: 0.74, y: 0.55, scale: 0.50, rotate: 0    }; break;
-    case "tight":  cam = { x: 0.5,  y: 0.55, scale: 0.78, rotate: 0    }; break;
-    case "tilt":   cam = { x: 0.5,  y: 0.62, scale: 0.58, rotate: 1.5  }; break;
+    // y values are intentionally pushed below 0.5 (toward the lower half of
+    // the viewport) so the headline (positioned at top ~6-14vh) and the
+    // BigNumeral (centered) have clear vertical lanes above the board.
+    case "wide":   cam = { x: 0.5,  y: 0.78, scale: 0.42, rotate: 0    }; break;
+    case "center": cam = { x: 0.5,  y: 0.72, scale: 0.46, rotate: 0    }; break;
+    case "left":   cam = { x: 0.26, y: 0.68, scale: 0.42, rotate: -1.2 }; break;
+    case "right":  cam = { x: 0.74, y: 0.68, scale: 0.42, rotate: 0    }; break;
+    case "tight":  cam = { x: 0.5,  y: 0.72, scale: 0.55, rotate: 0    }; break;
+    case "tilt":   cam = { x: 0.5,  y: 0.72, scale: 0.46, rotate: 1.5  }; break;
   }
   let mode: "standard" | "fanout" | "exploded" = "standard";
   let focusCell: number | null = null;

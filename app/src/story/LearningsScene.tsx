@@ -80,7 +80,7 @@ export function LearningsScene() {
       className="relative px-6 py-28 md:py-36 border-t border-hair"
       style={{ scrollMarginTop: 80 }}
     >
-      <div ref={ref} className="reveal mx-auto max-w-5xl space-y-4 text-center mb-16">
+      <div ref={ref} className="mx-auto max-w-5xl space-y-4 text-center mb-16">
         <div className="kicker justify-center">
           XI &middot; {STRINGS.chapters.XI[lang]}
         </div>

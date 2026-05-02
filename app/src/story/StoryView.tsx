@@ -218,18 +218,21 @@ function PinnedStory() {
             holds a chapter card (numeral + progress dots + label) and a
             spacer the size of the board for layout stability. */}
         <aside className="hidden lg:block">
-          <div className="sticky top-0 h-screen flex flex-col items-center justify-center gap-4 pointer-events-none">
-            {/* numeral, drops in on chapter change via key+motion */}
+          {/* Chapter card hugs the top and bottom of the sticky pane so it
+              never overlaps the persistent board, which paints in the middle.
+              Numeral + position label up top; chapter label + progress dots
+              down low. The middle vertical band is reserved for the board. */}
+          <div className="sticky top-0 h-screen pointer-events-none">
             <motion.div
               key={`pin-numeral-${active}`}
               initial={{ opacity: 0, y: -10, scale: 0.85 }}
               animate={{ opacity: 1, y: 0, scale: 1 }}
               transition={{ duration: 0.6, ease: [0.16, 1, 0.3, 1] }}
-              className="flex flex-col items-center gap-1"
+              className="absolute top-[10vh] left-1/2 -translate-x-1/2 flex flex-col items-center gap-1"
             >
               <span
                 className="display-italic text-vermilion select-none leading-none"
-                style={{ fontSize: "clamp(3.2rem, 5.5vw, 5.5rem)" }}
+                style={{ fontSize: "clamp(3rem, 4.4vw, 4.4rem)" }}
               >
                 {CHAPTER_NUMERAL_PIN[active] ?? "III"}
               </span>
@@ -238,38 +241,36 @@ function PinnedStory() {
               </span>
             </motion.div>
 
-            {/* spacer: where the persistent stage paints the board */}
-            <div className="w-[clamp(220px,28vw,320px)] aspect-square" aria-hidden />
+            <div className="absolute bottom-[10vh] left-1/2 -translate-x-1/2 flex flex-col items-center gap-3">
+              <motion.div
+                key={`pin-label-${active}`}
+                initial={{ opacity: 0, y: 6, clipPath: "inset(0 100% 0 0)" }}
+                animate={{ opacity: 1, y: 0, clipPath: "inset(0 0% 0 0)" }}
+                transition={{ duration: 0.55, ease: [0.16, 1, 0.3, 1], delay: 0.15 }}
+                className="display-italic text-xl text-paper-2 whitespace-nowrap"
+              >
+                {pinLabel}
+              </motion.div>
 
-            <motion.div
-              key={`pin-label-${active}`}
-              initial={{ opacity: 0, y: 6, clipPath: "inset(0 100% 0 0)" }}
-              animate={{ opacity: 1, y: 0, clipPath: "inset(0 0% 0 0)" }}
-              transition={{ duration: 0.55, ease: [0.16, 1, 0.3, 1], delay: 0.15 }}
-              className="display-italic text-2xl text-paper-2"
-            >
-              {pinLabel}
-            </motion.div>
-
-            {/* progress dots */}
-            <div className="flex items-center gap-2 mt-2">
-              {[0, 1, 2, 3, 4].map((i) => (
-                <motion.span
-                  key={i}
-                  className="block rounded-full"
-                  animate={{
-                    width: i === active ? 22 : 6,
-                    height: 2,
-                    backgroundColor:
-                      i < active
-                        ? "var(--color-vermilion-deep)"
-                        : i === active
-                        ? "var(--color-vermilion)"
-                        : "var(--color-graphite)",
-                  }}
-                  transition={{ type: "spring", stiffness: 280, damping: 24 }}
-                />
-              ))}
+              <div className="flex items-center gap-2">
+                {[0, 1, 2, 3, 4].map((i) => (
+                  <motion.span
+                    key={i}
+                    className="block rounded-full"
+                    animate={{
+                      width: i === active ? 22 : 6,
+                      height: 2,
+                      backgroundColor:
+                        i < active
+                          ? "var(--color-vermilion-deep)"
+                          : i === active
+                          ? "var(--color-vermilion)"
+                          : "var(--color-graphite)",
+                    }}
+                    transition={{ type: "spring", stiffness: 280, damping: 24 }}
+                  />
+                ))}
+              </div>
             </div>
           </div>
         </aside>

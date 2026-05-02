@@ -1,9 +1,7 @@
 import { useEffect, useRef, useState } from "react";
 import { usePrefersReducedMotion } from "./usePrefersReducedMotion";
 
-export function useReveal<T extends HTMLElement = HTMLDivElement>(
-  options: IntersectionObserverInit = { threshold: 0.18, rootMargin: "0px 0px -10% 0px" },
-) {
+export function useReveal<T extends HTMLElement = HTMLDivElement>() {
   const ref = useRef<T | null>(null);
   const reducedMotion = usePrefersReducedMotion();
 
@@ -14,19 +12,48 @@ export function useReveal<T extends HTMLElement = HTMLDivElement>(
       el.classList.add("is-visible");
       return;
     }
-    const observer = new IntersectionObserver(
-      (entries) => {
-        for (const entry of entries) {
-          if (entry.isIntersecting) {
-            entry.target.classList.add("is-visible");
-            observer.unobserve(entry.target);
-          }
-        }
-      },
-      options,
-    );
-    observer.observe(el);
-    return () => observer.disconnect();
+
+    // Initial geometric check: if the element is already in (or near) the
+    // viewport at mount time, reveal it immediately. Without this, async-
+    // loaded sections (LearningsScene etc.) sit invisible after a fast scroll
+    // because the observer's first callback never fires for already-static
+    // intersections under Lenis-driven smooth scroll.
+    const rect = el.getBoundingClientRect();
+    const vh = window.innerHeight;
+    if (rect.bottom > 0 && rect.top < vh) {
+      el.classList.add("is-visible");
+      return;
+    }
+
+    let frame = 0;
+    const check = () => {
+      frame = 0;
+      if (!el.isConnected) return;
+      const r = el.getBoundingClientRect();
+      const vh = window.innerHeight;
+      // Reveal once any part of the element enters the bottom 90% of the
+      // viewport — matches the rootMargin "-10% 0px" semantics.
+      if (r.top < vh * 0.9 && r.bottom > 0) {
+        el.classList.add("is-visible");
+        window.removeEventListener("scroll", onScroll);
+        window.removeEventListener("resize", onScroll);
+      }
+    };
+    const onScroll = () => {
+      if (frame) return;
+      frame = requestAnimationFrame(check);
+    };
+    window.addEventListener("scroll", onScroll, { passive: true });
+    window.addEventListener("resize", onScroll);
+    // Run once on next paint in case we mounted with the element already
+    // in view (post-async load, post-fast-scroll, post-Lenis-jump).
+    frame = requestAnimationFrame(check);
+
+    return () => {
+      if (frame) cancelAnimationFrame(frame);
+      window.removeEventListener("scroll", onScroll);
+      window.removeEventListener("resize", onScroll);
+    };
   }, [reducedMotion]);
 
   return ref;
