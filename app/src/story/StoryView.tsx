@@ -1,4 +1,5 @@
 import { useEffect, useRef, useState } from "react";
+import { motion } from "motion/react";
 import { StoryBoard } from "./StoryBoard";
 import { Term } from "./Term";
 import { TryYourself } from "./TryYourself";
@@ -1170,19 +1171,33 @@ function VariantCard({
   variant: (typeof VARIANTS)[number];
   index: number;
 }) {
-  const ref = useReveal<HTMLDivElement>({ threshold: 0.2, rootMargin: "0px 0px -5% 0px" });
   const { lang } = useLang();
   const i18n = STRINGS.variants[variant.id as keyof typeof STRINGS.variants];
   return (
-    <div
-      ref={ref}
-      className={`reveal delay-${Math.min(index, 4)} flex flex-col gap-4 border border-hair bg-ink-2 p-4 md:p-5 rounded-sm hover:border-vermilion/50 transition-colors`}
+    <motion.div
+      initial={{ opacity: 0, y: 32, rotate: index % 2 === 0 ? -1.5 : 1.5 }}
+      whileInView={{ opacity: 1, y: 0, rotate: 0 }}
+      viewport={{ once: true, margin: "-5%" }}
+      transition={{ delay: index * 0.09, duration: 0.65, ease: [0.16, 1, 0.3, 1] }}
+      whileHover={{ y: -4, scale: 1.02 }}
+      className="relative flex flex-col gap-4 border border-hair bg-ink-2 p-4 md:p-5 rounded-sm cursor-default group"
+      style={{
+        transformOrigin: "center bottom",
+        boxShadow: "0 24px 40px -28px rgba(0,0,0,0.6)",
+      }}
     >
+      {/* a thin vermilion edge line that grows from left on hover */}
+      <span
+        className="absolute left-0 top-0 bottom-0 w-[2px] bg-vermilion origin-bottom scale-y-0 group-hover:scale-y-100 transition-transform duration-500 ease-out"
+        aria-hidden
+      />
       <div className="flex items-center justify-between">
         <span className="mono text-[10px] tracking-[0.25em] uppercase text-vermilion">
           {variant.id}
         </span>
-        <span className="display italic text-2xl text-paper-3">{variant.glyph}</span>
+        <span className="display italic text-2xl text-paper-3 group-hover:text-vermilion transition-colors">
+          {variant.glyph}
+        </span>
       </div>
       <div className="display text-xl md:text-2xl text-paper leading-tight">
         {i18n ? i18n.label[lang] : variant.label}
@@ -1193,7 +1208,7 @@ function VariantCard({
       <p className="mono text-[11px] leading-[1.55] text-paper-2">
         {i18n ? i18n.rule[lang] : variant.rule}
       </p>
-    </div>
+    </motion.div>
   );
 }
 
@@ -1297,6 +1312,12 @@ function VerdictTable() {
   const ref = useReveal<HTMLDivElement>();
   const { lang } = useLang();
   const headers = STRINGS.scene8.tableHeaders;
+  // sort: winners first, then warns, then fails — visual priority of the
+  // "podium" reading.
+  const sorted = [...VERDICT].sort((a, b) => {
+    const order = { pass: 0, warn: 1, fail: 2 } as const;
+    return order[a.verdict as keyof typeof order] - order[b.verdict as keyof typeof order];
+  });
   return (
     <div ref={ref} className="reveal delay-1 overflow-x-auto">
       <table className="w-full border-collapse">
@@ -1310,22 +1331,42 @@ function VerdictTable() {
           </tr>
         </thead>
         <tbody>
-          {VERDICT.map((row, i) => {
+          {sorted.map((row, i) => {
             const balanceOk = Math.abs(row.balance - 0.5) <= 0.05;
             const skillOk = row.skill >= 0.75;
             const labelI18n = STRINGS.verdict.labels[row.id as keyof typeof STRINGS.verdict.labels];
             const failI18n = STRINGS.verdict.failReasons[row.id as keyof typeof STRINGS.verdict.failReasons];
+            const failed = row.verdict === "fail";
             return (
-              <tr
+              <motion.tr
                 key={row.id}
-                className={`align-middle border-b border-hair ${row.winner ? "bg-vermilion/[0.04]" : ""}`}
-                style={{ animationDelay: `${i * 70}ms` }}
+                initial={{ opacity: 0, x: -16 }}
+                whileInView={{ opacity: 1, x: 0 }}
+                viewport={{ once: true, margin: "-10%" }}
+                transition={{ duration: 0.55, ease: "easeOut", delay: i * 0.08 }}
+                className={`align-middle border-b border-hair relative ${
+                  row.winner
+                    ? "bg-vermilion/[0.06]"
+                    : failed
+                    ? "opacity-60"
+                    : ""
+                }`}
               >
                 <td className="py-5 pr-4">
                   <div className="flex items-baseline gap-3">
-                    {row.winner && <span className="display italic text-vermilion text-lg">★</span>}
+                    {row.winner && (
+                      <motion.span
+                        className="display italic text-vermilion text-2xl"
+                        initial={{ scale: 0, rotate: -45 }}
+                        whileInView={{ scale: 1, rotate: 0 }}
+                        viewport={{ once: true }}
+                        transition={{ delay: i * 0.08 + 0.4, type: "spring", stiffness: 280, damping: 18 }}
+                      >
+                        ★
+                      </motion.span>
+                    )}
                     <div>
-                      <div className="display text-lg text-paper">
+                      <div className={`display text-lg ${row.winner ? "text-paper font-semibold" : "text-paper"} ${failed ? "line-through decoration-vermilion/60" : ""}`}>
                         {labelI18n ? labelI18n[lang] : row.label}
                       </div>
                       <div className="mono text-[10px] tracking-[0.2em] uppercase text-paper-3">
@@ -1345,7 +1386,7 @@ function VerdictTable() {
                     </div>
                   )}
                 </td>
-              </tr>
+              </motion.tr>
             );
           })}
         </tbody>

@@ -45,7 +45,7 @@ export const DEFAULT_VIEW: StageView = {
   glow: 0.4,
 };
 
-const SPRING: Transition = { type: "spring", stiffness: 110, damping: 20, mass: 1 };
+const SPRING: Transition = { type: "spring", stiffness: 85, damping: 18, mass: 1.2 };
 
 interface Props {
   view: StageView;

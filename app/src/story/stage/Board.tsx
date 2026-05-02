@@ -80,7 +80,7 @@ function pieceCoords(p: TrackedPiece) {
 
 /* ---------------- the board ---------------- */
 
-const SPRING: Transition = { type: "spring", stiffness: 220, damping: 24, mass: 1 };
+const SPRING: Transition = { type: "spring", stiffness: 130, damping: 20, mass: 1.1 };
 const QUICK: Transition = { duration: 0.35, ease: [0.22, 0.6, 0.2, 1] };
 
 export function Board({
