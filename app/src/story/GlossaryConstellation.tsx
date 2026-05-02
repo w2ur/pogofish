@@ -194,8 +194,9 @@ export function GlossaryConstellation() {
               );
             })}
 
-            {/* nodes */}
-            {nodes.map((n) => {
+            {/* nodes — each one floats gently with its own deterministic
+                amplitude/period so the whole constellation feels alive. */}
+            {nodes.map((n, idx) => {
               const isActive = n.term === activeTerm;
               const isNeighbour = neighbours.has(n.term);
               const dimmed = activeTerm != null && !isActive && !isNeighbour;
@@ -205,14 +206,25 @@ export function GlossaryConstellation() {
                   : n.group === "Infra"
                   ? "rgba(180,160,120,1)"
                   : "rgba(236,226,203,1)";
+              const period = 5 + (idx % 5) * 0.7;
+              const phase = idx * 0.37;
               return (
-                <g
+                <motion.g
                   key={n.term}
                   onMouseEnter={() => setActiveTerm(n.term)}
                   onMouseLeave={() => setActiveTerm(null)}
                   onFocus={() => setActiveTerm(n.term)}
                   onBlur={() => setActiveTerm(null)}
                   tabIndex={0}
+                  animate={{
+                    y: [0, -3, 1, -2, 0],
+                  }}
+                  transition={{
+                    duration: period,
+                    repeat: Infinity,
+                    ease: "easeInOut",
+                    delay: phase,
+                  }}
                   style={{
                     cursor: "pointer",
                     opacity: dimmed ? 0.32 : 1,
@@ -249,7 +261,7 @@ export function GlossaryConstellation() {
                   >
                     {n.label}
                   </text>
-                </g>
+                </motion.g>
               );
             })}
 
