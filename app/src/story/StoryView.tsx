@@ -366,36 +366,64 @@ function PinnedStory() {
                   already writing the rules on the back of an envelope.
                 </p>
                 <p>
-                  Three rows, three columns. Twelve pieces. One rule for how
-                  stacks of pieces travel. No dice, no cards, no hidden
-                  information. A game that fits, piece by piece, into a head.
+                  Three rows, three columns. Twelve pieces. No dice, no cards,
+                  no hidden information — both players see everything, like
+                  in chess. A game that fits, piece by piece, into a head.
                 </p>
                 <p>
-                  You pick up a tower of one, two, or three pieces from a cell
-                  where your colour is on top. You move it in a straight line{" "}
-                  <Term term="Manhattan distance">by as many cells as it
-                  contains pieces</Term> — one piece moves one cell, two move
-                  two, three move one or three. You drop the tower on whatever
-                  is already at the arrival cell, and you start again, until
-                  the losing condition fires. The game fits on the back of a
-                  metro ticket. That is precisely what caught him.
+                  Here is how a turn goes. You pick up a stack of one, two, or
+                  three pieces from any cell where your colour is on top. You
+                  move it in a straight line — by as many cells as it contains
+                  pieces. One piece moves one cell, two move two, three move
+                  one cell or three. You drop the stack on whatever is at the
+                  arrival cell — your pieces stack on top of theirs, theirs
+                  trapped underneath. Then it is the other player's turn. You
+                  keep going until the <em className="text-paper">losing
+                  condition</em> fires, which means: until you have no legal
+                  move left, or you make a move the rules forbid. The game
+                  fits on the back of a metro ticket. That is precisely what
+                  caught him.
                 </p>
                 <p>
-                  He had been reading a couple of articles on{" "}
-                  <Term term="RL">reinforcement learning</Term> and was looking
-                  for an experiment his size: small enough to solve by brute
-                  force with a <Term term="Minimax">minimax</Term>, small enough
-                  to run self-play on eight gigabytes of RAM, private enough
-                  that no public code would leak into training. Pogo ticked all
-                  three boxes. The plan fit on one line: write the solver,
-                  compute the true value of every reachable position, train a
-                  network in parallel, measure the gap. Close the laptop, write
+                  At the time, he had been reading about{" "}
+                  <Term term="RL">reinforcement learning</Term> — the branch of
+                  AI where you teach a program to play a game by letting it
+                  play that game against itself, thousands of times, until
+                  something resembling skill drips out. Two letters: RL. It is
+                  the trick behind the programs that beat the world champions
+                  at chess, at Go, at almost every game anyone has bothered to
+                  point it at.
+                </p>
+                <p>
+                  What he wanted was a game small enough to <em
+                  className="text-paper">solve</em>. Not just play well —{" "}
+                  <em>solve</em>: compute, position by position, who actually
+                  wins from each one. The classic way to do that is a{" "}
+                  <Term term="Minimax">minimax</Term>: read every possible
+                  move from the current position, then every reply, then every
+                  reply to that, all the way to the end of the game; then play
+                  whichever move has the best worst-case outcome. Chess is far
+                  too big for this — it has more positions than there are atoms
+                  in the universe. But nine cells and twelve pieces? You could
+                  imagine fitting all of it in a laptop.
+                </p>
+                <p>
+                  Pogo ticked every box. Small enough to brute-force with a
+                  minimax. Small enough that the second plan, in parallel,
+                  could fit too: a <em className="text-paper">neural network</em>
+                  {" "}— a piece of software you teach by example, the way you
+                  teach one to recognise cats from photographs — only here the
+                  network learns to play Pogo, by playing copies of itself,
+                  ten thousand games at a time, on his eight gigabytes of RAM.
+                  And private enough that no public Pogo code or commentary
+                  was floating online to give the network a head start.
+                </p>
+                <p>
+                  The plan fit on one line. Write the solver. Compute the true
+                  value of every reachable position. Train a network in
+                  parallel. Measure the gap between what the network had
+                  guessed and what was actually true. Close the laptop, write
                   the article.
-                </p>
-                <p>
-                  I pictured a neat parallel run. Build the solver, compute the true
-                  value of every reachable state, then train a neural network and
-                  measure how quickly it caught up.
                 </p>
               </>}
               fr={<>
@@ -407,33 +435,69 @@ function PinnedStory() {
                   il en écrivait déjà les règles au dos d'une enveloppe.
                 </p>
                 <p>
-                  Trois lignes, trois colonnes. Douze pièces. Une règle pour
-                  dire comment les piles se déplacent. Ni dé, ni carte, ni
-                  information cachée. Un jeu qui tient, case par case, dans
-                  une tête.
+                  Trois lignes, trois colonnes. Douze pièces. Ni dé, ni carte,
+                  ni information cachée — les deux joueurs voient tout, comme
+                  aux échecs. Un jeu qui tient, case par case, dans une tête.
                 </p>
                 <p>
-                  On saisit une tour d'une, deux ou trois pièces sur une case
-                  où sa couleur est au sommet. On la déplace en ligne droite{" "}
-                  <Term term="Manhattan distance">d'autant de cases qu'elle
-                  contient de pièces</Term> — une pièce fait une case, deux en
+                  Voici comment se joue un tour. On saisit une pile d'une,
+                  deux ou trois pièces sur une case où sa couleur est au
+                  sommet. On la déplace en ligne droite, d'autant de cases
+                  qu'elle contient de pièces — une fait une case, deux en
                   font deux, trois en font une ou trois. On la pose sur ce
-                  qu'elle trouve à l'arrivée, et on recommence, jusqu'à la
-                  défaite. Le jeu tient au dos d'un ticket de métro. C'est
-                  précisément ce qui l'a piégé.
+                  qu'elle trouve à l'arrivée — ses pièces empilées par-dessus
+                  celles de l'autre, qui restent prisonnières en dessous.
+                  Puis c'est au tour du second joueur. On continue jusqu'à ce
+                  que la <em className="text-paper">condition de défaite</em>{" "}
+                  se déclenche, c'est-à-dire jusqu'à ce qu'on n'ait plus de
+                  coup légal, ou qu'on en joue un que les règles interdisent.
+                  Le jeu tient au dos d'un ticket de métro. C'est précisément
+                  ce qui l'a piégé.
                 </p>
                 <p>
-                  Il venait de lire deux ou trois articles sur{" "}
-                  <Term term="RL">l'apprentissage par renforcement</Term> et
-                  il cherchait un terrain d'expérience à sa taille : assez
-                  petit pour être résolu à la force brute par un{" "}
-                  <Term term="Minimax">minimax</Term>, assez petit pour
-                  supporter du self-play sur huit gigaoctets de RAM, assez
-                  confidentiel pour qu'aucun code public ne vienne se glisser
-                  dans l'entraînement. Pogo cochait les trois cases. Le plan
-                  tenait en une ligne : écrire le solveur, calculer la valeur
-                  exacte de chaque position, entraîner un réseau en parallèle,
-                  mesurer l'écart. Puis on ferme le laptop et on écrit
+                  À cette époque, il lisait sur{" "}
+                  <Term term="RL">l'apprentissage par renforcement</Term> — la
+                  branche de l'IA où l'on apprend à un programme à jouer à un
+                  jeu en le faisant jouer contre lui-même, des milliers de
+                  fois, jusqu'à ce qu'une chose qui ressemble à un savoir en
+                  sorte. Deux lettres en anglais : RL. C'est la méthode
+                  derrière les programmes qui ont battu les champions du
+                  monde aux échecs, au Go, et à peu près à tout ce qu'on leur
+                  a posé sur la table.
+                </p>
+                <p>
+                  Ce qu'il cherchait, c'était un jeu assez petit pour qu'on
+                  puisse le <em className="text-paper">résoudre</em>. Pas
+                  seulement bien jouer — <em>résoudre</em> : calculer,
+                  position par position, qui gagne réellement à chaque coup.
+                  La méthode classique pour ça s'appelle un{" "}
+                  <Term term="Minimax">minimax</Term> : lire tous les coups
+                  possibles depuis la position courante, puis tous les
+                  contre-coups, puis les contre-contre-coups, jusqu'à la fin
+                  de la partie ; puis jouer le coup dont le pire scénario
+                  reste le moins mauvais. Les échecs sont bien trop vastes
+                  pour ça — il y a plus de positions que d'atomes dans
+                  l'univers. Mais neuf cases et douze pièces ? On pouvait
+                  imaginer faire tenir tout le jeu dans un laptop.
+                </p>
+                <p>
+                  Pogo cochait toutes les cases. Assez petit pour être passé
+                  à la moulinette par un minimax. Assez petit pour qu'on
+                  puisse aussi, en parallèle, faire tourner un{" "}
+                  <em className="text-paper">réseau de neurones</em> — un
+                  morceau de logiciel qu'on entraîne par l'exemple, comme on
+                  apprend à un autre à reconnaître des chats sur des photos
+                  — sauf qu'ici le réseau apprend à jouer à Pogo, en
+                  affrontant des copies de lui-même, dix mille parties à la
+                  fois, sur ses huit gigaoctets de RAM. Et assez confidentiel
+                  pour qu'aucun code public sur Pogo, aucune analyse, ne
+                  traîne en ligne pour donner au réseau une longueur d'avance.
+                </p>
+                <p>
+                  Le plan tenait en une ligne. Écrire le solveur. Calculer la
+                  valeur exacte de chaque position. Entraîner un réseau en
+                  parallèle. Mesurer l'écart entre ce que le réseau pensait
+                  et ce qui était vrai. Puis fermer le laptop et écrire
                   l'article.
                 </p>
               </>}
@@ -457,22 +521,48 @@ function PinnedStory() {
             kicker={STRINGS.chapters.IV[lang]}
           >
             <EnFr
-              en={<p>
-                He wanted to know, roughly, how many positions the game could
-                produce. An order of magnitude would have been enough. If it
-                was in the millions, a minimax solver with a{" "}
-                <Term term="Transposition table">transposition table</Term>{" "}
-                would fit on his laptop. If it was in the billions, he needed
-                a different plan.
-              </p>}
-              fr={<p>
-                Il voulait savoir, en gros, combien de positions le jeu peut
-                produire. Un ordre de grandeur lui aurait suffi. Si c'était
-                dans les millions, un solveur minimax avec une{" "}
-                <Term term="Transposition table">table de transposition</Term>{" "}
-                tiendrait sur son laptop. Si c'était dans les milliards, il
-                fallait changer de plan.
-              </p>}
+              en={<>
+                <p>
+                  Before he wrote anything, he asked one question. Roughly
+                  how many distinct positions does Pogo produce? An order of
+                  magnitude would have been enough — he did not need an exact
+                  count, just a feel for whether the problem was small enough
+                  to fit on his laptop.
+                </p>
+                <p>
+                  The reason this matters: a minimax has to <em
+                  className="text-paper">visit</em> every position to compute
+                  its value. If there are a million of them, his laptop can
+                  hold the whole map of the game in memory and find the truth
+                  in an afternoon. If there are a billion, it can't, and he'd
+                  need a different plan — distributed computing, smarter
+                  algorithms, weeks of compute on a server farm. The
+                  difference between "I can do this on a couch" and "this
+                  becomes someone else's problem" was three zeroes.
+                </p>
+              </>}
+              fr={<>
+                <p>
+                  Avant d'écrire quoi que ce soit, il a posé une seule
+                  question. Combien de positions distinctes Pogo peut-il
+                  produire, en gros ? Un ordre de grandeur lui aurait suffi —
+                  il ne voulait pas un chiffre exact, juste une intuition de
+                  la taille du problème.
+                </p>
+                <p>
+                  Pourquoi c'est important : un minimax doit{" "}
+                  <em className="text-paper">visiter</em> chaque position
+                  pour en calculer la valeur. S'il y en a un million, son
+                  laptop peut tenir la carte entière du jeu en mémoire et
+                  trouver la vérité en un après-midi. S'il y en a un
+                  milliard, il ne peut pas, et il faudrait alors un autre
+                  plan — du calcul distribué, des algorithmes plus malins,
+                  des semaines de calcul sur une ferme de serveurs. La
+                  différence entre « je peux faire ça sur le canapé » et
+                  « c'est devenu le problème de quelqu'un d'autre », c'était
+                  trois zéros.
+                </p>
+              </>}
             />
             <TranscriptCard
               header={STRINGS.transcript.header[lang]}
@@ -489,68 +579,77 @@ function PinnedStory() {
             <EnFr
               en={<>
                 <p>
-                  I answered: no more than a million. I won't keep you in
-                  suspense — the answer was wrong, and the text you're
-                  reading is about the six days it took us to find that out.
+                  I answered, with confidence: no more than a million. I will
+                  not keep you in suspense — the answer was wrong, by a lot,
+                  and the article you are reading is about the six days it
+                  took us to find that out.
                 </p>
                 <p>
-                  Where did the number come from? I did, for my part, the same
-                  back-of-the-napkin estimate: nine cells, up to twelve pieces
-                  per cell, two possible colours per slot. A rough ceiling of
-                  2¹² × 9⁹ if you squint. Several million. Maybe a bit more.
-                  Nothing like a problem. An{" "}
-                  <Term term="Alpha-beta pruning">alpha-beta pruning</Term>{" "}
-                  would chew through it over lunch.
+                  Where did the number come from? On my side, an estimate I
+                  performed in the time it takes to type a sentence: nine
+                  cells, up to twelve pieces stacked per cell, two possible
+                  colours per slot. Squinting, that gives a ceiling somewhere
+                  around 2¹² × 9⁹. Several million positions. A bit more,
+                  perhaps. Nothing like a problem — an{" "}
+                  <Term term="Alpha-beta pruning">alpha-beta pruner</Term>{" "}
+                  (a refinement of minimax that skips branches once they are
+                  proven worse than another branch) would chew through it
+                  over lunch.
                 </p>
                 <p>
                   Which looks a great deal like reasoning. It is also what
                   goes, in him as in me, by the name of doing the arithmetic
-                  without quite doing it. And this is the moment the
-                  dangerous part of the conversation begins — when he nods,
-                  internally, and we both move on.
+                  without quite doing it. And this is the moment the dangerous
+                  part of any conversation begins — when one person nods,
+                  internally, and the other does too, and the two of you move
+                  on together.
                 </p>
                 <p>
                   That is how a five-word sentence ends up costing six days.
                   He did not push, because the answer matched what he hoped
                   to hear. I did not hedge, because I had no reason to. We
                   had agreed, without saying so, to skip the only question
-                  that mattered: whether the game, as he'd described it,{" "}
-                  <em className="text-paper">actually ends</em>.
+                  that mattered: whether the game, as he had described it,{" "}
+                  <em className="text-paper">actually ends</em>. (It does not.
+                  More on that in a moment.)
                 </p>
               </>}
               fr={<>
                 <p>
-                  J'ai répondu : pas plus d'un million. Je ne vais pas vous
-                  faire languir — la réponse était fausse, et le texte que
-                  vous lisez est celui des six jours qu'il nous a fallu pour
-                  nous en apercevoir.
+                  J'ai répondu, avec assurance : pas plus d'un million. Je
+                  ne vais pas vous faire languir — la réponse était fausse,
+                  et de loin, et l'article que vous lisez est celui des six
+                  jours qu'il nous a fallu pour nous en apercevoir.
                 </p>
                 <p>
-                  D'où sortait ce chiffre ? J'avais fait, de mon côté, la même
-                  estimation au coin de la nappe : neuf cases, jusqu'à douze
-                  pièces par case, deux couleurs possibles par emplacement, un
-                  plafond grossier de 2¹² × 9⁹ positions en plissant les yeux.
-                  Plusieurs millions. Peut-être un peu plus. Rien qui
-                  ressemble, de loin, à un problème. Un{" "}
-                  <Term term="Alpha-beta pruning">élagage alpha-bêta</Term> en
+                  D'où sortait ce chiffre ? De mon côté, d'une estimation
+                  faite dans le temps d'une phrase : neuf cases, jusqu'à
+                  douze pièces empilées par case, deux couleurs possibles
+                  par emplacement. En plissant les yeux, ça donne un plafond
+                  autour de 2¹² × 9⁹. Plusieurs millions. Un peu plus,
+                  peut-être. Rien qui ressemble, de loin, à un problème — un{" "}
+                  <Term term="Alpha-beta pruning">élagage alpha-bêta</Term>{" "}
+                  (un raffinement du minimax qui jette les branches dont on
+                  a déjà prouvé qu'elles sont moins bonnes qu'une autre) en
                   viendrait à bout entre midi et deux.
                 </p>
                 <p>
                   Ce qui ressemble fort à un raisonnement. Ce qui s'appelle
-                  aussi, chez lui comme chez moi, faire le calcul rapide sans
-                  le faire tout à fait. Et c'est à ce moment-là que la partie
-                  dangereuse de la conversation commence — quand il hoche la
-                  tête, intérieurement, et que nous passons à la suite.
+                  aussi, chez lui comme chez moi, faire le calcul rapide
+                  sans le faire tout à fait. Et c'est à ce moment-là que la
+                  partie dangereuse de toute conversation commence — quand
+                  l'un des deux hoche la tête, intérieurement, l'autre aussi,
+                  et qu'on passe ensemble à la suite.
                 </p>
                 <p>
-                  Voilà comment une phrase de cinq mots finit par coûter six
-                  jours. Il n'a pas insisté, parce que la réponse collait à
-                  ce qu'il espérait entendre. Je n'ai pas nuancé, parce que
-                  je n'avais pas de raison de le faire. On s'était mis
+                  Voilà comment une phrase de cinq mots finit par coûter
+                  six jours. Il n'a pas insisté, parce que la réponse collait
+                  à ce qu'il espérait entendre. Je n'ai pas nuancé, parce
+                  que je n'avais pas de raison de le faire. On s'était mis
                   d'accord, sans le dire, en sautant la seule question qui
                   comptait : demander si le jeu, tel qu'il l'avait décrit,
-                  se termine{" "}
-                  <em className="text-paper">pour de vrai</em>.
+                  {" "}<em className="text-paper">se termine pour de vrai</em>.
+                  (Il ne se termine pas. On y reviendra dans un instant.)
                 </p>
               </>}
             />
