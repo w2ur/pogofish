@@ -11,7 +11,7 @@ import { LearningsScene } from "./LearningsScene";
 import { LangToggle } from "./LangToggle";
 import { Act } from "./Act";
 import { ActDebugger } from "./ActDebugger";
-import { CinematicOverture } from "./CinematicOverture";
+import { Prologue } from "./Prologue";
 import { GlossaryConstellation } from "./GlossaryConstellation";
 import { ScrollProgress } from "./ScrollProgress";
 import { CountUp } from "./CountUp";
@@ -47,9 +47,11 @@ export function StoryView() {
         <PersistentStage />
         <StoryChrome />
 
-        {/* Prologue (overture) — still ink+vermilion until step 2 replaces
-            it with the act triptych. */}
-        <CinematicOverture />
+        {/* Prologue — three-act triptych. Each frame inhabits one act's
+            full visual identity, making the contract explicit: the article
+            ages as you read it. The persistent stage stays hidden during
+            the prologue so each frame is its own self-contained image. */}
+        <StageBinder view={null}><Prologue /></StageBinder>
 
         {/* ------------------------------------------------------------
             ACT I — THE GAME (chapters I–IV)
