@@ -2086,8 +2086,24 @@ function VerdictTable() {
     return order[a.verdict as keyof typeof order] - order[b.verdict as keyof typeof order];
   });
   return (
-    <div ref={ref} className="reveal delay-1 overflow-x-auto">
-      <table className="w-full border-collapse">
+    <div ref={ref} className="reveal delay-1 relative">
+      {/* dot-matrix paper frame: tractor-feed sprocket holes on either
+          side, a printer-style header bar above. The frame is decorative
+          — the table inside is unchanged — but it tells the eye this is
+          *output*, the printed verdict of a real machine. */}
+      <SprocketColumn side="left" />
+      <SprocketColumn side="right" />
+      <div className="mx-7 md:mx-10 border-x border-dashed border-hair">
+        <div className="mono text-[10px] tracking-[0.25em] uppercase text-paper-3 px-4 py-2 border-b border-dashed border-hair flex items-center justify-between">
+          <span>
+            {lang === "en" ? "tournament.out · page 1 of 1" : "tournoi.out · page 1 sur 1"}
+          </span>
+          <span className="text-paper-3">
+            {lang === "en" ? "5 variants · 15,000 games" : "5 variantes · 15 000 parties"}
+          </span>
+        </div>
+        <div className="overflow-x-auto px-4 py-2">
+          <table className="w-full border-collapse">
         <thead>
           <tr className="text-left">
             {(["variant", "balance", "skill", "draws", "verdict"] as const).map((h) => (
@@ -2156,8 +2172,36 @@ function VerdictTable() {
               </motion.tr>
             );
           })}
-        </tbody>
-      </table>
+          </tbody>
+        </table>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+/** Continuous-feed paper sprocket holes — two columns of small dots
+ *  flanking the verdict table to suggest dot-matrix printer output. */
+function SprocketColumn({ side }: { side: "left" | "right" }) {
+  return (
+    <div
+      aria-hidden
+      className={`absolute top-0 bottom-0 w-7 md:w-10 flex flex-col items-center justify-evenly ${
+        side === "left" ? "left-0" : "right-0"
+      }`}
+    >
+      {Array.from({ length: 18 }).map((_, i) => (
+        <span
+          key={i}
+          className="block rounded-full"
+          style={{
+            width: 6,
+            height: 6,
+            background: "var(--color-hair)",
+            border: "1px solid var(--color-graphite)",
+          }}
+        />
+      ))}
     </div>
   );
 }
@@ -2187,10 +2231,14 @@ function MetricCell({ value, ok }: { value: number; ok: boolean }) {
 
 function VerdictBadge({ verdict }: { verdict: "pass" | "fail" | "warn" }) {
   const { lang } = useLang();
+  // PASS uses the act's primary accent (phosphor green in Act II, gold
+  // in Act III). FAIL uses the act's "regression" second voice (rust
+  // in Act II, navy-soft in Act III). WARN sits between, in the
+  // mid-tone paper colour.
   const map = {
-    pass: { color: "var(--color-vermilion)", bg: "rgba(217,79,44,0.12)" },
-    warn: { color: "var(--color-paper-2)", bg: "rgba(236,226,203,0.06)" },
-    fail: { color: "var(--color-paper-3)", bg: "rgba(140,132,114,0.10)" },
+    pass: { color: "var(--color-vermilion)", bg: "color-mix(in oklab, var(--color-vermilion) 12%, transparent)" },
+    warn: { color: "var(--color-paper-2)",   bg: "color-mix(in oklab, var(--color-paper-2) 6%, transparent)" },
+    fail: { color: "var(--color-second)",    bg: "color-mix(in oklab, var(--color-second) 10%, transparent)" },
   };
   const s = map[verdict];
   return (
