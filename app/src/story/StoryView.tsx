@@ -9,7 +9,8 @@ import { Callout } from "./Callout";
 import { EnFr } from "./EnFr";
 import { LearningsScene } from "./LearningsScene";
 import { LangToggle } from "./LangToggle";
-import { PaletteSwitcher } from "./PaletteSwitcher";
+import { Act } from "./Act";
+import { ActDebugger } from "./ActDebugger";
 import { CinematicOverture } from "./CinematicOverture";
 import { GlossaryConstellation } from "./GlossaryConstellation";
 import { ScrollProgress } from "./ScrollProgress";
@@ -45,19 +46,52 @@ export function StoryView() {
         <ScrollProgress />
         <PersistentStage />
         <StoryChrome />
+
+        {/* Prologue (overture) — still ink+vermilion until step 2 replaces
+            it with the act triptych. */}
         <CinematicOverture />
-        <StageBinder view={null}><TryYourself /></StageBinder>
+
+        {/* ------------------------------------------------------------
+            ACT I — THE GAME (chapters I–IV)
+            Wood + cream paper + cocoa ink + pencil red.
+            William finds Pogo. Hand-touched, physical, warm.
+
+            PinnedStory manages its own data-act because the act 1 → 2
+            transition happens *inside* it (panel 1 → panel 2 = chapter
+            IV → V = "the night William opens his laptop"). It is the
+            narrative pivot point.
+            ------------------------------------------------------------ */}
+        <Act act={1} global>
+          <StageBinder view={null}><TryYourself /></StageBinder>
+        </Act>
         <PinnedStory />
-        <StageBinder view={null}><Scene7Experiments /></StageBinder>
-        <StageBinder view={null}><Scene8Verdict /></StageBinder>
-        <StageBinder view={null}><PlayScene /></StageBinder>
-        <StageBinder view={null}><LearningsScene /></StageBinder>
-        <StageBinder view={null}><Scene10Epilogue /></StageBinder>
-        <StageBinder view={null}><GlossaryConstellation /></StageBinder>
+
+        {/* ------------------------------------------------------------
+            ACT II — THE WORK (chapters V–IX)
+            Terminal black + off-white mono + phosphor green / rust.
+            The six-day run. Cold, technical, monospace dominant.
+            ------------------------------------------------------------ */}
+        <Act act={2} global>
+          <StageBinder view={null}><Scene7Experiments /></StageBinder>
+          <StageBinder view={null}><Scene8Verdict /></StageBinder>
+        </Act>
+
+        {/* ------------------------------------------------------------
+            ACT III — THE SYNTHESIS (chapters X–XII)
+            Matte off-white + navy ink + warm gold accent.
+            The polished writeup. Designed, calm, finished.
+            ------------------------------------------------------------ */}
+        <Act act={3} global>
+          <StageBinder view={null}><PlayScene /></StageBinder>
+          <StageBinder view={null}><LearningsScene /></StageBinder>
+          <StageBinder view={null}><Scene10Epilogue /></StageBinder>
+          <StageBinder view={null}><GlossaryConstellation /></StageBinder>
+        </Act>
+
         <StoryFooter />
         <PlayCTA />
         <LangToggle />
-        <PaletteSwitcher />
+        <ActDebugger />
       </div>
     </StageProvider>
   );
@@ -213,8 +247,44 @@ function PinnedStory() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [active]);
 
+  // The act 1 → 2 pivot lives inside PinnedStory: panels 0–1 are still
+  // the kitchen-table game (act 1); panel 2 is "the night William opens
+  // his laptop" — chapter V — and the page goes to terminal black for
+  // the rest of the run. Updating data-act on the section AND on the
+  // <html> root so fixed chrome follows.
+  const currentAct: 1 | 2 = active < 2 ? 1 : 2;
+  useEffect(() => {
+    const el = sectionRef.current;
+    if (!el) return;
+    let frame = 0;
+    const update = () => {
+      frame = 0;
+      const r = el.getBoundingClientRect();
+      const vh = window.innerHeight;
+      if (r.top < vh * 0.5 && r.bottom > vh * 0.5) {
+        document.documentElement.setAttribute("data-act", String(currentAct));
+      }
+    };
+    const onScroll = () => {
+      if (frame) return;
+      frame = requestAnimationFrame(update);
+    };
+    update();
+    window.addEventListener("scroll", onScroll, { passive: true });
+    window.addEventListener("resize", onScroll);
+    return () => {
+      if (frame) cancelAnimationFrame(frame);
+      window.removeEventListener("scroll", onScroll);
+      window.removeEventListener("resize", onScroll);
+    };
+  }, [currentAct]);
+
   return (
-    <section ref={sectionRef} className="relative">
+    <section
+      ref={sectionRef}
+      data-act={currentAct}
+      className="act-surface relative transition-colors duration-700"
+    >
       <div className="mx-auto max-w-6xl px-6 md:px-10 grid grid-cols-1 lg:grid-cols-[minmax(280px,_340px)_minmax(0,_1fr)] gap-10 lg:gap-20">
         {/* the persistent <Stage> renders the board behind us; this column
             holds a chapter card (numeral + progress dots + label) and a

@@ -26,68 +26,141 @@
   --color-second-soft: #d8cfb8;
 }
 
-/* ---------------- palette A — editorial + cobalt ----------------
-   Keeps the warm-dark editorial backbone but adds cobalt as a clear
-   "thinking" voice opposite vermilion's "action" voice. Diagrams,
-   mathematical structure, and links lean cobalt; the verdict, hits,
-   and emphasis stay vermilion. Two voices, one page. */
-[data-palette="A"] {
-  --color-ink: #0d1015;
-  --color-ink-2: #14171f;
-  --color-ink-3: #1f2330;
-  --color-paper: #f0e7d2;
-  --color-paper-2: #cfc6b1;
-  --color-paper-3: #8e8779;
-  --color-hair: #232634;
-  --color-vermilion: #e15a37;
-  --color-vermilion-deep: #b03d1d;
-  --color-vermilion-soft: #f3845f;
-  --color-graphite: #4a5366;
-  --color-second: #4f7be0;
-  --color-second-deep: #2e5cd6;
-  --color-second-soft: #87a5ec;
+/* ============================================================
+   THREE-ACT THEME SYSTEM
+
+   The article ages as the story does. Three acts, three media:
+
+   · Act 1 — the game (chapters I–IV)
+     Wood + cream paper + cocoa ink + pencil red.
+     William finds Pogo. Hand-touched, physical, warm.
+
+   · Act 2 — the work (chapters V–IX)
+     Terminal black + off-white mono + phosphor green / rust.
+     The six-day run. Cold, technical, monospace dominant.
+
+   · Act 3 — the synthesis (chapters X–XII)
+     Matte off-white + navy ink + warm gold accent.
+     The polished writeup. Designed, calm, finished.
+
+   Color tokens are reused across acts so existing components
+   automatically inherit the act's identity. New tokens
+   (--color-second*) carry the per-act second voice (wood,
+   rust, navy-soft).
+   ============================================================ */
+
+[data-act="1"] {
+  --color-ink: #efe6d3;          /* page surface — toothy cream paper */
+  --color-ink-2: #e3d9c2;
+  --color-ink-3: #d6caaf;
+  --color-paper: #241a13;        /* primary text — deep cocoa, not pure black */
+  --color-paper-2: #4a3b2d;
+  --color-paper-3: #7a6a55;
+  --color-hair: #c9bb9d;
+  --color-vermilion: #a83328;    /* pencil red — corrections, "wait that's wrong" */
+  --color-vermilion-deep: #802016;
+  --color-vermilion-soft: #c75c4d;
+  --color-graphite: #8a7a6a;
+  --color-second: #6b4a2b;       /* warm wood — board frames, edges, grain */
+  --color-second-deep: #4a3217;
+  --color-second-soft: #927055;
 }
 
-/* ---------------- palette B — Bauhaus on bone ----------------
-   Inverted: paper-color background, ink-color text. Three primaries:
-   vermilion (action), cobalt (structure), amber (warmth). Confident,
-   playful, geometric — befitting a tiny game with deep play. */
-[data-palette="B"] {
-  --color-ink: #f4eede;
-  --color-ink-2: #e9e2cf;
-  --color-ink-3: #ddd3bc;
-  --color-paper: #14110d;
-  --color-paper-2: #3a342a;
-  --color-paper-3: #6b6353;
-  --color-hair: #ddd3bc;
-  --color-vermilion: #e64d28;
-  --color-vermilion-deep: #b83a18;
-  --color-vermilion-soft: #f48366;
-  --color-graphite: #b3aa97;
-  --color-second: #2747c4;
-  --color-second-deep: #1a328e;
-  --color-second-soft: #7388e0;
+[data-act="2"] {
+  --color-ink: #0a0a0a;          /* terminal black */
+  --color-ink-2: #131313;
+  --color-ink-3: #1c1c1c;
+  --color-paper: #dcdcdc;        /* off-white — terminal text */
+  --color-paper-2: #a8a8a8;
+  --color-paper-3: #6c6c6c;
+  --color-hair: #2a2a2a;
+  --color-vermilion: #7af0a0;    /* phosphor green — improvements, progress */
+  --color-vermilion-deep: #4ec27a;
+  --color-vermilion-soft: #a8f7c1;
+  --color-graphite: #555555;
+  --color-second: #b85a3a;       /* oxidized rust — regressions, failures */
+  --color-second-deep: #8a3e22;
+  --color-second-soft: #d28966;
 }
 
-/* ---------------- palette C — risograph zine ----------------
-   Bone background, fluorescent pink primary, electric blue secondary,
-   true ink text. Most distinctive; reads like an art-school zine
-   about a strange small game. Highest personality, highest risk. */
-[data-palette="C"] {
-  --color-ink: #f1ebdc;
-  --color-ink-2: #e6dfcd;
-  --color-ink-3: #d8d0bc;
-  --color-paper: #1a140e;
-  --color-paper-2: #3f372d;
-  --color-paper-3: #6d6555;
-  --color-hair: #d6cdb8;
-  --color-vermilion: #ff5b8e;
-  --color-vermilion-deep: #c63a6b;
-  --color-vermilion-soft: #ff8aae;
-  --color-graphite: #aea692;
-  --color-second: #3a4cdb;
-  --color-second-deep: #2434a6;
-  --color-second-soft: #6e7ce8;
+[data-act="3"] {
+  --color-ink: #f6f0e2;          /* matte off-white — published-paper surface */
+  --color-ink-2: #ece5d3;
+  --color-ink-3: #e0d8c1;
+  --color-paper: #1a2840;        /* navy ink */
+  --color-paper-2: #3a5180;
+  --color-paper-3: #6e7a90;
+  --color-hair: #cdd2dd;
+  --color-vermilion: #c87a3c;    /* warm gold — moments of insight */
+  --color-vermilion-deep: #94561f;
+  --color-vermilion-soft: #e09d65;
+  --color-graphite: #95a0b3;
+  --color-second: #3a5180;       /* navy-soft — diagrams, structure */
+  --color-second-deep: #1a2840;
+  --color-second-soft: #6680b0;
+}
+
+/* ---------------- act surface textures ---------------- */
+
+/* Act 1 — cream paper grain (subtle warm fibers) */
+[data-act="1"] .act-surface::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  opacity: 0.35;
+  mix-blend-mode: multiply;
+  background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='200' height='200'><filter id='n'><feTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='2' seed='3'/><feColorMatrix values='0 0 0 0 0.14, 0 0 0 0 0.10, 0 0 0 0 0.07, 0 0 0 0.55 0'/></filter><rect width='200' height='200' filter='url(%23n)'/></svg>");
+  background-size: 320px 320px;
+}
+
+/* Act 2 — terminal scanlines + phosphor flicker */
+[data-act="2"] .act-surface::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  opacity: 0.4;
+  background:
+    repeating-linear-gradient(
+      0deg,
+      transparent 0,
+      transparent 2px,
+      rgba(255, 255, 255, 0.025) 2px,
+      rgba(255, 255, 255, 0.025) 3px
+    );
+}
+
+/* Act 3 — vertical paper grain (printed-page calm) */
+[data-act="3"] .act-surface::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  opacity: 0.25;
+  mix-blend-mode: multiply;
+  background:
+    repeating-linear-gradient(
+      90deg,
+      transparent 0,
+      transparent 4px,
+      rgba(26, 40, 64, 0.04) 4px,
+      rgba(26, 40, 64, 0.04) 5px
+    );
+}
+
+/* The act-surface positioning context — sections wrap in this so
+   their textured ::before pseudo-element lays correctly behind
+   content. */
+.act-surface {
+  position: relative;
+  background: var(--color-ink);
+  color: var(--color-paper);
+  isolation: isolate;
+}
+.act-surface > * {
+  position: relative;
+  z-index: 1;
 }
 
 /* ---------------- story surface ---------------- */
