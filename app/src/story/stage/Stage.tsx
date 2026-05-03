@@ -56,7 +56,11 @@ interface Props {
 export function Stage({ view, z = "back" }: Props) {
   return (
     <div
-      className="pf-stage pointer-events-none"
+      // Hidden under lg — the persistent stage relies on a sticky-aside
+      // layout the mobile/tablet view collapses to a single column, so the
+      // floating board would just paint over the prose. Inline scenes
+      // (Try-It, Play, finale figures) render their own boards and stay.
+      className="pf-stage pointer-events-none hidden lg:block"
       style={{
         position: "fixed",
         inset: 0,
