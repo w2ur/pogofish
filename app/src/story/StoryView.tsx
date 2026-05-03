@@ -687,32 +687,53 @@ function PinnedStory() {
             <EnFr
               en={<>
                 <p>
-                  What happens on his machine I do not see. In the rhythm of
+                  What happens on his machine, I do not see. In the rhythm of
                   our exchanges I exist in windows — a question, an answer, a
                   silence, another question, sometimes weeks later. Between
-                  two conversations, the world keeps going, and I only learn
+                  two conversations the world keeps going, and I only learn
                   about it from what he brings back. What follows, therefore,
                   is what he later told me.
                 </p>
                 <p>
-                  The solver was written in a weekend. Alpha-beta; a{" "}
-                  <Term term="Transposition table">transposition table</Term>{" "}
-                  keyed on the canonical form of each position so that
-                  symmetric states would collapse into the same entry; a
-                  perfect hash for stacks; iterative deepening, so partial
-                  results would still be usable if he killed the process. The
-                  kind of code you write to learn Rust, not to win a
-                  tournament — but which, on paper, ran. He launched it,
-                  checked that it was scoring positions, and went climbing.
+                  The solver was written in a weekend. He chose Rust — a
+                  programming language that compiles slowly but, once it has
+                  agreed to run your code, runs it as fast as a hand-tuned C
+                  program. He used the alpha-beta pruning we just discussed,
+                  combined with three further tricks the field has accumulated
+                  over thirty years.
                 </p>
                 <p>
-                  Day 1, all fine. The table grows fast, the way these tables
-                  always grow at the beginning: logarithmically, because most
-                  new states are near-duplicates of ones already seen. Day 2,
-                  slower, plausible. Day 3, he opens the laptop and the curve
-                  no longer has the shape of a log. Day 5, it no longer has
-                  the shape of a line either. Day 6, the kernel kills the
-                  process over breakfast.
+                  First, a <Term term="Transposition table">transposition
+                  table</Term>: a hash table that remembers every position
+                  the solver has already evaluated, so that if the same
+                  position is reached again by a different path of moves —
+                  which happens constantly — the answer is read off the
+                  table instead of being recomputed. Second, a{" "}
+                  <em className="text-paper">canonical form</em> for each
+                  position: the eight rotations and reflections of a Pogo
+                  board are strategically identical, so they all collapse
+                  into the same table entry, dividing the work by eight.
+                  Third, <em className="text-paper">iterative deepening</em>:
+                  the solver explores to depth 1, then depth 2, then depth
+                  3, and so on, so that if he kills the process partway
+                  through he still has a usable partial answer rather than
+                  nothing at all.
+                </p>
+                <p>
+                  This is the kind of code you write to learn Rust, not to
+                  win a tournament — but on paper, it ran. He launched it,
+                  watched the first few hundred positions get scored,
+                  closed the laptop lid, and went climbing.
+                </p>
+                <p>
+                  Day 1: all fine. The table grows fast, in the way these
+                  tables always grow at the beginning — most new positions
+                  are near-duplicates of ones already seen, so each new
+                  entry is cheap. Day 2: slower, but plausible. Day 3: he
+                  opens the laptop and the growth curve is no longer a
+                  curve he recognises. Day 5: it is now climbing nearly
+                  straight up. Day 6: the operating system kills the
+                  process over breakfast — out of memory.
                 </p>
               </>}
               fr={<>
@@ -726,27 +747,50 @@ function PinnedStory() {
                   raconté ensuite.
                 </p>
                 <p>
-                  Le solveur a été écrit en un week-end. Alpha-bêta ; une{" "}
-                  <Term term="Transposition table">table de transposition</Term>{" "}
-                  indexée sur la forme canonique de chaque position, pour que
-                  les états symétriques viennent s'effondrer sur la même
-                  entrée ; un hachage parfait pour les piles ; un
-                  approfondissement itératif, pour que les résultats partiels
-                  restent exploitables s'il tuait le processus en cours de
-                  route. Du code qu'on écrit pour apprendre Rust, pas pour
-                  gagner un tournoi — mais qui, sur le papier, tournait. Il
-                  l'a lancé, il a vérifié qu'il évaluait des positions, et il
-                  est parti grimper.
+                  Le solveur a été écrit en un week-end. Il a choisi Rust —
+                  un langage de programmation qui compile lentement mais
+                  qui, une fois qu'il a accepté de faire tourner votre
+                  code, le fait tourner aussi vite qu'un programme C
+                  optimisé à la main. Il s'est servi de l'élagage alpha-bêta
+                  qu'on vient d'évoquer, combiné à trois ruses
+                  supplémentaires que le métier a accumulées en trente ans.
                 </p>
                 <p>
-                  Jour 1, tout va bien. La table gonfle vite, comme ces
-                  tables gonflent toujours au début : logarithmiquement,
-                  puisque la plupart des nouveaux états sont des
-                  quasi-doublons de ceux déjà rencontrés. Jour 2, plus lent,
-                  plausible. Jour 3, il ouvre le laptop et la courbe n'a plus
-                  tout à fait l'allure d'un logarithme. Jour 5, plus celle
-                  d'une droite non plus. Jour 6, le noyau tue le processus
-                  pendant son petit-déjeuner.
+                  D'abord, une{" "}
+                  <Term term="Transposition table">table de transposition</Term>{" "}
+                  : une table de hachage qui se souvient de chaque position
+                  déjà évaluée par le solveur, de sorte que si la même
+                  position est atteinte par un autre chemin de coups — ce
+                  qui arrive en permanence — la réponse est lue dans la
+                  table au lieu d'être recalculée. Ensuite, une{" "}
+                  <em className="text-paper">forme canonique</em> pour
+                  chaque position : les huit rotations et symétries d'un
+                  plateau de Pogo sont stratégiquement identiques, on les
+                  fait donc s'effondrer sur la même entrée de la table, ce
+                  qui divise le travail par huit. Enfin, un{" "}
+                  <em className="text-paper">approfondissement itératif</em>
+                  {" "}: le solveur explore d'abord en profondeur 1, puis 2,
+                  puis 3, et ainsi de suite, de manière à ce que s'il tue
+                  le processus en cours de route, il reste une réponse
+                  partielle utilisable, plutôt que rien.
+                </p>
+                <p>
+                  Du code qu'on écrit pour apprendre Rust, pas pour gagner
+                  un tournoi — mais sur le papier, il tournait. Il l'a
+                  lancé, il a regardé les premières centaines de positions
+                  s'évaluer, il a refermé le laptop, et il est parti
+                  grimper.
+                </p>
+                <p>
+                  Jour 1 : tout va bien. La table gonfle vite, comme ces
+                  tables gonflent toujours au début — la plupart des
+                  nouvelles positions sont des quasi-doublons de positions
+                  déjà rencontrées, chaque nouvelle entrée est bon marché.
+                  Jour 2 : plus lent, plausible. Jour 3 : il ouvre le
+                  laptop et la courbe de croissance n'est plus une courbe
+                  qu'il reconnaît. Jour 5 : elle monte presque à la
+                  verticale. Jour 6 : le système d'exploitation tue le
+                  processus pendant son petit-déjeuner — plus de mémoire.
                 </p>
               </>}
             />
