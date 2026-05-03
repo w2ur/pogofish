@@ -1006,16 +1006,17 @@ function PinnedStory() {
             <EnFr
               en={<>
                 <p>
-                  A second problem sat under the first. Even in the games
-                  that did end — the ones where someone eventually stacked
-                  all six of their colour — the trajectories leading to
-                  those endings were strange. Stronger players learned to
+                  A second problem sat under the first one. Even in the
+                  rare games that <em>did</em> end — the ones where someone
+                  eventually stacked all six of their colour and ran out of
+                  legal moves — the trajectories leading to those endings
+                  were strange. Stronger players learned, very quickly, to
                   stop forming towers altogether. Pieces settled into mixed
                   stacks across the middle row, and nobody dared move. The
                   game drifted toward what he ended up calling a{" "}
                   <Term term="Lazy equilibrium">lazy equilibrium</Term>: a
-                  position too stable for either side to have anything to
-                  gain by committing.
+                  position so stable that neither side had anything to gain
+                  by committing to a real plan.
                 </p>
                 <p>
                   It took him too long to admit what this meant. Pogo, in
@@ -1023,13 +1024,15 @@ function PinnedStory() {
                   project, a dead end. For a player, frankly, a boring game.
                 </p>
                 <p>
-                  The rewrite begins here. Rather than trying to solve Pogo,
-                  he started asking what minimum repair would turn it into a
-                  game that could really be solved and played. A losing
-                  condition that fires when the state cycles, or the move
+                  The rewrite begins here. Instead of trying to solve Pogo
+                  as it was, he started asking what minimum repair would
+                  turn it into a game that could actually be solved and
+                  actually be played. A losing condition that fires when
+                  the position has been seen before, or when the move
                   budget runs out. Tight enough that good play means
-                  committing. Not a patch stapled onto the board: a variable
-                  to test. Three families of candidates came out of an
+                  committing to something. Not a patch stapled onto the
+                  board: a <em className="text-paper">variable</em> to
+                  test. Three families of candidates came out of an
                   afternoon with a notebook.
                 </p>
               </>}
@@ -1621,92 +1624,172 @@ function Scene7Experiments() {
             <EnFr
               en={<>
                 <p>
-                  The only way to settle it was to run the experiment. Each
-                  candidate rule gives a different game; each game calls for
-                  its own trained opponents to measure play quality. Five
-                  rules, three skill tiers, everyone against everyone: roughly
-                  fifteen thousand games per variant before any meaningful
-                  number comes out the other end.
+                  The only way to settle which variant was the right one
+                  was to run the experiment. Each candidate rule defines a
+                  different game; each game calls for its own trained
+                  opponents to measure play quality. Five rules, three
+                  skill tiers per rule, everyone against everyone: roughly
+                  fifteen thousand games per variant before any number
+                  meaningful enough to trust came out the other end.
                 </p>
                 <p>
-                  The three tiers are the ones he learned to build, in order,
-                  over the course of this project. First is{" "}
-                  <Term term="RL">random</Term> play — a baseline, a floor, a
-                  control. Second is <Term term="DQN">DQN</Term>, a neural
-                  network that plays itself and slowly shifts its move
-                  preferences toward the moves that tend to win. Third is{" "}
-                  <Term term="AlphaZero">AlphaZero</Term>: the same idea, more
-                  demanding. The network produces at every position both a{" "}
-                  <Term term="Policy / value network">policy and a value</Term>
-                  , and moves are chosen by a short{" "}
-                  <Term term="MCTS">tree search</Term> that uses the network
-                  as a compass.
+                  The three skill tiers are the ones he learned to build,
+                  in order, over the course of this project. The first
+                  is <Term term="RL">random</Term> play — a player that
+                  picks any legal move uniformly. It is a baseline: a
+                  floor, a control. If your network can't beat random, it
+                  hasn't learned anything.
                 </p>
                 <p>
-                  A <Term term="Gatekeeper">gatekeeper</Term> kept the training honest
-                  for each variant: new candidate networks only became the new champion
-                  if they won at least 55 % of a match against the current one. A{" "}
-                  <Term term="Round robin">round-robin tournament</Term> then pitted
-                  every tier against every other tier. Three measurements mattered:
-                  is White's win rate between 45 and 55 % (balance), does the strong
-                  opponent beat the weak one at least 75 % of the time (skill
-                  matters), and when draws happen, do they land between strong and weak
-                  players, or only between equals (earned draws)?
+                  The second is <Term term="DQN">DQN</Term> — short for{" "}
+                  <em className="text-paper">deep Q-network</em>. A
+                  neural network plays itself, over and over, and after
+                  each game it nudges its preferences toward the moves
+                  that ended up in wins and away from the ones that
+                  ended up in losses. After enough games it has learned,
+                  empirically, which moves tend to win. The "Q" is the
+                  expected value of a move, in the algorithm's vocabulary
+                  — how good the move looks, on average, from where you
+                  stand.
                 </p>
                 <p>
-                  The five cards below are the survivors I narrowed the slate to after
-                  a pilot round. Two in LC1 (the repetition family), one in LC2 (the
-                  hard cap), two in LC3 (the soft cap with draws). Each card shows a
-                  characteristic mid-game under that rule; the verdict, which follows,
-                  is where the tournament data lands.
+                  The third is <Term term="AlphaZero">AlphaZero</Term> —
+                  the algorithm DeepMind used to beat the world champions
+                  at Go and chess. Same self-play idea as DQN, but more
+                  ambitious. At every position, the network produces two
+                  things: a <em className="text-paper">policy</em> (a
+                  probability for each legal move, "this is how often I
+                  would choose this move") and a{" "}
+                  <em className="text-paper">value</em> ("from this
+                  position, I expect to win this fraction of the time").
+                  Moves are then chosen not by following the policy
+                  blindly, but by running a short{" "}
+                  <Term term="MCTS">tree search</Term> — a small
+                  exploration of plausible continuations, using the
+                  network as a compass, and refining the policy as it
+                  goes. The combination is dramatically stronger than
+                  either piece alone.
+                </p>
+                <p>
+                  A <Term term="Gatekeeper">gatekeeper</Term> kept the
+                  training honest for each variant. As the network plays
+                  itself, a new "candidate" copy is occasionally
+                  proposed. The gatekeeper only lets it replace the
+                  current champion if it can beat the champion in at
+                  least 55 % of a head-to-head match. Below that, the
+                  candidate is thrown out — preventing the network from
+                  drifting into a local style that wins against itself
+                  but loses against everyone else.
+                </p>
+                <p>
+                  A <Term term="Round robin">round-robin tournament</Term>{" "}
+                  then pitted every tier against every other tier — for
+                  every variant, random vs. DQN, DQN vs. AlphaZero, and
+                  so on. Three measurements mattered. Is White's win
+                  rate between 45 and 55 % — is the game{" "}
+                  <em className="text-paper">balanced</em>? Does the
+                  stronger opponent beat the weaker one at least 75 % of
+                  the time — does <em className="text-paper">skill</em>{" "}
+                  matter? And when draws happen, do they land between
+                  strong and weak players (suspicious — draws should be
+                  hard to force), or only between equals (earned)?
+                </p>
+                <p>
+                  The five cards below are the survivors I narrowed the
+                  slate to after a pilot round. Two in LC1 (the
+                  repetition family), one in LC2 (the hard cap), two in
+                  LC3 (the soft cap with draws). Each card shows a
+                  characteristic mid-game position that variant tends to
+                  produce; the verdict, which follows, is where the
+                  tournament data finally lands.
                 </p>
               </>}
               fr={<>
                 <p>
-                  Le seul moyen de trancher, c'était d'en faire l'expérience.
-                  Chaque règle candidate donne un jeu différent ; chaque jeu
-                  appelle ses propres adversaires pour qu'on en mesure la
-                  qualité. Cinq règles, trois niveaux, tout le monde contre
-                  tout le monde : environ quinze mille parties par variante
-                  avant qu'un chiffre à peu près significatif n'en sorte.
+                  Le seul moyen de trancher quelle variante était la bonne,
+                  c'était d'en faire l'expérience. Chaque règle candidate
+                  définit un jeu différent ; chaque jeu appelle ses propres
+                  adversaires pour qu'on en mesure la qualité. Cinq règles,
+                  trois niveaux par règle, tout le monde contre tout le
+                  monde : environ quinze mille parties par variante avant
+                  qu'un chiffre assez sérieux pour qu'on s'y fie n'en sorte.
                 </p>
                 <p>
                   Les trois niveaux sont ceux qu'il a appris à construire,
-                  dans l'ordre, au fil de ce projet. Le premier est le jeu{" "}
-                  <Term term="RL">aléatoire</Term> — un repère, un plancher,
-                  un témoin. Le deuxième est <Term term="DQN">DQN</Term>, un
-                  réseau de neurones qui joue contre lui-même et qui
-                  déplace, peu à peu, ses préférences vers les coups qui
-                  finissent par gagner. Le troisième est{" "}
-                  <Term term="AlphaZero">AlphaZero</Term> : la même idée, en
-                  plus exigeant. Le réseau produit à chaque position à la
-                  fois une{" "}
-                  <Term term="Policy / value network">politique et une valeur</Term>
-                  , et les coups sont choisis par une courte{" "}
-                  <Term term="MCTS">recherche arborescente</Term> qui se sert
-                  du réseau comme d'une boussole.
+                  dans l'ordre, au fil du projet. Le premier est le jeu{" "}
+                  <Term term="RL">aléatoire</Term> — un joueur qui pioche
+                  uniformément un coup légal au hasard. C'est un repère :
+                  un plancher, un témoin. Si votre réseau ne bat pas le
+                  joueur aléatoire, c'est qu'il n'a rien appris.
+                </p>
+                <p>
+                  Le deuxième est <Term term="DQN">DQN</Term> — pour{" "}
+                  <em className="text-paper">deep Q-network</em>, en
+                  anglais « réseau de Q profond ». Un réseau de neurones
+                  joue contre lui-même, encore et encore, et après chaque
+                  partie il déplace, peu à peu, ses préférences vers les
+                  coups qui ont fini par gagner, et les éloigne de ceux
+                  qui ont fini par perdre. Après assez de parties, il a
+                  appris, empiriquement, quels coups tendent à gagner. Le
+                  « Q », dans le vocabulaire de l'algorithme, désigne la
+                  valeur espérée d'un coup — à quel point le coup
+                  paraît bon, en moyenne, depuis votre position.
+                </p>
+                <p>
+                  Le troisième est <Term term="AlphaZero">AlphaZero</Term>{" "}
+                  — l'algorithme avec lequel DeepMind a battu les champions
+                  du monde au Go et aux échecs. Même idée d'auto-jeu que
+                  DQN, en plus ambitieuse. À chaque position, le réseau
+                  produit deux choses : une{" "}
+                  <em className="text-paper">politique</em> (une
+                  probabilité pour chaque coup légal, « voilà à quelle
+                  fréquence je choisirais ce coup ») et une{" "}
+                  <em className="text-paper">valeur</em> (« depuis cette
+                  position, je m'attends à gagner telle fraction du
+                  temps »). Les coups sont alors choisis non pas en
+                  suivant la politique aveuglément, mais en lançant une
+                  courte{" "}
+                  <Term term="MCTS">recherche arborescente</Term> — une
+                  petite exploration des suites plausibles, qui se sert
+                  du réseau comme d'une boussole et raffine la politique
+                  au passage. La combinaison est nettement plus forte que
+                  chacune des deux pièces prise séparément.
                 </p>
                 <p>
                   Un <Term term="Gatekeeper">gardien</Term> maintenait
-                  l'entraînement honnête : un nouveau réseau ne prenait la
-                  place du champion que s'il le battait au moins 55 fois sur
-                  cent. Puis un{" "}
-                  <Term term="Round robin">tournoi toutes rondes</Term>{" "}
-                  opposait chaque niveau à tous les autres. Trois mesures
-                  comptaient. Le taux de victoire du Blanc tombe-t-il entre
-                  45 et 55 % — l'équilibre est-il tenu ? L'adversaire fort
-                  bat-il le faible au moins 75 fois sur cent — la hiérarchie
-                  des forces joue-t-elle son rôle ? Et quand il y a nul,
-                  tombe-t-il entre joueurs de niveau inégal, ou seulement
-                  entre égaux — les nuls se méritent-ils ?
+                  l'entraînement honnête pour chaque variante. Au fil de
+                  l'auto-jeu, une copie « candidate » du réseau est
+                  proposée de temps en temps. Le gardien ne la laisse
+                  remplacer le champion en place que si elle le bat dans
+                  au moins 55 % d'un match en tête-à-tête. En dessous,
+                  la candidate est jetée — ce qui empêche le réseau de
+                  dériver vers un style local qui gagne contre lui-même
+                  mais perd contre tous les autres.
                 </p>
                 <p>
-                  Les cinq cartes qui suivent sont les survivantes d'un tour
-                  pilote : deux en LC1 (la famille répétition), une en LC2
-                  (le plafond strict), deux en LC3 (le plafond souple, avec
-                  nuls). Chaque carte présente une position caractéristique
-                  de milieu de partie sous sa règle ; le verdict viendra
-                  ensuite, et c'est là que les données du tournoi se posent.
+                  Puis un{" "}
+                  <Term term="Round robin">tournoi toutes rondes</Term>{" "}
+                  opposait chaque niveau à tous les autres — pour chaque
+                  variante : aléatoire contre DQN, DQN contre AlphaZero,
+                  et ainsi de suite. Trois mesures comptaient. Le taux de
+                  victoire du Blanc tombe-t-il entre 45 et 55 % — le jeu
+                  est-il{" "}
+                  <em className="text-paper">équilibré</em> ? L'adversaire
+                  le plus fort bat-il le plus faible au moins 75 % du
+                  temps — la <em className="text-paper">hiérarchie</em>{" "}
+                  joue-t-elle son rôle ? Et quand il y a nul, tombe-t-il
+                  entre joueurs de niveau inégal (suspect — les nuls
+                  devraient être difficiles à forcer), ou seulement entre
+                  égaux (mérités) ?
+                </p>
+                <p>
+                  Les cinq cartes qui suivent sont les survivantes d'un
+                  tour pilote : deux en LC1 (la famille répétition), une
+                  en LC2 (le plafond strict), deux en LC3 (le plafond
+                  souple, avec nuls). Chaque carte présente une position
+                  caractéristique de milieu de partie sous sa règle ; le
+                  verdict viendra ensuite, et c'est là que les données du
+                  tournoi finissent par se poser.
                 </p>
               </>}
             />
