@@ -1373,8 +1373,8 @@ function SixDaysChart() {
       <svg viewBox={`0 0 ${width} ${height}`} className="w-full h-auto">
         <defs>
           <linearGradient id="area-grad" x1="0" y1="0" x2="0" y2="1">
-            <stop offset="0%" stopColor="#d94f2c" stopOpacity="0.28" />
-            <stop offset="100%" stopColor="#d94f2c" stopOpacity="0" />
+            <stop offset="0%" style={{ stopColor: "var(--color-vermilion)", stopOpacity: 0.28 }} />
+            <stop offset="100%" style={{ stopColor: "var(--color-vermilion)", stopOpacity: 0 }} />
           </linearGradient>
         </defs>
         {[0.25, 0.5, 0.75].map((r) => (
@@ -1384,7 +1384,7 @@ function SixDaysChart() {
             x2={width - padX}
             y1={padY + r * (height - 2 * padY)}
             y2={padY + r * (height - 2 * padY)}
-            stroke="#2a2420"
+            stroke="var(--color-hair)"
             strokeDasharray="2 4"
           />
         ))}
@@ -1392,7 +1392,7 @@ function SixDaysChart() {
         <path
           d={path}
           fill="none"
-          stroke="#d94f2c"
+          stroke="var(--color-vermilion)"
           strokeWidth="1.8"
           strokeLinecap="round"
           style={{
@@ -1407,11 +1407,11 @@ function SixDaysChart() {
               cx={p.x}
               cy={p.y}
               r={i === pts.length - 1 ? 4 : 2.5}
-              fill={i === pts.length - 1 ? "#d94f2c" : "#ece2cb"}
+              fill={i === pts.length - 1 ? "var(--color-vermilion)" : "var(--color-paper)"}
               opacity="0"
               style={{ animation: `fade-in 0.6s ${0.6 + i * 0.18}s forwards` }}
             />
-            <text x={p.x} y={height - 6} fontSize="10" textAnchor="middle" fill="#8d8472" fontFamily="JetBrains Mono, monospace">
+            <text x={p.x} y={height - 6} fontSize="10" textAnchor="middle" fill="var(--color-paper-3)" fontFamily="JetBrains Mono, monospace">
               d{p.day}
             </text>
           </g>
@@ -1421,7 +1421,7 @@ function SixDaysChart() {
           y1={padY}
           x2={last.x}
           y2={height - padY}
-          stroke="#d94f2c"
+          stroke="var(--color-vermilion)"
           strokeWidth="0.6"
           strokeDasharray="3 3"
           opacity="0.5"
@@ -1435,8 +1435,72 @@ function SixDaysChart() {
           {lang === "en" ? " states · 36\u00A0GB RAM" : " états · 36\u00A0Go RAM"}
         </span>
       </div>
+      <SolverLogStream />
+
       <style>{`@keyframes dash { to { stroke-dashoffset: 0; } }`}</style>
     </motion.div>
+  );
+}
+
+/** A faux terminal log showing the kind of output the solver would
+ *  have printed during the six-day run. Lives inside SixDaysChart so
+ *  it inherits whatever act the surrounding section is in (act 2:
+ *  phosphor green improvements, rust-orange regressions). */
+function SolverLogStream() {
+  const { lang } = useLang();
+  const lines: { t: string; level: "info" | "warn" | "kill"; en: string; fr: string }[] = [
+    { t: "d1 03:14:07", level: "info", en: "alpha-beta search depth=8 branching≈12", fr: "recherche alpha-bêta prof=8 branchement≈12" },
+    { t: "d1 11:40:22", level: "info", en: "TT entries: 412,008  hit-rate: 38.4%",   fr: "entrées TT : 412 008  taux : 38,4 %" },
+    { t: "d2 07:12:55", level: "info", en: "TT entries: 8,344,207  hit-rate: 41.1%", fr: "entrées TT : 8 344 207  taux : 41,1 %" },
+    { t: "d3 14:03:18", level: "warn", en: "growth curve no longer log-shaped",      fr: "courbe de croissance n'est plus logarithmique" },
+    { t: "d4 09:45:01", level: "info", en: "TT entries: 27,901,540  RAM: 22.4 GB",   fr: "entrées TT : 27 901 540  RAM : 22,4 Go" },
+    { t: "d5 22:56:37", level: "warn", en: "growth curve nearly linear",             fr: "croissance presque linéaire" },
+    { t: "d6 08:11:19", level: "info", en: "TT entries: 49,000,000  RAM: 36.0 GB",   fr: "entrées TT : 49 000 000  RAM : 36,0 Go" },
+    { t: "d6 08:11:21", level: "kill", en: "killed (oom-killer): pogofish-solver",   fr: "tué (oom-killer) : pogofish-solver" },
+  ];
+  return (
+    <div className="mt-6 border border-hair bg-ink rounded-sm overflow-hidden">
+      <div className="flex items-center gap-2 px-3 py-1.5 border-b border-hair bg-ink-2">
+        <span className="block h-2 w-2 rounded-full bg-vermilion-soft opacity-60" />
+        <span className="block h-2 w-2 rounded-full bg-paper-3 opacity-60" />
+        <span className="block h-2 w-2 rounded-full bg-paper-3 opacity-30" />
+        <span className="ml-2 mono text-[10px] tracking-[0.25em] uppercase text-paper-3">
+          {lang === "en" ? "solver.log · tail" : "solver.log · tail"}
+        </span>
+      </div>
+      <ol className="px-4 py-3 mono text-[11px] leading-[1.7] text-paper-2 space-y-0.5">
+        {lines.map((l, i) => {
+          const isKill = l.level === "kill";
+          const isWarn = l.level === "warn";
+          const levelColor = isKill
+            ? "color-mix(in oklab, var(--color-second) 100%, white 0%)"
+            : isWarn
+            ? "color-mix(in oklab, var(--color-second-soft) 100%, white 0%)"
+            : "var(--color-vermilion)";
+          return (
+            <motion.li
+              key={i}
+              initial={{ opacity: 0, x: -6 }}
+              whileInView={{ opacity: 1, x: 0 }}
+              viewport={{ once: true, margin: "-10%" }}
+              transition={{ delay: 0.2 + i * 0.16, duration: 0.4, ease: "easeOut" }}
+              className="flex gap-3"
+            >
+              <span className="text-paper-3 tabular-nums w-[78px] flex-none">{l.t}</span>
+              <span
+                className="flex-none w-[42px] uppercase tracking-[0.18em]"
+                style={{ color: levelColor }}
+              >
+                {l.level}
+              </span>
+              <span style={isKill ? { color: "var(--color-second)" } : undefined}>
+                {l[lang]}
+              </span>
+            </motion.li>
+          );
+        })}
+      </ol>
+    </div>
   );
 }
 
