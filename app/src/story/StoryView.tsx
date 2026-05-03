@@ -12,6 +12,7 @@ import { LangToggle } from "./LangToggle";
 import { Act } from "./Act";
 import { ActDebugger } from "./ActDebugger";
 import { Prologue } from "./Prologue";
+import { WrongAnswerSlam } from "./Slam";
 import { GlossaryConstellation } from "./GlossaryConstellation";
 import { ScrollProgress } from "./ScrollProgress";
 import { CountUp } from "./CountUp";
@@ -663,29 +664,7 @@ function PinnedStory() {
                 </p>
               </>}
             />
-            <AnnotatedCompare
-              claimed="1,000,000"
-              actual="49,000,000+"
-              claimedLabel={STRINGS.compare.claimed[lang]}
-              actualLabel={STRINGS.compare.actualLower[lang]}
-            />
-            <EnFr
-              en={<p>
-                The true number is at least fifty times larger. And even that
-                only counts the states his solver had time to reach before it
-                ran out of memory. The real state space, under the game's
-                original rules, has no upper bound at all. Which is a
-                different problem from being big.
-              </p>}
-              fr={<p>
-                Le chiffre réel est au moins cinquante fois plus grand. Et
-                encore ne s'agit-il que des états que son solveur a eu le
-                temps d'atteindre avant de manquer de mémoire. L'espace
-                d'états véritable, avec les règles d'origine, n'a aucune
-                borne supérieure. Ce qui n'est pas le même problème que
-                d'être grand.
-              </p>}
-            />
+            <WrongAnswerSlam />
           </NarrativePanel>
 
           {/* IV — six days */}
@@ -1274,61 +1253,6 @@ function TranscriptCard({ header, body }: { header: string; body: React.ReactNod
         {header}
       </div>
       <div className="mono text-[13px] text-paper-2 leading-[1.7]">{body}</div>
-    </motion.div>
-  );
-}
-
-function AnnotatedCompare({
-  claimed,
-  actual,
-  claimedLabel,
-  actualLabel,
-}: {
-  claimed: string;
-  actual: string;
-  claimedLabel: string;
-  actualLabel: string;
-}) {
-  return (
-    <motion.div
-      initial={{ opacity: 0, y: 16 }}
-      whileInView={{ opacity: 1, y: 0 }}
-      viewport={{ once: true, margin: "-15%" }}
-      transition={{ duration: 0.7, ease: "easeOut" }}
-      className="my-10 grid grid-cols-2 gap-8 border-t border-b border-hair py-8 relative"
-    >
-      <div>
-        <div className="kicker mb-2" style={{ color: "var(--color-paper-3)" }}>
-          {claimedLabel}
-        </div>
-        <div className="display text-[clamp(2rem,4vw,3rem)] text-paper-3 relative inline-block">
-          {claimed}
-          {/* vermilion strikethrough drawing across the wrong number */}
-          <motion.span
-            className="absolute left-0 right-0 top-1/2 h-[3px] bg-vermilion origin-left"
-            initial={{ scaleX: 0 }}
-            whileInView={{ scaleX: 1 }}
-            viewport={{ once: true, margin: "-15%" }}
-            transition={{ duration: 0.7, ease: [0.6, 0, 0.2, 1], delay: 0.4 }}
-            aria-hidden
-          />
-        </div>
-      </div>
-      <div>
-        <div className="kicker mb-2">{actualLabel}</div>
-        <motion.div
-          className="display text-[clamp(2rem,4vw,3rem)] text-vermilion"
-          initial={{ opacity: 0, y: 8 }}
-          whileInView={{ opacity: 1, y: 0 }}
-          viewport={{ once: true, margin: "-15%" }}
-          transition={{ duration: 0.6, ease: "easeOut", delay: 0.95 }}
-          style={{
-            textShadow: "0 0 24px rgba(217,79,44,0.4)",
-          }}
-        >
-          {actual}
-        </motion.div>
-      </div>
     </motion.div>
   );
 }
