@@ -13,6 +13,7 @@ import { Act } from "./Act";
 import { ActDebugger } from "./ActDebugger";
 import { Prologue } from "./Prologue";
 import { WrongAnswerSlam } from "./Slam";
+import { useAct } from "./useAct";
 import { GlossaryConstellation } from "./GlossaryConstellation";
 import { ScrollProgress } from "./ScrollProgress";
 import { CountUp } from "./CountUp";
@@ -1125,34 +1126,66 @@ type PanelProps = {
   sectionRef?: (el: HTMLElement | null) => void;
 };
 
-/** A reusable cinematic chapter head used at the top of full-width sections.
- *  Massive italic numeral drops in, vermilion hairline draws across, kicker
- *  wipes from left. Same visual language as NarrativePanel's intro. */
-function SectionChapterHead({
+/** Cinematic chapter head whose visual register changes per act:
+ *
+ *  Act 1 (cream paper) — italic Roman numeral with a slight pencil-red
+ *    rotation, hand-touched. Kicker in regular kicker mono.
+ *  Act 2 (terminal) — numeral wrapped in ASCII brackets ([ V ]) with a
+ *    blinking phosphor cursor underneath. Kicker in monospace UPPERCASE.
+ *  Act 3 (paper) — a slim italic numeral over a thin horizontal rule,
+ *    kicker in small-caps display, archival.
+ *
+ *  The animation choreography (drop, hairline draw, kicker wipe) stays
+ *  consistent so the article still beats in time across acts.
+ */
+function ChapterHead({
   numeral,
   kicker,
+  size = "section",
 }: {
   numeral: string;
   kicker: string;
+  /** "section" (full-bleed scenes) sizes smaller than "panel" (NarrativePanel intro). */
+  size?: "section" | "panel";
 }) {
+  const ref = useRef<HTMLDivElement>(null);
+  const act = useAct(ref);
+  const numeralFs =
+    size === "panel"
+      ? "clamp(5rem, 12vw, 10rem)"
+      : "clamp(4rem, 9vw, 8rem)";
+
   return (
-    <div className="space-y-3 mb-8">
-      <motion.span
-        initial={{ opacity: 0, y: 24, scale: 0.9 }}
-        whileInView={{ opacity: 1, y: 0, scale: 1 }}
-        viewport={{ once: true, margin: "-15%" }}
-        transition={{ duration: 0.85, ease: [0.16, 1, 0.3, 1] }}
-        className="display-italic block leading-[0.85] text-vermilion select-none"
-        style={{
-          fontSize: "clamp(4rem, 9vw, 8rem)",
-          letterSpacing: "-0.04em",
-        }}
-      >
-        {numeral}
-      </motion.span>
+    <div ref={ref} className="space-y-3 mb-8">
+      {act === 2 ? (
+        <ChapterNumeralAct2 numeral={numeral} fontSize={numeralFs} />
+      ) : (
+        <motion.span
+          initial={{ opacity: 0, y: 24, scale: 0.9 }}
+          whileInView={{ opacity: 1, y: 0, scale: 1 }}
+          viewport={{ once: true, margin: "-15%" }}
+          transition={{ duration: 0.85, ease: [0.16, 1, 0.3, 1] }}
+          className="display-italic block leading-[0.85] text-vermilion select-none"
+          style={{
+            fontSize: numeralFs,
+            letterSpacing: "-0.04em",
+            // Act 1 — slight pencil-style rotation for hand-drawn feel.
+            // Act 3 — perfectly upright, archival.
+            transform: act === 1 ? "rotate(-2deg)" : undefined,
+            transformOrigin: "left bottom",
+          }}
+        >
+          {numeral}
+        </motion.span>
+      )}
       <motion.span
         aria-hidden
-        className="block h-px bg-vermilion origin-left"
+        className="block bg-vermilion origin-left"
+        style={{
+          // Act 3 — a thicker, calmer rule (a published-paper section break).
+          height: act === 3 ? 2 : 1,
+          opacity: act === 3 ? 0.85 : 1,
+        }}
         initial={{ scaleX: 0 }}
         whileInView={{ scaleX: 1 }}
         viewport={{ once: true, margin: "-15%" }}
@@ -1164,6 +1197,15 @@ function SectionChapterHead({
         viewport={{ once: true, margin: "-15%" }}
         transition={{ duration: 0.6, ease: [0.16, 1, 0.3, 1], delay: 0.4 }}
         className="kicker"
+        style={{
+          // Act 3 — small caps display lettering instead of mono.
+          fontFamily:
+            act === 3 ? "var(--font-display, serif)" : undefined,
+          fontStyle: act === 3 ? "italic" : undefined,
+          textTransform: act === 3 ? "lowercase" : undefined,
+          fontSize: act === 3 ? "1.05rem" : undefined,
+          letterSpacing: act === 3 ? "0.04em" : undefined,
+        }}
       >
         {kicker}
       </motion.div>
@@ -1171,44 +1213,67 @@ function SectionChapterHead({
   );
 }
 
+/** Act 2 numeral — wrapped in ASCII brackets with a blinking cursor below.
+ *  The cursor is the only "live" element on screen for a beat, signalling
+ *  that the page now reads as a terminal. */
+function ChapterNumeralAct2({
+  numeral,
+  fontSize,
+}: {
+  numeral: string;
+  fontSize: string;
+}) {
+  return (
+    <motion.div
+      initial={{ opacity: 0, y: 24 }}
+      whileInView={{ opacity: 1, y: 0 }}
+      viewport={{ once: true, margin: "-15%" }}
+      transition={{ duration: 0.85, ease: [0.16, 1, 0.3, 1] }}
+      className="flex items-baseline gap-3 select-none"
+      style={{
+        fontFamily: "ui-monospace, SFMono-Regular, monospace",
+        fontSize,
+        lineHeight: 0.9,
+        color: "var(--color-vermilion)",
+        letterSpacing: "0.05em",
+      }}
+    >
+      <span style={{ opacity: 0.55 }}>[</span>
+      <span style={{ fontWeight: 700 }}>{numeral}</span>
+      <span style={{ opacity: 0.55 }}>]</span>
+      <motion.span
+        aria-hidden
+        animate={{ opacity: [1, 1, 0, 0] }}
+        transition={{ duration: 1.2, repeat: Infinity, ease: "linear" }}
+        style={{
+          display: "inline-block",
+          marginLeft: "0.35em",
+          width: "0.5em",
+          height: "0.85em",
+          background: "var(--color-vermilion)",
+          alignSelf: "center",
+        }}
+      />
+    </motion.div>
+  );
+}
+
+/** Backwards-compat alias — a few section heads still call SectionChapterHead. */
+function SectionChapterHead({
+  numeral,
+  kicker,
+}: {
+  numeral: string;
+  kicker: string;
+}) {
+  return <ChapterHead numeral={numeral} kicker={kicker} size="section" />;
+}
+
 function NarrativePanel({ chapter, kicker, children, sectionRef }: PanelProps) {
   return (
     <section ref={sectionRef} className="min-h-screen flex items-center py-28">
       <div className="space-y-6 w-full max-w-[58ch]">
-        {/* dramatic chapter head: oversized Roman numeral drops in,
-            kicker wipes from the left, hairline draws across. */}
-        <div className="relative">
-          <motion.span
-            initial={{ opacity: 0, y: 24, scale: 0.9 }}
-            whileInView={{ opacity: 1, y: 0, scale: 1 }}
-            viewport={{ once: true, margin: "-15%" }}
-            transition={{ duration: 0.9, ease: [0.16, 1, 0.3, 1] }}
-            className="display-italic block leading-[0.85] text-vermilion select-none"
-            style={{
-              fontSize: "clamp(5rem, 12vw, 10rem)",
-              letterSpacing: "-0.04em",
-            }}
-          >
-            {chapter}
-          </motion.span>
-          <motion.span
-            aria-hidden
-            className="block h-px bg-vermilion origin-left mt-3"
-            initial={{ scaleX: 0 }}
-            whileInView={{ scaleX: 1 }}
-            viewport={{ once: true, margin: "-15%" }}
-            transition={{ duration: 1.2, ease: [0.6, 0, 0.2, 1], delay: 0.3 }}
-          />
-        </div>
-        <motion.div
-          initial={{ opacity: 0, y: 8, clipPath: "inset(0 100% 0 0)" }}
-          whileInView={{ opacity: 1, y: 0, clipPath: "inset(0 0% 0 0)" }}
-          viewport={{ once: true, margin: "-15%" }}
-          transition={{ duration: 0.7, ease: [0.16, 1, 0.3, 1], delay: 0.45 }}
-          className="kicker"
-        >
-          {kicker}
-        </motion.div>
+        <ChapterHead numeral={chapter} kicker={kicker} size="panel" />
         <motion.div
           initial={{ opacity: 0, y: 16 }}
           whileInView={{ opacity: 1, y: 0 }}
