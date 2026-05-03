@@ -849,44 +849,86 @@ function PinnedStory() {
             <EnFr
               en={<>
                 <p>
-                  Minimax is a simple and strict algorithm. It explores the
-                  game tree. At the leaves, it reads off a verdict —{" "}
-                  <em className="text-paper">White wins</em>,{" "}
-                  <em className="text-paper">Red wins</em>,{" "}
-                  <em className="text-paper">draw</em> — and propagates that
-                  verdict back up the tree by alternating minimum and maximum
-                  operations. Without leaves, nothing to propagate. The
-                  machine then spins on whatever depth horizon you give it,
-                  and that horizon, whatever it is, is arbitrary.
+                  To see what went wrong, you need to picture how a minimax
+                  actually works. Imagine the game as a tree of choices.
+                  The root of the tree is the starting position. From it,
+                  branches go to every move White can play. From each of
+                  those, branches go to every move Red can play. From each
+                  of those, branches again. And so on.
                 </p>
                 <p>
-                  Pogo, as he had encoded it, had no natural way to end. Two
-                  careful players could shuffle pieces between the same three
-                  cells until the end of time. No rule punished inertia. No
-                  rule forbade repetition. The only termination condition he
-                  had — a tower of all six pieces of one colour — was
-                  precisely the configuration that two skilled players knew
-                  how not to produce.
+                  At the very edges of the tree — the <em
+                  className="text-paper">leaves</em> — the game has ended,
+                  and the result is plain: <em
+                  className="text-paper">White wins</em>,{" "}
+                  <em className="text-paper">Red wins</em>, or{" "}
+                  <em className="text-paper">draw</em>. The minimax reads
+                  those verdicts off the leaves and propagates them back up
+                  the tree, taking the worst case for the opponent at each
+                  level (the "min" and "max" of the algorithm's name).
+                  After the verdict has been propagated all the way back to
+                  the root, every position has a known value. The game is
+                  solved.
                 </p>
                 <p>
-                  I just wrote that in three paragraphs. Writing it takes
-                  three paragraphs; noticing it, before the solver is
+                  Without leaves, nothing to propagate. And without any
+                  natural way for the game to end, the algorithm spins
+                  forever. The fix, normally, is to give it a depth horizon
+                  — "stop at depth 30, regardless of whether the game is
+                  over" — but that horizon, whatever you pick for it, is
+                  arbitrary. It is not the truth about the game. It is your
+                  patience.
+                </p>
+                <p>
+                  Pogo, as he had encoded it, had no natural way to end.
+                  Two careful players could shuffle pieces between the same
+                  three cells until the end of time. No rule punished
+                  inertia. No rule forbade repetition. The only termination
+                  condition he had written — a tower of all six pieces of
+                  one colour, after which a player has lost their
+                  manoeuvring room — was precisely the configuration that
+                  two skilled players knew how not to produce. The tree had
+                  no leaves.
+                </p>
+                <p>
+                  I have just written that in five paragraphs. Writing it
+                  takes five paragraphs; noticing it, before the solver was
                   launched, would have taken ten minutes with a notebook.
                   Neither of us took those ten minutes.
                 </p>
               </>}
               fr={<>
                 <p>
-                  Minimax est un algorithme simple et strict. Il explore
-                  l'arbre du jeu et, aux feuilles, il lit un verdict :{" "}
+                  Pour voir ce qui a foiré, il faut imaginer comment un
+                  minimax fonctionne réellement. Imaginez le jeu comme un
+                  arbre de choix. La racine de l'arbre, c'est la position
+                  de départ. Depuis cette racine, des branches partent vers
+                  chaque coup que Blanc peut jouer. Depuis chacune de ces
+                  branches, d'autres branches partent vers chaque réponse
+                  possible de Rouge. Et ainsi de suite.
+                </p>
+                <p>
+                  Tout au bout de l'arbre — aux{" "}
+                  <em className="text-paper">feuilles</em> — la partie est
+                  terminée, et le résultat est clair :{" "}
                   <em className="text-paper">Blanc gagne</em>,{" "}
-                  <em className="text-paper">Rouge gagne</em>,{" "}
-                  <em className="text-paper">nul</em>. Ce verdict remonte
-                  ensuite vers la racine en alternant des opérations de
-                  minimum et de maximum, et c'est ce qui donne sa valeur à
-                  chaque position. Sans feuilles, rien à remonter. La machine
-                  tourne alors sur l'horizon de profondeur qu'on lui fournit,
-                  quel qu'il soit, et cet horizon est arbitraire.
+                  <em className="text-paper">Rouge gagne</em>, ou{" "}
+                  <em className="text-paper">nul</em>. Le minimax lit ces
+                  verdicts sur les feuilles et les fait remonter le long
+                  de l'arbre, en prenant à chaque niveau le pire cas pour
+                  l'adversaire (les « min » et « max » dont l'algorithme
+                  tire son nom). Une fois le verdict remonté jusqu'à la
+                  racine, chaque position a une valeur connue. Le jeu est
+                  résolu.
+                </p>
+                <p>
+                  Sans feuilles, rien à faire remonter. Et sans manière
+                  naturelle pour la partie de se terminer, l'algorithme
+                  tourne indéfiniment. La parade habituelle, c'est de lui
+                  donner un horizon de profondeur — « tu t'arrêtes au coup
+                  30, peu importe que la partie soit finie » — mais cet
+                  horizon, quel qu'il soit, est arbitraire. Ce n'est pas la
+                  vérité sur le jeu. C'est juste votre patience.
                 </p>
                 <p>
                   Or Pogo, tel qu'il l'avait codé, n'avait aucune manière
@@ -894,14 +936,15 @@ function PinnedStory() {
                   se renvoyer des pièces entre les trois mêmes cases jusqu'à
                   la fin des temps. Aucune règle ne punissait l'inertie.
                   Aucune règle n'interdisait la répétition. La seule
-                  condition d'arrêt dont il disposait — former une tour des
-                  six pièces d'une même couleur — était précisément la
-                  configuration que deux joueurs avertis savaient éviter de
-                  produire.
+                  condition d'arrêt qu'il avait écrite — former une tour
+                  des six pièces d'une même couleur, après quoi le joueur
+                  perd toute sa marge de manœuvre — était précisément la
+                  configuration que deux joueurs avertis savaient éviter
+                  de produire. L'arbre n'avait pas de feuilles.
                 </p>
                 <p>
-                  Je viens d'écrire cela en trois paragraphes. L'écrire
-                  prend trois paragraphes ; s'en apercevoir, avant que le
+                  Je viens d'écrire cela en cinq paragraphes. L'écrire
+                  prend cinq paragraphes ; s'en apercevoir, avant que le
                   solveur ne soit lancé, aurait pris dix minutes avec un
                   cahier. Ni lui ni moi n'avons pris ces dix minutes.
                 </p>
