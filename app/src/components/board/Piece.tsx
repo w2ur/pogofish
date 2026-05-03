@@ -19,14 +19,16 @@ export function Piece({ color, size = "md" }: PieceProps) {
       style={
         color === "W"
           ? {
-              background: "linear-gradient(180deg, #fbf2da 0%, #cdc1a3 100%)",
+              background:
+                "linear-gradient(180deg, var(--board-piece-w-from) 0%, var(--board-piece-w-to) 100%)",
               boxShadow:
-                "0 1px 0 rgba(255,255,255,0.55) inset, 0 -1px 0 rgba(80,70,50,0.35) inset, 0 3px 6px rgba(0,0,0,0.55)",
+                "0 1px 0 rgba(255,255,255,0.55) inset, 0 -1px 0 rgba(80,70,50,0.35) inset, 0 3px 6px rgba(0,0,0,0.45)",
             }
           : {
-              background: "linear-gradient(180deg, #ec6f4c 0%, #8b1d05 100%)",
+              background:
+                "linear-gradient(180deg, var(--board-piece-r-from) 0%, var(--board-piece-r-to) 100%)",
               boxShadow:
-                "0 1px 0 rgba(255,200,180,0.5) inset, 0 -1px 0 rgba(40,15,5,0.5) inset, 0 3px 6px rgba(0,0,0,0.6), 0 0 12px -2px rgba(217,79,44,0.45)",
+                "0 1px 0 rgba(255,200,180,0.5) inset, 0 -1px 0 rgba(40,15,5,0.5) inset, 0 3px 6px rgba(0,0,0,0.45)",
             }
       }
     />

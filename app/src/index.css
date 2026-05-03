@@ -24,6 +24,17 @@
   --color-second: #c9bfa9;
   --color-second-deep: #8d8472;
   --color-second-soft: #d8cfb8;
+
+  /* Board surface defaults — used outside any act scope (overture etc).
+     Acts override these; see [data-act="N"] blocks below. */
+  --board-cell-empty: rgba(20, 16, 13, 0.95);
+  --board-cell-stroke: rgba(217, 79, 44, 0.10);
+  --board-piece-w-from: #fbf2da;
+  --board-piece-w-to: #cdc1a3;
+  --board-piece-r-from: #ec6f4c;
+  --board-piece-r-to: #8b1d05;
+  --board-halo: rgba(217, 79, 44, 0.18);
+  --board-cell-highlight: rgba(236, 226, 203, 0.06);
 }
 
 /* ============================================================
@@ -64,6 +75,17 @@
   --color-second: #6b4a2b;       /* warm wood — board frames, edges, grain */
   --color-second-deep: #4a3217;
   --color-second-soft: #927055;
+
+  /* Board surface — drawn-on-cream-paper aesthetic. Cells are subtle
+     warm wash, outlined in cocoa. Pieces are pencil-red on cocoa. */
+  --board-cell-empty: rgba(36, 26, 19, 0.045);
+  --board-cell-stroke: rgba(36, 26, 19, 0.32);
+  --board-piece-w-from: #f7eedb;
+  --board-piece-w-to: #b8a884;
+  --board-piece-r-from: #c75c4d;
+  --board-piece-r-to: #6e1d11;
+  --board-halo: rgba(168, 51, 40, 0.16);
+  --board-cell-highlight: rgba(36, 26, 19, 0.04);
 }
 
 [data-act="2"] {
@@ -81,6 +103,18 @@
   --color-second: #b85a3a;       /* oxidized rust — regressions, failures */
   --color-second-deep: #8a3e22;
   --color-second-soft: #d28966;
+
+  /* Board surface — terminal-grid aesthetic. Cells are deep black with
+     phosphor-green outlines (the kind a debug visualizer would draw).
+     Pieces are off-white and rust to match phosphor / regression. */
+  --board-cell-empty: rgba(8, 8, 8, 0.95);
+  --board-cell-stroke: rgba(122, 240, 160, 0.18);
+  --board-piece-w-from: #e8e8e8;
+  --board-piece-w-to: #888888;
+  --board-piece-r-from: #d28966;
+  --board-piece-r-to: #6e3318;
+  --board-halo: rgba(122, 240, 160, 0.12);
+  --board-cell-highlight: rgba(220, 220, 220, 0.04);
 }
 
 [data-act="3"] {
@@ -98,6 +132,18 @@
   --color-second: #3a5180;       /* navy-soft — diagrams, structure */
   --color-second-deep: #1a2840;
   --color-second-soft: #6680b0;
+
+  /* Board surface — published-paper figure aesthetic. Light cells with
+     navy outlines like a printed monograph; pieces in muted navy and
+     warm gold. */
+  --board-cell-empty: rgba(26, 40, 64, 0.05);
+  --board-cell-stroke: rgba(26, 40, 64, 0.22);
+  --board-piece-w-from: #f6f0e2;
+  --board-piece-w-to: #c4bca6;
+  --board-piece-r-from: #e09d65;
+  --board-piece-r-to: #7a3e0f;
+  --board-halo: rgba(200, 122, 60, 0.14);
+  --board-cell-highlight: rgba(26, 40, 64, 0.04);
 }
 
 /* ---------------- act surface textures ---------------- */

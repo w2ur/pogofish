@@ -108,15 +108,15 @@ export function Board({
       style={style}
     >
       <defs>
-        {/* gradient on white pieces */}
+        {/* gradient on white pieces — driven by act tokens */}
         <linearGradient id="pf-white" x1="0" y1="0" x2="0" y2="1">
-          <stop offset="0%" stopColor="#fbf2da" />
-          <stop offset="100%" stopColor="#cdc1a3" />
+          <stop offset="0%" style={{ stopColor: "var(--board-piece-w-from)" }} />
+          <stop offset="100%" style={{ stopColor: "var(--board-piece-w-to)" }} />
         </linearGradient>
-        {/* gradient on red pieces */}
+        {/* gradient on red pieces — driven by act tokens */}
         <linearGradient id="pf-red" x1="0" y1="0" x2="0" y2="1">
-          <stop offset="0%" stopColor="#ec6f4c" />
-          <stop offset="100%" stopColor="#8b1d05" />
+          <stop offset="0%" style={{ stopColor: "var(--board-piece-r-from)" }} />
+          <stop offset="100%" style={{ stopColor: "var(--board-piece-r-to)" }} />
         </linearGradient>
         {/* drop shadow */}
         <filter id="pf-piece-shadow" x="-50%" y="-50%" width="200%" height="200%">
@@ -130,12 +130,12 @@ export function Board({
             <feMergeNode in="SourceGraphic" />
           </feMerge>
         </filter>
-        {/* cell inner gradient */}
+        {/* cell inner highlight — driven by act tokens */}
         <radialGradient id="pf-cell-glow" cx="50%" cy="0%" r="80%">
-          <stop offset="0%" stopColor="rgba(236,226,203,0.06)" />
+          <stop offset="0%" style={{ stopColor: "var(--board-cell-highlight)" }} />
           <stop offset="100%" stopColor="rgba(0,0,0,0)" />
         </radialGradient>
-        {/* vermilion glow filter */}
+        {/* halo glow filter */}
         <filter id="pf-vermilion-glow" x="-50%" y="-50%" width="200%" height="200%">
           <feGaussianBlur stdDeviation="6" />
           <feComponentTransfer>
@@ -144,12 +144,12 @@ export function Board({
         </filter>
       </defs>
 
-      {/* halo behind board */}
+      {/* halo behind board — driven by act tokens */}
       <motion.circle
         cx={VIEW / 2}
         cy={VIEW / 2}
         r={VIEW * 0.55}
-        fill="rgba(217,79,44,0.18)"
+        fill="var(--board-halo)"
         filter="url(#pf-vermilion-glow)"
         animate={{ opacity: glow }}
         transition={QUICK}
@@ -315,9 +315,13 @@ function BoardCells({
         const o = cellOrigin(cell);
         const heat = heatmap?.[cell] ?? 0;
         const isFocus = focusCell === cell;
+        // Empty cells use the act's empty-cell token; heatmap cells override
+        // with a vermilion-tinted intensity (the heatmap accent stays
+        // vermilion regardless of act so heatmap insights read consistently
+        // as "this is where the network looked.")
         const heatFill = heat > 0
           ? `rgba(217,79,44,${0.06 + heat * 0.5})`
-          : "rgba(20,16,13,0.95)";
+          : "var(--board-cell-empty)";
         return (
           <g key={cell}>
             <motion.rect
@@ -327,7 +331,7 @@ function BoardCells({
               height={CELL}
               rx={4}
               fill={heatFill}
-              stroke="rgba(217,79,44,0.10)"
+              stroke="var(--board-cell-stroke)"
               strokeWidth={1}
               animate={{
                 scale: isFocus ? 1.06 : 1,
