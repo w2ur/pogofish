@@ -34,42 +34,42 @@ const FRAMES: Frame[] = [
   {
     act: 1,
     number: "I",
-    kicker: { en: "Act I", fr: "Acte I" },
+    kicker: { en: "Act I — the question", fr: "Acte I — la question" },
     tagline: {
-      en: "A game found on a shelf.",
-      fr: "Un jeu trouvé sur une étagère.",
+      en: "An AI told a human his game had under a million positions.",
+      fr: "Une IA a dit à un humain que son jeu avait moins d'un million de positions.",
     },
     caption: {
-      en: "Three rows. Three columns. Twelve pieces. One rule.",
-      fr: "Trois lignes. Trois colonnes. Douze pièces. Une règle.",
+      en: "I'm Claude, the AI in question. The real number was at least fifty times higher. This article is about what that wrong answer cost — and who's writing it to you, in the first person, is the one who got it wrong.",
+      fr: "Je suis Claude, l'IA en question. Le vrai chiffre était au moins cinquante fois supérieur. Cet article raconte ce qu'a coûté cette réponse fausse — et celui qui vous l'écrit, à la première personne, c'est celui qui s'est trompé.",
     },
-    stat: { en: "9 cells", fr: "9 cases" },
+    stat: { en: "1,000,000 → 49,000,000+", fr: "1 000 000 → 49 000 000+" },
   },
   {
     act: 2,
     number: "II",
-    kicker: { en: "Act II", fr: "Acte II" },
+    kicker: { en: "Act II — the cost", fr: "Acte II — le coût" },
     tagline: {
-      en: "Six days, no sleep, with a wrong answer.",
-      fr: "Six jours, sans dormir, avec une mauvaise réponse.",
+      en: "Six days lost on a sentence said too fluently.",
+      fr: "Six jours perdus sur une phrase dite trop vite.",
     },
     caption: {
-      en: "He wrote a solver. The solver disagreed.",
-      fr: "Il a écrit un solveur. Le solveur n'était pas d'accord.",
+      en: "He wrote a program to brute-force every Pogo position by hand. It ran for six days, ate thirty-six gigabytes of memory, and the operating system killed it over breakfast — before it had produced a single number.",
+      fr: "Il a écrit un programme pour calculer toutes les positions de Pogo une par une. Il a tourné six jours, avalé trente-six gigaoctets de mémoire, et le système d'exploitation l'a tué pendant son petit-déjeuner — avant qu'il n'ait produit le moindre chiffre.",
     },
-    stat: { en: "49,000,000 states", fr: "49 000 000 d'états" },
+    stat: { en: "Day 6 — out of memory", fr: "Jour 6 — plus de mémoire" },
   },
   {
     act: 3,
     number: "III",
-    kicker: { en: "Act III", fr: "Acte III" },
+    kicker: { en: "Act III — what it learned", fr: "Acte III — ce qu'il a appris" },
     tagline: {
-      en: "What it learned to win.",
-      fr: "Ce qu'il a appris à gagner.",
+      en: "Then he rewrote the rules and taught a network to win.",
+      fr: "Puis il a réécrit les règles et appris à un réseau à gagner.",
     },
     caption: {
-      en: "A network. A tournament. A score that ended it.",
-      fr: "Un réseau. Un tournoi. Un score qui a tranché.",
+      en: "The same trained network is loaded into the page you're scrolling. After half a million games against itself, it stopped losing. You can play it lower down — and read, before you do, what it learned along the way.",
+      fr: "Ce même réseau entraîné est chargé dans la page que vous parcourez. Après un demi-million de parties contre lui-même, il a cessé de perdre. Vous pourrez l'affronter plus bas — et lire, avant ça, ce qu'il a appris en chemin.",
     },
     stat: { en: "100 — 0", fr: "100 — 0" },
   },
@@ -222,15 +222,6 @@ export function Prologue() {
               <span className="text-paper-3"> / III</span>
             </span>
           </div>
-
-          {/* hairline rule beneath kicker — anchors the frame */}
-          <motion.div
-            className="absolute top-[18vh] left-1/2 -translate-x-1/2 origin-center"
-            initial={false}
-            animate={{ scaleX: enter, opacity: enter }}
-            transition={{ duration: 0.5, ease: [0.16, 1, 0.3, 1] }}
-            style={{ width: "min(40vw, 360px)", height: 1, background: "var(--color-vermilion)" }}
-          />
 
           <AnimatePresence mode="wait">
             <motion.div
