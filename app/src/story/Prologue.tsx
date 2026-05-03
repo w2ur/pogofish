@@ -162,8 +162,12 @@ export function Prologue() {
 
   // Each frame's content opacity peaks at sub=0.5 within its slot; we
   // crossfade out at the boundary so the next frame's act surface
-  // (different background, different texture) takes over cleanly.
-  const enter = Math.min(1, sub / 0.18);
+  // (different background, different texture) takes over cleanly. The
+  // very first frame is visible at scroll-zero so the cold open lands
+  // immediately (no waiting for the user to scroll a pixel before the
+  // article exists on screen).
+  const isFirstFrame = idx === 0;
+  const enter = isFirstFrame ? 1 : Math.min(1, sub / 0.18);
   const exit = sub > 0.82 ? 1 - (sub - 0.82) / 0.18 : 1;
   const contentOpacity = Math.max(0, Math.min(1, enter)) * Math.max(0, Math.min(1, exit));
 
