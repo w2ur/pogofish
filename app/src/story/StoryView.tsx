@@ -9,6 +9,7 @@ import { Callout } from "./Callout";
 import { EnFr } from "./EnFr";
 import { LearningsScene } from "./LearningsScene";
 import { LangToggle } from "./LangToggle";
+import { PaletteSwitcher } from "./PaletteSwitcher";
 import { CinematicOverture } from "./CinematicOverture";
 import { GlossaryConstellation } from "./GlossaryConstellation";
 import { ScrollProgress } from "./ScrollProgress";
@@ -56,6 +57,7 @@ export function StoryView() {
         <StoryFooter />
         <PlayCTA />
         <LangToggle />
+        <PaletteSwitcher />
       </div>
     </StageProvider>
   );

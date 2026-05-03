@@ -18,6 +18,76 @@
   --color-vermilion-deep: #a83719;
   --color-vermilion-soft: #f0825f;
   --color-graphite: #5a5344;
+  /* Second voice — used by palette overrides for diagrams, links, and
+     "structure" accents. In the baseline palette this is just a soft
+     vermilion-tinted neutral so existing components still work. */
+  --color-second: #c9bfa9;
+  --color-second-deep: #8d8472;
+  --color-second-soft: #d8cfb8;
+}
+
+/* ---------------- palette A — editorial + cobalt ----------------
+   Keeps the warm-dark editorial backbone but adds cobalt as a clear
+   "thinking" voice opposite vermilion's "action" voice. Diagrams,
+   mathematical structure, and links lean cobalt; the verdict, hits,
+   and emphasis stay vermilion. Two voices, one page. */
+[data-palette="A"] {
+  --color-ink: #0d1015;
+  --color-ink-2: #14171f;
+  --color-ink-3: #1f2330;
+  --color-paper: #f0e7d2;
+  --color-paper-2: #cfc6b1;
+  --color-paper-3: #8e8779;
+  --color-hair: #232634;
+  --color-vermilion: #e15a37;
+  --color-vermilion-deep: #b03d1d;
+  --color-vermilion-soft: #f3845f;
+  --color-graphite: #4a5366;
+  --color-second: #4f7be0;
+  --color-second-deep: #2e5cd6;
+  --color-second-soft: #87a5ec;
+}
+
+/* ---------------- palette B — Bauhaus on bone ----------------
+   Inverted: paper-color background, ink-color text. Three primaries:
+   vermilion (action), cobalt (structure), amber (warmth). Confident,
+   playful, geometric — befitting a tiny game with deep play. */
+[data-palette="B"] {
+  --color-ink: #f4eede;
+  --color-ink-2: #e9e2cf;
+  --color-ink-3: #ddd3bc;
+  --color-paper: #14110d;
+  --color-paper-2: #3a342a;
+  --color-paper-3: #6b6353;
+  --color-hair: #ddd3bc;
+  --color-vermilion: #e64d28;
+  --color-vermilion-deep: #b83a18;
+  --color-vermilion-soft: #f48366;
+  --color-graphite: #b3aa97;
+  --color-second: #2747c4;
+  --color-second-deep: #1a328e;
+  --color-second-soft: #7388e0;
+}
+
+/* ---------------- palette C — risograph zine ----------------
+   Bone background, fluorescent pink primary, electric blue secondary,
+   true ink text. Most distinctive; reads like an art-school zine
+   about a strange small game. Highest personality, highest risk. */
+[data-palette="C"] {
+  --color-ink: #f1ebdc;
+  --color-ink-2: #e6dfcd;
+  --color-ink-3: #d8d0bc;
+  --color-paper: #1a140e;
+  --color-paper-2: #3f372d;
+  --color-paper-3: #6d6555;
+  --color-hair: #d6cdb8;
+  --color-vermilion: #ff5b8e;
+  --color-vermilion-deep: #c63a6b;
+  --color-vermilion-soft: #ff8aae;
+  --color-graphite: #aea692;
+  --color-second: #3a4cdb;
+  --color-second-deep: #2434a6;
+  --color-second-soft: #6e7ce8;
 }
 
 /* ---------------- story surface ---------------- */

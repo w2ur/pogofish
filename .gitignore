@@ -81,3 +81,5 @@ Cargo.lock.bak
 # Jupyter
 .ipynb_checkpoints/
 .worktrees/
+/palette-*.png
+/palette-*.jpeg
