@@ -215,9 +215,11 @@ function PinnedStory() {
     { frameIdx: 10, x: 0.22, y: 0.5,  scale: 0.55, rotate: 0.8,  mode: "fanout",   focusCell: null, glow: 0.50 },
   ];
 
-  // Apply the view whenever active changes OR the section enters viewport
-  // (scroll listener). The latter handles the case where active hasn't
-  // changed but a previous section hid the stage.
+  // Apply the view ONLY when (a) the active panel changes or (b) the
+  // section first enters its active range. Without the !wasActive gate
+  // this fires on every scroll-tick while PinnedStory is partially in
+  // view, which races with the next section's StageBinder hide() call
+  // and ends up painting the persistent board on top of Chapter VIII.
   useEffect(() => {
     const apply = () => {
       const view = panelStageViews[active] ?? panelStageViews[0]!;
@@ -225,6 +227,7 @@ function PinnedStory() {
     };
 
     let frame = 0;
+    let wasActive = false;
     const evaluate = () => {
       frame = 0;
       const el = sectionRef.current;
@@ -232,13 +235,20 @@ function PinnedStory() {
       const rect = el.getBoundingClientRect();
       const vh = window.innerHeight;
       const isActive = rect.top < vh * 0.7 && rect.bottom > vh * 0.3;
-      if (isActive) apply();
+      if (isActive && !wasActive) apply();
+      wasActive = isActive;
     };
     const onScroll = () => {
       if (frame) return;
       frame = requestAnimationFrame(evaluate);
     };
+    // Fire once on mount or panel change. wasActive starts false so the
+    // first evaluate() during an active range applies the view.
     evaluate();
+    if (wasActive === false && sectionRef.current) {
+      // edge case: if mount-time evaluate found us inactive (above the
+      // section), the listener will catch us on the way in.
+    }
     window.addEventListener("scroll", onScroll, { passive: true });
     window.addEventListener("resize", onScroll);
     return () => {
