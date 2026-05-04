@@ -13,6 +13,7 @@ import { Act } from "./Act";
 import { ActDebugger } from "./ActDebugger";
 import { Prologue } from "./Prologue";
 import { WrongAnswerSlam } from "./Slam";
+import { Marginalia } from "./Marginalia";
 import { useAct } from "./useAct";
 import { GlossaryConstellation } from "./GlossaryConstellation";
 import { ScrollProgress } from "./ScrollProgress";
@@ -368,6 +369,12 @@ function PinnedStory() {
             chapter={CHAPTER_NUMERAL.III}
             kicker={STRINGS.chapters.III[lang]}
           >
+            <Marginalia stamp={lang === "fr" ? "enveloppe" : "envelope"}>
+              <EnFr
+                en={<>9 cells · 12 pieces · perfect info</>}
+                fr={<>9 cases · 12 pièces · info parfaite</>}
+              />
+            </Marginalia>
             <EnFr
               en={<>
                 <p className="dropcap">
@@ -514,6 +521,12 @@ function PinnedStory() {
                 </p>
               </>}
             />
+            <Marginalia stamp="RL">
+              <EnFr
+                en={<>train it by letting it play itself, ten thousand times.</>}
+                fr={<>on l'apprend en le laissant jouer contre lui-même, dix mille fois.</>}
+              />
+            </Marginalia>
             <Callout>
               <EnFr
                 en={<>A thesis-sized question on a kitchen-table board.</>}
@@ -576,6 +589,12 @@ function PinnedStory() {
                 </p>
               </>}
             />
+            <Marginalia stamp={lang === "fr" ? "ordre de grandeur" : "back-of-envelope"}>
+              <EnFr
+                en={<>10<sup>6</sup> — an afternoon. 10<sup>9</sup> — someone else's farm.</>}
+                fr={<>10<sup>6</sup> — un après-midi. 10<sup>9</sup> — la ferme d'un autre.</>}
+              />
+            </Marginalia>
             <TranscriptCard
               header={STRINGS.transcript.header[lang]}
               body={
@@ -674,6 +693,12 @@ function PinnedStory() {
             chapter={CHAPTER_NUMERAL.V}
             kicker={STRINGS.chapters.V[lang]}
           >
+            <Marginalia stamp="d1 09:14">
+              <EnFr
+                en={<>solver up. table=812k. growth +12%/h. nominal.</>}
+                fr={<>solveur lancé. table=812k. croissance +12%/h. nominal.</>}
+              />
+            </Marginalia>
             <EnFr
               en={<>
                 <p>
@@ -784,6 +809,12 @@ function PinnedStory() {
                 </p>
               </>}
             />
+            <Marginalia stamp="d6 07:42">
+              <EnFr
+                en={<>oom-kill: pid=4711, rss=36.2GB. exit 137. no checkpoint.</>}
+                fr={<>oom-kill : pid=4711, rss=36,2Go. exit 137. aucun snapshot.</>}
+              />
+            </Marginalia>
             <SixDaysChart />
             <EnFr
               en={<>
@@ -836,6 +867,12 @@ function PinnedStory() {
             chapter={CHAPTER_NUMERAL.VI}
             kicker={STRINGS.chapters.VI[lang]}
           >
+            <Marginalia stamp="search.depth">
+              <EnFr
+                en={<>terminal_node? → never. tree.height = ∞.</>}
+                fr={<>nœud_terminal? → jamais. arbre.hauteur = ∞.</>}
+              />
+            </Marginalia>
             <EnFr
               en={<>
                 <p>
@@ -993,6 +1030,12 @@ function PinnedStory() {
             chapter={CHAPTER_NUMERAL.VII}
             kicker={STRINGS.chapters.VII[lang]}
           >
+            <Marginalia stamp="variants">
+              <EnFr
+                en={<>LC1(rep=N) · LC2(cap=N) · LC3(cap=N, towers)</>}
+                fr={<>LC1(rep=N) · LC2(cap=N) · LC3(cap=N, tours)</>}
+              />
+            </Marginalia>
             <EnFr
               en={<>
                 <p>
@@ -1322,11 +1365,18 @@ function TranscriptCard({ header, body }: { header: string; body: React.ReactNod
   );
 }
 
+/** A hanging pull quote with a vermilion corner bracket on the left,
+ *  so it reads as an editorial extraction rather than a quote. The
+ *  bracket is drawn with two short rules at top and bottom and a thicker
+ *  vertical rule, all in --color-vermilion which adapts per act
+ *  (pencil-red / phosphor / gold). At xl, the whole block hangs slightly
+ *  left of the prose column to dramatize the extraction. */
 function PullQuote({ children }: { children: React.ReactNode }) {
   const ref = useReveal<HTMLQuoteElement>();
   return (
-    <blockquote ref={ref} className="reveal delay-1 my-10 pl-5 border-l-2 border-vermilion">
-      <span className="pullquote">{children}</span>
+    <blockquote ref={ref} className="reveal delay-1 pull-quote">
+      <span aria-hidden className="pull-quote__bracket" />
+      <span className="pull-quote__body pullquote">{children}</span>
     </blockquote>
   );
 }
@@ -2346,6 +2396,12 @@ function Scene10Epilogue() {
                 raisonnement fonctionne.</>}
             />
           </Callout>
+          <Marginalia stamp="n. 1">
+            <EnFr
+              en={<>The figure came out to 49 million reachable positions, depending on the rule variant chosen.</>}
+              fr={<>Le compte définitif s'est arrêté à 49 millions de positions atteignables, selon la variante de règle retenue.</>}
+            />
+          </Marginalia>
           <EnFr
             en={<>
               <p>

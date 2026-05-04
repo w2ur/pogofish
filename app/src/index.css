@@ -453,6 +453,168 @@
 .pogo-board.mini .pogo-piece:first-child { margin-top: 0; }
 .pogo-board.mini .pogo-coord { display: none; }
 
+/* ---------------- pull quote (hanging extraction) ----------------
+
+   A pull quote with a corner bracket on the left — top + bottom short
+   rules and a thicker vertical rule — so the block reads as an
+   editorial extraction. At xl the bracket and body hang slightly left
+   of the prose column, dramatizing the pull.                          */
+
+.pull-quote {
+  position: relative;
+  margin: 2.5rem 0;
+  padding: 0.4rem 0 0.4rem 1.5rem;
+}
+
+.pull-quote__bracket {
+  position: absolute;
+  inset: 0 auto 0 0;
+  width: 0.85rem;
+  pointer-events: none;
+  /* three lines: top rule, bottom rule, thick vertical rule (drawn via
+     borders so they pick up currentColor's act-aware vermilion). */
+  border-left: 3px solid var(--color-vermilion);
+}
+.pull-quote__bracket::before,
+.pull-quote__bracket::after {
+  content: "";
+  position: absolute;
+  left: -3px;
+  width: 0.85rem;
+  height: 1px;
+  background: var(--color-vermilion);
+}
+.pull-quote__bracket::before { top: 0; }
+.pull-quote__bracket::after { bottom: 0; }
+
+.pull-quote__body {
+  display: block;
+}
+
+/* xl: hang slightly left of the prose column for editorial drama.
+   The bracket and body shift in tandem; the body keeps its width so
+   line lengths don't change.                                          */
+@media (min-width: 1280px) {
+  .pull-quote {
+    margin-left: -1.75rem;
+  }
+}
+
+/* ---------------- marginalia (asymmetric layouts) ----------------
+
+   Side-margin annotations that float into the right gutter on desktop
+   and stack below the prose on mobile. Each act gets a distinct visual
+   register so the article's marginalia age with the rest of the page.
+
+   The float-with-negative-right-margin trick lets a marginalia escape
+   its parent prose container (max-w-[58ch]) and land in the gutter the
+   surrounding NarrativePanel reserves for it. Only kicks in at lg.    */
+
+.marginalia {
+  display: block;
+  margin: 1.25rem 0;
+  font-size: 0.9rem;
+  line-height: 1.5;
+  position: relative;
+}
+
+.marginalia__stamp {
+  display: block;
+  font-family: var(--font-mono);
+  font-size: 0.62rem;
+  letter-spacing: 0.24em;
+  text-transform: uppercase;
+  color: var(--color-vermilion);
+  margin-bottom: 0.3rem;
+  opacity: 0.85;
+}
+
+.marginalia__body {
+  display: block;
+}
+
+/* lg: a soft inline indent so the marginalia still feels gutter-y
+   without clipping. The prose column is too narrow at 1024px to safely
+   float into outside-container space, so we hold the float for xl+.   */
+@media (min-width: 1024px) and (max-width: 1279.98px) {
+  .marginalia {
+    margin-left: auto;
+    width: min(100%, 24rem);
+  }
+}
+
+/* xl+: float into the right gutter for real. The negative right margin
+   pushes the float past the prose container's right edge into the
+   outside-container space, which on max-w-6xl viewports is empty. */
+@media (min-width: 1280px) {
+  .marginalia {
+    float: right;
+    clear: right;
+    width: 10.5rem;
+    margin: 0.35rem -12rem 1.4rem 1.5rem;
+  }
+}
+
+/* Act 1 — pencil sidenote: hand-scrawled italic in pencil-red, soft
+   bracket on the left, slight rotation set inline by the component.   */
+.marginalia--pencil {
+  font-family: var(--font-display);
+  font-style: italic;
+  color: var(--color-vermilion);
+  border-left: 1px solid var(--color-vermilion);
+  padding: 0.05rem 0 0.05rem 0.75rem;
+  font-size: 0.95rem;
+  line-height: 1.4;
+}
+.marginalia--pencil .marginalia__stamp {
+  font-family: var(--font-mono);
+  font-style: normal;
+  color: var(--color-vermilion-deep);
+}
+
+/* Act 2 — terminal log line: tinted phosphor block, mono uppercase. */
+.marginalia--terminal {
+  font-family: var(--font-mono);
+  font-size: 0.74rem;
+  line-height: 1.55;
+  letter-spacing: 0.02em;
+  color: var(--color-vermilion);
+  background: rgba(122, 240, 160, 0.06);
+  border-left: 2px solid var(--color-vermilion);
+  padding: 0.55rem 0.7rem;
+  text-transform: uppercase;
+}
+.marginalia--terminal .marginalia__stamp {
+  color: var(--color-vermilion);
+  opacity: 0.7;
+  letter-spacing: 0.18em;
+}
+/* Rust voice: a regression / failure log line. Authors set this via
+   variant "terminal" but with stamp prefix "ERR" or wrap in this class
+   manually if needed. (For now, the act 2 default is phosphor.) */
+.marginalia--terminal[data-tone="err"] {
+  color: var(--color-second);
+  background: rgba(184, 90, 58, 0.08);
+  border-left-color: var(--color-second);
+}
+
+/* Act 3 — published-monograph footnote. Small navy italic with a thin
+   gold rule above. Sits quieter than the other two — by design.       */
+.marginalia--footnote {
+  font-family: var(--font-body);
+  font-style: italic;
+  font-size: 0.85rem;
+  line-height: 1.5;
+  color: var(--color-paper-2);
+  border-top: 1px solid var(--color-vermilion);
+  padding-top: 0.5rem;
+}
+.marginalia--footnote .marginalia__stamp {
+  font-family: var(--font-mono);
+  font-style: normal;
+  color: var(--color-vermilion);
+}
+
 /* ---------------- inline term (glossary trigger) ---------------- */
 
 .term {

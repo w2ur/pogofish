@@ -83,3 +83,9 @@ Cargo.lock.bak
 .worktrees/
 /palette-*.png
 /palette-*.jpeg
+/chap*-*.png
+/chap*-*.jpeg
+/act3-*.png
+/act3-*.jpeg
+/mobile-*.png
+/mobile-*.jpeg
