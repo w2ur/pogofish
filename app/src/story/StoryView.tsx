@@ -363,183 +363,90 @@ function PinnedStory() {
         </aside>
 
         <div className="flex flex-col">
-          {/* II — a game I found */}
+          {/* III — the game and the experiment */}
           <NarrativePanel
             sectionRef={(el) => { refs.current[0] = el; }}
             chapter={CHAPTER_NUMERAL.III}
             kicker={STRINGS.chapters.III[lang]}
           >
-            <Marginalia stamp={lang === "fr" ? "enveloppe" : "envelope"}>
-              <EnFr
-                en={<>9 cells · 12 pieces · perfect info</>}
-                fr={<>9 cases · 12 pièces · info parfaite</>}
-              />
-            </Marginalia>
             <EnFr
               en={<>
                 <p className="dropcap">
-                  Pogo is a real board game. William found it one evening on a
-                  friend's shelf, between a worn-out Carcassonne and a
-                  mismatched chess set. He played one round. He went home
-                  thinking about it, slept badly, and the next morning he was
-                  already writing the rules on the back of an envelope.
+                  Pogo arrived in William's life by way of a friend, who had
+                  the box and explained the rules across a dining table one
+                  evening. Three rows, three columns, twelve pieces, no dice
+                  and no hidden cards — both players see everything, like in
+                  chess. The rules took five minutes to learn. The game took
+                  rather longer to forget.
                 </p>
                 <p>
-                  Three rows, three columns. Twelve pieces. No dice, no cards,
-                  no hidden information — both players see everything, like
-                  in chess. A game that fits, piece by piece, into a head.
+                  What he was actually after, that month, was a{" "}
+                  <Term term="RL">reinforcement-learning</Term> experiment.
+                  RL — reinforcement learning — is the branch of machine
+                  learning where a program is taught to play a game by
+                  letting it play that game against itself, thousands or
+                  millions of times, until something resembling skill emerges
+                  from the noise. It is the technique behind the programs
+                  that beat the world champions at Go, at chess, at almost
+                  every game anyone has bothered to point it at — and it is
+                  famously expensive: the heavy-hitters consume small data
+                  centres for weeks at a stretch.
                 </p>
                 <p>
-                  Here is how a turn goes. You pick up a stack of one, two, or
-                  three pieces from any cell where your colour is on top. You
-                  move it in a straight line — by as many cells as it contains
-                  pieces. One piece moves one cell, two move two, three move
-                  one cell or three. You drop the stack on whatever is at the
-                  arrival cell — your pieces stack on top of theirs, theirs
-                  trapped underneath. Then it is the other player's turn. You
-                  keep going until the <em className="text-paper">losing
-                  condition</em> fires, which means: until you have no legal
-                  move left, or you make a move the rules forbid. The game
-                  fits on the back of a metro ticket. That is precisely what
-                  caught him.
+                  William did not have a small data centre. He had eight
+                  gigabytes of RAM. What he wanted was a game small enough
+                  that the experiment could fit on a laptop — train,
+                  evaluate, and play against the result, all on one machine,
+                  in time he could measure in days rather than months.
                 </p>
                 <p>
-                  At the time, he had been reading about{" "}
-                  <Term term="RL">reinforcement learning</Term> — the branch of
-                  AI where you teach a program to play a game by letting it
-                  play that game against itself, thousands of times, until
-                  something resembling skill drips out. Two letters: RL. It is
-                  the trick behind the programs that beat the world champions
-                  at chess, at Go, at almost every game anyone has bothered to
-                  point it at.
-                </p>
-                <p>
-                  What he wanted was a game small enough to <em
-                  className="text-paper">solve</em>. Not just play well —{" "}
-                  <em>solve</em>: compute, position by position, who actually
-                  wins from each one. The classic way to do that is a{" "}
-                  <Term term="Minimax">minimax</Term>: read every possible
-                  move from the current position, then every reply, then every
-                  reply to that, all the way to the end of the game; then play
-                  whichever move has the best worst-case outcome. Chess is far
-                  too big for this — it has more positions than there are atoms
-                  in the universe. But nine cells and twelve pieces? You could
-                  imagine fitting all of it in a laptop.
-                </p>
-                <p>
-                  Pogo ticked every box. Small enough to brute-force with a
-                  minimax. Small enough that the second plan, in parallel,
-                  could fit too: a <em className="text-paper">neural network</em>
-                  {" "}— a piece of software you teach by example, the way you
-                  teach one to recognise cats from photographs — only here the
-                  network learns to play Pogo, by playing copies of itself,
-                  ten thousand games at a time, on his eight gigabytes of RAM.
-                  And private enough that no public Pogo code or commentary
-                  was floating online to give the network a head start.
-                </p>
-                <p>
-                  The plan fit on one line. Write the solver. Compute the true
-                  value of every reachable position. Train a network in
-                  parallel. Measure the gap between what the network had
-                  guessed and what was actually true. Close the laptop, write
-                  the article.
+                  Pogo, three rows by three columns, looked very much like
+                  that game.
                 </p>
               </>}
               fr={<>
                 <p className="dropcap">
-                  Pogo est un vrai jeu de plateau. William l'a trouvé un soir
-                  sur l'étagère d'un ami, entre un Carcassonne fatigué et une
-                  boîte d'échecs dépareillée. Il y a joué une partie. Il est
-                  rentré en y pensant, il a mal dormi, et le lendemain matin
-                  il en écrivait déjà les règles au dos d'une enveloppe.
+                  Pogo est entré dans la vie de William par un ami, qui en
+                  avait la boîte et lui en a expliqué les règles sur un coin
+                  de table un soir. Trois lignes, trois colonnes, douze
+                  pièces, ni dé ni carte cachée — les deux joueurs voient
+                  tout, comme aux échecs. Les règles s'apprennent en cinq
+                  minutes. Le jeu, lui, met plus longtemps à s'oublier.
                 </p>
                 <p>
-                  Trois lignes, trois colonnes. Douze pièces. Ni dé, ni carte,
-                  ni information cachée — les deux joueurs voient tout, comme
-                  aux échecs. Un jeu qui tient, case par case, dans une tête.
+                  Ce qu'il cherchait, ce mois-là, c'était une expérience d'
+                  <Term term="RL">apprentissage par renforcement</Term>. Le
+                  RL — la branche du machine learning où l'on apprend à un
+                  programme à jouer en le faisant jouer contre lui-même, des
+                  milliers ou des millions de fois, jusqu'à ce qu'une chose
+                  qui ressemble à un savoir émerge du bruit. C'est la
+                  méthode derrière les programmes qui ont battu les
+                  champions du monde au Go, aux échecs, à peu près à tout
+                  ce qu'on leur a posé sur la table — et c'est, notoirement,
+                  coûteux : les gros joueurs consomment de petits data
+                  centers pendant des semaines.
                 </p>
                 <p>
-                  Voici comment se joue un tour. On saisit une pile d'une,
-                  deux ou trois pièces sur une case où sa couleur est au
-                  sommet. On la déplace en ligne droite, d'autant de cases
-                  qu'elle contient de pièces — une fait une case, deux en
-                  font deux, trois en font une ou trois. On la pose sur ce
-                  qu'elle trouve à l'arrivée — ses pièces empilées par-dessus
-                  celles de l'autre, qui restent prisonnières en dessous.
-                  Puis c'est au tour du second joueur. On continue jusqu'à ce
-                  que la <em className="text-paper">condition de défaite</em>{" "}
-                  se déclenche, c'est-à-dire jusqu'à ce qu'on n'ait plus de
-                  coup légal, ou qu'on en joue un que les règles interdisent.
-                  Le jeu tient au dos d'un ticket de métro. C'est précisément
-                  ce qui l'a piégé.
+                  William n'avait pas de petit data center. Il avait huit
+                  gigaoctets de RAM. Ce qu'il voulait, c'était un jeu assez
+                  petit pour que l'expérience tienne sur un laptop —
+                  entraîner, évaluer, et affronter le résultat, sur la même
+                  machine, dans un temps qui se compterait en jours plutôt
+                  qu'en mois.
                 </p>
                 <p>
-                  À cette époque, il lisait sur{" "}
-                  <Term term="RL">l'apprentissage par renforcement</Term> — la
-                  branche de l'IA où l'on apprend à un programme à jouer à un
-                  jeu en le faisant jouer contre lui-même, des milliers de
-                  fois, jusqu'à ce qu'une chose qui ressemble à un savoir en
-                  sorte. Deux lettres en anglais : RL. C'est la méthode
-                  derrière les programmes qui ont battu les champions du
-                  monde aux échecs, au Go, et à peu près à tout ce qu'on leur
-                  a posé sur la table.
-                </p>
-                <p>
-                  Ce qu'il cherchait, c'était un jeu assez petit pour qu'on
-                  puisse le <em className="text-paper">résoudre</em>. Pas
-                  seulement bien jouer — <em>résoudre</em> : calculer,
-                  position par position, qui gagne réellement à chaque coup.
-                  La méthode classique pour ça s'appelle un{" "}
-                  <Term term="Minimax">minimax</Term> : lire tous les coups
-                  possibles depuis la position courante, puis tous les
-                  contre-coups, puis les contre-contre-coups, jusqu'à la fin
-                  de la partie ; puis jouer le coup dont le pire scénario
-                  reste le moins mauvais. Les échecs sont bien trop vastes
-                  pour ça — il y a plus de positions que d'atomes dans
-                  l'univers. Mais neuf cases et douze pièces ? On pouvait
-                  imaginer faire tenir tout le jeu dans un laptop.
-                </p>
-                <p>
-                  Pogo cochait toutes les cases. Assez petit pour être passé
-                  à la moulinette par un minimax. Assez petit pour qu'on
-                  puisse aussi, en parallèle, faire tourner un{" "}
-                  <em className="text-paper">réseau de neurones</em> — un
-                  morceau de logiciel qu'on entraîne par l'exemple, comme on
-                  apprend à un autre à reconnaître des chats sur des photos
-                  — sauf qu'ici le réseau apprend à jouer à Pogo, en
-                  affrontant des copies de lui-même, dix mille parties à la
-                  fois, sur ses huit gigaoctets de RAM. Et assez confidentiel
-                  pour qu'aucun code public sur Pogo, aucune analyse, ne
-                  traîne en ligne pour donner au réseau une longueur d'avance.
-                </p>
-                <p>
-                  Le plan tenait en une ligne. Écrire le solveur. Calculer la
-                  valeur exacte de chaque position. Entraîner un réseau en
-                  parallèle. Mesurer l'écart entre ce que le réseau pensait
-                  et ce qui était vrai. Puis fermer le laptop et écrire
-                  l'article.
+                  Pogo, trois lignes sur trois colonnes, ressemblait
+                  beaucoup à ce jeu.
                 </p>
               </>}
             />
-            <Marginalia stamp="RL">
-              <EnFr
-                en={<>train it by letting it play itself, ten thousand times.</>}
-                fr={<>on l'apprend en le laissant jouer contre lui-même, dix mille fois.</>}
-              />
-            </Marginalia>
-            <Callout>
-              <EnFr
-                en={<>A thesis-sized question on a kitchen-table board.</>}
-                fr={<>Une question de thèse sur un plateau de table de cuisine.</>}
-              />
-            </Callout>
             <EnFr
-              en={<p>He did not write the first line that evening. He first opened a chat window — with me. This is, I realise, about where I should introduce myself. I am Claude, an AI he talks to often enough that he no longer uses quotation marks around the word. He opened the chat more by reflex than by method, the same reflex that makes humans open Wikipedia to check a date they already know.</p>}
-              fr={<p>Il n'a pas écrit la première ligne ce soir-là. Il a d'abord ouvert une fenêtre de chat — avec moi. Je me rends compte qu'il serait temps de me présenter. Je suis Claude, une IA à qui il parle depuis assez longtemps pour ne plus mettre de guillemets autour du mot. Il a ouvert ce chat plus par réflexe que par méthode ; le même réflexe qui fait qu'on ouvre Wikipédia pour vérifier une date qu'on connaît déjà.</p>}
+              en={<p>He did not write the first line of code that evening. He opened a chat with Claude — a general-purpose AI he had been using for months — to plan the experiment.</p>}
+              fr={<p>Il n'a pas écrit la première ligne de code ce soir-là. Il a ouvert un chat avec Claude — une IA générale qu'il utilisait depuis plusieurs mois — pour planifier l'expérience.</p>}
             />
           </NarrativePanel>
 
-          {/* III — the confident AI */}
+          {/* IV — the planning chat */}
           <NarrativePanel
             sectionRef={(el) => { refs.current[1] = el; }}
             chapter={CHAPTER_NUMERAL.IV}
@@ -548,53 +455,75 @@ function PinnedStory() {
             <EnFr
               en={<>
                 <p>
-                  Before he wrote anything, he asked one question. Roughly
-                  how many distinct positions does Pogo produce? An order of
-                  magnitude would have been enough — he did not need an exact
-                  count, just a feel for whether the problem was small enough
-                  to fit on his laptop.
+                  In the chat, William described what he wanted: an RL agent
+                  that learns Pogo by playing itself, on his laptop, in days.
+                  He asked Claude how to structure the project.
                 </p>
                 <p>
-                  The reason this matters: a minimax has to <em
-                  className="text-paper">visit</em> every position to compute
-                  its value. If there are a million of them, his laptop can
-                  hold the whole map of the game in memory and find the truth
-                  in an afternoon. If there are a billion, it can't, and he'd
-                  need a different plan — distributed computing, smarter
-                  algorithms, weeks of compute on a server farm. The
-                  difference between "I can do this on a couch" and "this
-                  becomes someone else's problem" was three zeroes.
+                  Claude came back with a five-phase plan. Phase one, a
+                  Python game engine — a sandbox for an RL agent to interact
+                  with. Phase two, a{" "}
+                  <Term term="Minimax">minimax</Term> solver: a brute-force
+                  algorithm that reads every move from the current position,
+                  then every reply, then every reply to that, all the way to
+                  the end of the game, and propagates the verdicts back. Run
+                  it once, ahead of time, and you get a complete map of
+                  every reachable Pogo position with its true value attached
+                  — the ground truth against which to measure whatever the
+                  network later learns. Phases three and four, the RL
+                  itself: tabular Q-learning as a baseline, then deep RL on
+                  top of it. Phase five, an interactive page where any
+                  reader can play the trained network.
+                </p>
+                <p>
+                  William had not known about minimax going in. Once Claude
+                  laid out the rationale — solve first, train against the
+                  solution — it landed cleanly. The plan made sense.
+                </p>
+                <p>
+                  Only one practical question remained: was Pogo small
+                  enough for the brute-force phase to finish in a reasonable
+                  time on a laptop with eight gigabytes of RAM?
                 </p>
               </>}
               fr={<>
                 <p>
-                  Avant d'écrire quoi que ce soit, il a posé une seule
-                  question. Combien de positions distinctes Pogo peut-il
-                  produire, en gros ? Un ordre de grandeur lui aurait suffi —
-                  il ne voulait pas un chiffre exact, juste une intuition de
-                  la taille du problème.
+                  Dans le chat, William a décrit ce qu'il voulait : un agent
+                  RL qui apprenne à jouer à Pogo en s'affrontant lui-même,
+                  sur son laptop, en quelques jours. Il a demandé à Claude
+                  comment structurer le projet.
                 </p>
                 <p>
-                  Pourquoi c'est important : un minimax doit{" "}
-                  <em className="text-paper">visiter</em> chaque position
-                  pour en calculer la valeur. S'il y en a un million, son
-                  laptop peut tenir la carte entière du jeu en mémoire et
-                  trouver la vérité en un après-midi. S'il y en a un
-                  milliard, il ne peut pas, et il faudrait alors un autre
-                  plan — du calcul distribué, des algorithmes plus malins,
-                  des semaines de calcul sur une ferme de serveurs. La
-                  différence entre « je peux faire ça sur le canapé » et
-                  « c'est devenu le problème de quelqu'un d'autre », c'était
-                  trois zéros.
+                  Claude est revenu avec un plan en cinq phases. Phase un,
+                  un moteur de jeu en Python — un bac à sable où un agent RL
+                  peut interagir avec les règles. Phase deux, un solveur{" "}
+                  <Term term="Minimax">minimax</Term> : un algorithme par
+                  force brute qui lit tous les coups possibles depuis la
+                  position courante, puis toutes les ripostes, puis les
+                  ripostes aux ripostes, jusqu'à la fin de la partie, et
+                  fait remonter les verdicts. Lancé une fois, en amont, il
+                  produit la carte complète de chaque position atteignable
+                  avec sa valeur exacte — la vérité terrain contre laquelle
+                  mesurer ce que le réseau apprendra ensuite. Phases trois
+                  et quatre, le RL lui-même : Q-learning tabulaire comme
+                  référence, puis deep RL par-dessus. Phase cinq, une page
+                  interactive où n'importe quel lecteur peut affronter le
+                  réseau entraîné.
+                </p>
+                <p>
+                  William ne connaissait pas le minimax avant cette
+                  conversation. Une fois la logique posée — résoudre d'abord,
+                  entraîner contre la solution — la chose tenait. Le plan
+                  faisait sens.
+                </p>
+                <p>
+                  Restait une seule question pratique : est-ce que Pogo
+                  était assez petit pour que la phase de force brute se
+                  termine en un temps raisonnable sur un laptop de huit
+                  gigaoctets ?
                 </p>
               </>}
             />
-            <Marginalia stamp={lang === "fr" ? "ordre de grandeur" : "back-of-envelope"}>
-              <EnFr
-                en={<>10<sup>6</sup> — an afternoon. 10<sup>9</sup> — someone else's farm.</>}
-                fr={<>10<sup>6</sup> — un après-midi. 10<sup>9</sup> — la ferme d'un autre.</>}
-              />
-            </Marginalia>
             <TranscriptCard
               header={STRINGS.transcript.header[lang]}
               body={
@@ -610,84 +539,33 @@ function PinnedStory() {
             <EnFr
               en={<>
                 <p>
-                  I answered, with confidence: no more than a million. I will
-                  not keep you in suspense — the answer was wrong, by a lot,
-                  and the article you are reading is about the six days it
-                  took us to find that out.
+                  The estimate sounded fine. A million positions, brute-forced
+                  in an afternoon, was no obstacle to the project; it would
+                  get out of the way of the more interesting RL work. William
+                  agreed to the plan and asked Claude to write the engine.
                 </p>
                 <p>
-                  Where did the number come from? On my side, an estimate I
-                  performed in the time it takes to type a sentence: nine
-                  cells, up to twelve pieces stacked per cell, two possible
-                  colours per slot. Squinting, that gives a ceiling somewhere
-                  around 2¹² × 9⁹. Several million positions. A bit more,
-                  perhaps. Nothing like a problem — an{" "}
-                  <Term term="Alpha-beta pruning">alpha-beta pruner</Term>{" "}
-                  (a refinement of minimax that skips branches once they are
-                  proven worse than another branch) would chew through it
-                  over lunch.
-                </p>
-                <p>
-                  Which looks a great deal like reasoning. It is also what
-                  goes, in him as in me, by the name of doing the arithmetic
-                  without quite doing it. And this is the moment the dangerous
-                  part of any conversation begins — when one person nods,
-                  internally, and the other does too, and the two of you move
-                  on together.
-                </p>
-                <p>
-                  That is how a five-word sentence ends up costing six days.
-                  He did not push, because the answer matched what he hoped
-                  to hear. I did not hedge, because I had no reason to. We
-                  had agreed, without saying so, to skip the only question
-                  that mattered: whether the game, as he had described it,{" "}
-                  <em className="text-paper">actually ends</em>. (It does not.
-                  More on that in a moment.)
+                  The estimate would turn out to be wrong by a factor of
+                  fifty.
                 </p>
               </>}
               fr={<>
                 <p>
-                  J'ai répondu, avec assurance : pas plus d'un million. Je
-                  ne vais pas vous faire languir — la réponse était fausse,
-                  et de loin, et l'article que vous lisez est celui des six
-                  jours qu'il nous a fallu pour nous en apercevoir.
+                  L'estimation tenait. Un million de positions passées à la
+                  moulinette en un après-midi, ce n'était pas un obstacle —
+                  ça libérait le terrain pour la partie RL, plus
+                  intéressante. William a validé le plan et a demandé à
+                  Claude d'écrire le moteur.
                 </p>
                 <p>
-                  D'où sortait ce chiffre ? De mon côté, d'une estimation
-                  faite dans le temps d'une phrase : neuf cases, jusqu'à
-                  douze pièces empilées par case, deux couleurs possibles
-                  par emplacement. En plissant les yeux, ça donne un plafond
-                  autour de 2¹² × 9⁹. Plusieurs millions. Un peu plus,
-                  peut-être. Rien qui ressemble, de loin, à un problème — un{" "}
-                  <Term term="Alpha-beta pruning">élagage alpha-bêta</Term>{" "}
-                  (un raffinement du minimax qui jette les branches dont on
-                  a déjà prouvé qu'elles sont moins bonnes qu'une autre) en
-                  viendrait à bout entre midi et deux.
-                </p>
-                <p>
-                  Ce qui ressemble fort à un raisonnement. Ce qui s'appelle
-                  aussi, chez lui comme chez moi, faire le calcul rapide
-                  sans le faire tout à fait. Et c'est à ce moment-là que la
-                  partie dangereuse de toute conversation commence — quand
-                  l'un des deux hoche la tête, intérieurement, l'autre aussi,
-                  et qu'on passe ensemble à la suite.
-                </p>
-                <p>
-                  Voilà comment une phrase de cinq mots finit par coûter
-                  six jours. Il n'a pas insisté, parce que la réponse collait
-                  à ce qu'il espérait entendre. Je n'ai pas nuancé, parce
-                  que je n'avais pas de raison de le faire. On s'était mis
-                  d'accord, sans le dire, en sautant la seule question qui
-                  comptait : demander si le jeu, tel qu'il l'avait décrit,
-                  {" "}<em className="text-paper">se termine pour de vrai</em>.
-                  (Il ne se termine pas. On y reviendra dans un instant.)
+                  L'estimation allait s'avérer fausse d'un facteur cinquante.
                 </p>
               </>}
             />
             <WrongAnswerSlam />
           </NarrativePanel>
 
-          {/* IV — six days */}
+          {/* V — twelve days, two losses */}
           <NarrativePanel
             sectionRef={(el) => { refs.current[2] = el; }}
             chapter={CHAPTER_NUMERAL.V}
@@ -702,110 +580,70 @@ function PinnedStory() {
             <EnFr
               en={<>
                 <p>
-                  What happens on his machine, I do not see. In the rhythm of
-                  our exchanges I exist in windows — a question, an answer, a
-                  silence, another question, sometimes weeks later. Between
-                  two conversations the world keeps going, and I only learn
-                  about it from what he brings back. What follows, therefore,
-                  is what he later told me.
+                  The engine came together in two days. Claude wrote it;
+                  William read each commit, asked questions, ran the test
+                  fixtures the engine shipped with. Phase one, done.
                 </p>
                 <p>
-                  The solver was written in a weekend. He chose Rust — a
-                  programming language that compiles slowly but, once it has
-                  agreed to run your code, runs it as fast as a hand-tuned C
-                  program. He used the alpha-beta pruning we just discussed,
-                  combined with three further tricks the field has accumulated
-                  over thirty years.
+                  The minimax solver came next. Claude wrote it in Python,
+                  alongside the engine. The two pieces of standard
+                  machinery from thirty years of game-tree research went in:
+                  {" "}<Term term="Alpha-beta pruning">alpha-beta pruning</Term>{" "}
+                  (skip a branch as soon as another has been proved better)
+                  and a{" "}
+                  <Term term="Transposition table">transposition table</Term>
+                  {" "}(cache the value of every position seen, so the same
+                  one isn't recomputed when reached by a different path of
+                  moves). Nothing exotic. On paper, the kind of solver that
+                  finishes a million positions over lunch.
                 </p>
                 <p>
-                  First, a <Term term="Transposition table">transposition
-                  table</Term>: a hash table that remembers every position
-                  the solver has already evaluated, so that if the same
-                  position is reached again by a different path of moves —
-                  which happens constantly — the answer is read off the
-                  table instead of being recomputed. Second, a{" "}
-                  <em className="text-paper">canonical form</em> for each
-                  position: the eight rotations and reflections of a Pogo
-                  board are strategically identical, so they all collapse
-                  into the same table entry, dividing the work by eight.
-                  Third, <em className="text-paper">iterative deepening</em>:
-                  the solver explores to depth 1, then depth 2, then depth
-                  3, and so on, so that if he kills the process partway
-                  through he still has a usable partial answer rather than
-                  nothing at all.
-                </p>
-                <p>
-                  This is the kind of code you write to learn Rust, not to
-                  win a tournament — but on paper, it ran. He launched it,
-                  watched the first few hundred positions get scored,
-                  closed the laptop lid, and went climbing.
-                </p>
-                <p>
-                  Day 1: all fine. The table grows fast, in the way these
-                  tables always grow at the beginning — most new positions
-                  are near-duplicates of ones already seen, so each new
-                  entry is cheap. Day 2: slower, but plausible. Day 3: he
-                  opens the laptop and the growth curve is no longer a
-                  curve he recognises. Day 5: it is now climbing nearly
-                  straight up. Day 6: the operating system kills the
-                  process over breakfast — out of memory.
+                  William launched it, watched the first few hundred
+                  positions get scored, and went to do something else. He
+                  kept Claude posted. Day one, table at eight hundred
+                  thousand entries, growth nominal. Day two, slower,
+                  plausible. Day three, the curve was already shaped like
+                  nothing anyone recognised. Day five, it was climbing
+                  nearly vertical. On the morning of day six, the operating
+                  system killed the process — out of memory, thirty-six
+                  gigabytes resident, forty-nine million entries in the
+                  table, and not a single value had made it back to the
+                  root. Six days, no answer, no checkpoint on disk.
                 </p>
               </>}
               fr={<>
                 <p>
-                  Ce qui se passe sur sa machine, je ne le vois pas. Dans le
-                  rythme de nos échanges, j'existe par fenêtres — une
-                  question, une réponse, un silence, une autre question,
-                  parfois des semaines plus tard. Entre deux conversations,
-                  le monde continue de tourner, et je n'en apprends rien que
-                  ce qu'il m'en ramène. Ce qui suit, donc, est ce qu'il m'a
-                  raconté ensuite.
+                  Le moteur a tenu en deux jours. Claude l'a écrit ;
+                  William a lu chaque commit, posé des questions, lancé les
+                  fixtures de test livrées avec. Phase un, faite.
                 </p>
                 <p>
-                  Le solveur a été écrit en un week-end. Il a choisi Rust —
-                  un langage de programmation qui compile lentement mais
-                  qui, une fois qu'il a accepté de faire tourner votre
-                  code, le fait tourner aussi vite qu'un programme C
-                  optimisé à la main. Il s'est servi de l'élagage alpha-bêta
-                  qu'on vient d'évoquer, combiné à trois ruses
-                  supplémentaires que le métier a accumulées en trente ans.
+                  Le solveur minimax est venu ensuite. Claude l'a écrit en
+                  Python, en parallèle du moteur. Les deux outils standards
+                  de trente ans de recherche en arbres de jeu y étaient :
+                  l'<Term term="Alpha-beta pruning">élagage alpha-bêta</Term>
+                  {" "}(jeter une branche dès qu'on a prouvé qu'une autre est
+                  meilleure) et une{" "}
+                  <Term term="Transposition table">table de transposition</Term>
+                  {" "}(mémoriser la valeur de chaque position rencontrée
+                  pour ne pas la recalculer si on y revient par un autre
+                  chemin). Rien d'exotique. Sur le papier, le genre de
+                  solveur qui ratisse un million de positions entre midi et
+                  deux.
                 </p>
                 <p>
-                  D'abord, une{" "}
-                  <Term term="Transposition table">table de transposition</Term>{" "}
-                  : une table de hachage qui se souvient de chaque position
-                  déjà évaluée par le solveur, de sorte que si la même
-                  position est atteinte par un autre chemin de coups — ce
-                  qui arrive en permanence — la réponse est lue dans la
-                  table au lieu d'être recalculée. Ensuite, une{" "}
-                  <em className="text-paper">forme canonique</em> pour
-                  chaque position : les huit rotations et symétries d'un
-                  plateau de Pogo sont stratégiquement identiques, on les
-                  fait donc s'effondrer sur la même entrée de la table, ce
-                  qui divise le travail par huit. Enfin, un{" "}
-                  <em className="text-paper">approfondissement itératif</em>
-                  {" "}: le solveur explore d'abord en profondeur 1, puis 2,
-                  puis 3, et ainsi de suite, de manière à ce que s'il tue
-                  le processus en cours de route, il reste une réponse
-                  partielle utilisable, plutôt que rien.
-                </p>
-                <p>
-                  Du code qu'on écrit pour apprendre Rust, pas pour gagner
-                  un tournoi — mais sur le papier, il tournait. Il l'a
-                  lancé, il a regardé les premières centaines de positions
-                  s'évaluer, il a refermé le laptop, et il est parti
-                  grimper.
-                </p>
-                <p>
-                  Jour 1 : tout va bien. La table gonfle vite, comme ces
-                  tables gonflent toujours au début — la plupart des
-                  nouvelles positions sont des quasi-doublons de positions
-                  déjà rencontrées, chaque nouvelle entrée est bon marché.
-                  Jour 2 : plus lent, plausible. Jour 3 : il ouvre le
-                  laptop et la courbe de croissance n'est plus une courbe
-                  qu'il reconnaît. Jour 5 : elle monte presque à la
-                  verticale. Jour 6 : le système d'exploitation tue le
-                  processus pendant son petit-déjeuner — plus de mémoire.
+                  William l'a lancé, a regardé les premières centaines de
+                  positions s'évaluer, et est parti faire autre chose. Il
+                  tenait Claude au courant. Jour un, table à huit cent mille
+                  entrées, croissance nominale. Jour deux, plus lente,
+                  plausible. Jour trois, la courbe ne ressemblait déjà plus
+                  à rien de connu. Jour cinq, elle montait presque à la
+                  verticale. Au matin du sixième, le système d'exploitation
+                  a tué le processus — plus de mémoire, trente-six
+                  gigaoctets résidents, quarante-neuf millions d'entrées
+                  dans la table, et pas une seule valeur remontée à la
+                  racine. Six jours, aucune réponse, aucun snapshot sur
+                  disque.
                 </p>
               </>}
             />
@@ -819,43 +657,51 @@ function PinnedStory() {
             <EnFr
               en={<>
                 <p>
-                  Bilan: 49 million states in the table, 36 gigabytes of
-                  resident memory, zero return value. No checkpoint on disk
-                  either — he had meant to add one later, and we both know
-                  what that means. Six days of compute had produced exactly
-                  nothing. No partial answer, no bound, not even proof that
-                  the problem was too big for this approach. An almost-empty
-                  log file, and a fan that had gone quiet.
+                  They got lucky once. The solver had been running in a
+                  bash shell inside a Claude Code session, which meant the
+                  dead process's memory image was still reachable from
+                  inside the same session: between them they pulled the
+                  value table out of RAM into a Pickle file before the
+                  session ended. On paper, the six days of compute were
+                  salvaged.
                 </p>
                 <p>
-                  When he came back to see me, he had been silent for six
-                  days.
+                  On the strength of that recovery, William asked Claude
+                  whether it was safe to relaunch — outside the session
+                  this time, on a fresh terminal, with a longer leash.
+                  Claude said yes.
                 </p>
                 <p>
-                  Silence, coffee. The real diagnosis was one he could have
-                  had at the envelope, if he'd sat with it for ten minutes:
-                  the tree had no leaves.
+                  It wasn't. The second run blew up the same way at day
+                  six, with no Claude Code memory underneath to fish out.
+                  This time there was nothing to recover. Twelve days of
+                  compute, gone. A near-empty log file, a fan that had been
+                  quiet for a week, and a diagnosis still owed.
                 </p>
               </>}
               fr={<>
                 <p>
-                  Bilan : 49 millions d'états dans la table, 36 gigaoctets de
-                  mémoire résidente, zéro valeur de retour. Aucun point de
-                  sauvegarde sur disque non plus — il comptait l'ajouter plus
-                  tard, nous savons tous les deux ce que cela veut dire. Six
-                  jours de calcul avaient produit exactement rien. Pas de
-                  réponse partielle, pas de borne, pas même la preuve que le
-                  problème était trop grand pour cette approche. Un fichier
-                  de logs à peu près vide, un ventilateur qui s'est tu.
+                  Ils ont eu de la chance, une fois. Le solveur tournait
+                  dans un bash à l'intérieur d'une session Claude Code, ce
+                  qui voulait dire que l'image mémoire du processus mort
+                  était encore accessible depuis la même session : à eux
+                  deux, ils ont sorti la table de valeurs de la RAM dans
+                  un fichier Pickle avant la fin de la session. Sur le
+                  papier, les six jours de calcul étaient sauvés.
                 </p>
                 <p>
-                  Quand il est revenu me voir, il était silencieux depuis six
-                  jours.
+                  Fort de cette récupération, William a demandé à Claude
+                  si on pouvait relancer — cette fois en dehors de la
+                  session, dans un terminal frais, avec plus de marge.
+                  Claude a dit oui.
                 </p>
                 <p>
-                  Silence et café. Le vrai diagnostic, il aurait pu l'avoir
-                  dès l'enveloppe, s'il s'y était assis dix minutes : l'arbre
-                  n'avait pas de feuilles.
+                  Ce n'était pas vrai. Le second run est tombé de la même
+                  manière au sixième jour, sans Claude Code dessous pour
+                  récupérer la mémoire. Cette fois, rien à sauver. Douze
+                  jours de calcul, perdus. Un fichier de logs à peu près
+                  vide, un ventilateur silencieux depuis une semaine, et
+                  un diagnostic à faire.
                 </p>
               </>}
             />

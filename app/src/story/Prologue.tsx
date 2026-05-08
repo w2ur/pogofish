@@ -34,44 +34,44 @@ const FRAMES: Frame[] = [
   {
     act: 1,
     number: "I",
-    kicker: { en: "Act I — the question", fr: "Acte I — la question" },
+    kicker: { en: "Act I — the experiment", fr: "Acte I — l'expérience" },
     tagline: {
-      en: "An AI told a human his game had under a million positions.",
-      fr: "Une IA a dit à un humain que son jeu avait moins d'un million de positions.",
+      en: "The experiment was meant to train an AI. It trained the human instead.",
+      fr: "L'expérience devait entraîner une IA. C'est l'humain qu'elle a entraîné.",
     },
     caption: {
-      en: "I'm Claude, the AI in question. The real number was at least fifty times higher. This article is about what that wrong answer cost — and who's writing it to you, in the first person, is the one who got it wrong.",
-      fr: "Je suis Claude, l'IA en question. Le vrai chiffre était au moins cinquante fois supérieur. Cet article raconte ce qu'a coûté cette réponse fausse — et celui qui vous l'écrit, à la première personne, c'est celui qui s'est trompé.",
+      en: "A reinforcement-learning experiment on a small board game. Before writing a line of code, the experimenter opened a chat with an AI to plan it. Twelve days of compute later, the only thing that had been trained was him.",
+      fr: "Une expérience d'apprentissage par renforcement sur un petit jeu de plateau. Avant d'écrire la moindre ligne de code, l'expérimentateur a ouvert un chat avec une IA pour la planifier. Douze jours de calcul plus tard, la seule chose entraînée, c'était lui.",
     },
-    stat: { en: "1,000,000 → 49,000,000+", fr: "1 000 000 → 49 000 000+" },
+    stat: { en: "12 days · 1 sentence", fr: "12 jours · 1 phrase" },
   },
   {
     act: 2,
     number: "II",
-    kicker: { en: "Act II — the cost", fr: "Acte II — le coût" },
+    kicker: { en: "Act II — the loss", fr: "Acte II — la perte" },
     tagline: {
-      en: "Six days lost on a sentence said too fluently.",
-      fr: "Six jours perdus sur une phrase dite trop vite.",
+      en: "Six days of compute, lost. Twice.",
+      fr: "Six jours de calcul, perdus. Deux fois.",
     },
     caption: {
-      en: "He wrote a program to brute-force every Pogo position by hand. It ran for six days, ate thirty-six gigabytes of memory, and the operating system killed it over breakfast — before it had produced a single number.",
-      fr: "Il a écrit un programme pour calculer toutes les positions de Pogo une par une. Il a tourné six jours, avalé trente-six gigaoctets de mémoire, et le système d'exploitation l'a tué pendant son petit-déjeuner — avant qu'il n'ait produit le moindre chiffre.",
+      en: "The solver — written by the AI, in Python — ran for six days, ate thirty-six gigabytes, and was killed by the kernel on the morning of the sixth. The experimenter asked the AI whether the relaunch was safe. The AI said yes. It wasn't.",
+      fr: "Le solveur — écrit par l'IA, en Python — a tourné six jours, avalé trente-six gigaoctets, et le noyau l'a tué au matin du sixième. L'expérimentateur a demandé à l'IA si la relance était sûre. L'IA a dit oui. C'était non.",
     },
-    stat: { en: "Day 6 — out of memory", fr: "Jour 6 — plus de mémoire" },
+    stat: { en: "Day 6 · 36 GB · ×2", fr: "Jour 6 · 36 Go · ×2" },
   },
   {
     act: 3,
     number: "III",
-    kicker: { en: "Act III — what it learned", fr: "Acte III — ce qu'il a appris" },
+    kicker: { en: "Act III — what was left", fr: "Acte III — ce qui restait" },
     tagline: {
-      en: "Then he rewrote the rules and taught a network to win.",
-      fr: "Puis il a réécrit les règles et appris à un réseau à gagner.",
+      en: "A bug, a rewrite, and a game deeper than the search.",
+      fr: "Un bug, une réécriture, et un jeu plus profond que la recherche.",
     },
     caption: {
-      en: "The same trained network is loaded into the page you're scrolling. After half a million games against itself, it stopped losing. You can play it lower down — and read, before you do, what it learned along the way.",
-      fr: "Ce même réseau entraîné est chargé dans la page que vous parcourez. Après un demi-million de parties contre lui-même, il a cessé de perdre. Vous pourrez l'affronter plus bas — et lire, avant ça, ce qu'il a appris en chemin.",
+      en: "Once the real bug — no cycle detection — was found and the rules tightened so the game itself terminates, the solver finished in fifty-four minutes. It still didn't solve Pogo: the game is deeper than twenty plies. The network loaded into this page learned to play what's left.",
+      fr: "Une fois le vrai bug — l'absence de détection de cycles — repéré et les règles resserrées pour que le jeu lui-même se termine, le solveur a tourné en cinquante-quatre minutes. Il n'a pas pour autant résolu Pogo : le jeu est plus profond que vingt coups. Le réseau chargé dans cette page a appris à jouer ce qui reste.",
     },
-    stat: { en: "100 — 0", fr: "100 — 0" },
+    stat: { en: "975K positions · 54 min", fr: "975 000 positions · 54 min" },
   },
 ];
 

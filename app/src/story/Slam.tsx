@@ -35,11 +35,11 @@ interface SlamCopy {
 
 const COPY: SlamCopy = {
   caption: {
-    en: "less than that, I said.",
-    fr: "moins que ça, j'ai dit.",
+    en: "the estimate.",
+    fr: "l'estimation.",
   },
-  claimedLabel: { en: "what I said", fr: "ce que j'ai dit" },
-  actualLabel: { en: "what was true", fr: "ce qui était vrai" },
+  claimedLabel: { en: "estimated", fr: "estimé" },
+  actualLabel: { en: "first run", fr: "premier run" },
   closer: {
     en: "off by a factor of fifty.",
     fr: "à un facteur cinquante près.",
