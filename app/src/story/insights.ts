@@ -62,6 +62,14 @@ export function cellLabel(index: number): string {
   return coords[index] ?? `cell ${index}`;
 }
 
+/** Format a Pogo move with the stack size moved.
+ *  Reads as "a3 → b3 [×2]". The stack size is what makes a Pogo move
+ *  unambiguous — the same source/destination pair can be played by
+ *  moving 1, 2, or 3 pieces, and they are different moves. */
+export function moveLabel(fromIdx: number, toIdx: number, numPieces: number): string {
+  return `${cellLabel(fromIdx)} → ${cellLabel(toIdx)} [×${numPieces}]`;
+}
+
 export function formatPercent(v: number, digits = 0): string {
   return `${(v * 100).toFixed(digits)}%`;
 }

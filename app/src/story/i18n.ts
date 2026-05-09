@@ -23,7 +23,7 @@ export const STRINGS = {
     titleA: { en: "Does the first\u00A0player ", fr: "Le premier\u00A0joueur peut-il " },
     titleB: { en: "win", fr: "gagner" },
     titleC: { en: " at Pogo?", fr: " à Pogo ?" },
-    signOff: { en: "— Claude & William, spring 2026", fr: "— Claude & William, printemps 2026" },
+    signOff: { en: "— William Revah, spring 2026", fr: "— William Revah, printemps 2026" },
   },
   chapters: {
     I:   { en: "Before a single line of code",        fr: "Avant la première ligne de code" },
@@ -81,8 +81,8 @@ export const STRINGS = {
     h2B: { en: "plain",                                fr: "français" },
     h2C: { en: " English.",                            fr: " clair." },
     intro: {
-      en: "I did not know most of these when I started. The definitions below are the versions I wish someone had handed me at the time — short, specific, and free of the assumption that you already know the surrounding ten terms.",
-      fr: "La plupart de ces mots ne me disaient rien lorsque j'ai commencé. Les définitions qui suivent sont celles que j'aurais voulu qu'on me tende à l'époque : brèves, précises, et qui ne tiennent jamais pour acquise la connaissance des dix termes voisins.",
+      en: "Most of these words meant nothing to William at the start of the project. The definitions below are the versions he wishes someone had handed him at the time — short, specific, and free of the assumption that you already know the surrounding ten terms.",
+      fr: "La plupart de ces mots ne disaient rien à William au début du projet. Les définitions qui suivent sont celles qu'il aurait voulu qu'on lui tende à l'époque : brèves, précises, et qui ne tiennent jamais pour acquise la connaissance des dix termes voisins.",
     },
     groups: {
       AI:    { name: { en: "AI & learning",   fr: "IA & apprentissage" },  blurb: { en: "Tools that learn from playing themselves.",                    fr: "Des outils qui apprennent en jouant contre eux-mêmes." } },
@@ -226,10 +226,10 @@ export const STRINGS = {
     h2A:         { en: "After ",                          fr: "Au bout de " },
     h2B:         { en: " games against itself, the network had opinions.",
                    fr: " parties jouées contre lui-même, le réseau avait des idées bien arrêtées." },
-    intro:       { en: "I didn't train it. I don't play Pogo. But I can tell you what it learned, from the same run that won the tournament — LC3-29, at 200 ",
-                   fr: "Je ne l'ai pas entraîné. Je ne joue pas à Pogo. Mais je peux vous dire ce qu'il a appris, à partir du même run qui a remporté le tournoi — LC3-29, à 200 " },
-    introMid:    { en: " simulations per move. Stats are empirical; diagrams are real positions from the sweep.",
-                   fr: " simulations par coup. Les statistiques sont empiriques ; les diagrammes, eux, sont des positions réellement jouées lors de l'enquête." },
+    intro:       { en: "These charts come from the same training run that won the tournament — the soft-cap variant, at 200 ",
+                   fr: "Les graphiques qui suivent viennent du même entraînement qui a remporté le tournoi — la variante à plafond souple, à 200 " },
+    introMid:    { en: " simulations per move. The numbers are empirical, counted from games actually played; the diagrams are real positions from the sweep.",
+                   fr: " simulations par coup. Les chiffres sont empiriques, comptés sur les parties réellement jouées ; les diagrammes sont des positions tirées de l'enquête." },
     initialPosition: { en: "initial position", fr: "position initiale" },
     capturesByPly:   { en: "captures by ply",  fr: "captures par demi-coup" },
     whiteWinsShort:  { en: "White wins",       fr: "Blanc gagne" },
@@ -240,8 +240,8 @@ export const STRINGS = {
     ariaLabel:{ en: "Jump to the playable game", fr: "Aller au jeu jouable" },
   },
   pageTitle: {
-    en: "Pogofish — an AI tells the story of one overconfident sentence",
-    fr: "Pogofish — le récit, par une IA, d'une phrase trop confiante",
+    en: "Pogofish — the experiment that trained the human",
+    fr: "Pogofish — l'expérience qui a entraîné l'humain",
   },
 } as const;
 

@@ -8,10 +8,10 @@ import { EnFr } from "./EnFr";
 import { STRINGS } from "./i18n";
 import { Board as AnimatedBoard } from "./stage/Board";
 import {
-  cellLabel,
   findProbe,
   formatPercent,
   loadInsights,
+  moveLabel,
   type InsightsPayload,
 } from "./insights";
 
@@ -91,7 +91,6 @@ export function LearningsScene() {
         </h2>
         <p className="body text-paper-2 max-w-2xl mx-auto">
           {STRINGS.learnings.intro[lang]}
-          <abbr title="Monte Carlo Tree Search">MCTS</abbr>
           {STRINGS.learnings.introMid[lang]}
         </p>
       </div>
@@ -106,17 +105,22 @@ export function LearningsScene() {
             claim={
               <EnFr
                 en={<>
-                  White&apos;s first move is nearly predetermined. {cellLabel(topOpening.from_cell)}{" "}
-                  → {cellLabel(topOpening.to_cell)} in{" "}
+                  White&apos;s first move is nearly predetermined.{" "}
+                  <span className="mono">{moveLabel(topOpening.from_cell, topOpening.to_cell, topOpening.num_pieces)}</span>{" "}
+                  in{" "}
                   <span className="text-vermilion">{formatPercent(topOpening.frequency)}</span>{" "}
-                  of games.
+                  of games. (The bracket gives the stack size moved — Pogo lets you take
+                  one, two or three pieces from a cell where your colour is on top.)
                 </>}
                 fr={<>
                   Le premier coup des Blancs, à peu de chose près, est écrit
-                  d'avance : {cellLabel(topOpening.from_cell)}{" "}
-                  → {cellLabel(topOpening.to_cell)}, dans{" "}
+                  d'avance :{" "}
+                  <span className="mono">{moveLabel(topOpening.from_cell, topOpening.to_cell, topOpening.num_pieces)}</span>,
+                  dans{" "}
                   <span className="text-vermilion">{formatPercent(topOpening.frequency)}</span>{" "}
-                  des parties.
+                  des parties. (Le crochet indique la taille de la pile déplacée :
+                  à Pogo, on prend une, deux ou trois pièces sur une case où sa
+                  couleur est au sommet.)
                 </>}
               />
             }
@@ -421,8 +425,8 @@ function HeatmapHero({ data }: { data: InsightsPayload }) {
               tout début de la partie. Les Blancs ne jouent presque jamais
               en dehors d'un petit ensemble de cases — la diagonale et le
               centre. La meilleure ouverture observée :{" "}
-              <span className="text-vermilion">
-                {top ? `${cellLabel(top.from_cell)} → ${cellLabel(top.to_cell)}` : "—"}
+              <span className="text-vermilion mono">
+                {top ? moveLabel(top.from_cell, top.to_cell, top.num_pieces) : "—"}
               </span>
               {top && <> dans <span className="text-vermilion">{formatPercent(top.frequency)}</span> des parties.</>}
             </>
@@ -432,8 +436,8 @@ function HeatmapHero({ data }: { data: InsightsPayload }) {
               in the very first ply. White almost never plays outside a
               tiny set of squares — the diagonal and the centre. Most-
               played first move:{" "}
-              <span className="text-vermilion">
-                {top ? `${cellLabel(top.from_cell)} → ${cellLabel(top.to_cell)}` : "—"}
+              <span className="text-vermilion mono">
+                {top ? moveLabel(top.from_cell, top.to_cell, top.num_pieces) : "—"}
               </span>
               {top && <> in <span className="text-vermilion">{formatPercent(top.frequency)}</span> of games.</>}
             </>

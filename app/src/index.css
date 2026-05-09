@@ -634,10 +634,10 @@
 }
 
 .term-popover {
+  --term-shift: 0px;
   position: absolute;
   left: 50%;
   bottom: calc(100% + 10px);
-  transform: translateX(-50%);
   z-index: 30;
   width: min(320px, 80vw);
   padding: 12px 14px;
@@ -656,21 +656,21 @@
   pointer-events: none;
   opacity: 0;
   transform-origin: center bottom;
-  transform: translateX(-50%) translateY(6px);
+  transform: translateX(calc(-50% + var(--term-shift))) translateY(6px);
   transition: opacity 0.18s ease, transform 0.18s ease;
 }
 
 .term[data-open="true"] .term-popover {
   opacity: 1;
   pointer-events: auto;
-  transform: translateX(-50%) translateY(0);
+  transform: translateX(calc(-50% + var(--term-shift))) translateY(0);
 }
 
 .term-popover::after {
   content: "";
   position: absolute;
   top: 100%;
-  left: 50%;
+  left: calc(50% - var(--term-shift));
   transform: translateX(-50%);
   border: 5px solid transparent;
   border-top-color: var(--color-hair);

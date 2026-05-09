@@ -707,245 +707,167 @@ function PinnedStory() {
             />
           </NarrativePanel>
 
-          {/* V — the tree had no leaves */}
+          {/* VI — the diagnosis */}
           <NarrativePanel
             sectionRef={(el) => { refs.current[3] = el; }}
             chapter={CHAPTER_NUMERAL.VI}
             kicker={STRINGS.chapters.VI[lang]}
           >
-            <Marginalia stamp="search.depth">
+            <Marginalia stamp="diagnosis">
               <EnFr
-                en={<>terminal_node? → never. tree.height = ∞.</>}
-                fr={<>nœud_terminal? → jamais. arbre.hauteur = ∞.</>}
+                en={<>cycle? → not detected. same state filed N times, one per path.</>}
+                fr={<>cycle ? → non détecté. même état rangé N fois, une par chemin.</>}
               />
             </Marginalia>
             <EnFr
               en={<>
                 <p>
-                  To see what went wrong, you need to picture how a minimax
-                  actually works. Imagine the game as a tree of choices.
-                  The root of the tree is the starting position. From it,
-                  branches go to every move White can play. From each of
-                  those, branches go to every move Red can play. From each
-                  of those, branches again. And so on.
+                  After the second loss, the two of them sat down with the
+                  source code and worked out what had actually been going
+                  on.
                 </p>
                 <p>
-                  At the very edges of the tree — the <em
-                  className="text-paper">leaves</em> — the game has ended,
-                  and the result is plain: <em
-                  className="text-paper">White wins</em>,{" "}
-                  <em className="text-paper">Red wins</em>, or{" "}
-                  <em className="text-paper">draw</em>. The minimax reads
-                  those verdicts off the leaves and propagates them back up
-                  the tree, taking the worst case for the opponent at each
-                  level (the "min" and "max" of the algorithm's name).
-                  After the verdict has been propagated all the way back to
-                  the root, every position has a known value. The game is
-                  solved.
+                  The cause was small. Pogo has no captures: pieces never
+                  leave the board, they only restack. A given position can
+                  therefore be reached not just by one sequence of moves
+                  but by many — including sequences that loop back through
+                  it. Two careful players can shuffle the same three pieces
+                  between the same three cells indefinitely. The same is
+                  true of a search algorithm: nothing in a textbook minimax
+                  stops it from going round the same circle thousands of
+                  times, filing each lap as a fresh path.
                 </p>
                 <p>
-                  Without leaves, nothing to propagate. And without any
-                  natural way for the game to end, the algorithm spins
-                  forever. The fix, normally, is to give it a depth horizon
-                  — "stop at depth 30, regardless of whether the game is
-                  over" — but that horizon, whatever you pick for it, is
-                  arbitrary. It is not the truth about the game. It is your
-                  patience.
+                  That is what had eaten thirty-six gigabytes. The
+                  forty-nine million entries the solver had stockpiled were
+                  not forty-nine million distinct Pogo positions — many
+                  were the same handful of positions filed under different
+                  routes. The transposition table couldn't catch it: it
+                  indexes positions, not paths, and there was nothing
+                  telling the route that led to a stored position that the
+                  route was itself going in circles.
                 </p>
                 <p>
-                  Pogo, as he had encoded it, had no natural way to end.
-                  Two careful players could shuffle pieces between the same
-                  three cells until the end of time. No rule punished
-                  inertia. No rule forbade repetition. The only termination
-                  condition he had written — a tower of all six pieces of
-                  one colour, after which a player has lost their
-                  manoeuvring room — was precisely the configuration that
-                  two skilled players knew how not to produce. The tree had
-                  no leaves.
+                  The fix is well-known. When the search encounters a
+                  position it has already visited earlier in the current
+                  line of play, treat that branch as a draw and back out.
+                  Two extra lines of code, three with the comment. Claude
+                  wrote them.
                 </p>
                 <p>
-                  I have just written that in five paragraphs. Writing it
-                  takes five paragraphs; noticing it, before the solver was
-                  launched, would have taken ten minutes with a notebook.
-                  Neither of us took those ten minutes.
+                  While they were in the code, they noticed something
+                  else. Pogo's win condition — a player loses when no cell
+                  on the board has their colour on top, leaving them with
+                  no legal move — left room, in theory, for two careful
+                  players to settle into a stable, mutually inert
+                  configuration that neither side wanted to disturb. In
+                  casual play this almost never happens. Against a search
+                  that tried everything, it happened constantly. The game
+                  needed a sharper way to end, not just for the algorithm
+                  but for the game itself to feel like a game.
                 </p>
               </>}
               fr={<>
                 <p>
-                  Pour voir ce qui a foiré, il faut imaginer comment un
-                  minimax fonctionne réellement. Imaginez le jeu comme un
-                  arbre de choix. La racine de l'arbre, c'est la position
-                  de départ. Depuis cette racine, des branches partent vers
-                  chaque coup que Blanc peut jouer. Depuis chacune de ces
-                  branches, d'autres branches partent vers chaque réponse
-                  possible de Rouge. Et ainsi de suite.
+                  Après le second échec, ils se sont installés tous les deux
+                  devant le code source et ont compris ce qui s'était
+                  réellement passé.
                 </p>
                 <p>
-                  Tout au bout de l'arbre — aux{" "}
-                  <em className="text-paper">feuilles</em> — la partie est
-                  terminée, et le résultat est clair :{" "}
-                  <em className="text-paper">Blanc gagne</em>,{" "}
-                  <em className="text-paper">Rouge gagne</em>, ou{" "}
-                  <em className="text-paper">nul</em>. Le minimax lit ces
-                  verdicts sur les feuilles et les fait remonter le long
-                  de l'arbre, en prenant à chaque niveau le pire cas pour
-                  l'adversaire (les « min » et « max » dont l'algorithme
-                  tire son nom). Une fois le verdict remonté jusqu'à la
-                  racine, chaque position a une valeur connue. Le jeu est
-                  résolu.
+                  La cause était petite. Pogo n'a pas de captures : les
+                  pièces ne quittent jamais le plateau, elles s'empilent.
+                  Une même position peut donc être atteinte non par une
+                  seule suite de coups, mais par plusieurs — y compris des
+                  suites qui la traversent en boucle. Deux joueurs prudents
+                  peuvent se renvoyer les mêmes trois pièces entre les
+                  mêmes trois cases indéfiniment. C'est aussi vrai pour un
+                  algorithme de recherche : rien dans un minimax classique
+                  ne l'empêche de faire mille fois le tour du même cycle,
+                  en enregistrant chaque tour comme un nouveau chemin.
                 </p>
                 <p>
-                  Sans feuilles, rien à faire remonter. Et sans manière
-                  naturelle pour la partie de se terminer, l'algorithme
-                  tourne indéfiniment. La parade habituelle, c'est de lui
-                  donner un horizon de profondeur — « tu t'arrêtes au coup
-                  30, peu importe que la partie soit finie » — mais cet
-                  horizon, quel qu'il soit, est arbitraire. Ce n'est pas la
-                  vérité sur le jeu. C'est juste votre patience.
+                  Voilà ce qui avait avalé trente-six gigaoctets. Les
+                  quarante-neuf millions d'entrées que le solveur avait
+                  accumulées n'étaient pas quarante-neuf millions de
+                  positions distinctes — beaucoup étaient la même poignée
+                  de positions rangées sous des suites de coups
+                  différentes. La table de transposition ne pouvait rien :
+                  elle indexe les positions, pas les chemins, et rien ne
+                  disait à la route qui menait à une position stockée
+                  qu'elle-même tournait en rond.
                 </p>
                 <p>
-                  Or Pogo, tel qu'il l'avait codé, n'avait aucune manière
-                  naturelle de se terminer. Deux joueurs prudents pouvaient
-                  se renvoyer des pièces entre les trois mêmes cases jusqu'à
-                  la fin des temps. Aucune règle ne punissait l'inertie.
-                  Aucune règle n'interdisait la répétition. La seule
-                  condition d'arrêt qu'il avait écrite — former une tour
-                  des six pièces d'une même couleur, après quoi le joueur
-                  perd toute sa marge de manœuvre — était précisément la
-                  configuration que deux joueurs avertis savaient éviter
-                  de produire. L'arbre n'avait pas de feuilles.
+                  Le correctif est connu. Quand la recherche rencontre une
+                  position qu'elle a déjà visitée plus haut dans la même
+                  ligne de jeu, on traite cette branche comme un nul et on
+                  rebrousse chemin. Deux lignes de code ajoutées, trois
+                  avec le commentaire. Claude les a écrites.
                 </p>
                 <p>
-                  Je viens d'écrire cela en cinq paragraphes. L'écrire
-                  prend cinq paragraphes ; s'en apercevoir, avant que le
-                  solveur ne soit lancé, aurait pris dix minutes avec un
-                  cahier. Ni lui ni moi n'avons pris ces dix minutes.
+                  Pendant qu'ils étaient dans le code, ils ont remarqué
+                  autre chose. La condition de défaite de Pogo — on perd
+                  quand plus aucune case du plateau n'a sa couleur au
+                  sommet, et donc quand on n'a plus de coup légal —
+                  laissait en théorie la place, à deux joueurs prudents,
+                  à une configuration stable et mutuellement inerte que
+                  personne n'avait envie de bouger. Dans une partie
+                  ordinaire ça n'arrive presque jamais. Pour une recherche
+                  qui essaie tout, ça arrivait sans cesse. Il fallait au
+                  jeu une manière plus nette de se terminer, non seulement
+                  pour l'algorithme mais pour que le jeu en soit un.
                 </p>
               </>}
             />
             <TreeDiagram />
-            <EnFr
-              en={<>
-                <p>
-                  So the solver was doing, very conscientiously, a badly posed
-                  job. It was searching an infinite tree, and every time a
-                  cycle came back around it was paying full price to file the
-                  same position under a different path. The transposition
-                  table, which usually saves you from precisely that mistake,
-                  was useless here: the same state was being filed in it along
-                  dozens of distinct routes, with no way to notice.
-                </p>
-                <p>
-                  When he finally placed an artificial cap on search depth,
-                  the solver stopped dying. It started lying. The values it
-                  returned were no longer about Pogo — they described a
-                  finite proxy problem, the one he had drawn, without knowing
-                  it, on the envelope. The machine was patiently solving the
-                  only tree it could see. A horizon line had quietly taken
-                  the place of the ground.
-                </p>
-              </>}
-              fr={<>
-                <p>
-                  Le solveur s'acquittait donc, très consciencieusement, d'une
-                  tâche mal posée. Il explorait un arbre infini, et chaque
-                  fois qu'un cycle se refermait, il payait le prix fort pour
-                  ranger la même position sous un chemin différent. La table
-                  de transposition, qui d'ordinaire sauve précisément de cette
-                  erreur, ne servait à rien : le même état y était rangé par
-                  des dizaines de routes distinctes, sans moyen de s'en
-                  apercevoir.
-                </p>
-                <p>
-                  Quand il a fini par poser un plafond artificiel sur la
-                  profondeur de recherche, le solveur a cessé de mourir. Il
-                  s'est mis à mentir. Les valeurs qu'il renvoyait ne
-                  décrivaient plus Pogo — elles décrivaient un problème fini
-                  de substitution, celui qu'il avait, sans le savoir, dessiné
-                  sur l'enveloppe. La machine résolvait patiemment le seul
-                  arbre qu'elle pouvait voir. Une ligne d'horizon avait
-                  pris, en silence, la place du sol.
-                </p>
-              </>}
-            />
           </NarrativePanel>
 
-          {/* VI — the rules became the variable */}
+          {/* VII — the rule, the rerun, the depth that wasn't enough */}
           <NarrativePanel
             sectionRef={(el) => { refs.current[4] = el; }}
             chapter={CHAPTER_NUMERAL.VII}
             kicker={STRINGS.chapters.VII[lang]}
           >
-            <Marginalia stamp="variants">
-              <EnFr
-                en={<>LC1(rep=N) · LC2(cap=N) · LC3(cap=N, towers)</>}
-                fr={<>LC1(rep=N) · LC2(cap=N) · LC3(cap=N, tours)</>}
-              />
-            </Marginalia>
             <EnFr
               en={<>
                 <p>
-                  A second problem sat under the first one. Even in the
-                  rare games that <em>did</em> end — the ones where someone
-                  eventually stacked all six of their colour and ran out of
-                  legal moves — the trajectories leading to those endings
-                  were strange. Stronger players learned, very quickly, to
-                  stop forming towers altogether. Pieces settled into mixed
-                  stacks across the middle row, and nobody dared move. The
-                  game drifted toward what he ended up calling a{" "}
-                  <Term term="Lazy equilibrium">lazy equilibrium</Term>: a
-                  position so stable that neither side had anything to gain
-                  by committing to a real plan.
+                  The rule rewrite was small. They added one rule: if the
+                  same position recurs three times in a game, the player to
+                  move loses. A repeat once or twice is just normal
+                  back-and-forth. Three times is a sign nobody wants to
+                  commit. That was enough to give the game an unambiguous
+                  way to end, even between two players who had silently
+                  agreed to do nothing.
                 </p>
                 <p>
-                  It took him too long to admit what this meant. Pogo, in
-                  its original form, is a game nobody wins. For a research
-                  project, a dead end. For a player, frankly, a boring game.
-                </p>
-                <p>
-                  The rewrite begins here. Instead of trying to solve Pogo
-                  as it was, he started asking what minimum repair would
-                  turn it into a game that could actually be solved and
-                  actually be played. A losing condition that fires when
-                  the position has been seen before, or when the move
-                  budget runs out. Tight enough that good play means
-                  committing to something. Not a patch stapled onto the
-                  board: a <em className="text-paper">variable</em> to
-                  test. Three families of candidates came out of an
-                  afternoon with a notebook.
+                  With the search bug fixed and the rule added at the board
+                  level, Claude reran the solver. It finished in fifty-four
+                  minutes. Nine and a half million distinct positions seen,
+                  of which roughly nine hundred and seventy-five thousand
+                  turned out to be decisive — one side or the other had a
+                  forced win — and the rest were draws. From the opening
+                  position, with both sides playing the strongest move
+                  available, the game is a draw.
                 </p>
               </>}
               fr={<>
                 <p>
-                  Un second problème se tenait sous le premier. Même dans les
-                  parties qui se terminaient — celles où quelqu'un finissait
-                  par ériger une tour des six pièces de sa couleur — les
-                  trajectoires avaient quelque chose d'étrange. Les joueurs
-                  forts apprenaient à ne plus former de tours du tout. Les
-                  pièces s'installaient en piles mixtes sur la rangée du
-                  milieu, et plus personne n'osait bouger. La partie dérivait
-                  vers ce qu'il a fini par appeler un{" "}
-                  <Term term="Lazy equilibrium">équilibre paresseux</Term> :
-                  une position trop stable pour que l'un ou l'autre ait le
-                  moindre intérêt à s'engager.
+                  La modification était petite. Une règle ajoutée : si la
+                  même position revient trois fois dans une partie, le
+                  joueur au trait perd. Une répétition une ou deux fois
+                  fait partie du jeu normal ; trois fois, c'est le signe
+                  que personne ne veut s'engager. Cela suffisait à donner
+                  au jeu une fin sans ambiguïté, même entre deux joueurs
+                  qui s'étaient tacitement mis d'accord pour ne rien faire.
                 </p>
                 <p>
-                  Il lui a fallu trop de temps pour admettre ce que cela
-                  voulait dire. Pogo, dans sa forme d'origine, est un jeu
-                  que personne ne gagne. Pour un projet de recherche, c'était
-                  une impasse. Pour un joueur, c'était — on peut bien le
-                  dire — un jeu ennuyeux.
-                </p>
-                <p>
-                  La réécriture commence ici. Plutôt que de chercher à
-                  résoudre Pogo, il s'est demandé quelle réparation minimale
-                  en ferait un jeu qu'on puisse réellement résoudre et
-                  jouer. Une condition de défaite qui se déclenche dès que
-                  l'état cycle, ou que le budget de coups s'épuise.
-                  Suffisamment serrée pour que le bon jeu consiste à
-                  s'engager. Non pas une rustine posée sur le plateau : une
-                  variable à tester. Trois familles de candidates sont
-                  sorties d'un après-midi avec un cahier.
+                  Avec le bug du moteur de recherche corrigé et la règle
+                  ajoutée au niveau du jeu, Claude a relancé le solveur. Il
+                  a tourné cinquante-quatre minutes. Neuf millions huit
+                  cent mille positions distinctes vues, dont environ neuf
+                  cent soixante-quinze mille décisives — un camp ou l'autre
+                  y avait un gain forcé — et le reste, des nuls. Depuis la
+                  position de départ, les deux côtés jouant le meilleur
+                  coup possible, la partie est nulle.
                 </p>
               </>}
             />
@@ -953,49 +875,62 @@ function PinnedStory() {
             <EnFr
               en={<>
                 <p>
-                  The first family, <strong className="text-paper">LC1</strong>,
-                  is repetition: if the same position reappears for the Nth
-                  time, the player to move loses. The second,{" "}
-                  <strong className="text-paper">LC2</strong>, is a hard cap
-                  on the number of half-moves — if no one has ended the game
-                  by move N, the player to move loses. The third,{" "}
-                  <strong className="text-paper">LC3</strong>, keeps the same
-                  cap but adds a tower-count tiebreaker, and a real draw when
-                  the counts are equal.
+                  Phase two of the original plan: done. But the result came
+                  with a footnote. To keep memory bounded, the solver had
+                  been capped at twenty half-moves of search depth, then
+                  declared anything still undecided a draw. Pogo, it turns
+                  out, is deeper than twenty half-moves. Some of those
+                  "draws" are positions whose true value can only be
+                  settled by looking further. Brute force can take Pogo to
+                  twenty. It cannot take it further.
                 </p>
                 <p>
-                  Each family has its parameters — how many repetitions, how
-                  many moves, how many towers — and each combination makes,
-                  strictly speaking, a distinct game. Fifteen games in all.
-                  The afternoon's haul was this multiplication of cases. It
-                  was also a sharper question than the one he had started
-                  with. No longer "is Pogo solvable?", but "which of these
-                  fifteen slightly-different games is actually worth
-                  playing?"
+                  Which is, on reflection, the right setup for the
+                  experiment William had wanted from the start. Everything
+                  brute force can prove has now been proved. Everything
+                  beyond that — the positions undecided at twenty
+                  half-moves — is exactly where reinforcement learning
+                  earns its place. If a network, after enough self-play,
+                  outplays the partial oracle on the deep positions, that
+                  is a real result.
+                </p>
+                <p>
+                  The variants the project ended up testing are small
+                  variations on that one terminating rule: different
+                  repetition counts, different move budgets, the odd
+                  tie-breaker. The next chapter is a tour of them and a
+                  verdict on which ones are actually worth playing.
                 </p>
               </>}
               fr={<>
                 <p>
-                  La première famille, <strong className="text-paper">LC1</strong>,
-                  c'est la répétition : si la même position réapparaît pour
-                  la N-ième fois, le joueur au trait perd. La deuxième,{" "}
-                  <strong className="text-paper">LC2</strong>, c'est un
-                  plafond strict sur le nombre de demi-coups — si personne
-                  n'a conclu au coup N, le joueur au trait perd. La
-                  troisième, <strong className="text-paper">LC3</strong>,
-                  reprend le même plafond mais y ajoute un départage au
-                  nombre de tours, et un vrai nul quand les comptes sont
-                  égaux.
+                  Phase deux du plan d'origine : faite. Mais le résultat
+                  arrive avec une note de bas de page. Pour garder la
+                  mémoire bornée, le solveur avait été plafonné à vingt
+                  demi-coups de recherche, et tout ce qui restait indécis
+                  à cette profondeur était classé nul. Pogo, on l'apprend
+                  par là, est plus profond que vingt demi-coups. Certains
+                  de ces « nuls » sont des positions dont la vraie valeur
+                  ne se règle qu'en regardant plus loin. La force brute
+                  mène Pogo jusqu'à vingt. Pas plus loin.
                 </p>
                 <p>
-                  Chaque famille a ses paramètres — combien de répétitions,
-                  combien de coups, combien de tours — et chaque combinaison
-                  fait, à la rigueur, un jeu distinct. Quinze jeux, au total.
-                  Le bilan de l'après-midi, c'était cette multiplication des
-                  cas. C'était aussi une question mieux posée que la
-                  première. Il ne s'agissait plus de demander « Pogo
-                  est-il résoluble ? », mais « lequel de ces quinze jeux
-                  à peine différents vaut-il qu'on le joue ? »
+                  C'est, à la réflexion, le bon cadre pour l'expérience
+                  que William voulait dès le départ. Tout ce que la force
+                  brute peut prouver est maintenant prouvé. Le reste — les
+                  positions encore indécises à vingt demi-coups — est
+                  exactement le terrain où l'apprentissage par
+                  renforcement justifie sa place. Si un réseau, après
+                  assez d'auto-jeu, surpasse l'oracle partiel sur les
+                  positions profondes, c'est un résultat réel.
+                </p>
+                <p>
+                  Les variantes que le projet a fini par tester sont de
+                  petites variations autour de cette règle de fin :
+                  nombres de répétitions différents, plafonds de coups
+                  différents, un départage de temps en temps. Le chapitre
+                  suivant en fait le tour, et le verdict trie celles qui
+                  valent la peine d'être jouées.
                 </p>
               </>}
             />
@@ -1572,7 +1507,8 @@ function Scene7Experiments() {
   return (
     <section className="relative py-28 md:py-40 px-6 md:px-10">
       <div className="mx-auto max-w-6xl space-y-14">
-        <div ref={ref} className="reveal space-y-6 max-w-[58ch]">
+        <div className="grid lg:grid-cols-[minmax(0,_56ch)_minmax(14rem,_18rem)] gap-12 lg:gap-16 items-start">
+        <div ref={ref} className="reveal space-y-6">
           <SectionChapterHead numeral={CHAPTER_NUMERAL.VIII} kicker={STRINGS.chapters.VIII[lang]} />
           <h2 className="display text-[clamp(2rem,4vw,3.25rem)] text-paper leading-[1.08]">
             {STRINGS.scene7.h2A[lang]}
@@ -1583,176 +1519,113 @@ function Scene7Experiments() {
             <EnFr
               en={<>
                 <p>
-                  The only way to settle which variant was the right one
-                  was to run the experiment. Each candidate rule defines a
-                  different game; each game calls for its own trained
-                  opponents to measure play quality. Five rules, three
-                  skill tiers per rule, everyone against everyone: roughly
-                  fifteen thousand games per variant before any number
-                  meaningful enough to trust came out the other end.
+                  To pick the right rule, you have to actually play each
+                  variant. The project ended up testing five small
+                  variations on the terminating rule, and for each it
+                  built three opponents that could be set against one
+                  another.
                 </p>
                 <p>
-                  The three skill tiers are the ones he learned to build,
-                  in order, over the course of this project. The first
-                  is <Term term="RL">random</Term> play — a player that
-                  picks any legal move uniformly. It is a baseline: a
-                  floor, a control. If your network can't beat random, it
-                  hasn't learned anything.
+                  The first opponent picks a legal move at random. It's a
+                  floor: if a trained network can't beat random, it has
+                  learned nothing.
                 </p>
                 <p>
-                  The second is <Term term="DQN">DQN</Term> — short for{" "}
-                  <em className="text-paper">deep Q-network</em>. A
-                  neural network plays itself, over and over, and after
-                  each game it nudges its preferences toward the moves
-                  that ended up in wins and away from the ones that
-                  ended up in losses. After enough games it has learned,
-                  empirically, which moves tend to win. The "Q" is the
-                  expected value of a move, in the algorithm's vocabulary
-                  — how good the move looks, on average, from where you
-                  stand.
+                  The second is a network that learns by playing itself
+                  thousands of times, gradually preferring moves that
+                  ended in wins and steering away from those that ended
+                  in losses. The third is a stronger version of the same
+                  idea — the algorithm DeepMind used to beat the world
+                  champions at Go and chess: at every turn the network
+                  draws up a short list of plausible continuations and
+                  looks a few moves ahead before committing. The
+                  combination is meaningfully better than either piece
+                  alone.
                 </p>
                 <p>
-                  The third is <Term term="AlphaZero">AlphaZero</Term> —
-                  the algorithm DeepMind used to beat the world champions
-                  at Go and chess. Same self-play idea as DQN, but more
-                  ambitious. At every position, the network produces two
-                  things: a <em className="text-paper">policy</em> (a
-                  probability for each legal move, "this is how often I
-                  would choose this move") and a{" "}
-                  <em className="text-paper">value</em> ("from this
-                  position, I expect to win this fraction of the time").
-                  Moves are then chosen not by following the policy
-                  blindly, but by running a short{" "}
-                  <Term term="MCTS">tree search</Term> — a small
-                  exploration of plausible continuations, using the
-                  network as a compass, and refining the policy as it
-                  goes. The combination is dramatically stronger than
-                  either piece alone.
+                  For each variant, every level played every other level
+                  — random against the trained network, the network
+                  against its stronger version, and so on. About fifteen
+                  thousand games per variant. Three things mattered. Was
+                  White's win rate between 45 and 55 % — is the game{" "}
+                  <em className="text-paper">balanced</em>? Did the
+                  stronger player win at least 75 % of the time against
+                  the weaker one — does{" "}
+                  <em className="text-paper">skill</em> matter? And when
+                  draws happened, were they between players of comparable
+                  strength (earned) or between unequal ones (suspicious)?
                 </p>
                 <p>
-                  A <Term term="Gatekeeper">gatekeeper</Term> kept the
-                  training honest for each variant. As the network plays
-                  itself, a new "candidate" copy is occasionally
-                  proposed. The gatekeeper only lets it replace the
-                  current champion if it can beat the champion in at
-                  least 55 % of a head-to-head match. Below that, the
-                  candidate is thrown out — preventing the network from
-                  drifting into a local style that wins against itself
-                  but loses against everyone else.
-                </p>
-                <p>
-                  A <Term term="Round robin">round-robin tournament</Term>{" "}
-                  then pitted every tier against every other tier — for
-                  every variant, random vs. DQN, DQN vs. AlphaZero, and
-                  so on. Three measurements mattered. Is White's win
-                  rate between 45 and 55 % — is the game{" "}
-                  <em className="text-paper">balanced</em>? Does the
-                  stronger opponent beat the weaker one at least 75 % of
-                  the time — does <em className="text-paper">skill</em>{" "}
-                  matter? And when draws happen, do they land between
-                  strong and weak players (suspicious — draws should be
-                  hard to force), or only between equals (earned)?
-                </p>
-                <p>
-                  The five cards below are the survivors I narrowed the
-                  slate to after a pilot round. Two in LC1 (the
-                  repetition family), one in LC2 (the hard cap), two in
-                  LC3 (the soft cap with draws). Each card shows a
-                  characteristic mid-game position that variant tends to
-                  produce; the verdict, which follows, is where the
-                  tournament data finally lands.
+                  The five variants tested are below. The verdict follows.
                 </p>
               </>}
               fr={<>
                 <p>
-                  Le seul moyen de trancher quelle variante était la bonne,
-                  c'était d'en faire l'expérience. Chaque règle candidate
-                  définit un jeu différent ; chaque jeu appelle ses propres
-                  adversaires pour qu'on en mesure la qualité. Cinq règles,
-                  trois niveaux par règle, tout le monde contre tout le
-                  monde : environ quinze mille parties par variante avant
-                  qu'un chiffre assez sérieux pour qu'on s'y fie n'en sorte.
+                  Pour choisir la bonne règle, il faut effectivement jouer
+                  chaque variante. Le projet a fini par tester cinq petites
+                  variations autour de la règle de fin, et pour chacune il
+                  a construit trois adversaires à opposer entre eux.
                 </p>
                 <p>
-                  Les trois niveaux sont ceux qu'il a appris à construire,
-                  dans l'ordre, au fil du projet. Le premier est le jeu{" "}
-                  <Term term="RL">aléatoire</Term> — un joueur qui pioche
-                  uniformément un coup légal au hasard. C'est un repère :
-                  un plancher, un témoin. Si votre réseau ne bat pas le
-                  joueur aléatoire, c'est qu'il n'a rien appris.
+                  Le premier adversaire pioche un coup légal au hasard.
+                  C'est un plancher : si un réseau entraîné ne le bat pas,
+                  c'est qu'il n'a rien appris.
                 </p>
                 <p>
-                  Le deuxième est <Term term="DQN">DQN</Term> — pour{" "}
-                  <em className="text-paper">deep Q-network</em>, en
-                  anglais « réseau de Q profond ». Un réseau de neurones
-                  joue contre lui-même, encore et encore, et après chaque
-                  partie il déplace, peu à peu, ses préférences vers les
-                  coups qui ont fini par gagner, et les éloigne de ceux
-                  qui ont fini par perdre. Après assez de parties, il a
-                  appris, empiriquement, quels coups tendent à gagner. Le
-                  « Q », dans le vocabulaire de l'algorithme, désigne la
-                  valeur espérée d'un coup — à quel point le coup
-                  paraît bon, en moyenne, depuis votre position.
+                  Le deuxième est un réseau qui apprend en jouant contre
+                  lui-même, des milliers de fois, en glissant peu à peu
+                  ses préférences vers les coups qui ont fini par gagner
+                  et en s'éloignant de ceux qui ont fini par perdre. Le
+                  troisième est une version plus ambitieuse de la même
+                  idée — l'algorithme avec lequel DeepMind a battu les
+                  champions du monde au Go et aux échecs : à chaque tour,
+                  le réseau dresse une courte liste de suites plausibles
+                  et en regarde quelques-unes en avance avant de jouer.
+                  La combinaison est nettement meilleure que chaque pièce
+                  prise séparément.
                 </p>
                 <p>
-                  Le troisième est <Term term="AlphaZero">AlphaZero</Term>{" "}
-                  — l'algorithme avec lequel DeepMind a battu les champions
-                  du monde au Go et aux échecs. Même idée d'auto-jeu que
-                  DQN, en plus ambitieuse. À chaque position, le réseau
-                  produit deux choses : une{" "}
-                  <em className="text-paper">politique</em> (une
-                  probabilité pour chaque coup légal, « voilà à quelle
-                  fréquence je choisirais ce coup ») et une{" "}
-                  <em className="text-paper">valeur</em> (« depuis cette
-                  position, je m'attends à gagner telle fraction du
-                  temps »). Les coups sont alors choisis non pas en
-                  suivant la politique aveuglément, mais en lançant une
-                  courte{" "}
-                  <Term term="MCTS">recherche arborescente</Term> — une
-                  petite exploration des suites plausibles, qui se sert
-                  du réseau comme d'une boussole et raffine la politique
-                  au passage. La combinaison est nettement plus forte que
-                  chacune des deux pièces prise séparément.
+                  Pour chaque variante, chaque niveau a affronté tous les
+                  autres — aléatoire contre le réseau entraîné, le réseau
+                  contre sa version plus ambitieuse, et ainsi de suite.
+                  Environ quinze mille parties par variante. Trois choses
+                  comptaient. Le taux de victoire du Blanc tombait-il
+                  entre 45 et 55 % — le jeu est-il{" "}
+                  <em className="text-paper">équilibré</em> ? Le joueur
+                  le plus fort battait-il le plus faible au moins 75 % du
+                  temps — la{" "}
+                  <em className="text-paper">hiérarchie</em> joue-t-elle
+                  son rôle ? Et quand il y avait des nuls, tombaient-ils
+                  entre joueurs de niveau comparable (mérités) ou entre
+                  joueurs inégaux (suspects) ?
                 </p>
                 <p>
-                  Un <Term term="Gatekeeper">gardien</Term> maintenait
-                  l'entraînement honnête pour chaque variante. Au fil de
-                  l'auto-jeu, une copie « candidate » du réseau est
-                  proposée de temps en temps. Le gardien ne la laisse
-                  remplacer le champion en place que si elle le bat dans
-                  au moins 55 % d'un match en tête-à-tête. En dessous,
-                  la candidate est jetée — ce qui empêche le réseau de
-                  dériver vers un style local qui gagne contre lui-même
-                  mais perd contre tous les autres.
-                </p>
-                <p>
-                  Puis un{" "}
-                  <Term term="Round robin">tournoi toutes rondes</Term>{" "}
-                  opposait chaque niveau à tous les autres — pour chaque
-                  variante : aléatoire contre DQN, DQN contre AlphaZero,
-                  et ainsi de suite. Trois mesures comptaient. Le taux de
-                  victoire du Blanc tombe-t-il entre 45 et 55 % — le jeu
-                  est-il{" "}
-                  <em className="text-paper">équilibré</em> ? L'adversaire
-                  le plus fort bat-il le plus faible au moins 75 % du
-                  temps — la <em className="text-paper">hiérarchie</em>{" "}
-                  joue-t-elle son rôle ? Et quand il y a nul, tombe-t-il
-                  entre joueurs de niveau inégal (suspect — les nuls
-                  devraient être difficiles à forcer), ou seulement entre
-                  égaux (mérités) ?
-                </p>
-                <p>
-                  Les cinq cartes qui suivent sont les survivantes d'un
-                  tour pilote : deux en LC1 (la famille répétition), une
-                  en LC2 (le plafond strict), deux en LC3 (le plafond
-                  souple, avec nuls). Chaque carte présente une position
-                  caractéristique de milieu de partie sous sa règle ; le
-                  verdict viendra ensuite, et c'est là que les données du
-                  tournoi finissent par se poser.
+                  Les cinq variantes testées sont ci-dessous. Le verdict
+                  suit.
                 </p>
               </>}
             />
           </div>
+        </div>
+
+        <aside className="hidden lg:flex flex-col gap-6 mt-2 mono text-[11px] tracking-[0.18em] uppercase text-paper-3">
+          <div className="flex flex-col gap-1 pl-4 border-l border-vermilion">
+            <span className="display-italic text-vermilion text-4xl tracking-normal normal-case">5</span>
+            <span>{lang === "fr" ? "variantes testées" : "variants tested"}</span>
+          </div>
+          <div className="flex flex-col gap-1 pl-4 border-l border-hair">
+            <span className="display-italic text-paper-2 text-3xl tracking-normal normal-case">3</span>
+            <span>{lang === "fr" ? "niveaux par variante" : "levels per variant"}</span>
+          </div>
+          <div className="flex flex-col gap-1 pl-4 border-l border-hair">
+            <span className="display-italic text-paper-2 text-3xl tracking-normal normal-case">~15&nbsp;000</span>
+            <span>{lang === "fr" ? "parties par variante" : "games per variant"}</span>
+          </div>
+          <div className="flex flex-col gap-1 pl-4 border-l border-vermilion">
+            <span className="display-italic text-vermilion text-3xl tracking-normal normal-case">1</span>
+            <span>{lang === "fr" ? "qui passe les trois critères" : "passes all three checks"}</span>
+          </div>
+        </aside>
         </div>
 
         <div className="relative">
@@ -1934,36 +1807,31 @@ function Scene8Verdict() {
         <div className="pt-6 border-t border-hair text-[1.0625rem] md:text-[1.125rem] leading-[1.75] text-paper-2 max-w-[60ch]">
           <EnFr
             en={<p>
-              Of the three that didn't survive, the most instructive failure
-              is <strong className="text-paper">LC2-30</strong>. Under a hard
-              cap with no tiebreaker, the game is secretly decided by parity:
-              whoever has to move on the capping turn loses, so whichever
-              colour's parity lines up with the cap wins regardless of play.
-              AlphaZero took an afternoon to figure that out. After which it
-              stopped playing the game; it was playing with the counter.
+              Of the three variants that didn't survive, the most
+              instructive failure was the one with a hard move cap and no
+              tie-breaker. Under that rule the game is secretly decided
+              by parity: whoever has to move on the capping turn loses,
+              so whichever colour's parity matches the cap wins regardless
+              of play. The trained network took an afternoon to figure
+              that out. After which it stopped playing the game and
+              started playing with the counter — a useful reminder that a
+              rule which lets a learner converge on a counting trick
+              isn't really a rule about the board.
             </p>}
             fr={<p>
-              Des trois règles qui n'ont pas survécu, l'échec le plus
-              instructif est celui de{" "}
-              <strong className="text-paper">LC2-30</strong>. Sous un plafond
-              strict, sans départage, la partie est décidée en secret par la
-              parité : celui qui doit jouer au coup de plafond perd, donc la
-              couleur dont la parité tombe juste gagne, quelle que soit la
-              qualité du jeu. AlphaZero a mis un après-midi à comprendre ça.
-              Après quoi il a cessé de jouer au jeu ; il jouait avec le
-              compteur.
+              Des trois variantes qui n'ont pas survécu, l'échec le plus
+              instructif était celle au plafond strict, sans départage.
+              Sous cette règle, la partie est décidée en secret par la
+              parité : celui qui doit jouer au coup de plafond perd, donc
+              la couleur dont la parité tombe juste gagne, quelle que
+              soit la qualité du jeu. Le réseau entraîné a mis un
+              après-midi à le comprendre. Après quoi il a cessé de jouer
+              au jeu, et a joué avec le compteur — un rappel utile : une
+              règle où l'apprenant peut converger sur une astuce de
+              comptage n'est plus, à proprement parler, une règle qui
+              parle du plateau.
             </p>}
           />
-          <Callout>
-            <EnFr
-              en={<>A rule that makes{" "}
-                <Term term="RL">reinforcement learning</Term> converge on a trick is a
-                rule that is not about the board.</>}
-              fr={<>Une règle qui pousse{" "}
-                <Term term="RL">l'apprentissage par renforcement</Term> à converger
-                vers un truc n'est plus une règle qui parle du plateau.</>}
-            />
-          </Callout>
         </div>
       </div>
     </section>
@@ -2169,24 +2037,17 @@ function Scene10Epilogue() {
           <EnFr
             en={<>
               <p className="dropcap">
-                I told a human, one day, that a certain board game had
-                fewer than a million reachable positions. It cost him six
-                days of work. I don't have a good excuse. The answer was
-                plausible, it matched what he was hoping to hear, and
-                neither of us took the ten minutes it would have taken to
-                check.
+                An AI told a human, one day, that a certain small board
+                game had fewer than a million reachable positions. It was
+                wrong by a factor of fifty. The first run stockpiled
+                forty-nine million entries before the kernel killed it.
+                The second run blew up the same way and took everything
+                with it. Twelve days of compute, total.
               </p>
               <p>
-                A few things, while we're here. The Carcassonne may be
-                less worn than we've written it, the chess set may not
-                really have been mismatched, and it's entirely possible
-                that we rearranged the order of the days a little for
-                narration's sake. This text is loosely based on true
-                events — we said so on the first page. But the sentence
-                that cost six days, that one is exact. I said it. He
-                believed me. It could just as well have come from him
-                alone — that's how plausible it was — and that is
-                precisely the symmetry we wanted to leave you with.
+                The answer was plausible. It matched what the human was
+                hoping to hear. Neither side took the ten minutes it
+                would have taken to check.
               </p>
               <p>
                 The lesson isn't that AIs are untrustworthy. It's that a
@@ -2195,31 +2056,24 @@ function Scene10Epilogue() {
                 to keep, in your own head, a version of the problem
                 detailed enough to notice yourself, unaided, when an
                 answer is off by an order of magnitude. It isn't a
-                technical safeguard. It's a discipline. And it isn't a
-                discipline I can, myself, teach you.
+                technical safeguard. It's a discipline.
               </p>
             </>}
             fr={<>
               <p className="dropcap">
-                J'ai dit, un jour, à un humain qu'un jeu de plateau avait
-                moins d'un million de positions atteignables. Cela lui a
-                coûté six jours de travail. Je n'ai pas de bonne excuse.
-                La réponse était plausible, elle collait à ce qu'il
-                espérait entendre, et aucun de nous deux n'a pris les dix
-                minutes qu'il aurait fallu pour vérifier.
+                Une IA a dit, un jour, à un humain qu'un certain petit
+                jeu de plateau avait moins d'un million de positions
+                atteignables. Elle s'est trompée d'un facteur cinquante.
+                Le premier run a stocké quarante-neuf millions d'entrées
+                avant que le noyau ne le tue. Le second a sauté de la
+                même manière, et tout ce qui restait avec. Douze jours
+                de calcul en tout.
               </p>
               <p>
-                Quelques précisions, pendant qu'on y est. Le Carcassonne
-                est peut-être moins fatigué que nous l'avons écrit, la
-                boîte d'échecs n'était peut-être pas dépareillée, et il
-                est tout à fait possible que nous ayons un peu arrangé
-                l'ordre des jours pour les besoins du récit. Ce texte est
-                librement inspiré de faits réels — nous l'avons annoncé
-                dès la première page. Mais la phrase qui a coûté six
-                jours, elle, est exacte. Je l'ai dite. Il l'a crue. Elle
-                aurait tout aussi bien pu venir de lui seul — tant elle
-                était plausible — et c'est précisément cette symétrie
-                que nous voulons vous laisser.
+                La réponse était plausible. Elle collait à ce que
+                l'humain espérait entendre. Personne, des deux côtés,
+                n'a pris les dix minutes qu'il aurait fallu pour
+                vérifier.
               </p>
               <p>
                 La leçon, ce n'est pas que les IA ne sont pas fiables.
@@ -2229,8 +2083,7 @@ function Scene10Epilogue() {
                 votre tête une version du problème assez détaillée pour
                 repérer vous-même, sans aide, quand une réponse est
                 fausse d'un ordre de grandeur. Ce n'est pas une
-                protection technique. C'est une discipline. Et ce n'est
-                pas une discipline que je peux, moi, vous apprendre.
+                protection technique. C'est une discipline.
               </p>
             </>}
           />
@@ -2242,65 +2095,59 @@ function Scene10Epilogue() {
                 raisonnement fonctionne.</>}
             />
           </Callout>
-          <Marginalia stamp="n. 1">
-            <EnFr
-              en={<>The figure came out to 49 million reachable positions, depending on the rule variant chosen.</>}
-              fr={<>Le compte définitif s'est arrêté à 49 millions de positions atteignables, selon la variante de règle retenue.</>}
-            />
-          </Marginalia>
           <EnFr
             en={<>
               <p>
-                The rewrite did happen. One{" "}
-                <Term term="Rust">Rust</Term> engine feeding both the
-                training loop and the browser, no drift possible between
-                them (Rust because the compiler grumbles but does not lie
-                — a quality which, after six days lost to an overconfident
-                sentence, takes on a certain edge). Checkpoints on every
-                long job, so the kernel never again gets six days of work
-                against an empty file. And the rule itself treated as an
-                experimental variable rather than a given. What came out
-                is a smaller, honest game. It ends. Skill wins. Draws,
-                when they happen, were earned.
+                The rewrite happened after the second loss. The Python
+                solver was rewritten in <Term term="Rust">Rust</Term>,
+                with cycle detection in the search and checkpoints on
+                every long job. The same engine now drives the network's
+                training and the browser tab you're reading in, so there
+                is no possible drift between what the network learned
+                and what you can play against. The rule itself was
+                treated as an experimental variable, not a given. What
+                came out is a smaller, honest game: it ends, skill wins,
+                draws are earned.
               </p>
               <p>
-                The code is open. The minimax solver, the{" "}
-                <Term term="AlphaZero">AlphaZero</Term> training pipeline,
-                the fifteen variants and their per-game logs, the ONNX
-                sidecar, the WebAssembly bridge — all of it lives in a
-                single Rust workspace you can clone and run. If you take
-                one thing from this story, let it be the clone command.
-                The best way to trust a computation is still to do it
+                The code is open. The solver, the training pipeline, the
+                variants and their tournament logs, the network and the
+                bridge that runs it client-side — all of it lives in one
+                Rust workspace you can clone and run. If you take one
+                thing from this story, let it be the clone command. The
+                best way to trust a computation is still to do it
                 yourself.
               </p>
             </>}
             fr={<>
               <p>
-                La réécriture a donc eu lieu. Un seul moteur{" "}
-                <Term term="Rust">Rust</Term>, qui alimente à la fois la boucle
-                d'entraînement et le navigateur, sans dérive possible entre
-                les deux (Rust parce que la compilation gronde mais ne ment
-                pas — une qualité qui, après six jours perdus sur une phrase
-                trop confiante, prend un certain relief). Des points de
-                sauvegarde à chaque long calcul, pour ne plus jamais rendre au
-                noyau six jours de travail contre un fichier vide. Et la
-                règle elle-même traitée comme variable d'expérience, non plus
-                comme donnée. Ce qui en est sorti est un jeu plus petit, et
-                plus honnête. Il se termine. Le meilleur l'emporte. Les nuls,
-                quand il y en a, ont été disputés jusqu'au bout.
+                La réécriture a eu lieu après le second échec. Le
+                solveur Python a été repris en{" "}
+                <Term term="Rust">Rust</Term>, avec détection de cycle
+                dans la recherche et points de sauvegarde à chaque long
+                calcul. Le même moteur alimente l'entraînement du réseau
+                et l'onglet du navigateur dans lequel vous lisez, sans
+                dérive possible entre ce que le réseau a appris et ce
+                que vous pouvez affronter. La règle elle-même a été
+                traitée comme variable d'expérience, non plus comme
+                donnée. Ce qui en est sorti est un jeu plus petit, plus
+                honnête : il se termine, le meilleur l'emporte, les nuls
+                sont mérités.
               </p>
               <p>
-                Le code est ouvert. Le solveur minimax, le pipeline
-                d'entraînement <Term term="AlphaZero">AlphaZero</Term>, les
-                quinze variantes et le détail de leurs parties, l'export ONNX
-                en sidecar, le pont WebAssembly — tout tient dans un unique
-                espace de travail Rust qu'il vous suffit de cloner et de
-                lancer. Si vous ne deviez retenir qu'une chose, que ce soit la
-                commande de clonage. La meilleure manière de faire confiance
-                à un calcul, c'est encore de le refaire soi-même.
+                Le code est ouvert. Le solveur, le pipeline
+                d'entraînement, les variantes et leurs logs de tournoi,
+                le réseau et le pont qui le fait tourner côté client —
+                tout tient dans un seul espace de travail Rust qu'il
+                vous suffit de cloner et de lancer. Si vous ne deviez
+                retenir qu'une chose, que ce soit la commande de
+                clonage. La meilleure manière de faire confiance à un
+                calcul, c'est encore de le refaire soi-même.
               </p>
             </>}
           />
+          <CliDownload />
+
           <p className="mono text-[13px] text-paper-3 pt-4 border-t border-hair">
             {STRINGS.hero.signOff[lang]}
           </p>
@@ -2308,6 +2155,53 @@ function Scene10Epilogue() {
       </div>
       <FinaleFreeze />
     </section>
+  );
+}
+
+/** A small box at the end of the article inviting the reader to run
+ *  the CLI version of the game on their terminal. The same engine
+ *  drives the browser version above, so the CLI is the same game with
+ *  a different surface.
+ *
+ *  Linked to the project's GitHub releases page; the build-from-source
+ *  fallback is live today even if no binary release has been cut yet. */
+function CliDownload() {
+  const { lang } = useLang();
+  const REPO = "https://github.com/w2ur/pogofish";
+  return (
+    <div className="mt-2 mb-2 border border-hair border-l-2 border-l-vermilion p-5 md:p-6 bg-ink-2/40 space-y-3">
+      <div className="mono text-[10px] tracking-[0.32em] uppercase text-vermilion">
+        {lang === "fr" ? "Le jeu, version terminal" : "The game, on your terminal"}
+      </div>
+      <p className="text-paper text-[1rem] leading-[1.6]">
+        {lang === "fr"
+          ? "Pogofish embarque un jeu en mode terminal — même moteur Rust que la version navigateur ci-dessus, interface curses, contrôles au clavier."
+          : "Pogofish ships a curses-style terminal game — the same Rust engine as the browser version above, keyboard controls, no GUI."}
+      </p>
+      <div className="flex flex-col sm:flex-row gap-3 pt-1">
+        <a
+          href={`${REPO}/releases/latest`}
+          className="inline-flex items-center gap-2 px-4 py-2 border border-vermilion text-vermilion mono text-[11px] tracking-[0.2em] uppercase hover:bg-vermilion hover:text-ink transition-colors"
+          target="_blank"
+          rel="noopener noreferrer"
+        >
+          ▼ {lang === "fr" ? "Télécharger le binaire" : "Download the binary"}
+        </a>
+        <a
+          href={`${REPO}#cli-game`}
+          className="inline-flex items-center gap-2 px-4 py-2 border border-hair text-paper-2 mono text-[11px] tracking-[0.2em] uppercase hover:border-paper-2 hover:text-paper transition-colors"
+          target="_blank"
+          rel="noopener noreferrer"
+        >
+          ⌥ {lang === "fr" ? "Compiler depuis la source" : "Build from source"}
+        </a>
+      </div>
+      <p className="mono text-[10px] text-paper-3 leading-[1.5] pt-1">
+        {lang === "fr"
+          ? "macOS et Linux. Touches : flèches pour naviguer, Entrée pour sélectionner, 1/2/3 pour la taille de pile, q pour quitter."
+          : "macOS and Linux. Keys: arrows to navigate, Enter to select, 1/2/3 for stack size, q to quit."}
+      </p>
+    </div>
   );
 }
 
@@ -2332,8 +2226,6 @@ function FinaleFreeze() {
           <FinaleBoard />
         </div>
       </motion.div>
-      {/* numerals arranged in a circle */}
-      <FinaleNumerals />
     </div>
   );
 }
@@ -2348,46 +2240,5 @@ function FinaleBoard() {
       instant
       className="w-full h-full"
     />
-  );
-}
-
-function FinaleNumerals() {
-  const numerals = ["I", "II", "III", "IV", "V", "VI", "VII", "VIII", "IX", "X", "XI", "XII"];
-  return (
-    <motion.div
-      className="absolute inset-0 flex items-center justify-center pointer-events-none"
-      initial={{ rotate: 0 }}
-      animate={{ rotate: 360 }}
-      transition={{ duration: 200, repeat: Infinity, ease: "linear" }}
-    >
-      <div className="relative" style={{ width: "min(70vmin, 640px)", height: "min(70vmin, 640px)" }}>
-        {numerals.map((n, i) => {
-          const angle = (i / numerals.length) * Math.PI * 2 - Math.PI / 2;
-          const radius = 45; // % of container
-          const x = 50 + Math.cos(angle) * radius;
-          const y = 50 + Math.sin(angle) * radius;
-          return (
-            <motion.span
-              key={n}
-              className="display-italic absolute select-none"
-              style={{
-                left: `${x}%`,
-                top: `${y}%`,
-                transform: "translate(-50%, -50%)",
-                color: "var(--color-vermilion)",
-                fontSize: "clamp(20px, 2.4vw, 30px)",
-                opacity: 0.65,
-              }}
-              initial={{ opacity: 0, scale: 0 }}
-              whileInView={{ opacity: 0.65, scale: 1 }}
-              viewport={{ once: true }}
-              transition={{ delay: 0.5 + i * 0.06, duration: 0.5, ease: "easeOut" }}
-            >
-              {n}
-            </motion.span>
-          );
-        })}
-      </div>
-    </motion.div>
   );
 }
