@@ -1,16 +1,32 @@
-import { useMemo, useState } from "react";
+import {
+  useEffect,
+  useMemo,
+  useRef,
+  useState,
+  type PointerEvent as ReactPointerEvent,
+} from "react";
 import { motion } from "motion/react";
+import {
+  forceCenter,
+  forceCollide,
+  forceLink,
+  forceManyBody,
+  forceSimulation,
+  type Simulation,
+  type SimulationLinkDatum,
+  type SimulationNodeDatum,
+} from "d3-force";
 import { GLOSSARY } from "./data";
 import { useLang } from "./LangContext";
 import { STRINGS } from "./i18n";
+import { usePrefersReducedMotion } from "./usePrefersReducedMotion";
 
 /**
- * The glossary as an interactive constellation. Each term is a node positioned
- * inside its category cluster (AI / Infra / Pogo), connected by faint edges
- * to conceptually-related terms. Hovering a node lights it up plus its
- * neighbours, and reveals the long definition in a side panel.
+ * The glossary as an interactive force-directed constellation. Each term is a
+ * node, edges are conceptual relationships, and a d3-force simulation pulls
+ * related terms together. Reader can drag a node — its neighbours follow.
  *
- * Replaces the previous three-column list. Last visual moment of the article.
+ * Replaces the previous spiral placement. Last visual moment of the article.
  */
 
 type TermKey = string;
@@ -39,94 +55,238 @@ const EDGES: Edge[] = [
   ["Minimax", "RL"],
 ];
 
-// Deterministic golden-spiral placement inside a cluster.
-function spiralPositions(
-  cx: number,
-  cy: number,
-  count: number,
-  rmin: number,
-  rmax: number,
-): { x: number; y: number }[] {
-  const phi = Math.PI * (3 - Math.sqrt(5));
-  return Array.from({ length: count }, (_, i) => {
-    const t = (i + 0.5) / count;
-    const r = rmin + (rmax - rmin) * Math.sqrt(t);
-    const angle = i * phi + 0.7; // small offset so first node isn't right of center
-    return { x: cx + r * Math.cos(angle), y: cy + r * Math.sin(angle) };
-  });
-}
+const VIEW_W = 1600;
+const VIEW_H = 900;
 
-interface NodeData {
+// Cluster anchors used for initial node placement (kept from the old spiral
+// layout so the simulation starts in a recognisable shape and doesn't drift
+// into a single blob during the first few ticks).
+const CLUSTERS = {
+  AI: { cx: 560, cy: 470, r: 240 },
+  Infra: { cx: 1280, cy: 270, r: 130 },
+  Pogo: { cx: 1280, cy: 720, r: 120 },
+} as const;
+
+interface SimNode extends SimulationNodeDatum {
   term: string;
   label: string;
   group: "AI" | "Infra" | "Pogo";
-  x: number;
-  y: number;
   short: string;
   long: string;
+  degree: number;
 }
 
-function useNodes(lang: "en" | "fr"): { nodes: NodeData[]; edges: Edge[] } {
-  return useMemo(() => {
-    const byGroup = {
-      AI: GLOSSARY.filter((e) => e.group === "AI"),
-      Infra: GLOSSARY.filter((e) => e.group === "Infra"),
-      Pogo: GLOSSARY.filter((e) => e.group === "Pogo"),
+type SimLink = SimulationLinkDatum<SimNode>;
+
+interface BuiltGraph {
+  nodes: SimNode[];
+  links: SimLink[];
+  edges: Edge[];
+  degreeByTerm: Map<TermKey, number>;
+}
+
+function buildGraph(lang: "en" | "fr"): BuiltGraph {
+  // Compute degree once from EDGES so node size scales with connectivity.
+  const degreeByTerm = new Map<TermKey, number>();
+  for (const [a, b] of EDGES) {
+    degreeByTerm.set(a, (degreeByTerm.get(a) ?? 0) + 1);
+    degreeByTerm.set(b, (degreeByTerm.get(b) ?? 0) + 1);
+  }
+
+  const phi = Math.PI * (3 - Math.sqrt(5));
+  const groupCounts = { AI: 0, Infra: 0, Pogo: 0 };
+  const groupTotals = {
+    AI: GLOSSARY.filter((e) => e.group === "AI").length,
+    Infra: GLOSSARY.filter((e) => e.group === "Infra").length,
+    Pogo: GLOSSARY.filter((e) => e.group === "Pogo").length,
+  };
+
+  const nodes: SimNode[] = GLOSSARY.map((entry) => {
+    const g = entry.group;
+    const total = groupTotals[g];
+    const i = groupCounts[g]++;
+    const t = (i + 0.5) / total;
+    const r = CLUSTERS[g].r * Math.sqrt(t);
+    const angle = i * phi + 0.7;
+    const label = lang === "fr" && entry.termFr ? entry.termFr : entry.term;
+    return {
+      term: entry.term,
+      label,
+      group: g,
+      short: entry.short[lang],
+      long: entry.long[lang],
+      degree: degreeByTerm.get(entry.term) ?? 0,
+      x: CLUSTERS[g].cx + r * Math.cos(angle),
+      y: CLUSTERS[g].cy + r * Math.sin(angle),
     };
-    // Cluster centers in a 1600x900 viewBox
-    const clusters = {
-      AI: { cx: 560, cy: 470, rmin: 130, rmax: 360 },
-      Infra: { cx: 1280, cy: 270, rmin: 60, rmax: 150 },
-      Pogo: { cx: 1280, cy: 720, rmin: 50, rmax: 130 },
-    };
-    const nodes: NodeData[] = [];
-    for (const g of ["AI", "Infra", "Pogo"] as const) {
-      const positions = spiralPositions(
-        clusters[g].cx,
-        clusters[g].cy,
-        byGroup[g].length,
-        clusters[g].rmin,
-        clusters[g].rmax,
-      );
-      byGroup[g].forEach((entry, i) => {
-        const label = lang === "fr" && entry.termFr ? entry.termFr : entry.term;
-        nodes.push({
-          term: entry.term,
-          label,
-          group: g,
-          x: positions[i]!.x,
-          y: positions[i]!.y,
-          short: entry.short[lang],
-          long: entry.long[lang],
-        });
-      });
-    }
-    return { nodes, edges: EDGES };
-  }, [lang]);
+  });
+
+  const links: SimLink[] = EDGES.map(([a, b]) => ({ source: a, target: b }));
+
+  return { nodes, links, edges: EDGES, degreeByTerm };
+}
+
+// Per-degree visual size. Scales 5.5 → ~12 across observed degrees (1–6).
+function radiusFor(degree: number, isActive: boolean, isNeighbour: boolean): number {
+  const base = 5.5 + Math.min(degree, 6) * 0.9;
+  if (isActive) return base + 5;
+  if (isNeighbour) return base + 2;
+  return base;
 }
 
 export function GlossaryConstellation() {
   const { lang } = useLang();
-  const { nodes, edges } = useNodes(lang);
+  const reducedMotion = usePrefersReducedMotion();
+
+  const graph = useMemo(() => buildGraph(lang), [lang]);
+
+  // Ref holds the live simulation + node objects (mutated in place by d3).
+  const simRef = useRef<Simulation<SimNode, SimLink> | null>(null);
+  const nodesRef = useRef<SimNode[]>(graph.nodes);
+  // Tick counter triggers re-render; positions are read from nodesRef.
+  const [, setTick] = useState(0);
+  const rafRef = useRef<number | null>(null);
+
   const [activeTerm, setActiveTerm] = useState<TermKey | null>(null);
+  const [hoverTerm, setHoverTerm] = useState<TermKey | null>(null);
+  const draggingRef = useRef<TermKey | null>(null);
+
+  // (Re)build the simulation whenever the graph changes (lang switch).
+  useEffect(() => {
+    nodesRef.current = graph.nodes;
+
+    const sim = forceSimulation<SimNode>(graph.nodes)
+      .force(
+        "link",
+        forceLink<SimNode, SimLink>(graph.links)
+          .id((n) => n.term)
+          .distance(80)
+          .strength(0.5),
+      )
+      .force("charge", forceManyBody<SimNode>().strength(-180))
+      .force("center", forceCenter(VIEW_W / 2, VIEW_H / 2))
+      .force("collide", forceCollide<SimNode>(28))
+      .stop();
+
+    if (reducedMotion) {
+      // Settle headlessly, then freeze — no live ticking, no drag heating.
+      for (let i = 0; i < 100; i++) sim.tick();
+      setTick((t) => t + 1);
+      simRef.current = sim;
+      return () => {
+        sim.stop();
+      };
+    }
+
+    // Pre-settle a chunk so first paint isn't a chaotic explosion.
+    for (let i = 0; i < 100; i++) sim.tick();
+
+    let running = true;
+    sim.alpha(0.4).restart();
+    sim.on("tick", () => {
+      // Keep nodes inside the viewBox.
+      for (const n of nodesRef.current) {
+        if (n.x === undefined || n.y === undefined) continue;
+        n.x = Math.max(40, Math.min(VIEW_W - 40, n.x));
+        n.y = Math.max(40, Math.min(VIEW_H - 40, n.y));
+      }
+      // Batch React updates onto a single rAF so we re-render at most once
+      // per frame regardless of d3's tick cadence.
+      if (running && rafRef.current === null) {
+        rafRef.current = requestAnimationFrame(() => {
+          rafRef.current = null;
+          setTick((t) => (t + 1) % 1_000_000);
+        });
+      }
+    });
+
+    simRef.current = sim;
+
+    return () => {
+      running = false;
+      sim.on("tick", null);
+      sim.stop();
+      if (rafRef.current !== null) {
+        cancelAnimationFrame(rafRef.current);
+        rafRef.current = null;
+      }
+    };
+  }, [graph, reducedMotion]);
 
   const nodeByTerm = useMemo(() => {
-    const m = new Map<TermKey, NodeData>();
-    for (const n of nodes) m.set(n.term, n);
+    const m = new Map<TermKey, SimNode>();
+    for (const n of graph.nodes) m.set(n.term, n);
     return m;
-  }, [nodes]);
+  }, [graph]);
 
-  const active = activeTerm ? nodeByTerm.get(activeTerm) : null;
+  const focusTerm = activeTerm ?? hoverTerm;
+  const active = focusTerm ? nodeByTerm.get(focusTerm) : null;
 
   const neighbours = useMemo(() => {
-    if (!activeTerm) return new Set<TermKey>();
+    if (!focusTerm) return new Set<TermKey>();
     const set = new Set<TermKey>();
-    for (const [a, b] of edges) {
-      if (a === activeTerm) set.add(b);
-      if (b === activeTerm) set.add(a);
+    for (const [a, b] of graph.edges) {
+      if (a === focusTerm) set.add(b);
+      if (b === focusTerm) set.add(a);
     }
     return set;
-  }, [activeTerm, edges]);
+  }, [focusTerm, graph.edges]);
+
+  // --- drag handlers (pointer events for touch + mouse) -------------------
+
+  const onPointerDown = (term: TermKey) => (event: ReactPointerEvent<SVGGElement>) => {
+    if (reducedMotion) return;
+    const node = nodeByTerm.get(term);
+    const sim = simRef.current;
+    if (!node || !sim) return;
+
+    draggingRef.current = term;
+    setHoverTerm(term);
+
+    node.fx = node.x;
+    node.fy = node.y;
+    sim.alphaTarget(0.3).restart();
+
+    // Capture pointer so we keep getting move events even if it leaves the node.
+    (event.currentTarget as Element).setPointerCapture(event.pointerId);
+    event.stopPropagation();
+  };
+
+  const onPointerMove = (event: ReactPointerEvent<SVGGElement>) => {
+    const term = draggingRef.current;
+    if (!term) return;
+    const node = nodeByTerm.get(term);
+    if (!node) return;
+
+    const svg = (event.currentTarget as SVGGElement).ownerSVGElement;
+    if (!svg) return;
+    const pt = svg.createSVGPoint();
+    pt.x = event.clientX;
+    pt.y = event.clientY;
+    const ctm = svg.getScreenCTM();
+    if (!ctm) return;
+    const local = pt.matrixTransform(ctm.inverse());
+    node.fx = local.x;
+    node.fy = local.y;
+  };
+
+  const onPointerUp = (event: ReactPointerEvent<SVGGElement>) => {
+    const term = draggingRef.current;
+    if (!term) return;
+    const node = nodeByTerm.get(term);
+    const sim = simRef.current;
+    if (node) {
+      node.fx = null;
+      node.fy = null;
+    }
+    if (sim) sim.alphaTarget(0);
+    draggingRef.current = null;
+    try {
+      (event.currentTarget as Element).releasePointerCapture(event.pointerId);
+    } catch {
+      // ignore — pointer may already have been released
+    }
+  };
 
   return (
     <section className="relative py-28 md:py-36 px-6 md:px-10 border-t border-hair">
@@ -141,15 +301,15 @@ export function GlossaryConstellation() {
           <p className="text-paper-2">{STRINGS.scene11.intro[lang]}</p>
           <p className="mono text-[10px] tracking-[0.28em] uppercase text-paper-3 mt-4">
             {lang === "fr"
-              ? "Survolez un terme — la constellation l'éclaire avec ses voisins."
-              : "Hover a term — the constellation lights it up with its neighbours."}
+              ? "Glissez un terme — la constellation suit. Survol pour révéler les liens."
+              : "Drag a term — the constellation follows. Hover to reveal the links."}
           </p>
         </div>
 
         <div className="relative">
           <svg
-            viewBox="0 0 1600 900"
-            className="w-full h-auto"
+            viewBox={`0 0 ${VIEW_W} ${VIEW_H}`}
+            className="w-full h-auto select-none touch-none"
             style={{ maxHeight: "min(72vh, 720px)" }}
           >
             <defs>
@@ -165,103 +325,111 @@ export function GlossaryConstellation() {
                 <stop offset="0%" stopColor="rgba(236,226,203,0.05)" />
                 <stop offset="70%" stopColor="rgba(236,226,203,0)" />
               </radialGradient>
+              <filter id="node-glow" x="-50%" y="-50%" width="200%" height="200%">
+                <feGaussianBlur stdDeviation="6" result="blur" />
+                <feMerge>
+                  <feMergeNode in="blur" />
+                  <feMergeNode in="SourceGraphic" />
+                </feMerge>
+              </filter>
             </defs>
 
-            {/* cluster halos */}
+            {/* cluster halos — rendered around the (now drifting) cluster
+                centres so the AI/Infra/Pogo backdrop still reads. */}
             <circle cx="540" cy="470" r="320" fill="url(#cluster-glow-ai)" />
             <circle cx="1240" cy="280" r="180" fill="url(#cluster-glow-infra)" />
             <circle cx="1240" cy="700" r="140" fill="url(#cluster-glow-pogo)" />
 
             {/* edges */}
-            {edges.map(([a, b], i) => {
+            {graph.edges.map(([a, b], i) => {
               const na = nodeByTerm.get(a);
               const nb = nodeByTerm.get(b);
-              if (!na || !nb) return null;
+              if (!na || !nb || na.x === undefined || nb.x === undefined) return null;
               const isHot =
-                activeTerm != null &&
-                (a === activeTerm || b === activeTerm);
+                focusTerm != null && (a === focusTerm || b === focusTerm);
               return (
                 <line
                   key={`e-${i}`}
                   x1={na.x}
-                  y1={na.y}
+                  y1={na.y!}
                   x2={nb.x}
-                  y2={nb.y}
-                  stroke={isHot ? "var(--color-vermilion)" : "rgba(141,132,114,0.28)"}
-                  strokeWidth={isHot ? 1.4 : 0.8}
+                  y2={nb.y!}
+                  stroke={isHot ? "var(--color-vermilion)" : "rgba(141,132,114,0.22)"}
+                  strokeWidth={isHot ? 1.6 : 0.5}
                   style={{ transition: "stroke 240ms ease, stroke-width 240ms ease" }}
                 />
               );
             })}
 
-            {/* nodes — each one floats gently with its own deterministic
-                amplitude/period so the whole constellation feels alive. */}
-            {nodes.map((n, idx) => {
-              const isActive = n.term === activeTerm;
+            {/* nodes */}
+            {graph.nodes.map((n) => {
+              const isActive = n.term === focusTerm;
               const isNeighbour = neighbours.has(n.term);
-              const dimmed = activeTerm != null && !isActive && !isNeighbour;
+              const dimmed = focusTerm != null && !isActive && !isNeighbour;
               const colour =
                 n.group === "AI"
                   ? "rgba(217,79,44,1)"
                   : n.group === "Infra"
                   ? "rgba(180,160,120,1)"
                   : "rgba(236,226,203,1)";
-              const period = 5 + (idx % 5) * 0.7;
-              const phase = idx * 0.37;
+              const r = radiusFor(n.degree, isActive, isNeighbour);
               return (
-                <motion.g
+                <g
                   key={n.term}
-                  onMouseEnter={() => setActiveTerm(n.term)}
-                  onMouseLeave={() => setActiveTerm(null)}
+                  onMouseEnter={() => setHoverTerm(n.term)}
+                  onMouseLeave={() => {
+                    if (draggingRef.current !== n.term) setHoverTerm((t) => (t === n.term ? null : t));
+                  }}
                   onFocus={() => setActiveTerm(n.term)}
-                  onBlur={() => setActiveTerm(null)}
+                  onBlur={() => setActiveTerm((t) => (t === n.term ? null : t))}
+                  onPointerDown={onPointerDown(n.term)}
+                  onPointerMove={onPointerMove}
+                  onPointerUp={onPointerUp}
+                  onPointerCancel={onPointerUp}
                   tabIndex={0}
-                  animate={{
-                    y: [0, -3, 1, -2, 0],
-                  }}
-                  transition={{
-                    duration: period,
-                    repeat: Infinity,
-                    ease: "easeInOut",
-                    delay: phase,
-                  }}
                   style={{
-                    cursor: "pointer",
+                    cursor: reducedMotion ? "pointer" : "grab",
                     opacity: dimmed ? 0.32 : 1,
                     transition: "opacity 240ms ease",
                     outline: "none",
                   }}
                 >
                   <motion.circle
-                    cx={n.x}
-                    cy={n.y}
+                    cx={n.x ?? 0}
+                    cy={n.y ?? 0}
                     initial={false}
-                    animate={{
-                      r: isActive ? 11 : isNeighbour ? 8 : 5.5,
-                    }}
+                    animate={{ r }}
                     transition={{ type: "spring", stiffness: 260, damping: 22 }}
                     fill={colour}
+                    filter={isActive ? "url(#node-glow)" : undefined}
                     style={{
                       filter: isActive
-                        ? "drop-shadow(0 0 14px rgba(217,79,44,0.85))"
+                        ? undefined
                         : isNeighbour
                         ? "drop-shadow(0 0 8px rgba(217,79,44,0.45))"
                         : "drop-shadow(0 0 4px rgba(0,0,0,0.6))",
                     }}
                   />
                   <text
-                    x={n.x}
-                    y={n.y - 14}
+                    x={n.x ?? 0}
+                    y={(n.y ?? 0) - (r + 8)}
                     textAnchor="middle"
-                    fill={isActive ? "var(--color-paper)" : isNeighbour ? "var(--color-paper)" : "var(--color-paper-2)"}
+                    fill={
+                      isActive
+                        ? "var(--color-paper)"
+                        : isNeighbour
+                        ? "var(--color-paper)"
+                        : "var(--color-paper-2)"
+                    }
                     fontSize={isActive ? 18 : 13}
                     fontFamily="var(--font-display)"
                     fontStyle="italic"
                     style={{ transition: "font-size 240ms ease, fill 240ms ease, opacity 240ms ease" }}
+                    pointerEvents="none"
                   >
                     {n.label}
                   </text>
-                </motion.g>
+                </g>
               );
             })}
 
