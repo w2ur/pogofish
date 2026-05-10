@@ -122,43 +122,6 @@ export function Board({
       style={style}
       data-board-act={act}
     >
-      <defs>
-        {/* gradient on white pieces — driven by act tokens */}
-        <linearGradient id="pf-white" x1="0" y1="0" x2="0" y2="1">
-          <stop offset="0%" style={{ stopColor: "var(--board-piece-w-from)" }} />
-          <stop offset="100%" style={{ stopColor: "var(--board-piece-w-to)" }} />
-        </linearGradient>
-        {/* gradient on red pieces — driven by act tokens */}
-        <linearGradient id="pf-red" x1="0" y1="0" x2="0" y2="1">
-          <stop offset="0%" style={{ stopColor: "var(--board-piece-r-from)" }} />
-          <stop offset="100%" style={{ stopColor: "var(--board-piece-r-to)" }} />
-        </linearGradient>
-        {/* drop shadow */}
-        <filter id="pf-piece-shadow" x="-50%" y="-50%" width="200%" height="200%">
-          <feGaussianBlur in="SourceAlpha" stdDeviation="1.4" />
-          <feOffset dx="0" dy="2" result="offsetblur" />
-          <feComponentTransfer>
-            <feFuncA type="linear" slope="0.55" />
-          </feComponentTransfer>
-          <feMerge>
-            <feMergeNode />
-            <feMergeNode in="SourceGraphic" />
-          </feMerge>
-        </filter>
-        {/* cell inner highlight — driven by act tokens */}
-        <radialGradient id="pf-cell-glow" cx="50%" cy="0%" r="80%">
-          <stop offset="0%" style={{ stopColor: "var(--board-cell-highlight)" }} />
-          <stop offset="100%" stopColor="rgba(0,0,0,0)" />
-        </radialGradient>
-        {/* halo glow filter */}
-        <filter id="pf-vermilion-glow" x="-50%" y="-50%" width="200%" height="200%">
-          <feGaussianBlur stdDeviation="6" />
-          <feComponentTransfer>
-            <feFuncA type="linear" slope="0.7" />
-          </feComponentTransfer>
-        </filter>
-      </defs>
-
       {/* halo behind board — driven by act tokens */}
       <motion.circle
         cx={VIEW / 2}
@@ -358,34 +321,60 @@ function PieceSketch({ isWhite }: { isWhite: boolean }) {
   );
 }
 
-/** Act 2 — debug viz on a terminal screen. Phosphor-green ASCII boxes
- *  with the piece rendered as a single monospace letter. */
+/** Act 2 — debug viz on a terminal screen. Each piece is a flat phosphor
+ *  bracket the width of the disc, with a monospace W/R glyph inside. The
+ *  flat geometry matches the act-1/3 disc footprint so pieces stack on the
+ *  PIECE_TOP_HEIGHT (13px) spacing without their bboxes colliding. */
 function PieceAscii({ isWhite }: { isWhite: boolean }) {
-  const color = "var(--board-piece-r-from)"; // act-2 token resolves to phosphor green for both colors with a neutral mark
-  // We distinguish W vs R by the letter, not the color. Pure phosphor is
-  // act-2's unified accent — pieces are W/R glyphs, not coloured discs.
-  const fg = isWhite ? "var(--board-piece-w-from)" : color;
+  // Phosphor green is the act-2 accent; rust is the secondary voice.
+  // Use phosphor for W (the "live" voice — clean reading) and rust for R
+  // (the "regression" voice — the colour the article uses for failure).
+  const fg = isWhite ? "var(--color-vermilion)" : "var(--color-second)";
+  // Filled-with-tint background so the piece reads as a debug cell-with-value
+  // even at small zoom levels. Resolves through color-mix to a faint version
+  // of the foreground colour without needing a separate token.
+  const bg = isWhite
+    ? "color-mix(in oklab, var(--color-vermilion) 14%, transparent)"
+    : "color-mix(in oklab, var(--color-second) 18%, transparent)";
+  // Half-bracket dimensions: full width of a disc, height of the stack slot.
+  const halfW = PIECE_RX * 0.92;
+  const halfH = PIECE_RY * 1.6; // ~10.4px → fits the 13px stack spacing
   return (
     <g>
-      {/* tight square outline around the letter — like a debug bbox */}
+      {/* Filled bracket — a wide flat slot, same footprint as a disc */}
       <rect
-        x={-PIECE_RX * 0.55}
-        y={-PIECE_RX * 0.55}
-        width={PIECE_RX * 1.1}
-        height={PIECE_RX * 1.1}
-        fill="none"
+        x={-halfW}
+        y={-halfH}
+        width={halfW * 2}
+        height={halfH * 2}
+        rx={1.2}
+        fill={bg}
         stroke={fg}
-        strokeWidth={1.3}
-        opacity={0.7}
+        strokeWidth={1.1}
+        opacity={0.95}
       />
+      {/* Inset hairline marks at the corners — the "debug bracket" aesthetic */}
+      {[-1, 1].flatMap((sx) =>
+        [-1, 1].map((sy) => (
+          <g key={`${sx}_${sy}`} stroke={fg} strokeWidth={1.1} opacity={0.95}>
+            <line
+              x1={sx * (halfW - 1.5)}
+              y1={sy * halfH}
+              x2={sx * (halfW - 4.5)}
+              y2={sy * halfH}
+            />
+          </g>
+        )),
+      )}
       <text
         x={0}
-        y={2}
+        y={0.5}
         textAnchor="middle"
         dominantBaseline="middle"
         fontFamily="ui-monospace, SFMono-Regular, monospace"
         fontWeight={700}
-        fontSize={PIECE_RX * 0.95}
+        fontSize={halfH * 1.4}
+        letterSpacing="0.02em"
         fill={fg}
       >
         {isWhite ? "W" : "R"}

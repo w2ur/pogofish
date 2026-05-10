@@ -1,5 +1,6 @@
 import { useRef } from "react";
 import { motion } from "motion/react";
+import { fadeRight } from "./motion";
 import { useAct } from "./useAct";
 
 type Variant = "auto" | "pencil" | "terminal" | "footnote";
@@ -50,10 +51,7 @@ export function Marginalia({ children, variant = "auto", stamp, rotate }: Props)
   return (
     <motion.aside
       ref={ref}
-      initial={{ opacity: 0, x: 10 }}
-      whileInView={{ opacity: 1, x: 0 }}
-      viewport={{ once: true, margin: "-10%" }}
-      transition={{ duration: 0.7, ease: [0.16, 1, 0.3, 1] }}
+      {...fadeRight}
       className={`marginalia marginalia--${v}`}
       style={r ? { transform: `rotate(${r}deg)` } : undefined}
     >

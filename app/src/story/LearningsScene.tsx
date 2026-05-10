@@ -1,5 +1,6 @@
 import { useEffect, useMemo, useState } from "react";
 import { motion } from "motion/react";
+import { fadeUp } from "./motion";
 import { StoryBoard } from "./StoryBoard";
 import type { StoryBoard as StoryBoardData } from "./data";
 import { useReveal } from "./useReveal";
@@ -388,10 +389,7 @@ function HeatmapHero({ data }: { data: InsightsPayload }) {
   return (
     <motion.div
       ref={ref}
-      initial={{ opacity: 0, y: 24 }}
-      whileInView={{ opacity: 1, y: 0 }}
-      viewport={{ once: true, margin: "-10%" }}
-      transition={{ duration: 0.7, ease: [0.16, 1, 0.3, 1] }}
+      {...fadeUp}
       className="relative mb-16 mx-auto max-w-4xl grid md:grid-cols-[auto_1fr] gap-10 items-center px-4 py-10 border border-hair bg-ink-2/40"
     >
       {/* heatmap board */}

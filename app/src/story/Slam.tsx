@@ -125,27 +125,137 @@ export function WrongAnswerSlam() {
 
   if (reduced) {
     return (
-      <div
-        className="my-10 grid grid-cols-2 gap-8 border-t border-b border-hair py-8"
+      <section
         aria-label={
-          lang === "en" ? "Claimed versus actual" : "Annoncé contre réel"
+          lang === "en"
+            ? "The wrong answer — by a factor of fifty"
+            : "La mauvaise réponse — à un facteur cinquante"
         }
+        style={{ height: "auto" }}
+        className="py-12 md:py-16"
       >
-        <div>
-          <div className="kicker mb-2" style={{ color: "var(--color-paper-3)" }}>
-            {COPY.claimedLabel[lang]}
+        <div
+          style={{
+            borderTop: "1px solid var(--color-vermilion)",
+            borderBottom: "1px solid var(--color-vermilion)",
+          }}
+          className="flex flex-col items-center text-center px-6 py-10 gap-3"
+        >
+          {/* 1. Kicker — "the estimate." */}
+          <div
+            className="kicker"
+            style={{
+              color: "var(--color-paper-3)",
+              fontSize: "0.7rem",
+              letterSpacing: "0.28em",
+            }}
+          >
+            {COPY.caption[lang]}
           </div>
-          <div className="display text-[clamp(2rem,4vw,3rem)] text-paper-3 line-through decoration-vermilion decoration-[3px]">
-            1,000,000
+
+          {/* 2. Wrong number with diagonal strikethrough + × 50 stamp */}
+          <div className="relative inline-block">
+            <div
+              className="display"
+              style={{
+                fontSize: "clamp(3rem, 8vw, 7rem)",
+                lineHeight: 0.95,
+                color: "var(--color-paper-3)",
+                letterSpacing: "-0.02em",
+              }}
+            >
+              1,000,000
+            </div>
+            {/* Diagonal strikethrough */}
+            <span
+              aria-hidden
+              style={{
+                position: "absolute",
+                left: "-5%",
+                top: "50%",
+                width: "110%",
+                height: "6px",
+                background: "var(--color-vermilion)",
+                transform: "translateY(-50%) rotate(-8deg)",
+                boxShadow:
+                  "0 0 10px color-mix(in oklab, var(--color-vermilion) 55%, transparent)",
+                display: "block",
+              }}
+            />
+            {/* × 50 stamp overlapping the right edge */}
+            <div
+              aria-hidden
+              style={{
+                position: "absolute",
+                bottom: 0,
+                right: 0,
+                transform: "translate(20%, -30%) rotate(-6deg)",
+                fontFamily: "var(--font-display, serif)",
+                fontStyle: "italic",
+                fontWeight: 700,
+                fontSize: "clamp(1.1rem, 2.4vw, 1.8rem)",
+                color: "var(--color-vermilion)",
+                border: "4px solid var(--color-vermilion)",
+                borderRadius: 4,
+                padding: "0.1em 0.4em",
+                whiteSpace: "nowrap",
+                letterSpacing: "0.06em",
+              }}
+            >
+              × 50
+            </div>
           </div>
-        </div>
-        <div>
-          <div className="kicker mb-2">{COPY.actualLabel[lang]}</div>
-          <div className="display text-[clamp(2rem,4vw,3rem)] text-vermilion">
+
+          {/* 3. Verdict line */}
+          <p
+            className="display-italic mt-4"
+            style={{
+              color: "var(--color-paper-2)",
+              fontSize: "1.2rem",
+            }}
+          >
+            {COPY.closer[lang]}
+          </p>
+
+          {/* Thin vermilion rule */}
+          <div
+            aria-hidden
+            style={{
+              width: "100%",
+              height: "1px",
+              background: "var(--color-vermilion)",
+              opacity: 0.5,
+              margin: "0.25rem 0",
+            }}
+          />
+
+          {/* Correct number */}
+          <div
+            className="display"
+            style={{
+              color: "var(--color-vermilion)",
+              fontSize: "clamp(4rem, 10vw, 9rem)",
+              lineHeight: 0.95,
+              letterSpacing: "-0.02em",
+              textShadow:
+                "0 0 36px color-mix(in oklab, var(--color-vermilion) 45%, transparent)",
+            }}
+          >
             49,000,000+
           </div>
+
+          {/* Caption: "first run." */}
+          <p
+            className="display-italic"
+            style={{
+              color: "var(--color-paper-2)",
+              fontSize: "1rem",
+            }}
+          >
+            {COPY.actualLabel[lang]}.
+          </p>
         </div>
-      </div>
+      </section>
     );
   }
 
