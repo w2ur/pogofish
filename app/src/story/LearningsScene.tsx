@@ -43,7 +43,7 @@ export function LearningsScene() {
   if (err) {
     return (
       <section
-        id="chapter-x"
+        id="chapter-xi"
         className="relative px-6 py-24 min-h-[40vh] flex items-center justify-center"
       >
         <p className="mono text-paper-3 text-sm">{STRINGS.learnings.loadError[lang]}{err}</p>
@@ -54,7 +54,7 @@ export function LearningsScene() {
   if (!data) {
     return (
       <section
-        id="chapter-x"
+        id="chapter-xi"
         className="relative px-6 py-24 min-h-[40vh] flex items-center justify-center"
       >
         <p className="mono text-paper-3 text-sm">{STRINGS.learnings.loading[lang]}</p>
@@ -77,7 +77,7 @@ export function LearningsScene() {
 
   return (
     <section
-      id="chapter-x"
+      id="chapter-xi"
       className="relative px-6 py-28 md:py-36 border-t border-hair"
       style={{ scrollMarginTop: 80 }}
     >

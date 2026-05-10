@@ -113,7 +113,7 @@ export function TryYourself() {
 
   return (
     <section
-      id="chapter-iii"
+      id="chapter-ii"
       className="relative px-6 py-28 md:py-36 min-h-screen flex flex-col items-center justify-center gap-8"
     >
       <div className="w-full max-w-3xl text-center space-y-4">

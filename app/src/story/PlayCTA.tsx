@@ -16,7 +16,7 @@ export function PlayCTA() {
     // Show once the user has scrolled past the cinematic overture, hide
     // again when the play section enters the viewport.
     const sentinel = document.querySelector("[data-overture-end]");
-    const playEl = document.getElementById("play");
+    const playEl = document.getElementById("chapter-x");
     if (!sentinel) return;
 
     let playInView = false;
@@ -49,7 +49,7 @@ export function PlayCTA() {
 
   return (
     <a
-      href="#play"
+      href="#chapter-x"
       aria-label={STRINGS.playCta.ariaLabel[lang]}
       className={`fixed bottom-6 right-6 z-50 mono text-[10px] tracking-[0.28em] uppercase
         rounded-full bg-vermilion text-ink px-5 py-3 shadow-lg shadow-black/40

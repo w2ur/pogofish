@@ -181,6 +181,7 @@ export function Prologue() {
   return (
     <>
       <section
+        id="chapter-i"
         ref={ref}
         className="prologue relative"
         // The sticky child pins for (height - 100vh) of scroll. We want

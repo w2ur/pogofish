@@ -6,7 +6,7 @@ import { useEffect, useState } from "react";
  * journalism touch — the kind of element NYT/Pudding pieces use to give
  * the reader a sense of progress through long-form.
  */
-export function ScrollProgress() {
+export function ScrollProgress({ className }: { className?: string }) {
   const [p, setP] = useState(0);
 
   useEffect(() => {
@@ -37,7 +37,7 @@ export function ScrollProgress() {
   return (
     <div
       aria-hidden
-      className="fixed top-0 left-0 right-0 z-[60] pointer-events-none"
+      className={`fixed top-0 left-0 right-0 z-[60] pointer-events-none${className ? ` ${className}` : ""}`}
       style={{ height: 2 }}
     >
       <div
