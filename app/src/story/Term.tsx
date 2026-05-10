@@ -24,6 +24,7 @@ interface Props {
  */
 export function Term({ term, children }: Props) {
   const [open, setOpen] = useState(false);
+  const [openedBy, setOpenedBy] = useState<"hover" | "keyboard" | null>(null);
   const [shift, setShift] = useState(0);
   const ref = useRef<HTMLSpanElement | null>(null);
   const popRef = useRef<HTMLSpanElement | null>(null);
@@ -35,12 +36,21 @@ export function Term({ term, children }: Props) {
   useEffect(() => {
     if (!open || !entry) return;
     const onDocClick = (e: MouseEvent) => {
-      if (!ref.current?.contains(e.target as Node)) setOpen(false);
+      if (!ref.current?.contains(e.target as Node)) {
+        setOpen(false);
+        setOpenedBy(null);
+      }
     };
     const onKey = (e: KeyboardEvent) => {
-      if (e.key === "Escape") setOpen(false);
+      if (e.key === "Escape") {
+        setOpen(false);
+        setOpenedBy(null);
+      }
     };
-    const onScroll = () => setOpen(false);
+    const onScroll = () => {
+      setOpen(false);
+      setOpenedBy(null);
+    };
     document.addEventListener("click", onDocClick);
     document.addEventListener("keydown", onKey);
     window.addEventListener("scroll", onScroll, { passive: true });
@@ -74,11 +84,28 @@ export function Term({ term, children }: Props) {
       ref={ref}
       className="term"
       data-open={open || undefined}
-      onMouseEnter={() => setOpen(true)}
-      onMouseLeave={() => setOpen(false)}
+      onMouseEnter={() => {
+        setOpen(true);
+        setOpenedBy("hover");
+      }}
+      onMouseLeave={() => {
+        if (openedBy !== "keyboard") {
+          setOpen(false);
+          setOpenedBy(null);
+        }
+      }}
       onClick={(e) => {
         e.stopPropagation();
+        const byKeyboard = e.detail === 0;
         setOpen((v) => !v);
+        setOpenedBy((prev) => (prev === "keyboard" ? null : byKeyboard ? "keyboard" : "hover"));
+      }}
+      onKeyDown={(e) => {
+        if (e.key === "Enter" || e.key === " ") {
+          e.preventDefault();
+          setOpen(true);
+          setOpenedBy("keyboard");
+        }
       }}
       tabIndex={0}
       role="button"
@@ -91,6 +118,20 @@ export function Term({ term, children }: Props) {
         role="tooltip"
         style={shift !== 0 ? { ["--term-shift" as string]: `${shift}px` } : undefined}
       >
+        {openedBy === "keyboard" && (
+          <button
+            type="button"
+            onClick={(e) => {
+              e.stopPropagation();
+              setOpen(false);
+              setOpenedBy(null);
+            }}
+            className="absolute top-1 right-1 text-paper-3 hover:text-paper text-sm"
+            aria-label={lang === "en" ? "Close" : "Fermer"}
+          >
+            ×
+          </button>
+        )}
         <span className="term-popover-head">{displayTerm}</span>
         {shortText}
       </span>

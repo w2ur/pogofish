@@ -1,13 +1,12 @@
-import { useEffect, useRef, useState } from "react";
+import { lazy, Suspense, useEffect, useRef, useState } from "react";
 import { motion } from "motion/react";
+import { fadeUp, fadeIn, fadeRight } from "./motion";
 import { StoryBoard } from "./StoryBoard";
 import { Term } from "./Term";
 import { TryYourself } from "./TryYourself";
-import { PlayScene } from "./PlayScene";
 import { PlayCTA } from "./PlayCTA";
 import { Callout } from "./Callout";
 import { EnFr } from "./EnFr";
-import { LearningsScene } from "./LearningsScene";
 import { LangToggle } from "./LangToggle";
 import { Act } from "./Act";
 import { ActDebugger } from "./ActDebugger";
@@ -15,8 +14,9 @@ import { Prologue } from "./Prologue";
 import { WrongAnswerSlam } from "./Slam";
 import { Marginalia } from "./Marginalia";
 import { useAct } from "./useAct";
-import { GlossaryConstellation } from "./GlossaryConstellation";
+
 import { ScrollProgress } from "./ScrollProgress";
+import { ChapterRail } from "./ChapterRail";
 import { CountUp } from "./CountUp";
 import { useLang } from "./LangContext";
 import { STRINGS, tf } from "./i18n";
@@ -30,6 +30,18 @@ import {
   VERDICT,
   FMT,
 } from "./data";
+
+const PlayScene = lazy(() =>
+  import("./PlayScene").then((m) => ({ default: m.PlayScene }))
+);
+const LearningsScene = lazy(() =>
+  import("./LearningsScene").then((m) => ({ default: m.LearningsScene }))
+);
+const GlossaryConstellation = lazy(() =>
+  import("./GlossaryConstellation").then((m) => ({
+    default: m.GlossaryConstellation,
+  }))
+);
 
 /** Chapter numerals stay language-agnostic — kickers come from i18n. */
 type ChapterKey = keyof typeof STRINGS.chapters;
@@ -46,7 +58,10 @@ export function StoryView() {
   return (
     <StageProvider>
       <div className="story story-grain story-noise min-h-screen">
-        <ScrollProgress />
+        <SkipLink />
+        <ActAnnouncer />
+        <ScrollProgress className="lg:hidden" />
+        <ChapterRail />
         <PersistentStage />
         <StoryChrome />
 
@@ -86,19 +101,55 @@ export function StoryView() {
             Matte off-white + navy ink + warm gold accent.
             The polished writeup. Designed, calm, finished.
             ------------------------------------------------------------ */}
-        <Act act={3} global>
-          <StageBinder view={null}><PlayScene /></StageBinder>
-          <StageBinder view={null}><LearningsScene /></StageBinder>
-          <StageBinder view={null}><Scene10Epilogue /></StageBinder>
-          <StageBinder view={null}><GlossaryConstellation /></StageBinder>
-        </Act>
+        <Suspense fallback={<ActLoadingFallback />}>
+          <Act act={3} global>
+            <StageBinder view={null}><PlayScene /></StageBinder>
+            <StageBinder view={null}><LearningsScene /></StageBinder>
+            <StageBinder view={null}><Scene10Epilogue /></StageBinder>
+            <StageBinder view={null}><GlossaryConstellation /></StageBinder>
+          </Act>
+        </Suspense>
 
-        <StoryFooter />
+        {/* The footer is past the last chapter — bind a null view so the
+            persistent stage hides and the mobile band fades out. Without this
+            the last Act 3 view (GlossaryConstellation) hangs over the footer
+            like a stale board. */}
+        <StageBinder view={null}><StoryFooter /></StageBinder>
         <PlayCTA />
         <LangToggle />
         <ActDebugger />
       </div>
     </StageProvider>
+  );
+}
+
+/** Placeholder shown while Act III lazy chunks are fetching.
+ *  Sized at ~60vh so the scrollbar doesn't jump noticeably. */
+function ActLoadingFallback() {
+  return (
+    <div
+      style={{
+        minHeight: "60vh",
+        display: "flex",
+        alignItems: "flex-end",
+        paddingBottom: "4rem",
+        color: "var(--color-ink)",
+        opacity: 0.3,
+      }}
+    >
+      <span
+        style={{
+          fontFamily: "var(--font-mono, monospace)",
+          fontSize: "0.65rem",
+          letterSpacing: "0.15em",
+          textTransform: "uppercase",
+          backgroundColor: "var(--color-paper-3, transparent)",
+          padding: "0.25rem 0.5rem",
+        }}
+      >
+        Act III loading
+      </span>
+    </div>
   );
 }
 
@@ -113,6 +164,50 @@ function usePageTitle() {
   useEffect(() => {
     document.title = STRINGS.pageTitle[lang];
   }, [lang]);
+}
+
+/* ---------------- a11y helpers ---------------- */
+
+function SkipLink() {
+  const { lang } = useLang();
+  return (
+    <a
+      href="#chapter-iii"
+      className="sr-only focus:not-sr-only fixed top-2 left-2 z-[200] bg-paper text-ink px-3 py-2 rounded font-mono text-xs uppercase tracking-wider"
+    >
+      {lang === "en" ? "Skip to story" : "Aller au récit"}
+    </a>
+  );
+}
+
+function ActAnnouncer() {
+  const { lang } = useLang();
+  const [announcement, setAnnouncement] = useState("");
+
+  useEffect(() => {
+    const labels: Record<string, { en: string; fr: string }> = {
+      "1": { en: "Act I — the game", fr: "Acte I — le jeu" },
+      "2": { en: "Act II — the work", fr: "Acte II — le travail" },
+      "3": { en: "Act III — the synthesis", fr: "Acte III — la synthèse" },
+    };
+    const read = () => {
+      const a = document.documentElement.getAttribute("data-act");
+      if (a && labels[a]) setAnnouncement(labels[a][lang]);
+    };
+    read();
+    const obs = new MutationObserver(read);
+    obs.observe(document.documentElement, {
+      attributes: true,
+      attributeFilter: ["data-act"],
+    });
+    return () => obs.disconnect();
+  }, [lang]);
+
+  return (
+    <output className="sr-only" aria-live="polite" aria-atomic="true">
+      {announcement}
+    </output>
+  );
 }
 
 /* ---------------- chrome ---------------- */
@@ -157,7 +252,7 @@ function StoryChrome() {
         </span>
       </div>
       <a
-        href="#play"
+        href="#chapter-x"
         className="pointer-events-auto mono text-[10px] tracking-[0.25em] uppercase text-paper-3 hover:text-vermilion transition-colors"
       >
         {STRINGS.chrome.skipToPlay[lang]}
@@ -365,6 +460,7 @@ function PinnedStory() {
         <div className="flex flex-col">
           {/* III — the game and the experiment */}
           <NarrativePanel
+            id="chapter-iii"
             sectionRef={(el) => { refs.current[0] = el; }}
             chapter={CHAPTER_NUMERAL.III}
             kicker={STRINGS.chapters.III[lang]}
@@ -448,6 +544,7 @@ function PinnedStory() {
 
           {/* IV — the planning chat */}
           <NarrativePanel
+            id="chapter-iv"
             sectionRef={(el) => { refs.current[1] = el; }}
             chapter={CHAPTER_NUMERAL.IV}
             kicker={STRINGS.chapters.IV[lang]}
@@ -562,11 +659,11 @@ function PinnedStory() {
                 </p>
               </>}
             />
-            <WrongAnswerSlam />
           </NarrativePanel>
 
           {/* V — twelve days, two losses */}
           <NarrativePanel
+            id="chapter-v"
             sectionRef={(el) => { refs.current[2] = el; }}
             chapter={CHAPTER_NUMERAL.V}
             kicker={STRINGS.chapters.V[lang]}
@@ -654,6 +751,7 @@ function PinnedStory() {
               />
             </Marginalia>
             <SixDaysChart />
+            <WrongAnswerSlam />
             <EnFr
               en={<>
                 <p>
@@ -709,6 +807,7 @@ function PinnedStory() {
 
           {/* VI — the diagnosis */}
           <NarrativePanel
+            id="chapter-vi"
             sectionRef={(el) => { refs.current[3] = el; }}
             chapter={CHAPTER_NUMERAL.VI}
             kicker={STRINGS.chapters.VI[lang]}
@@ -823,6 +922,7 @@ function PinnedStory() {
 
           {/* VII — the rule, the rerun, the depth that wasn't enough */}
           <NarrativePanel
+            id="chapter-vii"
             sectionRef={(el) => { refs.current[4] = el; }}
             chapter={CHAPTER_NUMERAL.VII}
             kicker={STRINGS.chapters.VII[lang]}
@@ -948,6 +1048,7 @@ type PanelProps = {
   kicker: string;
   children: React.ReactNode;
   sectionRef?: (el: HTMLElement | null) => void;
+  id?: string;
 };
 
 /** Cinematic chapter head whose visual register changes per act:
@@ -1049,8 +1150,7 @@ function ChapterNumeralAct2({
 }) {
   return (
     <motion.div
-      initial={{ opacity: 0, y: 24 }}
-      whileInView={{ opacity: 1, y: 0 }}
+      {...fadeUp}
       viewport={{ once: true, margin: "-15%" }}
       transition={{ duration: 0.85, ease: [0.16, 1, 0.3, 1] }}
       className="flex items-baseline gap-3 select-none"
@@ -1093,14 +1193,14 @@ function SectionChapterHead({
   return <ChapterHead numeral={numeral} kicker={kicker} size="section" />;
 }
 
-function NarrativePanel({ chapter, kicker, children, sectionRef }: PanelProps) {
+function NarrativePanel({ chapter, kicker, children, sectionRef, id }: PanelProps) {
   return (
-    <section ref={sectionRef} className="min-h-screen flex items-center py-28">
+    <section id={id} ref={sectionRef} className="min-h-screen flex items-center py-28">
       <div className="space-y-6 w-full max-w-[58ch]">
         <ChapterHead numeral={chapter} kicker={kicker} size="panel" />
         <motion.div
+          {...fadeUp}
           initial={{ opacity: 0, y: 16 }}
-          whileInView={{ opacity: 1, y: 0 }}
           viewport={{ once: true, margin: "-15%" }}
           transition={{ duration: 0.7, ease: "easeOut", delay: 0.6 }}
           className="space-y-5 text-paper text-[1.0625rem] md:text-[1.125rem] leading-[1.75]"
@@ -1115,10 +1215,9 @@ function NarrativePanel({ chapter, kicker, children, sectionRef }: PanelProps) {
 function TranscriptCard({ header, body }: { header: string; body: React.ReactNode }) {
   return (
     <motion.div
+      {...fadeUp}
       initial={{ opacity: 0, y: 24, scale: 0.98 }}
       whileInView={{ opacity: 1, y: 0, scale: 1 }}
-      viewport={{ once: true, margin: "-10%" }}
-      transition={{ duration: 0.7, ease: [0.16, 1, 0.3, 1] }}
       className="border border-hair bg-ink-2 rounded-sm px-5 py-4 my-8 relative shadow-2xl"
       style={{
         boxShadow: "0 28px 50px -30px rgba(0,0,0,0.7), 0 0 50px -28px rgba(217,79,44,0.35)",
@@ -1184,10 +1283,7 @@ function SixDaysChart() {
   const { lang } = useLang();
   return (
     <motion.div
-      initial={{ opacity: 0, y: 24 }}
-      whileInView={{ opacity: 1, y: 0 }}
-      viewport={{ once: true, margin: "-10%" }}
-      transition={{ duration: 0.7, ease: "easeOut" }}
+      {...fadeUp}
       className="my-8 border border-hair bg-ink-2 rounded-sm p-5"
     >
       <div className="mono text-[10px] tracking-[0.25em] uppercase text-paper-3 mb-4 flex justify-between">
@@ -1310,9 +1406,8 @@ function SolverLogStream() {
           return (
             <motion.li
               key={i}
+              {...fadeRight}
               initial={{ opacity: 0, x: -6 }}
-              whileInView={{ opacity: 1, x: 0 }}
-              viewport={{ once: true, margin: "-10%" }}
               transition={{ delay: 0.2 + i * 0.16, duration: 0.4, ease: "easeOut" }}
               className="flex gap-3"
             >
@@ -1365,10 +1460,8 @@ function TreeDiagram() {
 
   return (
     <motion.div
+      {...fadeUp}
       initial={{ opacity: 0, y: 20 }}
-      whileInView={{ opacity: 1, y: 0 }}
-      viewport={{ once: true, margin: "-10%" }}
-      transition={{ duration: 0.7, ease: "easeOut" }}
       className="my-10 grid grid-cols-2 gap-8 border-t border-b border-hair py-6"
     >
       <div className="space-y-3">
@@ -1485,9 +1578,7 @@ function TreeDiagram() {
             fontFamily="JetBrains Mono"
             fontSize={8}
             fill="#d94f2c"
-            initial={{ opacity: 0 }}
-            whileInView={{ opacity: 1 }}
-            viewport={{ once: true, margin: "-10%" }}
+            {...fadeIn}
             transition={{ duration: 0.5, delay: 2.0 }}
           >
             {STRINGS.charts.artificialHorizon[lang]}
@@ -1505,7 +1596,7 @@ function Scene7Experiments() {
   const ref = useReveal<HTMLDivElement>();
   const { lang } = useLang();
   return (
-    <section className="relative py-28 md:py-40 px-6 md:px-10">
+    <section id="chapter-viii" className="relative py-28 md:py-40 px-6 md:px-10">
       <div className="mx-auto max-w-6xl space-y-14">
         <div className="grid lg:grid-cols-[minmax(0,_56ch)_minmax(14rem,_18rem)] gap-12 lg:gap-16 items-start">
         <div ref={ref} className="reveal space-y-6">
@@ -1759,7 +1850,7 @@ function Scene8Verdict() {
   const ref = useReveal<HTMLDivElement>();
   const { lang } = useLang();
   return (
-    <section className="relative py-28 md:py-40 px-6 md:px-10 border-t border-hair">
+    <section id="chapter-ix" className="relative py-28 md:py-40 px-6 md:px-10 border-t border-hair">
       <div className="mx-auto max-w-6xl space-y-14">
         <div ref={ref} className="reveal space-y-6 max-w-[58ch]">
           <SectionChapterHead numeral={CHAPTER_NUMERAL.IX} kicker={STRINGS.chapters.IX[lang]} />
@@ -1886,9 +1977,8 @@ function VerdictTable() {
             return (
               <motion.tr
                 key={row.id}
+                {...fadeRight}
                 initial={{ opacity: 0, x: -16 }}
-                whileInView={{ opacity: 1, x: 0 }}
-                viewport={{ once: true, margin: "-10%" }}
                 transition={{ duration: 0.55, ease: "easeOut", delay: i * 0.08 }}
                 className={`align-middle border-b border-hair relative ${
                   row.winner
@@ -2023,7 +2113,7 @@ function Scene10Epilogue() {
   const ref = useReveal<HTMLDivElement>();
   const { lang } = useLang();
   return (
-    <section className="relative py-32 md:py-48 px-6 md:px-10 border-t border-hair">
+    <section id="chapter-xii" className="relative py-32 md:py-48 px-6 md:px-10 border-t border-hair">
       <div ref={ref} className="reveal mx-auto max-w-[60ch] space-y-8">
         <SectionChapterHead numeral={CHAPTER_NUMERAL.XII} kicker={STRINGS.chapters.XII[lang]} />
 
