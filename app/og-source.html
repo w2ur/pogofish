@@ -1,0 +1,293 @@
+<!doctype html>
+<!--
+  Source for app/public/og-image.png.
+
+  Regenerate:
+    1. Serve this file (e.g. `python3 -m http.server 8765` from app/)
+    2. Open it in a 1200x630 viewport
+    3. Screenshot to app/public/og-image.png
+
+  This file is NOT in app/public/, so Vite does not serve it in production.
+-->
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<title>Pogofish OG</title>
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Instrument+Serif:ital@0;1&family=Newsreader:ital,opsz,wght@0,6..72,400;0,6..72,600;1,6..72,400&family=JetBrains+Mono:wght@400;500&display=swap" />
+<style>
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  html, body {
+    width: 1200px;
+    height: 630px;
+    overflow: hidden;
+    font-family: "Newsreader", Georgia, serif;
+    color: #ece2cb;
+    background: #121010;
+  }
+  .og {
+    width: 1200px;
+    height: 630px;
+    position: relative;
+    background:
+      radial-gradient(ellipse at 50% 0%, rgba(217, 79, 44, 0.12), transparent 60%),
+      radial-gradient(ellipse at 90% 100%, rgba(217, 79, 44, 0.06), transparent 55%),
+      #121010;
+    padding: 40px 56px 32px;
+    display: grid;
+    grid-template-columns: 1fr 700px;
+    grid-template-rows: 1fr auto;
+    gap: 36px 48px;
+    align-items: stretch;
+  }
+  .lede { display: flex; flex-direction: column; justify-content: center; }
+  .og::before {
+    content: "";
+    position: absolute;
+    inset: 0;
+    pointer-events: none;
+    opacity: 0.06;
+    mix-blend-mode: overlay;
+    background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='200' height='200'><filter id='n'><feTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='2' stitchTiles='stitch'/><feColorMatrix values='0 0 0 0 0.9  0 0 0 0 0.88  0 0 0 0 0.8  0 0 0 0 0.55 0'/></filter><rect width='100%' height='100%' filter='url(%23n)'/></svg>");
+  }
+
+  .kicker {
+    font-family: "JetBrains Mono", monospace;
+    font-size: 14px;
+    letter-spacing: 0.32em;
+    text-transform: uppercase;
+    color: #d94f2c;
+  }
+
+  .title {
+    font-family: "Instrument Serif", serif;
+    font-size: 96px;
+    line-height: 0.95;
+    letter-spacing: -0.018em;
+    color: #ece2cb;
+    margin-top: 12px;
+  }
+  .title em {
+    font-style: italic;
+    color: #d94f2c;
+  }
+  .tagline {
+    font-family: "Newsreader", serif;
+    font-style: italic;
+    font-size: 19px;
+    line-height: 1.35;
+    color: #c9bfa9;
+    margin-top: 14px;
+  }
+
+  .acts {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 18px;
+    align-items: stretch;
+    align-self: center;
+  }
+  .act {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+  }
+  .act-board {
+    width: 100%;
+    aspect-ratio: 1 / 1;
+    border-radius: 6px;
+    padding: 14px;
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    grid-template-rows: repeat(3, 1fr);
+    gap: 4px;
+  }
+  .cell {
+    border-radius: 3px;
+    display: flex;
+    flex-direction: column-reverse;
+    align-items: center;
+    padding: 4px;
+    gap: 2px;
+  }
+  .piece {
+    width: 78%;
+    height: 8px;
+    border-radius: 50%;
+  }
+
+  /* ----- Act 1: cream paper sketch ----- */
+  .act-1 .act-board {
+    background: #efe6d3;
+    box-shadow: inset 0 0 0 1px #c9bb9d;
+  }
+  .act-1 .cell {
+    background: rgba(36, 26, 19, 0.04);
+    box-shadow: inset 0 0 0 1px rgba(36, 26, 19, 0.3);
+  }
+  .act-1 .piece.W {
+    background: linear-gradient(180deg, #f7eedb, #b8a884);
+    box-shadow: inset 0 1px 0 rgba(255,255,255,0.4), 0 1px 2px rgba(0,0,0,0.2);
+  }
+  .act-1 .piece.R {
+    background: linear-gradient(180deg, #c75c4d, #6e1d11);
+    box-shadow: inset 0 1px 0 rgba(255,180,160,0.35), 0 1px 2px rgba(0,0,0,0.3);
+  }
+  .act-1 .label-act { color: #8a7a6a; }
+  .act-1 .label-name { color: #a83328; }
+
+  /* ----- Act 2: terminal black ----- */
+  .act-2 .act-board {
+    background: #0a0a0a;
+    box-shadow: inset 0 0 0 1px rgba(122,240,160,0.18);
+  }
+  .act-2 .cell {
+    background: rgba(8, 8, 8, 0.95);
+    box-shadow: inset 0 0 0 1px rgba(122,240,160,0.18);
+  }
+  .act-2 .piece.W {
+    background: linear-gradient(180deg, #e8e8e8, #888888);
+  }
+  .act-2 .piece.R {
+    background: linear-gradient(180deg, #d28966, #6e3318);
+  }
+  .act-2 .label-act { color: #6c6c6c; }
+  .act-2 .label-name { color: #7af0a0; }
+
+  /* ----- Act 3: matte navy ----- */
+  .act-3 .act-board {
+    background: #f6f0e2;
+    box-shadow: inset 0 0 0 1px #cdd2dd;
+  }
+  .act-3 .cell {
+    background: rgba(26, 40, 64, 0.05);
+    box-shadow: inset 0 0 0 1px rgba(26,40,64,0.22);
+  }
+  .act-3 .piece.W {
+    background: linear-gradient(180deg, #f6f0e2, #c4bca6);
+    box-shadow: inset 0 1px 0 rgba(255,255,255,0.4), 0 1px 2px rgba(0,0,0,0.1);
+  }
+  .act-3 .piece.R {
+    background: linear-gradient(180deg, #e09d65, #7a3e0f);
+    box-shadow: inset 0 1px 0 rgba(255,200,140,0.35), 0 1px 2px rgba(0,0,0,0.15);
+  }
+  .act-3 .label-act { color: #6e7a90; }
+  .act-3 .label-name { color: #c87a3c; }
+
+  .act-labels {
+    display: flex;
+    justify-content: space-between;
+    align-items: baseline;
+    margin-top: 4px;
+  }
+  .label-act {
+    font-family: "JetBrains Mono", monospace;
+    font-size: 11px;
+    letter-spacing: 0.28em;
+    text-transform: uppercase;
+  }
+  .label-name {
+    font-family: "Instrument Serif", serif;
+    font-style: italic;
+    font-size: 22px;
+  }
+
+  .footer {
+    grid-column: 1 / -1;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    border-top: 1px solid rgba(217, 79, 44, 0.3);
+    padding-top: 14px;
+  }
+  .footer-left {
+    font-family: "JetBrains Mono", monospace;
+    font-size: 12px;
+    letter-spacing: 0.25em;
+    text-transform: uppercase;
+    color: #8d8472;
+  }
+  .footer-right {
+    font-family: "Newsreader", serif;
+    font-style: italic;
+    font-size: 16px;
+    color: #c9bfa9;
+  }
+</style>
+</head>
+<body>
+<div class="og">
+  <div class="lede">
+    <div class="kicker">an investigation · in three acts</div>
+    <h1 class="title">Pog<em>o</em>fish</h1>
+    <p class="tagline">A board game, a misplaced trust in an AI, six days of compute wasted — and a rewrite. The honest story.</p>
+  </div>
+
+  <div class="acts">
+    <!-- ACT 1 -->
+    <div class="act act-1">
+      <div class="act-board">
+        <!-- 9 cells, mid-game state with a few pieces -->
+        <div class="cell"></div>
+        <div class="cell"><div class="piece W"></div></div>
+        <div class="cell"><div class="piece W"></div><div class="piece R"></div></div>
+        <div class="cell"><div class="piece R"></div></div>
+        <div class="cell"><div class="piece W"></div><div class="piece R"></div></div>
+        <div class="cell"><div class="piece W"></div></div>
+        <div class="cell"><div class="piece R"></div><div class="piece W"></div></div>
+        <div class="cell"></div>
+        <div class="cell"><div class="piece R"></div></div>
+      </div>
+      <div class="act-labels">
+        <span class="label-act">act i</span>
+        <span class="label-name">the game</span>
+      </div>
+    </div>
+
+    <!-- ACT 2 -->
+    <div class="act act-2">
+      <div class="act-board">
+        <div class="cell"></div>
+        <div class="cell"><div class="piece W"></div></div>
+        <div class="cell"><div class="piece W"></div><div class="piece R"></div></div>
+        <div class="cell"><div class="piece R"></div></div>
+        <div class="cell"><div class="piece W"></div><div class="piece R"></div></div>
+        <div class="cell"><div class="piece W"></div></div>
+        <div class="cell"><div class="piece R"></div><div class="piece W"></div></div>
+        <div class="cell"></div>
+        <div class="cell"><div class="piece R"></div></div>
+      </div>
+      <div class="act-labels">
+        <span class="label-act">act ii</span>
+        <span class="label-name">the work</span>
+      </div>
+    </div>
+
+    <!-- ACT 3 -->
+    <div class="act act-3">
+      <div class="act-board">
+        <div class="cell"></div>
+        <div class="cell"><div class="piece W"></div></div>
+        <div class="cell"><div class="piece W"></div><div class="piece R"></div></div>
+        <div class="cell"><div class="piece R"></div></div>
+        <div class="cell"><div class="piece W"></div><div class="piece R"></div></div>
+        <div class="cell"><div class="piece W"></div></div>
+        <div class="cell"><div class="piece R"></div><div class="piece W"></div></div>
+        <div class="cell"></div>
+        <div class="cell"><div class="piece R"></div></div>
+      </div>
+      <div class="act-labels">
+        <span class="label-act">act iii</span>
+        <span class="label-name">the synthesis</span>
+      </div>
+    </div>
+  </div>
+
+  <div class="footer">
+    <span class="footer-left">pogofish.netlify.app</span>
+    <span class="footer-right">made by william revah</span>
+  </div>
+</div>
+</body>
+</html>
