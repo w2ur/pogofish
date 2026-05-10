@@ -4,7 +4,7 @@
  * Runs ONNX inference and minimax lookups off the main thread.
  */
 
-import { type GameState, type RuleSet } from "../engine/types";
+import { type GameState, type Move, type RuleSet } from "../engine/types";
 import { type AIConfig, type AILevel } from "./player";
 import { type PositionEval } from "./minimax";
 
@@ -29,7 +29,19 @@ export interface LoadMinimaxRequest {
   id: number;
 }
 
-export type WorkerRequest = GetMoveRequest | EvaluateRequest | LoadMinimaxRequest;
+export interface InspectModelRequest {
+  type: "inspectModel";
+  id: number;
+  state: GameState;
+  level: AILevel;
+  ruleSet?: RuleSet;
+}
+
+export type WorkerRequest =
+  | GetMoveRequest
+  | EvaluateRequest
+  | LoadMinimaxRequest
+  | InspectModelRequest;
 
 export interface MoveResponse {
   type: "move";
@@ -55,6 +67,18 @@ export interface MinimaxLoadedResponse {
   id: number;
 }
 
+export interface InspectResult {
+  legalMoves: Move[];
+  policyProbs: number[];
+  value: number;
+}
+
+export interface InspectResponse {
+  type: "inspect";
+  id: number;
+  result: InspectResult;
+}
+
 export interface ErrorResponse {
   type: "error";
   id: number;
@@ -66,6 +90,7 @@ export type WorkerResponse =
   | EvalResponse
   | MinimaxProgressResponse
   | MinimaxLoadedResponse
+  | InspectResponse
   | ErrorResponse;
 
 // Re-export types used by the hook
@@ -111,6 +136,17 @@ if (typeof self !== "undefined" && typeof (self as unknown as { document?: unkno
             type: "eval",
             id: msg.id,
             evaluation,
+          };
+          self.postMessage(response);
+          break;
+        }
+
+        case "inspectModel": {
+          const result = await player.inspectModel(msg.state, msg.level, msg.ruleSet);
+          const response: InspectResponse = {
+            type: "inspect",
+            id: msg.id,
+            result,
           };
           self.postMessage(response);
           break;

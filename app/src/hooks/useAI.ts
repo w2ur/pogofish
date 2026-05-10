@@ -2,15 +2,22 @@ import { useCallback, useMemo, useRef, useState } from "react";
 import { type GameState, type Move, type RuleSet } from "../engine/types";
 import type {
   AIConfig,
+  AILevel,
   WorkerResponse,
   PositionEval,
+  InspectResult,
 } from "../ai/worker";
 
-export type { AIConfig, PositionEval };
+export type { AIConfig, PositionEval, InspectResult };
 
 export interface UseAI {
   requestMove: (state: GameState, config: AIConfig) => Promise<Move>;
   requestEval: (state: GameState, ruleSet?: RuleSet) => Promise<PositionEval>;
+  requestInspect: (
+    state: GameState,
+    level: AILevel,
+    ruleSet?: RuleSet,
+  ) => Promise<InspectResult>;
   loadMinimax: () => void;
   minimaxProgress: number;
   minimaxLoaded: boolean;
@@ -55,6 +62,10 @@ export function useAI(): UseAI {
         case "eval":
           pendingRef.current.delete(msg.id);
           pending.resolve(msg.evaluation);
+          break;
+        case "inspect":
+          pendingRef.current.delete(msg.id);
+          pending.resolve(msg.result);
           break;
         case "minimaxLoaded":
           pendingRef.current.delete(msg.id);
@@ -103,6 +114,22 @@ export function useAI(): UseAI {
     [sendRequest],
   );
 
+  const requestInspect = useCallback(
+    (
+      state: GameState,
+      level: AILevel,
+      ruleSet?: RuleSet,
+    ): Promise<InspectResult> => {
+      return sendRequest<InspectResult>({
+        type: "inspectModel",
+        state,
+        level,
+        ruleSet,
+      });
+    },
+    [sendRequest],
+  );
+
   const loadMinimax = useCallback(() => {
     sendRequest({ type: "loadMinimax" }).catch(() => {
       // Progress and loaded state are tracked via worker messages
@@ -112,8 +139,9 @@ export function useAI(): UseAI {
   return useMemo(() => ({
     requestMove,
     requestEval,
+    requestInspect,
     loadMinimax,
     minimaxProgress,
     minimaxLoaded,
-  }), [requestMove, requestEval, loadMinimax, minimaxProgress, minimaxLoaded]);
+  }), [requestMove, requestEval, requestInspect, loadMinimax, minimaxProgress, minimaxLoaded]);
 }

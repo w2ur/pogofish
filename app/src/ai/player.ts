@@ -1,4 +1,6 @@
 import { type GameState, type Move, type RuleSet } from "../engine/types";
+import { legalMoves } from "../engine/engine";
+import { actionToIndex, maskedSoftmax } from "../engine/encoding";
 import { randomMove } from "./random";
 import { OnnxModel } from "./onnx";
 import {
@@ -125,6 +127,42 @@ export async function getMove(
       // Fall through to AlphaZero+MCTS as the strongest playable AI.
       return getMove(state, { level: "alphazero-mcts", mctsSimulations: config.mctsSimulations ?? 100, ruleSet: config.ruleSet });
   }
+}
+
+/** Per-legal-move policy probabilities + value head, for the "Inspect model"
+ *  panel. Routes to the same model file the matching player would use, so the
+ *  reader sees exactly what the live opponent thinks. Falls back gracefully
+ *  when the level has no associated network. */
+export async function inspectModel(
+  state: GameState,
+  level: AILevel,
+  ruleSet?: RuleSet,
+): Promise<{ legalMoves: Move[]; policyProbs: number[]; value: number }> {
+  const moves = legalMoves(state);
+
+  // Pick model based on level — mirror the routing in getMove().
+  let model: OnnxModel;
+  if (level === "dqn") {
+    // DQN only exists for the LC1 (sudden-death) variant.
+    if (ruleSet && !isLC1(ruleSet)) {
+      return { legalMoves: moves, policyProbs: moves.map(() => 0), value: 0 };
+    }
+    model = await getDqnModel(ruleSet);
+  } else if (level === "alphazero" || level === "alphazero-mcts") {
+    model = await getAlphazeroModel(ruleSet);
+  } else {
+    // No network for human/random/minimax — caller should not invoke us.
+    return { legalMoves: moves, policyProbs: moves.map(() => 0), value: 0 };
+  }
+
+  const { policyLogits, value } = await model.infer(state);
+  const legalIndices = moves.map((m) => actionToIndex(m));
+  // maskedSoftmax returns a full ACTION_SIZE Float32Array with probabilities
+  // only at legal indices. Project back to per-move order.
+  const probs = maskedSoftmax(policyLogits, legalIndices);
+  const policyProbs = legalIndices.map((idx) => probs[idx] ?? 0);
+
+  return { legalMoves: moves, policyProbs, value };
 }
 
 /** Evaluate a position. Tries minimax first, falls back to AlphaZero. */

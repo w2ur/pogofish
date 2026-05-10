@@ -14,6 +14,8 @@ import { Term } from "./Term";
 import { useReveal } from "./useReveal";
 import { useLang } from "./LangContext";
 import { STRINGS, tf } from "./i18n";
+import { InspectModelPanel } from "./InspectModelPanel";
+import type { InspectResult } from "../hooks/useAI";
 
 /* -------------------------------------------------------------------------- */
 /* Settings UI — reused from the prior Scene9Play                             */
@@ -188,6 +190,13 @@ function PlaySession({
   mctsSimsRef.current = mctsSimulations;
   const evalIdRef = useRef(0);
 
+  // Inspect-the-model panel — shows per-legal-move policy probabilities and
+  // value head from the trained network for the current position.
+  const [inspectEnabled, setInspectEnabled] = useState(false);
+  const [inspectResult, setInspectResult] = useState<InspectResult | null>(null);
+  const [inspectLoading, setInspectLoading] = useState(false);
+  const inspectIdRef = useRef(0);
+
   useEffect(() => {
     aiRef.current.loadMinimax();
   }, []);
@@ -254,6 +263,35 @@ function PlaySession({
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [stateKey, analysisEnabled]);
 
+  // Inspect-the-model: query the network on every position when enabled and
+  // the active opponent has a neural model. Skips when game is over.
+  useEffect(() => {
+    if (!inspectEnabled || gameOver) return;
+    const isNeural =
+      aiLevel === "dqn" || aiLevel === "alphazero" || aiLevel === "alphazero-mcts";
+    if (!isNeural) {
+      setInspectResult(null);
+      return;
+    }
+    const id = ++inspectIdRef.current;
+    setInspectLoading(true);
+    aiRef.current
+      .requestInspect(state.gameState, aiLevel, ruleSet)
+      .then((result) => {
+        if (id === inspectIdRef.current) {
+          setInspectResult(result);
+          setInspectLoading(false);
+        }
+      })
+      .catch(() => {
+        if (id === inspectIdRef.current) {
+          setInspectResult(null);
+          setInspectLoading(false);
+        }
+      });
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [stateKey, inspectEnabled, aiLevel, gameOver]);
+
   const handleSelectCell = useCallback(
     (cellIndex: number) => {
       const activeColor = isHuman
@@ -293,53 +331,87 @@ function PlaySession({
         ? STRINGS.play.yourTurn[lang]
         : STRINGS.play.thinking[lang];
 
-  return (
-    <div className="flex flex-col items-center gap-5">
-      {analysisEnabled && state.positionEval && (
-        <div className="w-full max-w-[min(85vw,420px)]">
-          <EvalBar
-            value={state.positionEval.value}
-            proven={state.positionEval.proven}
-            direction="horizontal"
-          />
-        </div>
-      )}
+  const sidePanelMounted =
+    analysisEnabled || inspectEnabled || (analysisEnabled && state.positionEval);
 
-      <div className="flex flex-col items-center gap-1">
-        <div className="mono text-[11px] tracking-[0.25em] uppercase h-4 text-paper-3">
-          {thinking ? <span className="animate-pulse">{turnLabel}</span> : turnLabel}
-        </div>
-        {isLC1 && !gameOver && repetitionCount > 0 && (
-          <div className="rounded-full bg-vermilion/15 px-3 py-0.5 text-xs font-medium text-vermilion">
-            {tf(STRINGS.play.repetitionBadge[lang], { n: repetitionCount })}
+  return (
+    <div className="flex flex-col items-center gap-5 w-full">
+      <div className="flex flex-col lg:flex-row lg:items-start lg:justify-center gap-6 lg:gap-10 w-full">
+        {/* Board column — turn label, board, controls below it */}
+        <div className="flex flex-col items-center gap-4 lg:flex-shrink-0">
+          <div className="flex flex-col items-center gap-1">
+            <div className="mono text-[11px] tracking-[0.25em] uppercase h-4 text-paper-3">
+              {thinking ? <span className="animate-pulse">{turnLabel}</span> : turnLabel}
+            </div>
+            {isLC1 && !gameOver && repetitionCount > 0 && (
+              <div className="rounded-full bg-vermilion/15 px-3 py-0.5 text-xs font-medium text-vermilion">
+                {tf(STRINGS.play.repetitionBadge[lang], { n: repetitionCount })}
+              </div>
+            )}
+            {isLC3 && !gameOver && (
+              <div className="mono text-[10px] text-paper-3">
+                {tf(STRINGS.play.moveCounter[lang], {
+                  n: state.gameState.moveCount,
+                  cap: (ruleSet as { LC3: { cap: number } }).LC3.cap,
+                })}
+              </div>
+            )}
           </div>
-        )}
-        {isLC3 && !gameOver && (
-          <div className="mono text-[10px] text-paper-3">
-            {tf(STRINGS.play.moveCounter[lang], {
-              n: state.gameState.moveCount,
-              cap: (ruleSet as { LC3: { cap: number } }).LC3.cap,
-            })}
+
+          <Board
+            state={state.gameState}
+            selection={state.selection}
+            lastMove={state.lastMove}
+            bestMoveCell={null}
+            onSelectCell={handleSelectCell}
+            onSelectDestination={handleSelectDestination}
+            onSelectCount={handleSelectCount}
+          />
+
+          <button
+            onClick={() => setInspectEnabled((v) => !v)}
+            className={`mono text-[10px] tracking-[0.25em] uppercase px-4 py-1.5 border rounded-sm transition-colors ${
+              inspectEnabled
+                ? "border-vermilion bg-vermilion/10 text-vermilion"
+                : "border-hair text-paper-3 hover:border-paper-3 hover:text-paper-2"
+            }`}
+            aria-pressed={inspectEnabled}
+          >
+            {inspectEnabled
+              ? lang === "en" ? "hide model inspector" : "masquer l'inspecteur"
+              : lang === "en" ? "inspect model" : "inspecter le modèle"}
+          </button>
+        </div>
+
+        {/* Side panel — stacked on mobile, to the right of the board on lg+.
+            Hosts EvalBar + AnalysisPanel + InspectModelPanel. Only mounts the
+            container when there's something to show. */}
+        {sidePanelMounted && (
+          <div className="flex flex-col items-stretch gap-4 w-full lg:w-[min(36vw,420px)] lg:max-w-[420px] lg:min-w-[300px] lg:pt-7">
+            {analysisEnabled && state.positionEval && (
+              <EvalBar
+                value={state.positionEval.value}
+                proven={state.positionEval.proven}
+                direction="horizontal"
+              />
+            )}
+            {analysisEnabled && (
+              <AnalysisPanel
+                positionEval={state.positionEval}
+                loading={state.analysisLoading}
+              />
+            )}
+            {inspectEnabled && (
+              <InspectModelPanel
+                result={inspectResult}
+                loading={inspectLoading}
+                level={aiLevel}
+                lang={lang}
+              />
+            )}
           </div>
         )}
       </div>
-
-      <Board
-        state={state.gameState}
-        selection={state.selection}
-        lastMove={state.lastMove}
-        bestMoveCell={null}
-        onSelectCell={handleSelectCell}
-        onSelectDestination={handleSelectDestination}
-        onSelectCount={handleSelectCount}
-      />
-
-      {analysisEnabled && (
-        <AnalysisPanel
-          positionEval={state.positionEval}
-          loading={state.analysisLoading}
-        />
-      )}
 
       <GameControls
         canUndo={canUndo}
@@ -378,7 +450,7 @@ function PlaySession({
               {STRINGS.play.changeSettings[lang]}
             </button>
             <a
-              href="#chapter-x"
+              href="#chapter-xi"
               className="mono text-[11px] tracking-[0.25em] uppercase text-paper-3 px-5 py-2.5 hover:text-vermilion transition-colors"
             >
               {STRINGS.play.continue[lang]}
@@ -418,7 +490,7 @@ export function PlayScene() {
 
   return (
     <section
-      id="play"
+      id="chapter-x"
       className="relative py-28 md:py-36 px-6 md:px-10 border-t border-hair overflow-hidden"
       style={{ scrollMarginTop: 80 }}
     >
