@@ -36,30 +36,32 @@ export function ChapterRail() {
   const sectionsRef = useRef<Element[]>([]);
 
   useEffect(() => {
-    const sections = CHAPTER_IDS.map((id) => document.getElementById(id)).filter(
-      (el): el is HTMLElement => el !== null,
-    );
-    sectionsRef.current = sections;
-
-    if (sections.length === 0) return;
-
-    // Active = the section whose top is the highest value still <= an anchor
+    // Active = the chapter whose top is the highest value still <= an anchor
     // line at 35% from the viewport top. Scrolling past a section's top makes
     // it active until the next section's top crosses the line. This works
     // uniformly for short and tall sections, where IntersectionObserver-by-
     // ratio fails (a 2x-viewport-tall section like chapter IX peaks below the
     // 0.5 threshold and the observer never re-fires).
+    //
+    // Sections are looked up *per tick* rather than cached at mount because
+    // the Act 3 chapters (X, XI, XII) live behind a Suspense boundary and
+    // mount asynchronously after their lazy chunk resolves. A cached array
+    // would miss them, leaving the rail stuck at chapter IX.
     let frame = 0;
     const compute = () => {
       frame = 0;
       const anchor = window.innerHeight * 0.35;
       let activeIdx = -1;
-      for (let i = 0; i < sections.length; i++) {
-        const rect = sections[i]!.getBoundingClientRect();
+      const live: (HTMLElement | null)[] = CHAPTER_IDS.map((id) =>
+        document.getElementById(id),
+      );
+      sectionsRef.current = live.filter((el): el is HTMLElement => el !== null);
+      for (let i = 0; i < live.length; i++) {
+        const el = live[i];
+        if (!el) continue;
+        const rect = el.getBoundingClientRect();
         if (rect.top <= anchor) {
           activeIdx = i;
-        } else {
-          break;
         }
       }
       setActive((prev) => (prev === activeIdx ? prev : activeIdx >= 0 ? activeIdx : null));
