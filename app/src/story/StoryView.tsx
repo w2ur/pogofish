@@ -2117,6 +2117,12 @@ function Scene10Epilogue() {
       <div ref={ref} className="reveal mx-auto max-w-[60ch] space-y-8">
         <SectionChapterHead numeral={CHAPTER_NUMERAL.XII} kicker={STRINGS.chapters.XII[lang]} />
 
+        {/* The opening position — full circle to where the article began.
+            Sits at the top of the final chapter as a visual breath before
+            the closing prose. Previously rendered after the CliDownload,
+            which left it stranded as a stale board past the article's CTA. */}
+        <FinaleFreeze />
+
         <h2 className="display text-[clamp(2rem,4vw,3rem)] text-paper leading-[1.08]">
           {STRINGS.scene12.h2A[lang]}
           <span className="display-italic text-vermilion">{STRINGS.scene12.h2B[lang]}</span>
@@ -2243,7 +2249,6 @@ function Scene10Epilogue() {
           </p>
         </div>
       </div>
-      <FinaleFreeze />
     </section>
   );
 }
@@ -2300,18 +2305,17 @@ function CliDownload() {
  *  rotating slowly. The article's last image. */
 function FinaleFreeze() {
   return (
-    <div className="relative mt-24 md:mt-32 mb-8 mx-auto" style={{ height: "min(80vh, 720px)" }}>
+    <div className="relative mb-6 mx-auto" style={{ height: "min(48vh, 360px)" }}>
       <motion.div
-        initial={{ opacity: 0, scale: 0.9 }}
+        initial={{ opacity: 0, scale: 0.94 }}
         whileInView={{ opacity: 1, scale: 1 }}
-        viewport={{ once: true, margin: "-15%" }}
-        transition={{ duration: 1.2, ease: [0.16, 1, 0.3, 1] }}
+        viewport={{ once: true, margin: "-10%" }}
+        transition={{ duration: 1.0, ease: [0.16, 1, 0.3, 1] }}
         className="absolute inset-0 flex items-center justify-center"
       >
-        {/* the board, dim, contemplative */}
         <div
           className="relative"
-          style={{ width: "min(40vmin, 360px)", height: "min(40vmin, 360px)" }}
+          style={{ width: "min(36vmin, 320px)", height: "min(36vmin, 320px)" }}
         >
           <FinaleBoard />
         </div>

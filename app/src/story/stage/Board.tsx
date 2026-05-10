@@ -263,61 +263,18 @@ function Piece({
             : { duration: 0.2 }
         }
       />
-      {act === 1 ? (
-        <PieceSketch isWhite={isWhite} />
-      ) : act === 2 ? (
+      {act === 2 ? (
         <PieceAscii isWhite={isWhite} />
       ) : (
+        // Acts 1 and 3 share the same gradient-disc rendering. The act-aware
+        // colour tokens (--board-piece-{w,r}-{from,to}) already differ per
+        // act so the discs pick up cream/pencil-red in Act 1 and matte-navy/
+        // warm-gold in Act 3 automatically. The previous Act 1 sketch (ring
+        // outlines, no fill) read as unfinished next to the inline game-
+        // board pieces, so we use the cleaner disc here too.
         <PieceClean isWhite={isWhite} />
       )}
     </motion.g>
-  );
-}
-
-/** Act 1 — pencil ink on cream paper. No fill, ring + diagonal hatch
- *  inside (suggests a coin sketched in a notebook). */
-function PieceSketch({ isWhite }: { isWhite: boolean }) {
-  const stroke = isWhite ? "var(--board-piece-w-from)" : "var(--board-piece-r-from)";
-  return (
-    <g>
-      {/* outer ring */}
-      <ellipse
-        cx={0}
-        cy={0}
-        rx={PIECE_RX}
-        ry={PIECE_RY}
-        fill="none"
-        stroke={stroke}
-        strokeWidth={2.4}
-      />
-      {/* inner concentric ring */}
-      <ellipse
-        cx={0}
-        cy={0}
-        rx={PIECE_RX * 0.65}
-        ry={PIECE_RY * 0.65}
-        fill="none"
-        stroke={stroke}
-        strokeWidth={1.2}
-        opacity={0.6}
-      />
-      {/* short diagonal hatch — gives a "shaded" feel without filling */}
-      {!isWhite && (
-        <g stroke={stroke} strokeWidth={0.9} opacity={0.55}>
-          {[-PIECE_RX * 0.55, -PIECE_RX * 0.2, PIECE_RX * 0.15, PIECE_RX * 0.5].map(
-            (x, i) => (
-              <line
-                key={i}
-                x1={x - 4}
-                y1={-PIECE_RY * 0.4}
-                x2={x + 4}
-                y2={PIECE_RY * 0.4}
-              />
-            ),
-          )}
-        </g>
-      )}
-    </g>
   );
 }
 
