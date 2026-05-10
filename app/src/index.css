@@ -363,6 +363,33 @@
   animation: draw-line 1.4s cubic-bezier(0.6, 0, 0.2, 1) forwards;
 }
 
+/* ---------------- mobile stage band ---------------- */
+
+.pf-stage-band {
+  position: sticky;
+  top: 0;
+  z-index: 30;
+  height: 64px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0 16px;
+  background: var(--color-ink);
+  border-bottom: 1px solid var(--color-hair);
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
+  pointer-events: none;
+  transition: opacity 0.4s ease;
+}
+
+.pf-stage-band-act {
+  font-family: var(--font-mono);
+  font-size: 10px;
+  letter-spacing: 0.28em;
+  text-transform: uppercase;
+  color: var(--color-paper-3);
+}
+
 /* ---------------- pogo board primitives ---------------- */
 
 .pogo-board {
@@ -452,6 +479,11 @@
 .pogo-board.mini .pogo-piece { height: 7px; margin-top: -3px; }
 .pogo-board.mini .pogo-piece:first-child { margin-top: 0; }
 .pogo-board.mini .pogo-coord { display: none; }
+
+@media (max-width: 380px) {
+  .pogo-board { --cell: clamp(44px, 12vw, 56px); gap: 4px; }
+  .pogo-board.mini { --cell: clamp(22px, 6vw, 30px); gap: 2px; }
+}
 
 /* ---------------- pull quote (hanging extraction) ----------------
 
@@ -708,4 +740,53 @@
     transition-duration: 0.001ms !important;
     scroll-behavior: auto !important;
   }
+}
+
+@media print {
+  /* hide chrome and interactives */
+  .pf-stage, .pf-stage-board { display: none !important; }
+  /* slam fallback to a static line */
+  [aria-label*="wrong answer"], [aria-label*="mauvaise réponse"] {
+    page-break-inside: avoid;
+  }
+  /* footer, language toggle, play CTA, scroll progress, chapter rail */
+  .lang-toggle, .play-cta, .scroll-progress, .chapter-rail,
+  [aria-hidden="true"].fixed { display: none !important; }
+
+  body, .story {
+    background: white !important;
+    color: black !important;
+    font-family: var(--font-body), Georgia, serif !important;
+    font-size: 11pt !important;
+    line-height: 1.45 !important;
+  }
+  .display, .display-italic {
+    color: black !important;
+  }
+  .kicker { color: #666 !important; }
+  .pull-quote { break-inside: avoid; }
+  /* marginalia → flow as proper inline footnote-style block */
+  .marginalia {
+    float: none !important;
+    width: 100% !important;
+    margin: 0.6rem 0 !important;
+    border-left: 2px solid #999 !important;
+    padding: 0.3rem 0 0.3rem 0.6rem !important;
+    font-size: 9pt !important;
+    color: #444 !important;
+    background: none !important;
+  }
+  /* boards print as outlines only — no gradients */
+  .pogo-cell {
+    background: white !important;
+    border: 1px solid #999 !important;
+    box-shadow: none !important;
+  }
+  .pogo-piece.white { background: #f0f0f0 !important; box-shadow: none !important; }
+  .pogo-piece.red { background: #c0392b !important; box-shadow: none !important; }
+  /* page breaks between major chapters */
+  section { page-break-inside: avoid; }
+  h2.display { break-after: avoid; }
+  /* don't print the play scene — it's interactive */
+  .play-scene-print-replace { display: none !important; }
 }

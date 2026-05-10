@@ -1,3 +1,4 @@
+import { useEffect, useRef, useState } from "react";
 import { motion } from "motion/react";
 import type { Transition } from "motion/react";
 import { Board, type BoardMode } from "./Board";
@@ -10,6 +11,9 @@ import { Board, type BoardMode } from "./Board";
  * The board is rendered inside a relative container in the center of
  * the viewport; a transform shifts it to the requested viewport-relative
  * (x, y) position with the requested scale + rotation.
+ *
+ * On lg+ screens: floating fixed board scaled to 72vmin.
+ * Below lg: a 64px sticky band at the top showing act badge + board thumbnail.
  */
 
 export interface StageView {
@@ -47,6 +51,77 @@ export const DEFAULT_VIEW: StageView = {
 
 const SPRING: Transition = { type: "spring", stiffness: 85, damping: 18, mass: 1.2 };
 
+const ACT_LABELS: Record<string, string> = {
+  "1": "ACT I",
+  "2": "ACT II",
+  "3": "ACT III",
+};
+
+function MobileStageBand({ view }: { view: StageView }) {
+  const [act, setAct] = useState<string | null>(null);
+  const [visible, setVisible] = useState(false);
+  const timerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+
+  useEffect(() => {
+    const read = () => {
+      const a = document.documentElement.getAttribute("data-act");
+      setAct(a ?? null);
+      if (a) {
+        // Delay visibility to allow a smooth fade-in on first act arrival
+        if (timerRef.current) clearTimeout(timerRef.current);
+        timerRef.current = setTimeout(() => setVisible(true), 50);
+      } else {
+        setVisible(false);
+      }
+    };
+    read();
+    const obs = new MutationObserver(read);
+    obs.observe(document.documentElement, {
+      attributes: true,
+      attributeFilter: ["data-act"],
+    });
+    return () => {
+      obs.disconnect();
+      if (timerRef.current) clearTimeout(timerRef.current);
+    };
+  }, []);
+
+  // The stage view's opacity tracks the lg+ floating board's visibility
+  // (StageBinder view={null} → opacity 0). The band mirrors it so when a
+  // chapter explicitly hides the stage (footer, prologue, inline-figure
+  // scenes) the band fades out too — no stale board past chapter XII.
+  const stageActive = act && visible && view.opacity > 0.05;
+
+  return (
+    <div
+      className="pf-stage-band lg:hidden"
+      aria-hidden
+      style={{ opacity: stageActive ? 1 : 0 }}
+    >
+      <span className="pf-stage-band-act">
+        {act ? (ACT_LABELS[act] ?? "") : ""}
+      </span>
+      <div
+        style={{
+          width: 48,
+          height: 48,
+          flexShrink: 0,
+          borderRadius: 4,
+          overflow: "hidden",
+        }}
+      >
+        <Board
+          frameIdx={view.frameIdx}
+          mode="standard"
+          focusCell={null}
+          glow={0}
+          className="w-full h-full"
+        />
+      </div>
+    </div>
+  );
+}
+
 interface Props {
   view: StageView;
   /** show the board behind content (negative z) or in front */
@@ -55,47 +130,49 @@ interface Props {
 
 export function Stage({ view, z = "back" }: Props) {
   return (
-    <div
-      // Hidden under lg — the persistent stage relies on a sticky-aside
-      // layout the mobile/tablet view collapses to a single column, so the
-      // floating board would just paint over the prose. Inline scenes
-      // (Try-It, Play, finale figures) render their own boards and stay.
-      className="pf-stage pointer-events-none hidden lg:block"
-      style={{
-        position: "fixed",
-        inset: 0,
-        zIndex: z === "front" ? 5 : 1,
-        contain: "layout paint size",
-      }}
-      aria-hidden
-    >
-      <motion.div
-        className="pf-stage-board"
-        animate={{
-          left: `${view.x * 100}%`,
-          top: `${view.y * 100}%`,
-          scale: view.scale,
-          rotate: view.rotate,
-          opacity: view.opacity,
-        }}
-        transition={SPRING}
+    <>
+      {/* lg+: full floating board scaled to 72vmin */}
+      <div
+        className="pf-stage pointer-events-none hidden lg:block"
         style={{
-          position: "absolute",
-          width: "min(72vmin, 720px)",
-          height: "min(72vmin, 720px)",
-          translate: "-50% -50%",
-          willChange: "transform, opacity",
+          position: "fixed",
+          inset: 0,
+          zIndex: z === "front" ? 5 : 1,
+          contain: "layout paint size",
         }}
+        aria-hidden
       >
-        <Board
-          frameIdx={view.frameIdx}
-          mode={view.mode}
-          focusCell={view.focusCell}
-          heatmap={view.heatmap}
-          glow={view.glow}
-          className="w-full h-full"
-        />
-      </motion.div>
-    </div>
+        <motion.div
+          className="pf-stage-board"
+          animate={{
+            left: `${view.x * 100}%`,
+            top: `${view.y * 100}%`,
+            scale: view.scale,
+            rotate: view.rotate,
+            opacity: view.opacity,
+          }}
+          transition={SPRING}
+          style={{
+            position: "absolute",
+            width: "min(72vmin, 720px)",
+            height: "min(72vmin, 720px)",
+            translate: "-50% -50%",
+            willChange: "transform, opacity",
+          }}
+        >
+          <Board
+            frameIdx={view.frameIdx}
+            mode={view.mode}
+            focusCell={view.focusCell}
+            heatmap={view.heatmap}
+            glow={view.glow}
+            className="w-full h-full"
+          />
+        </motion.div>
+      </div>
+
+      {/* < lg: sticky band showing act badge + board thumbnail */}
+      <MobileStageBand view={view} />
+    </>
   );
 }
