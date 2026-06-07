@@ -192,7 +192,7 @@ function PlaySession({
 
   // Inspect-the-model panel — shows per-legal-move policy probabilities and
   // value head from the trained network for the current position.
-  const [inspectEnabled, setInspectEnabled] = useState(false);
+  const [inspectEnabled, setInspectEnabled] = useState(true);
   const [inspectResult, setInspectResult] = useState<InspectResult | null>(null);
   const [inspectLoading, setInspectLoading] = useState(false);
   const inspectIdRef = useRef(0);
@@ -370,16 +370,16 @@ function PlaySession({
 
           <button
             onClick={() => setInspectEnabled((v) => !v)}
-            className={`mono text-[10px] tracking-[0.25em] uppercase px-4 py-1.5 border rounded-sm transition-colors ${
+            className={`mono text-[11px] tracking-[0.2em] uppercase px-4 py-2 border rounded-sm transition-colors ${
               inspectEnabled
                 ? "border-vermilion bg-vermilion/10 text-vermilion"
-                : "border-hair text-paper-3 hover:border-paper-3 hover:text-paper-2"
+                : "border-hair text-paper-2 hover:border-paper-3 hover:text-paper"
             }`}
             aria-pressed={inspectEnabled}
           >
             {inspectEnabled
-              ? lang === "en" ? "hide model inspector" : "masquer l'inspecteur"
-              : lang === "en" ? "inspect model" : "inspecter le modèle"}
+              ? (lang === "fr" ? "Masquer l'inspecteur ▾" : "Hide inspector ▾")
+              : (lang === "fr" ? "Inspecter le modèle ▸" : "Inspect the model ▸")}
           </button>
         </div>
 
@@ -402,12 +402,19 @@ function PlaySession({
               />
             )}
             {inspectEnabled && (
-              <InspectModelPanel
-                result={inspectResult}
-                loading={inspectLoading}
-                level={aiLevel}
-                lang={lang}
-              />
+              <>
+                <p className="mono text-[11px] leading-relaxed text-paper-3 italic">
+                  {lang === "fr"
+                    ? "Voici ce qu'il croit, coup par coup — une probabilité par coup légal, une valeur entre −1 et +1. À vous de juger s'il a raison."
+                    : "This is what it believes, move by move — a probability for every legal move, a value between −1 and +1. You decide whether it's right."}
+                </p>
+                <InspectModelPanel
+                  result={inspectResult}
+                  loading={inspectLoading}
+                  level={aiLevel}
+                  lang={lang}
+                />
+              </>
             )}
           </div>
         )}

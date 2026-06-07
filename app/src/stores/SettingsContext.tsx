@@ -44,7 +44,7 @@ function applyTheme(theme: "dark" | "light"): void {
 
 export function SettingsProvider({ children }: { children: ReactNode }) {
   const [theme, setThemeState] = useState<"dark" | "light">(getSystemTheme);
-  const [analysisEnabled, setAnalysisEnabled] = useState(false);
+  const [analysisEnabled, setAnalysisEnabled] = useState(true);
   const [aiLevel, setAILevelState] = useState<AILevel>("alphazero");
   const [mctsSimulations, setMctsSimulationsState] = useState(50);
   const [variant, setVariantState] = useState<GameVariant>("sudden-death");

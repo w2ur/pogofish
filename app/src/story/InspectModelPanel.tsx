@@ -32,7 +32,7 @@ const NEURAL_LEVELS: AILevel[] = ["dqn", "alphazero", "alphazero-mcts"];
 export function InspectModelPanel({ result, loading, level, lang }: Props) {
   if (!NEURAL_LEVELS.includes(level)) {
     return (
-      <div className="w-full max-w-[min(85vw,420px)] rounded-sm border border-dashed border-hair p-4">
+      <div className="w-full rounded-sm border border-dashed border-hair p-4">
         <div className="kicker mb-2">{COPY.caption[lang]}</div>
         <p className="text-paper-3 text-[13px] leading-snug">{COPY.noNet[lang]}</p>
       </div>
@@ -41,7 +41,7 @@ export function InspectModelPanel({ result, loading, level, lang }: Props) {
 
   if (!result || loading) {
     return (
-      <div className="w-full max-w-[min(85vw,420px)] rounded-sm border border-dashed border-hair p-4">
+      <div className="w-full rounded-sm border border-dashed border-hair p-4">
         <div className="kicker mb-2">{COPY.caption[lang]}</div>
         <p className="text-paper-3 text-[13px] animate-pulse">{COPY.loading[lang]}</p>
       </div>
@@ -65,7 +65,7 @@ export function InspectModelPanel({ result, loading, level, lang }: Props) {
         : COPY.even[lang];
 
   return (
-    <div className="w-full max-w-[min(85vw,420px)] rounded-sm border border-hair p-4 space-y-4">
+    <div className="w-full rounded-sm border border-hair p-4 space-y-4">
       <div className="kicker">{COPY.caption[lang]}</div>
 
       {/* Value head */}
