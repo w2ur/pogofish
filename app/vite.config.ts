@@ -11,6 +11,12 @@ export default defineConfig({
   worker: {
     format: "es",
   },
+  resolve: {
+    // Use the extern-wasm variant of onnxruntime-web so Vite does not emit
+    // wasm asset copies into dist/assets/. The actual wasm files are served
+    // from /ort/ via viteStaticCopy and referenced by ort.env.wasm.wasmPaths.
+    conditions: ["onnxruntime-web-use-extern-wasm"],
+  },
   optimizeDeps: {
     exclude: ["pogofish-wasm"],
   },
@@ -25,8 +31,17 @@ export default defineConfig({
     viteStaticCopy({
       targets: [
         {
-          src: "node_modules/onnxruntime-web/dist/ort-wasm-simd-threaded*.{wasm,mjs}",
-          dest: ".",
+          // Copy only the JSEP wasm + its loader mjs to dist/ort/ (flat).
+          // stripBase:true strips the node_modules/onnxruntime-web/dist/ prefix.
+          src: "node_modules/onnxruntime-web/dist/ort-wasm-simd-threaded.jsep.{wasm,mjs}",
+          dest: "ort",
+          rename: { stripBase: true },
+        },
+        {
+          // Base wasm + mjs as fallback when JSEP is unavailable.
+          src: "node_modules/onnxruntime-web/dist/ort-wasm-simd-threaded.{wasm,mjs}",
+          dest: "ort",
+          rename: { stripBase: true },
         },
       ],
     }),
@@ -47,6 +62,15 @@ export default defineConfig({
         globPatterns: ["**/*.{js,css,html}"],
         maximumFileSizeToCacheInBytes: 30 * 1024 * 1024,
         runtimeCaching: [
+          {
+            // Runtime-cache same-origin ORT wasm (CacheFirst; not precached due to size).
+            urlPattern: /\/ort\/.*\.wasm$/,
+            handler: "CacheFirst",
+            options: {
+              cacheName: "ort-wasm",
+              expiration: { maxAgeSeconds: 60 * 60 * 24 * 365 },
+            },
+          },
           {
             urlPattern: /\/models\/.*\.onnx$/,
             handler: "CacheFirst",

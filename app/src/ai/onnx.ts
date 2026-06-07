@@ -9,10 +9,9 @@ import {
   STATE_SIZE,
 } from "../engine/encoding";
 
-// Load WASM binary from CDN — avoids Vite dev server file-serving issues
-// where the worker can't resolve WASM files through Vite's module system.
-// The PWA service worker caches this after first load for offline use.
-ort.env.wasm.wasmPaths = "https://cdn.jsdelivr.net/npm/onnxruntime-web@1.24.3/dist/";
+// Load WASM binaries from same-origin /ort/ (served via viteStaticCopy).
+// The PWA service worker caches these after first load for offline use.
+ort.env.wasm.wasmPaths = "/ort/";
 ort.env.wasm.numThreads = 1;
 
 export class OnnxModel {
