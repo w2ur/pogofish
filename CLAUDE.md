@@ -75,7 +75,7 @@ cd app
 npm install
 npm run dev        # dev server
 npm run build      # production build
-npx vitest run     # run tests (7 tests)
+npx vitest run     # run tests (22 tests)
 ```
 
 ## Project Structure
@@ -107,7 +107,7 @@ archive/
 ## Testing
 
 - Rust workspace: `cargo test --workspace` (74 tests: engine, search, train)
-- Web app: `cd app && npx vitest run` (7 tests)
+- Web app: `cd app && npx vitest run` (22 tests)
 - Property tests: engine invariants via proptest (piece conservation, no stalemate, legal moves apply)
 
 ## Build Warning Exceptions

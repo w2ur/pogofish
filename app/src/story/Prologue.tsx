@@ -147,10 +147,9 @@ export function Prologue() {
                 <span className="text-paper-3 mx-2">·</span>
                 <span className="text-paper-3">{f.number}</span>
               </div>
-              <h2 className="display text-[clamp(2.5rem,6vw,5.5rem)] leading-[1.05] mb-8">
+              <h2 className="display text-[clamp(2.5rem,6vw,5.5rem)] leading-[1.05] mb-8 text-balance">
                 {f.tagline[lang]}
               </h2>
-              <p className="body text-paper-2 max-w-2xl mx-auto">{f.caption[lang]}</p>
               <p className="display-italic text-vermilion text-3xl mt-10">{f.stat[lang]}</p>
             </div>
           </section>
@@ -169,7 +168,12 @@ export function Prologue() {
   const isFirstFrame = idx === 0;
   const enter = isFirstFrame ? 1 : Math.min(1, sub / 0.18);
   const exit = sub > 0.82 ? 1 - (sub - 0.82) / 0.18 : 1;
-  const contentOpacity = Math.max(0, Math.min(1, enter)) * Math.max(0, Math.min(1, exit));
+  const rawOpacity = Math.max(0, Math.min(1, enter)) * Math.max(0, Math.min(1, exit));
+  // Act III's navy ink loses legibility against cream far faster at partial
+  // opacity than Act I cocoa or Act II off-white-on-black. Floor the third
+  // frame so the resolution image never photographs as illegible ghost text
+  // mid-fade — it is the climax of the "the article ages" concept.
+  const contentOpacity = frame.act === 3 ? Math.max(0.5, rawOpacity) : rawOpacity;
 
   // The kicker sits high; the tagline is the centrepiece; the caption
   // grounds it; the stat anchors the bottom. Each gets its own
@@ -205,7 +209,7 @@ export function Prologue() {
           }}
         >
           {/* tiny brand strip */}
-          <div className="pointer-events-none absolute top-6 left-6 md:top-8 md:left-10 mono text-[10px] tracking-[0.32em] uppercase text-paper-3">
+          <div className="pointer-events-none absolute top-6 left-6 md:top-8 md:left-10 hidden sm:block mono text-[10px] tracking-[0.32em] uppercase text-paper-3">
             <span className="text-vermilion">Pogofish</span>
             <span className="mx-2">·</span>
             <span>
@@ -216,7 +220,7 @@ export function Prologue() {
           </div>
 
           {/* act/frame counter top-right */}
-          <div className="pointer-events-none absolute top-6 right-6 md:top-8 md:right-10 flex flex-col items-end gap-2 mono text-[10px] tracking-[0.32em] uppercase text-paper-3">
+          <div className="pointer-events-none absolute top-6 right-6 md:top-8 md:right-10 hidden sm:flex flex-col items-end gap-2 mono text-[10px] tracking-[0.32em] uppercase text-paper-3">
             <span>
               {lang === "en" ? "Act" : "Acte"}{" "}
               <span className="text-vermilion">{frame.number}</span>
@@ -248,7 +252,7 @@ export function Prologue() {
 
               {/* tagline — the dramatic line */}
               <h2
-                className="display max-w-[18ch] leading-[1.02]"
+                className="display max-w-[18ch] leading-[1.02] text-balance"
                 style={{
                   fontSize: "clamp(2.6rem, 7.4vw, 7rem)",
                   transform: `translate3d(0, ${liftB}px, 0)`,
@@ -257,17 +261,6 @@ export function Prologue() {
               >
                 {frame.tagline[lang]}
               </h2>
-
-              {/* caption — grounds the line */}
-              <p
-                className="body text-paper-2 mt-8 max-w-[44ch]"
-                style={{
-                  transform: `translate3d(0, ${liftC}px, 0)`,
-                  opacity: enter * 0.85,
-                }}
-              >
-                {frame.caption[lang]}
-              </p>
 
               {/* stat — bottom anchor in display-italic vermilion */}
               <div
@@ -285,9 +278,8 @@ export function Prologue() {
 
           {/* defile hint, only on the first frame */}
           {idx === 0 && sub < 0.5 && (
-            <div className="pointer-events-none absolute bottom-8 left-1/2 -translate-x-1/2 flex flex-col items-center gap-2">
-              <span className="block h-10 w-px bg-vermilion opacity-80" />
-              <span className="mono text-[9px] tracking-[0.5em] uppercase text-vermilion animate-pulse">
+            <div className="pointer-events-none absolute bottom-6 left-1/2 -translate-x-1/2 flex flex-col items-center">
+              <span className="mono text-[12px] tracking-[0.5em] uppercase text-vermilion animate-pulse">
                 ↓
               </span>
             </div>

@@ -148,12 +148,17 @@ export function TryYourself() {
       </div>
 
       {drillComplete && (
-        <a
-          href="#chapter-iv"
-          className="kicker text-vermilion underline underline-offset-4 hover:text-paper transition-colors"
-        >
-          {STRINGS.tryYourself.continue[lang]}
-        </a>
+        <div className="flex flex-col items-center gap-4 max-w-md text-center">
+          <p className="display-italic text-paper-2 text-[1.25rem] leading-snug">
+            {STRINGS.tryYourself.drillHook[lang]}
+          </p>
+          <a
+            href="#chapter-iv"
+            className="kicker text-vermilion underline underline-offset-4 hover:text-paper transition-colors"
+          >
+            {STRINGS.tryYourself.continue[lang]}
+          </a>
+        </div>
       )}
     </section>
   );

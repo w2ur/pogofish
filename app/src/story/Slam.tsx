@@ -2,6 +2,8 @@ import { useEffect, useRef, useState } from "react";
 import { createPortal } from "react-dom";
 import { useLang } from "./LangContext";
 import { usePrefersReducedMotion } from "./usePrefersReducedMotion";
+import { useGuess } from "./GuessContext";
+import { FMT } from "./data";
 
 /**
  * The wrong-answer slam — the iconic moment of the article.
@@ -119,6 +121,7 @@ function overshoot(t: number) {
 
 export function WrongAnswerSlam() {
   const { lang } = useLang();
+  const { guess } = useGuess();
   const reduced = usePrefersReducedMotion();
   const ref = useRef<HTMLElement>(null);
   const { p, visible } = useSlamState(ref);
@@ -423,36 +426,37 @@ export function WrongAnswerSlam() {
                 }}
               />
             </div>
-          </div>
 
-          {/* "× 50" stamp — slams from above onto the upper-right of the
-              number with a real-ink-stamp aesthetic. Lands off-center so it
-              looks struck rather than placed. */}
-          <div
-            aria-hidden
-            className="absolute pointer-events-none select-none"
-            style={{
-              top: "50%",
-              left: "50%",
-              transform: `translate3d(calc(-50% + 14vw), calc(-50% - 14vh + ${stampY}px), 0) rotate(${stampRot}deg) scale(${stampScale})`,
-              opacity: stampOpacity * 0.92 * (1 - blackT),
-              fontFamily: "var(--font-display, serif)",
-              fontStyle: "italic",
-              fontWeight: 700,
-              fontSize: "clamp(2.4rem, 4.6vw, 4.2rem)",
-              color: "var(--color-vermilion)",
-              padding: "0.18em 0.55em",
-              border: "4px solid var(--color-vermilion)",
-              borderRadius: 4,
-              letterSpacing: "0.06em",
-              textShadow:
-                "0 0 14px color-mix(in oklab, var(--color-vermilion) 40%, transparent)",
-              boxShadow:
-                "inset 0 0 12px color-mix(in oklab, var(--color-vermilion) 18%, transparent)",
-              whiteSpace: "nowrap",
-            }}
-          >
-            × 50
+            {/* "× 50" stamp — anchored to the number's top-right corner so it
+                clears the digits entirely (it used to smear the "000"). Slams
+                in from above and settles struck across the corner. */}
+            <div
+              aria-hidden
+              className="absolute pointer-events-none select-none"
+              style={{
+                left: "100%",
+                top: 0,
+                transformOrigin: "left top",
+                transform: `translate3d(calc(-45% + ${stampY * 0.1}px), calc(-62% + ${stampY}px), 0) rotate(${stampRot}deg) scale(${stampScale})`,
+                opacity: stampOpacity * 0.92,
+                fontFamily: "var(--font-display, serif)",
+                fontStyle: "italic",
+                fontWeight: 700,
+                fontSize: "clamp(2rem, 4vw, 3.6rem)",
+                color: "var(--color-vermilion)",
+                padding: "0.18em 0.55em",
+                border: "4px solid var(--color-vermilion)",
+                borderRadius: 4,
+                letterSpacing: "0.06em",
+                textShadow:
+                  "0 0 14px color-mix(in oklab, var(--color-vermilion) 40%, transparent)",
+                boxShadow:
+                  "inset 0 0 12px color-mix(in oklab, var(--color-vermilion) 18%, transparent)",
+                whiteSpace: "nowrap",
+              }}
+            >
+              × 50
+            </div>
           </div>
 
           {/* caption */}
@@ -506,6 +510,21 @@ export function WrongAnswerSlam() {
             >
               {COPY.closer[lang]}
             </p>
+            {guess != null && (
+              <p
+                className="mono mt-4"
+                style={{
+                  color: "var(--color-paper-3)",
+                  fontSize: "clamp(0.8rem, 1vw, 0.95rem)",
+                  opacity: Math.max(0, truthT - 0.5),
+                  letterSpacing: "0.04em",
+                }}
+              >
+                {lang === "en"
+                  ? `you guessed ${FMT.compact(guess)}. the machine promised a million.`
+                  : `vous aviez dit ${FMT.compact(guess)}. la machine en promettait un million.`}
+              </p>
+            )}
           </div>
         </div>
 

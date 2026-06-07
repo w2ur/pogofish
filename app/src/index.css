@@ -265,6 +265,9 @@
 .mono {
   font-family: var(--font-mono);
   letter-spacing: -0.01em;
+  /* long unbroken tokens (oom-kill: pid=4711, rss=36.2GB; table=812k) must
+     not force horizontal scroll on narrow screens. */
+  overflow-wrap: anywhere;
 }
 
 .kicker {
@@ -299,6 +302,26 @@
   padding: 0.4rem 0.6rem 0 0;
   color: var(--color-vermilion);
   font-weight: 400;
+}
+
+/* Act III's warm gold (#c87a3c) is a fine accent but fails WCAG contrast as
+   TEXT on the cream Act III surface (~2.93:1). Point text roles at the darker
+   gold (--color-vermilion-deep #94561f ≈ 5.12:1, passes AA) while leaving the
+   lighter gold for non-text fills (rules, board halo, borders, backgrounds). */
+[data-act="3"] .kicker,
+[data-act="3"] .dropcap::first-letter,
+[data-act="3"] .text-vermilion {
+  color: var(--color-vermilion-deep);
+}
+[data-act="3"] .term {
+  border-bottom-color: var(--color-vermilion-deep);
+}
+
+/* guess-and-reveal slider — native range tinted to the act accent */
+.pf-guess-range {
+  accent-color: var(--color-vermilion);
+  cursor: pointer;
+  height: 1.5rem;
 }
 
 /* ---------------- reveal animations ---------------- */

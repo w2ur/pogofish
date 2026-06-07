@@ -32,11 +32,11 @@ export const STRINGS = {
     IV:  { en: "\u201CNo more than a million.\u201D", fr: "«\u00A0Pas plus d'un million.\u00A0»" },
     V:   { en: "Thirty-six gigabytes at dawn",        fr: "Trente-six gigaoctets, un ventilateur qui se tait" },
     VI:  { en: "The tree had no leaves",              fr: "L'arbre n'avait pas de feuilles" },
-    VII: { en: "The rules became the variable",       fr: "La règle devient la variable" },
+    VII: { en: "The rule becomes the variable",        fr: "La règle devient la variable" },
     VIII:{ en: "Five candidate endings",              fr: "Cinq manières de finir" },
     IX:  { en: "One survives all three axes",         fr: "Une seule tient les trois critères" },
     X:   { en: "Now it is your move",                 fr: "À vous de jouer" },
-    XI:  { en: "What it learned about winning",       fr: "Ce que la machine a appris" },
+    XI:  { en: "What it decided about winning",       fr: "Ce que la machine a appris" },
     XII: { en: "Keep the problem in your head",       fr: "Garder le problème en tête" },
   },
   pinned: {
@@ -96,12 +96,13 @@ export const STRINGS = {
     h2C: { en: ".",                                                                       fr: "." },
   },
   tryYourself: {
-    h2:           { en: "Try a few moves before we go on.", fr: "Cinq coups pour prendre le jeu en main, avant de reprendre la lecture." },
+    h2:           { en: "Try a few moves before we go on.", fr: "Cinq coups, le temps de sentir les règles." },
     body:         { en: "You play White. Red answers with a fixed rule: capture if it can, otherwise stack, otherwise pick the first legal move. After five of your plies, the article scrolls on.",
                     fr: "Vous jouez les Blancs. Rouge répond par une règle fixe : il capture s'il peut, sinon il empile, et à défaut il joue le premier coup légal. Cinq de vos demi-coups suffisent ; après quoi l'article reprend son cours." },
     bodyWhite:    { en: "White",         fr: "les Blancs" },
     ply:          { en: "ply {n} / {m}", fr: "demi-coup {n} / {m}" },
     drillDone:    { en: "Drill complete.", fr: "Exercice terminé." },
+    drillHook:    { en: "That's the whole game. Three by three. Now watch it eat six days of compute.", fr: "C'est tout le jeu. Trois sur trois. Regardez-le maintenant engloutir six jours de calcul." },
     yourMove:     { en: "Your move.",     fr: "À vous." },
     redThinking:  { en: "Red is thinking…", fr: "Rouge réfléchit…" },
     continue:     { en: "↓ continue reading", fr: "↓ continuer la lecture" },
@@ -124,7 +125,7 @@ export const STRINGS = {
     failReasons: {
       "LC2-30": { en: "Parity of cap decides winner — skill barely matters.", fr: "La parité du plafond tranche à la place des joueurs." },
       "LC3-40": { en: "Draw rate creeps. Readable but flat.",                  fr: "Les nuls s'installent. Jouable, mais sans relief." },
-      "LC1-3":  { en: "Balanced, but defensive play dominates.",               fr: "Équilibré sur le papier, défensif en pratique." },
+      "LC1-3":  { en: "Balanced on paper, defensive in play.",                  fr: "Équilibré sur le papier, défensif en pratique." },
     },
     suddenDeath: {
       paraEn: "Sudden Death wins on elegance. Repeat a position, you lose. Every move is consequential because the cost of stalling is built into the rule itself, not bolted on with a move counter. The network learned this quickly: strong AlphaZero beat strong DQN 82 % of the time, and zero games ended in a draw. A game that either decides or continues.",

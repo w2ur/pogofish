@@ -13,6 +13,8 @@ import { ActDebugger } from "./ActDebugger";
 import { Prologue } from "./Prologue";
 import { WrongAnswerSlam } from "./Slam";
 import { Marginalia } from "./Marginalia";
+import { GuessReachable } from "./GuessReachable";
+import { GuessProvider } from "./GuessContext";
 import { useAct } from "./useAct";
 
 import { ScrollProgress } from "./ScrollProgress";
@@ -57,6 +59,7 @@ export function StoryView() {
   usePageTitle();
   return (
     <StageProvider>
+      <GuessProvider>
       <div className="story story-grain story-noise min-h-screen">
         <SkipLink />
         <ActAnnouncer />
@@ -94,6 +97,7 @@ export function StoryView() {
         <Act act={2} global>
           <StageBinder view={null}><Scene7Experiments /></StageBinder>
           <StageBinder view={null}><Scene8Verdict /></StageBinder>
+          <StageBinder view={null}><RecoveryBeat /></StageBinder>
         </Act>
 
         {/* ------------------------------------------------------------
@@ -103,10 +107,13 @@ export function StoryView() {
             ------------------------------------------------------------ */}
         <Suspense fallback={<ActLoadingFallback />}>
           <Act act={3} global>
+            {/* Glossary (reference material) sits BEFORE the epilogue so the
+                article's reframe + dated sign-off land genuinely last — no
+                appendix scrolling past the close. */}
             <StageBinder view={null}><PlayScene /></StageBinder>
             <StageBinder view={null}><LearningsScene /></StageBinder>
-            <StageBinder view={null}><Scene10Epilogue /></StageBinder>
             <StageBinder view={null}><GlossaryConstellation /></StageBinder>
+            <StageBinder view={null}><Scene10Epilogue /></StageBinder>
           </Act>
         </Suspense>
 
@@ -119,6 +126,7 @@ export function StoryView() {
         <LangToggle />
         <ActDebugger />
       </div>
+      </GuessProvider>
     </StageProvider>
   );
 }
@@ -302,15 +310,15 @@ function PinnedStory() {
   // Frames mirror PINNED_BOARDS in data.ts.
   const panelStageViews: Array<Parameters<typeof stage.setView>[0]> = [
     // III · opening — clean, wide, contemplative
-    { frameIdx: 0,  x: 0.22, y: 0.5,  scale: 0.55, rotate: 0,    mode: "standard", focusCell: null, glow: 0.30 },
+    { frameIdx: 0,  x: 0.22, y: 0.5,  scale: 0.64, rotate: 0,    mode: "standard", focusCell: null, glow: 0.30 },
     // IV · the claim — slight tilt, warmer glow (the bad answer is being given)
-    { frameIdx: 2,  x: 0.22, y: 0.5,  scale: 0.58, rotate: -1.5, mode: "standard", focusCell: null, glow: 0.45 },
+    { frameIdx: 2,  x: 0.22, y: 0.5,  scale: 0.64, rotate: -1.5, mode: "standard", focusCell: null, glow: 0.45 },
     // V · six days — board pushed up slightly, brighter glow (peak stress)
-    { frameIdx: 8,  x: 0.22, y: 0.46, scale: 0.55, rotate: 0,    mode: "standard", focusCell: null, glow: 0.62 },
+    { frameIdx: 8,  x: 0.22, y: 0.46, scale: 0.64, rotate: 0,    mode: "standard", focusCell: null, glow: 0.62 },
     // VI · the tree had no leaves — exploded mode focuses on b2 (the equilibrium cell)
-    { frameIdx: 11, x: 0.22, y: 0.5,  scale: 0.55, rotate: 0,    mode: "exploded", focusCell: 4,    glow: 0.45 },
+    { frameIdx: 11, x: 0.22, y: 0.5,  scale: 0.62, rotate: 0,    mode: "exploded", focusCell: 4,    glow: 0.45 },
     // VII · rules became variable — fanout: ghost copies fan behind the main board
-    { frameIdx: 10, x: 0.22, y: 0.5,  scale: 0.55, rotate: 0.8,  mode: "fanout",   focusCell: null, glow: 0.50 },
+    { frameIdx: 10, x: 0.22, y: 0.5,  scale: 0.62, rotate: 0.8,  mode: "fanout",   focusCell: null, glow: 0.50 },
   ];
 
   // Apply the view ONLY when (a) the active panel changes or (b) the
@@ -465,10 +473,11 @@ function PinnedStory() {
             chapter={CHAPTER_NUMERAL.III}
             kicker={STRINGS.chapters.III[lang]}
           >
+            <MobileChapterBoard frameIdx={panelStageViews[0]!.frameIdx} glow={panelStageViews[0]!.glow} act={1} />
             <EnFr
               en={<>
                 <p className="dropcap">
-                  Pogo arrived in William's life by way of a friend, who had
+                  Pogo arrived in my life by way of a friend who had
                   the box and explained the rules across a dining table one
                   evening. Three rows, three columns, twelve pieces, no dice
                   and no hidden cards — both players see everything, like in
@@ -476,7 +485,7 @@ function PinnedStory() {
                   rather longer to forget.
                 </p>
                 <p>
-                  What he was actually after, that month, was a{" "}
+                  What I was actually after, that month, was a{" "}
                   <Term term="RL">reinforcement-learning</Term> experiment.
                   RL — reinforcement learning — is the branch of machine
                   learning where a program is taught to play a game by
@@ -489,11 +498,11 @@ function PinnedStory() {
                   centres for weeks at a stretch.
                 </p>
                 <p>
-                  William did not have a small data centre. He had eight
-                  gigabytes of RAM. What he wanted was a game small enough
+                  I did not have a small data centre. I had eight
+                  gigabytes of RAM. What I wanted was a game small enough
                   that the experiment could fit on a laptop — train,
                   evaluate, and play against the result, all on one machine,
-                  in time he could measure in days rather than months.
+                  in time I could measure in days rather than months.
                 </p>
                 <p>
                   Pogo, three rows by three columns, looked very much like
@@ -502,15 +511,15 @@ function PinnedStory() {
               </>}
               fr={<>
                 <p className="dropcap">
-                  Pogo est entré dans la vie de William par un ami, qui en
-                  avait la boîte et lui en a expliqué les règles sur un coin
+                  Pogo est entré dans ma vie par un ami qui en
+                  avait la boîte et m'en a expliqué les règles sur un coin
                   de table un soir. Trois lignes, trois colonnes, douze
                   pièces, ni dé ni carte cachée — les deux joueurs voient
                   tout, comme aux échecs. Les règles s'apprennent en cinq
                   minutes. Le jeu, lui, met plus longtemps à s'oublier.
                 </p>
                 <p>
-                  Ce qu'il cherchait, ce mois-là, c'était une expérience d'
+                  Ce que je cherchais, ce mois-là, c'était une expérience d'
                   <Term term="RL">apprentissage par renforcement</Term>. Le
                   RL — la branche du machine learning où l'on apprend à un
                   programme à jouer en le faisant jouer contre lui-même, des
@@ -523,8 +532,8 @@ function PinnedStory() {
                   centers pendant des semaines.
                 </p>
                 <p>
-                  William n'avait pas de petit data center. Il avait huit
-                  gigaoctets de RAM. Ce qu'il voulait, c'était un jeu assez
+                  Je n'avais pas de petit data center. J'avais huit
+                  gigaoctets de RAM. Ce que je voulais, c'était un jeu assez
                   petit pour que l'expérience tienne sur un laptop —
                   entraîner, évaluer, et affronter le résultat, sur la même
                   machine, dans un temps qui se compterait en jours plutôt
@@ -537,8 +546,8 @@ function PinnedStory() {
               </>}
             />
             <EnFr
-              en={<p>He did not write the first line of code that evening. He opened a chat with Claude — a general-purpose AI he had been using for months — to plan the experiment.</p>}
-              fr={<p>Il n'a pas écrit la première ligne de code ce soir-là. Il a ouvert un chat avec Claude — une IA générale qu'il utilisait depuis plusieurs mois — pour planifier l'expérience.</p>}
+              en={<p>I did not write the first line of code that evening. I opened a chat with Claude — a general-purpose AI I had been using for months — to plan the experiment.</p>}
+              fr={<p>Je n'ai pas écrit la première ligne de code ce soir-là. J'ai ouvert un chat avec Claude — une IA générale que j'utilisais depuis plusieurs mois — pour planifier l'expérience.</p>}
             />
           </NarrativePanel>
 
@@ -549,12 +558,13 @@ function PinnedStory() {
             chapter={CHAPTER_NUMERAL.IV}
             kicker={STRINGS.chapters.IV[lang]}
           >
+            <MobileChapterBoard frameIdx={panelStageViews[1]!.frameIdx} glow={panelStageViews[1]!.glow} act={1} />
             <EnFr
               en={<>
                 <p>
-                  In the chat, William described what he wanted: an RL agent
-                  that learns Pogo by playing itself, on his laptop, in days.
-                  He asked Claude how to structure the project.
+                  In the chat, I described what I wanted: an RL agent
+                  that learns Pogo by playing itself, on my laptop, in days.
+                  I asked Claude how to structure the project.
                 </p>
                 <p>
                   Claude came back with a five-phase plan. Phase one, a
@@ -573,7 +583,7 @@ function PinnedStory() {
                   reader can play the trained network.
                 </p>
                 <p>
-                  William had not known about minimax going in. Once Claude
+                  I had not known about minimax going in. Once Claude
                   laid out the rationale — solve first, train against the
                   solution — it landed cleanly. The plan made sense.
                 </p>
@@ -585,9 +595,9 @@ function PinnedStory() {
               </>}
               fr={<>
                 <p>
-                  Dans le chat, William a décrit ce qu'il voulait : un agent
+                  Dans le chat, j'ai décrit ce que je voulais : un agent
                   RL qui apprenne à jouer à Pogo en s'affrontant lui-même,
-                  sur son laptop, en quelques jours. Il a demandé à Claude
+                  sur mon laptop, en quelques jours. J'ai demandé à Claude
                   comment structurer le projet.
                 </p>
                 <p>
@@ -608,7 +618,7 @@ function PinnedStory() {
                   réseau entraîné.
                 </p>
                 <p>
-                  William ne connaissait pas le minimax avant cette
+                  Je ne connaissais pas le minimax avant cette
                   conversation. Une fois la logique posée — résoudre d'abord,
                   entraîner contre la solution — la chose tenait. Le plan
                   faisait sens.
@@ -621,6 +631,7 @@ function PinnedStory() {
                 </p>
               </>}
             />
+            <GuessReachable />
             <TranscriptCard
               header={STRINGS.transcript.header[lang]}
               body={
@@ -638,7 +649,7 @@ function PinnedStory() {
                 <p>
                   The estimate sounded fine. A million positions, brute-forced
                   in an afternoon, was no obstacle to the project; it would
-                  get out of the way of the more interesting RL work. William
+                  get out of the way of the more interesting RL work. I
                   agreed to the plan and asked Claude to write the engine.
                 </p>
                 <p>
@@ -651,7 +662,7 @@ function PinnedStory() {
                   L'estimation tenait. Un million de positions passées à la
                   moulinette en un après-midi, ce n'était pas un obstacle —
                   ça libérait le terrain pour la partie RL, plus
-                  intéressante. William a validé le plan et a demandé à
+                  intéressante. J'ai validé le plan et demandé à
                   Claude d'écrire le moteur.
                 </p>
                 <p>
@@ -668,6 +679,7 @@ function PinnedStory() {
             chapter={CHAPTER_NUMERAL.V}
             kicker={STRINGS.chapters.V[lang]}
           >
+            <MobileChapterBoard frameIdx={panelStageViews[2]!.frameIdx} glow={panelStageViews[2]!.glow} act={2} />
             <Marginalia stamp="d1 09:14">
               <EnFr
                 en={<>solver up. table=812k. growth +12%/h. nominal.</>}
@@ -678,7 +690,7 @@ function PinnedStory() {
               en={<>
                 <p>
                   The engine came together in two days. Claude wrote it;
-                  William read each commit, asked questions, ran the test
+                  I read each commit, asked questions, ran the test
                   fixtures the engine shipped with. Phase one, done.
                 </p>
                 <p>
@@ -695,8 +707,8 @@ function PinnedStory() {
                   finishes a million positions over lunch.
                 </p>
                 <p>
-                  William launched it, watched the first few hundred
-                  positions get scored, and went to do something else. He
+                  I launched it, watched the first few hundred
+                  positions get scored, and went to do something else. I
                   kept Claude posted. Day one, table at eight hundred
                   thousand entries, growth nominal. Day two, slower,
                   plausible. Day three, the curve was already shaped like
@@ -711,7 +723,7 @@ function PinnedStory() {
               fr={<>
                 <p>
                   Le moteur a tenu en deux jours. Claude l'a écrit ;
-                  William a lu chaque commit, posé des questions, lancé les
+                  j'ai lu chaque commit, posé des questions, lancé les
                   fixtures de test livrées avec. Phase un, faite.
                 </p>
                 <p>
@@ -729,9 +741,9 @@ function PinnedStory() {
                   deux.
                 </p>
                 <p>
-                  William l'a lancé, a regardé les premières centaines de
-                  positions s'évaluer, et est parti faire autre chose. Il
-                  tenait Claude au courant. Jour un, table à huit cent mille
+                  Je l'ai lancé, j'ai regardé les premières centaines de
+                  positions s'évaluer, et je suis parti faire autre chose. Je
+                  tenais Claude au courant. Jour un, table à huit cent mille
                   entrées, croissance nominale. Jour deux, plus lente,
                   plausible. Jour trois, la courbe ne ressemblait déjà plus
                   à rien de connu. Jour cinq, elle montait presque à la
@@ -755,16 +767,16 @@ function PinnedStory() {
             <EnFr
               en={<>
                 <p>
-                  They got lucky once. The solver had been running in a
+                  I got lucky once. The solver had been running in a
                   bash shell inside a Claude Code session, which meant the
                   dead process's memory image was still reachable from
-                  inside the same session: between them they pulled the
+                  inside the same session: between us, Claude and I pulled the
                   value table out of RAM into a Pickle file before the
                   session ended. On paper, the six days of compute were
                   salvaged.
                 </p>
                 <p>
-                  On the strength of that recovery, William asked Claude
+                  On the strength of that recovery, I asked Claude
                   whether it was safe to relaunch — outside the session
                   this time, on a fresh terminal, with a longer leash.
                   Claude said yes.
@@ -779,16 +791,16 @@ function PinnedStory() {
               </>}
               fr={<>
                 <p>
-                  Ils ont eu de la chance, une fois. Le solveur tournait
+                  J'ai eu de la chance, une fois. Le solveur tournait
                   dans un bash à l'intérieur d'une session Claude Code, ce
                   qui voulait dire que l'image mémoire du processus mort
-                  était encore accessible depuis la même session : à eux
-                  deux, ils ont sorti la table de valeurs de la RAM dans
+                  était encore accessible depuis la même session : à nous
+                  deux, Claude et moi avons sorti la table de valeurs de la RAM dans
                   un fichier Pickle avant la fin de la session. Sur le
                   papier, les six jours de calcul étaient sauvés.
                 </p>
                 <p>
-                  Fort de cette récupération, William a demandé à Claude
+                  Fort de cette récupération, j'ai demandé à Claude
                   si on pouvait relancer — cette fois en dehors de la
                   session, dans un terminal frais, avec plus de marge.
                   Claude a dit oui.
@@ -812,6 +824,7 @@ function PinnedStory() {
             chapter={CHAPTER_NUMERAL.VI}
             kicker={STRINGS.chapters.VI[lang]}
           >
+            <MobileChapterBoard frameIdx={panelStageViews[3]!.frameIdx} glow={panelStageViews[3]!.glow} act={2} />
             <Marginalia stamp="diagnosis">
               <EnFr
                 en={<>cycle? → not detected. same state filed N times, one per path.</>}
@@ -821,7 +834,7 @@ function PinnedStory() {
             <EnFr
               en={<>
                 <p>
-                  After the second loss, the two of them sat down with the
+                  After the second loss, Claude and I sat down with the
                   source code and worked out what had actually been going
                   on.
                 </p>
@@ -854,7 +867,7 @@ function PinnedStory() {
                   wrote them.
                 </p>
                 <p>
-                  While they were in the code, they noticed something
+                  While we were in the code, we noticed something
                   else. Pogo's win condition — a player loses when no cell
                   on the board has their colour on top, leaving them with
                   no legal move — left room, in theory, for two careful
@@ -868,8 +881,8 @@ function PinnedStory() {
               </>}
               fr={<>
                 <p>
-                  Après le second échec, ils se sont installés tous les deux
-                  devant le code source et ont compris ce qui s'était
+                  Après le second échec, Claude et moi nous sommes installés
+                  devant le code source et avons compris ce qui s'était
                   réellement passé.
                 </p>
                 <p>
@@ -903,7 +916,7 @@ function PinnedStory() {
                   avec le commentaire. Claude les a écrites.
                 </p>
                 <p>
-                  Pendant qu'ils étaient dans le code, ils ont remarqué
+                  Pendant que nous étions dans le code, nous avons remarqué
                   autre chose. La condition de défaite de Pogo — on perd
                   quand plus aucune case du plateau n'a sa couleur au
                   sommet, et donc quand on n'a plus de coup légal —
@@ -918,6 +931,12 @@ function PinnedStory() {
               </>}
             />
             <TreeDiagram />
+            <PullQuote>
+              <EnFr
+                en={<>Twelve days of compute. Two lines of code. Three with the comment.</>}
+                fr={<>Douze jours de calcul. Deux lignes de code. Trois avec le commentaire.</>}
+              />
+            </PullQuote>
           </NarrativePanel>
 
           {/* VII — the rule, the rerun, the depth that wasn't enough */}
@@ -927,10 +946,11 @@ function PinnedStory() {
             chapter={CHAPTER_NUMERAL.VII}
             kicker={STRINGS.chapters.VII[lang]}
           >
+            <MobileChapterBoard frameIdx={panelStageViews[4]!.frameIdx} glow={panelStageViews[4]!.glow} act={2} />
             <EnFr
               en={<>
                 <p>
-                  The rule rewrite was small. They added one rule: if the
+                  The rule rewrite was small. We added one rule: if the
                   same position recurs three times in a game, the player to
                   move loses. A repeat once or twice is just normal
                   back-and-forth. Three times is a sign nobody wants to
@@ -986,7 +1006,7 @@ function PinnedStory() {
                 </p>
                 <p>
                   Which is, on reflection, the right setup for the
-                  experiment William had wanted from the start. Everything
+                  experiment I had wanted from the start. Everything
                   brute force can prove has now been proved. Everything
                   beyond that — the positions undecided at twenty
                   half-moves — is exactly where reinforcement learning
@@ -1016,7 +1036,7 @@ function PinnedStory() {
                 </p>
                 <p>
                   C'est, à la réflexion, le bon cadre pour l'expérience
-                  que William voulait dès le départ. Tout ce que la force
+                  que je voulais dès le départ. Tout ce que la force
                   brute peut prouver est maintenant prouvé. Le reste — les
                   positions encore indécises à vingt demi-coups — est
                   exactement le terrain où l'apprentissage par
@@ -1193,6 +1213,37 @@ function SectionChapterHead({
   return <ChapterHead numeral={numeral} kicker={kicker} size="section" />;
 }
 
+/** Mobile-only inline board at the top of each pinned chapter. On lg+ the
+ *  persistent floating Stage carries the board; below lg it is hidden, so
+ *  without this the signature device — a board that morphs frame-by-frame and
+ *  ages act-by-act — never reaches phone readers (where most arrive). Standard
+ *  mode keeps the in-flow SVG from overflowing on narrow screens; the frame and
+ *  the act still change per chapter, which is the whole point. */
+function MobileChapterBoard({
+  frameIdx = 0,
+  glow = 0.4,
+  act,
+}: {
+  frameIdx?: number;
+  glow?: number;
+  act: 1 | 2 | 3;
+}) {
+  return (
+    <div className="lg:hidden mb-8 flex justify-center" aria-hidden>
+      <div style={{ width: "min(72vw, 320px)" }}>
+        <FinaleSvgBoard
+          frameIdx={frameIdx}
+          mode="standard"
+          glow={glow}
+          act={act}
+          instant
+          className="w-full h-full"
+        />
+      </div>
+    </div>
+  );
+}
+
 function NarrativePanel({ chapter, kicker, children, sectionRef, id }: PanelProps) {
   return (
     <section id={id} ref={sectionRef} className="min-h-screen flex items-center py-28">
@@ -1296,7 +1347,16 @@ function SixDaysChart() {
           {lang === "fr" ? "JOUR 6" : "DAY 6"}
         </span>
       </div>
-      <svg viewBox={`0 0 ${width} ${height}`} className="w-full h-auto">
+      <svg
+        viewBox={`0 0 ${width} ${height}`}
+        className="w-full h-auto"
+        role="img"
+        aria-label={
+          lang === "en"
+            ? "Line chart. The solver's state table grows nominally for the first two days, then bends near-vertical, reaching 49 million entries and 36 GB of RAM before the kernel kills the process on day six."
+            : "Graphique. La table d'états du solveur croît normalement les deux premiers jours, puis grimpe presque à la verticale jusqu'à 49 millions d'entrées et 36 Go de RAM, avant que le noyau ne tue le processus au sixième jour."
+        }
+      >
         <defs>
           <linearGradient id="area-grad" x1="0" y1="0" x2="0" y2="1">
             <stop offset="0%" style={{ stopColor: "var(--color-vermilion)", stopOpacity: 0.28 }} />
@@ -1406,10 +1466,32 @@ function SolverLogStream() {
           return (
             <motion.li
               key={i}
-              {...fadeRight}
               initial={{ opacity: 0, x: -6 }}
-              transition={{ delay: 0.2 + i * 0.16, duration: 0.4, ease: "easeOut" }}
+              whileInView={
+                isKill
+                  ? { opacity: [0, 1, 0.15, 1, 0.5, 1], x: 0 }
+                  : { opacity: 1, x: 0 }
+              }
+              viewport={{ once: true, margin: "-10%" }}
+              transition={
+                isKill
+                  ? {
+                      delay: 0.2 + i * 0.16,
+                      duration: 1.0,
+                      ease: "easeOut",
+                      times: [0, 0.18, 0.32, 0.5, 0.66, 1],
+                    }
+                  : { delay: 0.2 + i * 0.16, duration: 0.4, ease: "easeOut" }
+              }
               className="flex gap-3"
+              style={
+                isKill
+                  ? {
+                      textShadow:
+                        "0 0 12px color-mix(in oklab, var(--color-second) 55%, transparent)",
+                    }
+                  : undefined
+              }
             >
               <span className="text-paper-3 tabular-nums w-[78px] flex-none">{l.t}</span>
               <span
@@ -1468,7 +1550,16 @@ function TreeDiagram() {
         <div className="kicker" style={{ color: "var(--color-paper-3)" }}>
           {STRINGS.charts.whatIDrew[lang]}
         </div>
-        <svg viewBox="0 0 160 120" className="w-full h-auto">
+        <svg
+          viewBox="0 0 160 120"
+          className="w-full h-auto"
+          role="img"
+          aria-label={
+            lang === "en"
+              ? "Diagram of a finite game tree: branches descend from a single root and terminate in leaf nodes — a game that always ends."
+              : "Schéma d'un arbre de jeu fini : les branches descendent d'une racine unique et se terminent par des feuilles — un jeu qui finit toujours."
+          }
+        >
           {/* root */}
           <motion.circle
             cx={80}
@@ -1526,7 +1617,16 @@ function TreeDiagram() {
       </div>
       <div className="space-y-3">
         <div className="kicker">{STRINGS.charts.whatIWasSolving[lang]}</div>
-        <svg viewBox="0 0 160 120" className="w-full h-auto">
+        <svg
+          viewBox="0 0 160 120"
+          className="w-full h-auto"
+          role="img"
+          aria-label={
+            lang === "en"
+              ? "Diagram of the tree actually being solved: the same branches never reach leaves — they fade into a dashed artificial horizon, because cycles let the game continue forever."
+              : "Schéma de l'arbre réellement résolu : les mêmes branches n'atteignent jamais de feuilles — elles s'estompent dans un horizon artificiel en pointillés, car les cycles laissent la partie continuer indéfiniment."
+          }
+        >
           <motion.circle
             cx={80}
             cy={14}
@@ -1601,7 +1701,7 @@ function Scene7Experiments() {
         <div className="grid lg:grid-cols-[minmax(0,_56ch)_minmax(14rem,_18rem)] gap-12 lg:gap-16 items-start">
         <div ref={ref} className="reveal space-y-6">
           <SectionChapterHead numeral={CHAPTER_NUMERAL.VIII} kicker={STRINGS.chapters.VIII[lang]} />
-          <h2 className="display text-[clamp(2rem,4vw,3.25rem)] text-paper leading-[1.08]">
+          <h2 className="display text-[clamp(2rem,4vw,3.25rem)] text-paper leading-[1.08] text-balance">
             {STRINGS.scene7.h2A[lang]}
             <span className="display-italic text-vermilion">{STRINGS.scene7.h2B[lang]}</span>
             {STRINGS.scene7.h2C[lang]}
@@ -1611,9 +1711,9 @@ function Scene7Experiments() {
               en={<>
                 <p>
                   To pick the right rule, you have to actually play each
-                  variant. The project ended up testing five small
-                  variations on the terminating rule, and for each it
-                  built three opponents that could be set against one
+                  variant. I ended up testing five small
+                  variations on the terminating rule, and for each I
+                  built three opponents to set against one
                   another.
                 </p>
                 <p>
@@ -1653,9 +1753,9 @@ function Scene7Experiments() {
               fr={<>
                 <p>
                   Pour choisir la bonne règle, il faut effectivement jouer
-                  chaque variante. Le projet a fini par tester cinq petites
-                  variations autour de la règle de fin, et pour chacune il
-                  a construit trois adversaires à opposer entre eux.
+                  chaque variante. J'ai fini par tester cinq petites
+                  variations autour de la règle de fin, et pour chacune j'ai
+                  construit trois adversaires à opposer entre eux.
                 </p>
                 <p>
                   Le premier adversaire pioche un coup légal au hasard.
@@ -1854,7 +1954,7 @@ function Scene8Verdict() {
       <div className="mx-auto max-w-6xl space-y-14">
         <div ref={ref} className="reveal space-y-6 max-w-[58ch]">
           <SectionChapterHead numeral={CHAPTER_NUMERAL.IX} kicker={STRINGS.chapters.IX[lang]} />
-          <h2 className="display text-[clamp(2rem,4vw,3.25rem)] text-paper leading-[1.08]">
+          <h2 className="display text-[clamp(2rem,4vw,3.25rem)] text-paper leading-[1.08] text-balance">
             {STRINGS.scene8.h2A[lang]}
             <span className="display-italic text-vermilion">{STRINGS.scene8.h2B[lang]}</span>
             {STRINGS.scene8.h2C[lang]}
@@ -2105,6 +2205,88 @@ function VerdictBadge({ verdict }: { verdict: "pass" | "fail" | "warn" }) {
 }
 
 
+/* ---------------- the recovery beat (Act II → III pivot) ----------------
+
+   The arc spends ~260vh and a six-beat slam on the failure. Without a
+   counter-beat the recovery reads flat. This is the catharsis: the dead run
+   is struck through, the fifty-four-minute rerun resolves up in gold, and the
+   page is one scroll from Act III. */
+function RecoveryBeat() {
+  const { lang } = useLang();
+  const t = (en: string, fr: string) => (lang === "fr" ? fr : en);
+  return (
+    <section className="relative py-24 md:py-36 px-6 border-t border-hair overflow-hidden">
+      <div className="mx-auto max-w-3xl flex flex-col items-center text-center gap-7">
+        {/* the dead run — struck through */}
+        <motion.div
+          initial={{ opacity: 0, y: 16 }}
+          whileInView={{ opacity: 1, y: 0 }}
+          viewport={{ once: true, margin: "-15%" }}
+          transition={{ duration: 0.6 }}
+          className="relative mono uppercase tracking-[0.15em] tabular-nums"
+          style={{
+            color: "var(--color-second)",
+            fontSize: "clamp(0.9rem, 2.1vw, 1.35rem)",
+          }}
+        >
+          49,000,000 {t("entries", "entrées")} · 36&nbsp;GB · {t("killed", "tué")}
+          <motion.span
+            aria-hidden
+            className="absolute left-0 top-1/2 h-[2px] origin-left"
+            style={{ width: "100%", background: "var(--color-second)" }}
+            initial={{ scaleX: 0 }}
+            whileInView={{ scaleX: 1 }}
+            viewport={{ once: true, margin: "-15%" }}
+            transition={{ duration: 0.7, delay: 0.5, ease: [0.6, 0, 0.2, 1] }}
+          />
+        </motion.div>
+
+        <motion.span
+          aria-hidden
+          initial={{ opacity: 0 }}
+          whileInView={{ opacity: 1 }}
+          viewport={{ once: true }}
+          transition={{ delay: 0.95 }}
+          className="mono text-lg"
+          style={{ color: "var(--color-vermilion)" }}
+        >
+          ↓
+        </motion.span>
+
+        {/* the rerun — resolves up in the act accent */}
+        <motion.div
+          initial={{ opacity: 0, y: 18, filter: "blur(4px)" }}
+          whileInView={{ opacity: 1, y: 0, filter: "blur(0px)" }}
+          viewport={{ once: true, margin: "-15%" }}
+          transition={{ duration: 0.8, delay: 1.1, ease: [0.16, 1, 0.3, 1] }}
+          className="display-italic tabular-nums"
+          style={{
+            color: "var(--color-vermilion)",
+            fontSize: "clamp(1.8rem, 5vw, 3.4rem)",
+            textShadow:
+              "0 0 30px color-mix(in oklab, var(--color-vermilion) 35%, transparent)",
+          }}
+        >
+          54&nbsp;min · 975K {t("positions", "positions")} · {t("finished", "terminé")}
+        </motion.div>
+
+        <motion.p
+          initial={{ opacity: 0 }}
+          whileInView={{ opacity: 1 }}
+          viewport={{ once: true }}
+          transition={{ delay: 1.5, duration: 0.6 }}
+          className="text-paper-2 text-[1.0625rem] leading-[1.6] max-w-[42ch]"
+        >
+          {t(
+            "The fix took an afternoon. The rerun took fifty-four minutes. The twelve lost days had only ever been mine to lose.",
+            "Le correctif a pris un après-midi ; la reprise, cinquante-quatre minutes. Les douze jours perdus n'auront été qu'à moi.",
+          )}
+        </motion.p>
+      </div>
+    </section>
+  );
+}
+
 /* scene 11 glossary moved to GlossaryConstellation.tsx (interactive graph). */
 
 /* ---------------- scene 10: epilogue ---------------- */
@@ -2123,7 +2305,7 @@ function Scene10Epilogue() {
             which left it stranded as a stale board past the article's CTA. */}
         <FinaleFreeze />
 
-        <h2 className="display text-[clamp(2rem,4vw,3rem)] text-paper leading-[1.08]">
+        <h2 className="display text-[clamp(2rem,4vw,3rem)] text-paper leading-[1.08] text-balance">
           {STRINGS.scene12.h2A[lang]}
           <span className="display-italic text-vermilion">{STRINGS.scene12.h2B[lang]}</span>
           {STRINGS.scene12.h2C[lang]}
@@ -2133,7 +2315,7 @@ function Scene10Epilogue() {
           <EnFr
             en={<>
               <p className="dropcap">
-                An AI told a human, one day, that a certain small board
+                An AI told me, one day, that a small board
                 game had fewer than a million reachable positions. It was
                 wrong by a factor of fifty. The first run stockpiled
                 forty-nine million entries before the kernel killed it.
@@ -2141,8 +2323,8 @@ function Scene10Epilogue() {
                 with it. Twelve days of compute, total.
               </p>
               <p>
-                The answer was plausible. It matched what the human was
-                hoping to hear. Neither side took the ten minutes it
+                The answer was plausible. It matched what I was
+                hoping to hear. Neither of us took the ten minutes it
                 would have taken to check.
               </p>
               <p>
@@ -2157,7 +2339,7 @@ function Scene10Epilogue() {
             </>}
             fr={<>
               <p className="dropcap">
-                Une IA a dit, un jour, à un humain qu'un certain petit
+                Une IA m'a dit, un jour, qu'un petit
                 jeu de plateau avait moins d'un million de positions
                 atteignables. Elle s'est trompée d'un facteur cinquante.
                 Le premier run a stocké quarante-neuf millions d'entrées
@@ -2167,9 +2349,8 @@ function Scene10Epilogue() {
               </p>
               <p>
                 La réponse était plausible. Elle collait à ce que
-                l'humain espérait entendre. Personne, des deux côtés,
-                n'a pris les dix minutes qu'il aurait fallu pour
-                vérifier.
+                j'espérais entendre. Ni l'un ni l'autre n'a pris les dix
+                minutes qu'il aurait fallu pour vérifier.
               </p>
               <p>
                 La leçon, ce n'est pas que les IA ne sont pas fiables.
@@ -2209,8 +2390,7 @@ function Scene10Epilogue() {
                 The code is open. The solver, the training pipeline, the
                 variants and their tournament logs, the network and the
                 bridge that runs it client-side — all of it lives in one
-                Rust workspace you can clone and run. If you take one
-                thing from this story, let it be the clone command. The
+                Rust workspace you can clone and run. The
                 best way to trust a computation is still to do it
                 yourself.
               </p>
@@ -2235,10 +2415,9 @@ function Scene10Epilogue() {
                 d'entraînement, les variantes et leurs logs de tournoi,
                 le réseau et le pont qui le fait tourner côté client —
                 tout tient dans un seul espace de travail Rust qu'il
-                vous suffit de cloner et de lancer. Si vous ne deviez
-                retenir qu'une chose, que ce soit la commande de
-                clonage. La meilleure manière de faire confiance à un
-                calcul, c'est encore de le refaire soi-même.
+                vous suffit de cloner et de lancer. La meilleure manière
+                de faire confiance à un calcul, c'est encore de le
+                refaire soi-même.
               </p>
             </>}
           />

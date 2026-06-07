@@ -51,7 +51,7 @@ export function PlayCTA() {
     <a
       href="#chapter-x"
       aria-label={STRINGS.playCta.ariaLabel[lang]}
-      className={`fixed bottom-6 right-6 z-50 mono text-[10px] tracking-[0.28em] uppercase
+      className={`play-cta fixed bottom-6 right-6 z-50 mono text-[10px] tracking-[0.28em] uppercase
         rounded-full bg-vermilion text-ink px-5 py-3 shadow-lg shadow-black/40
         hover:bg-vermilion-soft
         ${reducedMotion ? "" : "transition-all duration-300 ease-out"}
