@@ -33,7 +33,12 @@ type TermKey = string;
 type Edge = [TermKey, TermKey];
 
 // Conceptual relationships between terms — hand-curated, not exhaustive.
+// Intra-cluster edges establish the core relationships within each group.
+// Inter-cluster edges (marked with comments) connect the three groups into
+// one connected organism so the force simulation produces a single graph,
+// not three disconnected islands.
 const EDGES: Edge[] = [
+  // --- AI cluster (intra) ---
   ["Minimax", "Alpha-beta pruning"],
   ["Minimax", "Transposition table"],
   ["Alpha-beta pruning", "Transposition table"],
@@ -48,23 +53,33 @@ const EDGES: Edge[] = [
   ["Gatekeeper", "Round robin"],
   ["RL", "AlphaZero"],
   ["RL", "DQN"],
+  ["Minimax", "RL"],
+  // --- Infra cluster (intra) ---
   ["Rust", "WASM"],
   ["Rust", "ONNX"],
   ["WASM", "ONNX"],
+  // --- Pogo cluster (intra) ---
   ["Manhattan distance", "Lazy equilibrium"],
-  ["Minimax", "RL"],
+  // --- Inter-cluster bridges: AI ↔ Infra ---
+  ["AlphaZero", "ONNX"],    // AlphaZero model exported and served as ONNX
+  ["WASM", "AlphaZero"],    // AlphaZero policy runs via WASM in the browser
+  // --- Inter-cluster bridges: AI ↔ Pogo ---
+  ["Minimax", "Manhattan distance"],  // Minimax uses Manhattan distance as heuristic in Pogo
+  ["Self-play", "Lazy equilibrium"],  // Self-play surfaces lazy equilibria as a training signal
 ];
 
 const VIEW_W = 1600;
 const VIEW_H = 900;
 
-// Cluster anchors used for initial node placement (kept from the old spiral
-// layout so the simulation starts in a recognisable shape and doesn't drift
-// into a single blob during the first few ticks).
+// Cluster anchors used for initial node placement. Tightened into the central
+// ~70% of the canvas (x: 240–1360, y: 135–765) to avoid clusters drifting
+// into empty corners. The large AI cluster sits centre-left; Infra and Pogo
+// occupy the right side stacked vertically, closer to the AI core so the
+// inter-cluster force edges pull them together naturally.
 const CLUSTERS = {
-  AI: { cx: 560, cy: 470, r: 240 },
-  Infra: { cx: 1280, cy: 270, r: 130 },
-  Pogo: { cx: 1280, cy: 720, r: 120 },
+  AI: { cx: 600, cy: 450, r: 220 },
+  Infra: { cx: 1150, cy: 280, r: 120 },
+  Pogo: { cx: 1150, cy: 650, r: 110 },
 } as const;
 
 interface SimNode extends SimulationNodeDatum {
@@ -311,7 +326,14 @@ export function GlossaryConstellation() {
             viewBox={`0 0 ${VIEW_W} ${VIEW_H}`}
             className="w-full h-auto select-none touch-none"
             style={{ maxHeight: "min(72vh, 720px)" }}
+            role="img"
+            aria-labelledby="constellation-title"
           >
+            <title id="constellation-title">
+              {lang === "fr"
+                ? "Constellation de termes : trois groupes — IA, Infrastructure, Pogo — reliés par des liens conceptuels."
+                : "Term constellation: three clusters — AI, Infrastructure, Pogo — linked by conceptual relationships."}
+            </title>
             <defs>
               <radialGradient id="cluster-glow-ai" cx="50%" cy="50%" r="50%">
                 <stop offset="0%" stopColor="rgba(217,79,44,0.07)" />
@@ -335,18 +357,24 @@ export function GlossaryConstellation() {
             </defs>
 
             {/* cluster halos — rendered around the (now drifting) cluster
-                centres so the AI/Infra/Pogo backdrop still reads. */}
-            <circle cx="540" cy="470" r="320" fill="url(#cluster-glow-ai)" />
-            <circle cx="1240" cy="280" r="180" fill="url(#cluster-glow-infra)" />
-            <circle cx="1240" cy="700" r="140" fill="url(#cluster-glow-pogo)" />
+                centres so the AI/Infra/Pogo backdrop still reads. Positions
+                match the tightened CLUSTERS anchors. */}
+            <circle cx="600" cy="450" r="300" fill="url(#cluster-glow-ai)" />
+            <circle cx="1150" cy="280" r="160" fill="url(#cluster-glow-infra)" />
+            <circle cx="1150" cy="650" r="140" fill="url(#cluster-glow-pogo)" />
 
-            {/* edges */}
+            {/* edges — visible at rest so the graph reads as connected immediately;
+                opacity and colour ramp up when a neighbour node is focused. */}
             {graph.edges.map(([a, b], i) => {
               const na = nodeByTerm.get(a);
               const nb = nodeByTerm.get(b);
               if (!na || !nb || na.x === undefined || nb.x === undefined) return null;
               const isHot =
                 focusTerm != null && (a === focusTerm || b === focusTerm);
+              // Determine whether this edge crosses clusters (inter) for a
+              // slightly higher resting opacity so the bridges read clearly.
+              const isInterCluster = na.group !== nb.group;
+              const restingOpacity = isInterCluster ? 0.38 : 0.22;
               return (
                 <line
                   key={`e-${i}`}
@@ -354,8 +382,8 @@ export function GlossaryConstellation() {
                   y1={na.y!}
                   x2={nb.x}
                   y2={nb.y!}
-                  stroke={isHot ? "var(--color-vermilion)" : "rgba(141,132,114,0.22)"}
-                  strokeWidth={isHot ? 1.6 : 0.5}
+                  stroke={isHot ? "var(--color-vermilion)" : `rgba(141,132,114,${restingOpacity})`}
+                  strokeWidth={isHot ? 1.6 : isInterCluster ? 0.8 : 0.5}
                   style={{ transition: "stroke 240ms ease, stroke-width 240ms ease" }}
                 />
               );
@@ -376,6 +404,8 @@ export function GlossaryConstellation() {
               return (
                 <g
                   key={n.term}
+                  role="button"
+                  aria-label={`${n.label}: ${n.short}`}
                   onMouseEnter={() => setHoverTerm(n.term)}
                   onMouseLeave={() => {
                     if (draggingRef.current !== n.term) setHoverTerm((t) => (t === n.term ? null : t));
@@ -433,10 +463,10 @@ export function GlossaryConstellation() {
               );
             })}
 
-            {/* cluster labels */}
+            {/* cluster labels — positions updated to match tightened anchors */}
             <text
-              x="220"
-              y="220"
+              x="300"
+              y="190"
               fill="var(--color-vermilion)"
               fontFamily="var(--font-mono)"
               fontSize="14"
@@ -445,8 +475,8 @@ export function GlossaryConstellation() {
               {STRINGS.scene11.groups.AI.name[lang].toUpperCase()}
             </text>
             <text
-              x="1100"
-              y="120"
+              x="980"
+              y="140"
               fill="var(--color-paper-3)"
               fontFamily="var(--font-mono)"
               fontSize="12"
@@ -455,8 +485,8 @@ export function GlossaryConstellation() {
               {STRINGS.scene11.groups.Infra.name[lang].toUpperCase()}
             </text>
             <text
-              x="1100"
-              y="820"
+              x="980"
+              y="775"
               fill="var(--color-paper-3)"
               fontFamily="var(--font-mono)"
               fontSize="12"
@@ -495,7 +525,21 @@ export function GlossaryConstellation() {
           </motion.div>
         </div>
 
-        {/* fallback static list — mobile + a11y */}
+        {/* Screen-reader-only term list — gives AT users immediate access to all
+            terms and definitions without needing to expand the details widget.
+            Visually hidden via sr-only (Tailwind utility). */}
+        <ul className="sr-only" aria-label={lang === "fr" ? "Liste de tous les termes du glossaire" : "Full glossary term list"}>
+          {GLOSSARY.map((e) => {
+            const label = lang === "fr" && e.termFr ? e.termFr : e.term;
+            return (
+              <li key={e.term}>
+                <strong>{label}</strong>: {e.long[lang]}
+              </li>
+            );
+          })}
+        </ul>
+
+        {/* fallback static list — mobile + visual readers */}
         <details className="mt-8">
           <summary className="mono text-[10px] tracking-[0.3em] uppercase text-paper-3 cursor-pointer hover:text-vermilion select-none">
             {lang === "fr" ? "Voir la liste complète" : "See the full list"}
