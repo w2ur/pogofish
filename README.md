@@ -1,6 +1,6 @@
 # Pogofish
 
-A longform article about training an AI to play a forgotten 3×3 board game — with the playable game inlined at the climax. Bilingual FR/EN (FR pass in progress). Single-page web app; no server.
+A longform article about training an AI to play a forgotten 3×3 board game — with the playable game inlined at the climax. Bilingual FR/EN (English at `/`, French at `/fr`, both prerendered). Single-page web app; no server.
 
 The article walks through a real build: why the problem is harder than it looks, why a minimax solver hits a wall, a failed DQN attempt, an AlphaZero agent that worked, a rule-variant sweep that picked the playable balance, and a section showing what the trained network actually learned about winning from 500 self-play games.
 

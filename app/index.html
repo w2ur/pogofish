@@ -3,6 +3,24 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+
+    <!-- First-visit language redirect: send a French browser (or an explicit
+         stored French choice) from the x-default root to /fr before anything
+         paints. Runs only at "/", and never overrides an explicit English
+         choice. Per-language documents are emitted by scripts/prerender.mjs. -->
+    <script>
+      (function () {
+        try {
+          if (location.pathname !== "/") return;
+          var stored = localStorage.getItem("pogofish.lang");
+          var wantFr = stored
+            ? stored === "fr"
+            : (navigator.language || "").toLowerCase().indexOf("fr") === 0;
+          if (wantFr) location.replace("/fr" + location.search + location.hash);
+        } catch (e) {}
+      })();
+    </script>
+
     <meta name="theme-color" content="#121010" />
     <meta
       name="description"
@@ -34,9 +52,11 @@
     />
     <meta name="twitter:image" content="https://pogofish.revah.paris/og-image.png" />
     <link rel="canonical" href="https://pogofish.revah.paris/" />
-    <!-- hreflang intentionally omitted: FR/EN is a single-URL client-side
-         toggle, so per-language alternate URLs don't exist yet. Add when
-         prerendering emits distinct /fr + /en documents. -->
+    <!-- Reciprocal hreflang. The /fr document (see scripts/prerender.mjs)
+         rewrites canonical + og:url to /fr but keeps these same alternates. -->
+    <link rel="alternate" hreflang="en" href="https://pogofish.revah.paris/" />
+    <link rel="alternate" hreflang="fr" href="https://pogofish.revah.paris/fr" />
+    <link rel="alternate" hreflang="x-default" href="https://pogofish.revah.paris/" />
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
     <link

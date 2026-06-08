@@ -61,6 +61,10 @@ export default defineConfig({
       workbox: {
         globPatterns: ["**/*.{js,css,html}"],
         maximumFileSizeToCacheInBytes: 30 * 1024 * 1024,
+        // The SPA navigation fallback serves the precached (English) index.html
+        // for navigations. Exclude /fr so the French document is fetched from
+        // the network instead of being shadowed by the English shell.
+        navigateFallbackDenylist: [/^\/fr(\/|$)/],
         runtimeCaching: [
           {
             // Runtime-cache same-origin ORT wasm (CacheFirst; not precached due to size).
