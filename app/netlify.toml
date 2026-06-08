@@ -2,6 +2,13 @@
   publish = "dist"
   command = "npm run build"
 
+[build.environment]
+  NODE_VERSION = "20"
+  # Install Playwright's Chromium into node_modules so Netlify's build cache
+  # keeps it across deploys (the postbuild prerender step drives the real build
+  # in headless Chromium — see app/scripts/prerender.mjs).
+  PLAYWRIGHT_BROWSERS_PATH = "0"
+
 [[headers]]
   for = "/models/*"
   [headers.values]
