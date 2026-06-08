@@ -1,0 +1,7 @@
+# Pogofish — a single-page editorial article. Everything is public and
+# crawlable. /ort/ (WASM) is intentionally allowed: crawlers that render
+# JS need it to load the page, so blocking it would hurt indexing.
+User-agent: *
+Allow: /
+
+Sitemap: https://pogofish.revah.paris/sitemap.xml

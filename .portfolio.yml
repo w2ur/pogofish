@@ -8,12 +8,12 @@ visibility: public
 status: active
 surface_type: external-story
 
-url: null
-domain: null
+url: "https://pogofish.revah.paris"
+domain: "pogofish.revah.paris"
 deploy: netlify
 
-portfolio_card: false
-portfolio_link: false
+portfolio_card: true
+portfolio_link: true
 badge: null
 sort_order: 99
 

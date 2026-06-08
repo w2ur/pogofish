@@ -13,32 +13,66 @@
     <!-- Open Graph / Twitter — three-act board mosaic generated from
          /og-source.html via Playwright (see CLAUDE.md note on regenerating). -->
     <meta property="og:type" content="article" />
-    <meta property="og:title" content="Pogofish — the story of a rule that had to be fixed" />
+    <meta property="og:url" content="https://pogofish.revah.paris/" />
+    <meta property="og:site_name" content="William Revah" />
+    <meta property="og:title" content="Pogofish — the experiment that trained the human" />
     <meta
       property="og:description"
       content="A board game, a misplaced trust in an AI, six days of compute wasted — and a rewrite. The honest story."
     />
-    <meta property="og:image" content="/og-image.png" />
+    <meta property="og:image" content="https://pogofish.revah.paris/og-image.png" />
     <meta property="og:image:width" content="1200" />
     <meta property="og:image:height" content="630" />
     <meta property="og:image:alt" content="Pogofish — three boards in three acts: cream paper, terminal black, matte navy." />
     <meta property="og:locale" content="en_US" />
     <meta property="og:locale:alternate" content="fr_FR" />
     <meta name="twitter:card" content="summary_large_image" />
-    <meta name="twitter:title" content="Pogofish — the story of a rule that had to be fixed" />
+    <meta name="twitter:title" content="Pogofish — the experiment that trained the human" />
     <meta
       name="twitter:description"
       content="A board game, a misplaced trust in an AI, six days of compute wasted — and a rewrite."
     />
-    <meta name="twitter:image" content="/og-image.png" />
-    <!-- TODO: add <link rel=canonical> + hreflang once the production domain is set -->
+    <meta name="twitter:image" content="https://pogofish.revah.paris/og-image.png" />
+    <link rel="canonical" href="https://pogofish.revah.paris/" />
+    <!-- hreflang intentionally omitted: FR/EN is a single-URL client-side
+         toggle, so per-language alternate URLs don't exist yet. Add when
+         prerendering emits distinct /fr + /en documents. -->
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
     <link
       rel="stylesheet"
       href="https://fonts.googleapis.com/css2?family=Instrument+Serif:ital@0;1&family=Newsreader:ital,opsz,wght@0,6..72,300..700;1,6..72,300..700&family=JetBrains+Mono:ital,wght@0,400;0,500;1,400&display=swap"
     />
-    <title>Pogofish — the story of a rule that had to be fixed</title>
+    <title>Pogofish — the experiment that trained the human</title>
+
+    <!-- Structured data for search rich results (schema.org Article). -->
+    <script type="application/ld+json">
+      {
+        "@context": "https://schema.org",
+        "@type": "Article",
+        "headline": "Pogofish — the experiment that trained the human",
+        "description": "A board game, a misplaced trust in an AI, six days of compute wasted — and a rewrite. The honest story behind Pogofish.",
+        "image": "https://pogofish.revah.paris/og-image.png",
+        "datePublished": "2026-04-18",
+        "dateModified": "2026-06-07",
+        "inLanguage": ["en", "fr"],
+        "author": {
+          "@type": "Person",
+          "name": "William Revah",
+          "url": "https://william.revah.paris"
+        },
+        "publisher": {
+          "@type": "Person",
+          "name": "William Revah",
+          "url": "https://william.revah.paris"
+        },
+        "mainEntityOfPage": {
+          "@type": "WebPage",
+          "@id": "https://pogofish.revah.paris/"
+        },
+        "keywords": "Pogo, board game, AlphaZero, reinforcement learning, game AI, ONNX, Rust, WASM"
+      }
+    </script>
   </head>
   <body>
     <div id="root"></div>

@@ -56,6 +56,7 @@ const CHAPTER_NUMERAL: Record<ChapterKey, string> = {
 const CHAPTER_NUMERAL_PIN = ["III", "IV", "V", "VI", "VII"];
 
 export function StoryView() {
+  const { lang } = useLang();
   usePageTitle();
   return (
     <StageProvider>
@@ -67,6 +68,14 @@ export function StoryView() {
         <ChapterRail />
         <PersistentStage />
         <StoryChrome />
+
+        <main id="content">
+        <article>
+        {/* Single document heading for SEO + screen readers. The visible
+            "title" is the cinematic three-frame prologue (styled h2
+            taglines), so the page's one <h1> is sr-only — it carries full
+            crawler/a11y weight with no change to the composition. */}
+        <h1 className="sr-only">{STRINGS.pageTitle[lang]}</h1>
 
         {/* Prologue — three-act triptych. Each frame inhabits one act's
             full visual identity, making the contract explicit: the article
@@ -116,6 +125,8 @@ export function StoryView() {
             <StageBinder view={null}><Scene10Epilogue /></StageBinder>
           </Act>
         </Suspense>
+        </article>
+        </main>
 
         {/* The footer is past the last chapter — bind a null view so the
             persistent stage hides and the mobile band fades out. Without this
