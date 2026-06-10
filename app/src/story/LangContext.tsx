@@ -33,7 +33,9 @@ export function detectInitialLang(pathname: string): Lang {
 }
 
 function pathForLang(lang: Lang): string {
-  return lang === "fr" ? "/fr" : "/";
+  // Trailing slash: /fr is a directory on Netlify (dist/fr/index.html), so a
+  // bare /fr 301-redirects to /fr/. Point at the canonical 200 URL directly.
+  return lang === "fr" ? "/fr/" : "/";
 }
 
 export function LangProvider({ children }: { children: ReactNode }) {

@@ -70,7 +70,7 @@ async function localiseFrHead(page) {
         const el = document.querySelector(sel);
         if (el) el.setAttribute(attr, val);
       };
-      const url = base + "/fr";
+      const url = base + "/fr/"; // canonical 200 URL (bare /fr 301s to /fr/ on Netlify)
       const title = document.title; // already French (set by the app at runtime)
       set('link[rel="canonical"]', "href", url);
       set('meta[property="og:url"]', "content", url);

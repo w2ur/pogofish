@@ -4,18 +4,18 @@
   <url>
     <loc>https://pogofish.revah.paris/</loc>
     <xhtml:link rel="alternate" hreflang="en" href="https://pogofish.revah.paris/"/>
-    <xhtml:link rel="alternate" hreflang="fr" href="https://pogofish.revah.paris/fr"/>
+    <xhtml:link rel="alternate" hreflang="fr" href="https://pogofish.revah.paris/fr/"/>
     <xhtml:link rel="alternate" hreflang="x-default" href="https://pogofish.revah.paris/"/>
-    <lastmod>2026-06-08</lastmod>
+    <lastmod>2026-06-10</lastmod>
     <changefreq>yearly</changefreq>
     <priority>1.0</priority>
   </url>
   <url>
-    <loc>https://pogofish.revah.paris/fr</loc>
+    <loc>https://pogofish.revah.paris/fr/</loc>
     <xhtml:link rel="alternate" hreflang="en" href="https://pogofish.revah.paris/"/>
-    <xhtml:link rel="alternate" hreflang="fr" href="https://pogofish.revah.paris/fr"/>
+    <xhtml:link rel="alternate" hreflang="fr" href="https://pogofish.revah.paris/fr/"/>
     <xhtml:link rel="alternate" hreflang="x-default" href="https://pogofish.revah.paris/"/>
-    <lastmod>2026-06-08</lastmod>
+    <lastmod>2026-06-10</lastmod>
     <changefreq>yearly</changefreq>
     <priority>1.0</priority>
   </url>

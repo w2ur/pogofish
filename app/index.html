@@ -16,7 +16,7 @@
           var wantFr = stored
             ? stored === "fr"
             : (navigator.language || "").toLowerCase().indexOf("fr") === 0;
-          if (wantFr) location.replace("/fr" + location.search + location.hash);
+          if (wantFr) location.replace("/fr/" + location.search + location.hash);
         } catch (e) {}
       })();
     </script>
@@ -55,7 +55,7 @@
     <!-- Reciprocal hreflang. The /fr document (see scripts/prerender.mjs)
          rewrites canonical + og:url to /fr but keeps these same alternates. -->
     <link rel="alternate" hreflang="en" href="https://pogofish.revah.paris/" />
-    <link rel="alternate" hreflang="fr" href="https://pogofish.revah.paris/fr" />
+    <link rel="alternate" hreflang="fr" href="https://pogofish.revah.paris/fr/" />
     <link rel="alternate" hreflang="x-default" href="https://pogofish.revah.paris/" />
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
