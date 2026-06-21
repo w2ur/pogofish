@@ -1,10 +1,12 @@
 import { lazy, Suspense, useEffect, useRef, useState } from "react";
+import { usePrefetchGameAssets } from "../hooks/usePrefetchGameAssets";
 import { motion } from "motion/react";
 import { fadeUp, fadeIn, fadeRight } from "./motion";
 import { StoryBoard } from "./StoryBoard";
 import { Term } from "./Term";
 import { TryYourself } from "./TryYourself";
 import { PlayCTA } from "./PlayCTA";
+import { InstallNudge } from "./InstallNudge";
 import { Callout } from "./Callout";
 import { EnFr } from "./EnFr";
 import { LangToggle } from "./LangToggle";
@@ -58,6 +60,9 @@ const CHAPTER_NUMERAL_PIN = ["III", "IV", "V", "VI", "VII"];
 export function StoryView() {
   const { lang } = useLang();
   usePageTitle();
+  // Warm the Workbox runtime caches for WASM/ONNX when the reader approaches
+  // the game section (chapter-x), so offline play does not cold-start fail.
+  usePrefetchGameAssets("chapter-x");
   return (
     <StageProvider>
       <GuessProvider>
@@ -134,6 +139,7 @@ export function StoryView() {
             like a stale board. */}
         <StageBinder view={null}><StoryFooter /></StageBinder>
         <PlayCTA />
+        <InstallNudge />
         <LangToggle />
         <ActDebugger />
       </div>
