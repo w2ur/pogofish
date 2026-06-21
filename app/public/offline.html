@@ -1,0 +1,116 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="theme-color" content="#09090b" />
+    <title>Offline — Pogofish</title>
+    <style>
+      *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+      html, body {
+        min-height: 100dvh;
+        background: #09090b;
+        color: #e4e4e7;
+        font-family: ui-monospace, SFMono-Regular, "SF Mono", Menlo, Monaco, Consolas, monospace;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+      }
+
+      main {
+        max-width: 480px;
+        padding: 2.5rem 2rem;
+        text-align: center;
+      }
+
+      .logo {
+        font-family: Georgia, "Times New Roman", serif;
+        font-style: italic;
+        font-size: 2rem;
+        color: #e4e4e7;
+        letter-spacing: -0.03em;
+        margin-bottom: 2.5rem;
+      }
+
+      .board {
+        display: grid;
+        grid-template-columns: repeat(3, 1fr);
+        gap: 4px;
+        width: 108px;
+        margin: 0 auto 2rem;
+      }
+
+      .cell {
+        width: 32px;
+        height: 32px;
+        border: 1px solid rgba(228, 228, 231, 0.12);
+        border-radius: 2px;
+      }
+
+      h1 {
+        font-size: 0.6875rem;
+        letter-spacing: 0.28em;
+        text-transform: uppercase;
+        color: rgba(228, 228, 231, 0.5);
+        margin-bottom: 1rem;
+      }
+
+      p {
+        font-size: 0.875rem;
+        line-height: 1.7;
+        color: rgba(228, 228, 231, 0.65);
+        margin-bottom: 1.5rem;
+      }
+
+      .vermilion { color: #d94f2c; }
+
+      .retry {
+        display: inline-block;
+        padding: 0.625rem 1.5rem;
+        border: 1px solid #d94f2c;
+        color: #d94f2c;
+        text-decoration: none;
+        font-size: 0.625rem;
+        letter-spacing: 0.28em;
+        text-transform: uppercase;
+        cursor: pointer;
+        background: transparent;
+        font-family: inherit;
+        transition: background 0.2s, color 0.2s;
+      }
+
+      .retry:hover {
+        background: #d94f2c;
+        color: #09090b;
+      }
+
+      .hint {
+        margin-top: 2rem;
+        font-size: 0.625rem;
+        letter-spacing: 0.18em;
+        text-transform: uppercase;
+        color: rgba(228, 228, 231, 0.3);
+      }
+    </style>
+  </head>
+  <body>
+    <main>
+      <div class="logo">pogofish</div>
+
+      <div class="board" aria-hidden="true">
+        <div class="cell"></div><div class="cell"></div><div class="cell"></div>
+        <div class="cell"></div><div class="cell" style="background:rgba(217,79,44,0.15)"></div><div class="cell"></div>
+        <div class="cell"></div><div class="cell"></div><div class="cell"></div>
+      </div>
+
+      <h1>You are offline</h1>
+      <p>
+        The article and the game load from your device once cached —
+        visit once online to unlock offline play.
+      </p>
+      <button class="retry" onclick="window.location.reload()">Try again</button>
+      <p class="hint">If the game was already cached, try clearing and reloading.</p>
+    </main>
+  </body>
+</html>
