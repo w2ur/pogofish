@@ -29,3 +29,6 @@ stack:
   - Vite
   - Tailwind CSS
   - ONNX Runtime Web
+
+repo_public: false
+license: null
