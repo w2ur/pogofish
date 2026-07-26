@@ -75,7 +75,7 @@ cd app
 npm install
 npm run dev        # dev server
 npm run build      # production build (tsc → vite → prerender; see below)
-npx vitest run     # run tests (21 tests)
+npx vitest run     # run tests (41 tests)
 ```
 
 ### Prerendering
@@ -139,7 +139,7 @@ archive/
 ## Testing
 
 - Rust workspace: `cargo test --workspace` (74 tests: engine, search, train)
-- Web app: `cd app && npx vitest run` (21 tests)
+- Web app: `cd app && npx vitest run` (41 tests)
 - Property tests: engine invariants via proptest (piece conservation, no stalemate, legal moves apply)
 
 ## Build Warning Exceptions
