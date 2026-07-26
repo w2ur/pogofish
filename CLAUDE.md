@@ -146,6 +146,7 @@ archive/
 
 - `DeprecationWarning: You are using the legacy TorchScript-based ONNX export` — emitted by PyTorch 2.9+ in `tools/export_onnx.py`. Using the legacy path intentionally until `onnxscript` is added.
 - `warning: method cells_mut is never used` in engine crate — `pub(crate)` accessor reserved for future use by testing helpers.
+- `(!) Some chunks are larger than 500 kB after minification` — emitted by `vite build` for the main `index-*.js` chunk (≈637 kB raw, **214 kB gzipped**). Accepted rather than split: the article is prerendered, so JS never gates first paint, and the two heavy interactive scenes (`PlayScene`, `GlossaryConstellation`) already lazy-load as their own chunks. Splitting the remaining bundle would trade a measurable improvement for none. Do not silence it with `build.chunkSizeWarningLimit` — that would also hide a real regression. Revisit if the gzipped figure passes ~250 kB.
 
 ## Deployment
 
