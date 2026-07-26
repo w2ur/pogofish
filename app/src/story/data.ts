@@ -134,7 +134,7 @@ export const CHAPTERS: { numeral: string; kicker: string }[] = [
   { numeral: "VI",   kicker: "The tree had no leaves" },                  // 5 — Pinned: DQN
   { numeral: "VII",  kicker: "The rules became the variable" },           // 6 — Pinned: AlphaZero
   { numeral: "VIII", kicker: "Five candidate endings" },                  // 7 — Experiments
-  { numeral: "IX",   kicker: "One survives all three axes" },             // 8 — Verdict
+  { numeral: "IX",   kicker: "Three clear the bar, one never ran" },      // 8 — Verdict
   { numeral: "X",    kicker: "Now it is your move" },                     // 9 — Play
   { numeral: "XI",   kicker: "What it learned about winning" },           // 10 — Learnings
   { numeral: "XII",  kicker: "Keep the problem in your head" },           // 11 — Epilogue
