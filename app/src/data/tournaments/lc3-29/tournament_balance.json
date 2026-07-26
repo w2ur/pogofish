@@ -1,0 +1,14 @@
+{
+  "draws": 11,
+  "games": 200,
+  "player1": "models/lc3-29-v2/model_best.pt",
+  "player1_as_red_wins": 44,
+  "player1_as_white_wins": 50,
+  "player1_win_rate": 0.47,
+  "player2": "models/lc3-29-v2/model_best.pt",
+  "player2_as_red_wins": 45,
+  "player2_as_white_wins": 50,
+  "red_wins": 89,
+  "variant": "lc3-29",
+  "white_wins": 100
+}

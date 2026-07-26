@@ -1,0 +1,14 @@
+{
+  "draws": 0,
+  "games": 200,
+  "player1": "models/lc2-30-v2/dqn/model_best.pt",
+  "player1_as_red_wins": 85,
+  "player1_as_white_wins": 36,
+  "player1_win_rate": 0.605,
+  "player2": "random",
+  "player2_as_red_wins": 64,
+  "player2_as_white_wins": 15,
+  "red_wins": 149,
+  "variant": "lc2-30",
+  "white_wins": 51
+}
