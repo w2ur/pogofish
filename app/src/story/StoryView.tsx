@@ -31,9 +31,9 @@ import { Board as FinaleSvgBoard } from "./stage/Board";
 import {
   VARIANTS,
   FAILED_RUN_DAYS,
-  VERDICT,
   FMT,
 } from "./data";
+import { VERDICT, VERDICT_THRESHOLDS, VERDICT_TOTALS, type VerdictLevel } from "./verdict";
 
 const PlayScene = lazy(() =>
   import("./PlayScene").then((m) => ({ default: m.PlayScene }))
@@ -1712,6 +1712,7 @@ function TreeDiagram() {
 function Scene7Experiments() {
   const ref = useReveal<HTMLDivElement>();
   const { lang } = useLang();
+  const nf = new Intl.NumberFormat(lang === "fr" ? "fr-FR" : "en-US");
   return (
     <section id="chapter-viii" className="relative py-28 md:py-40 px-6 md:px-10">
       <div className="mx-auto max-w-6xl space-y-14">
@@ -1728,8 +1729,9 @@ function Scene7Experiments() {
               en={<>
                 <p>
                   To pick the right rule, you have to actually play each
-                  variant. I ended up testing five small
-                  variations on the terminating rule, and for each I
+                  variant. I ended up drawing up {VERDICT_TOTALS.variants} small
+                  variations on the terminating rule and running{" "}
+                  {VERDICT_TOTALS.tested} of them, and for each I
                   built three opponents to set against one
                   another.
                 </p>
@@ -1753,8 +1755,9 @@ function Scene7Experiments() {
                 <p>
                   For each variant, every level played every other level
                   — random against the trained network, the network
-                  against its stronger version, and so on. About fifteen
-                  thousand games per variant. Three things mattered. Was
+                  against its stronger version, and so on.{" "}
+                  {nf.format(VERDICT_TOTALS.gamesPerTestedVariant)} games
+                  per variant. Three things mattered. Was
                   White's win rate between 45 and 55 % — is the game{" "}
                   <em className="text-paper">balanced</em>? Did the
                   stronger player win at least 75 % of the time against
@@ -1764,14 +1767,17 @@ function Scene7Experiments() {
                   strength (earned) or between unequal ones (suspicious)?
                 </p>
                 <p>
-                  The five variants tested are below. The verdict follows.
+                  All {VERDICT_TOTALS.variants} variants are below —{" "}
+                  {VERDICT_TOTALS.tested} with tournament results, one that
+                  never got trained. The verdict follows.
                 </p>
               </>}
               fr={<>
                 <p>
                   Pour choisir la bonne règle, il faut effectivement jouer
-                  chaque variante. J'ai fini par tester cinq petites
-                  variations autour de la règle de fin, et pour chacune j'ai
+                  chaque variante. J'ai fini par dessiner {VERDICT_TOTALS.variants} petites
+                  variations autour de la règle de fin et par en faire jouer{" "}
+                  {VERDICT_TOTALS.tested}, et pour chacune j'ai
                   construit trois adversaires à opposer entre eux.
                 </p>
                 <p>
@@ -1795,8 +1801,9 @@ function Scene7Experiments() {
                 <p>
                   Pour chaque variante, chaque niveau a affronté tous les
                   autres — aléatoire contre le réseau entraîné, le réseau
-                  contre sa version plus ambitieuse, et ainsi de suite.
-                  Environ quinze mille parties par variante. Trois choses
+                  contre sa version plus ambitieuse, et ainsi de suite.{" "}
+                  {nf.format(VERDICT_TOTALS.gamesPerTestedVariant)} parties par
+                  variante. Trois choses
                   comptaient. Le taux de victoire du Blanc tombait-il
                   entre 45 et 55 % — le jeu est-il{" "}
                   <em className="text-paper">équilibré</em> ? Le joueur
@@ -1808,8 +1815,9 @@ function Scene7Experiments() {
                   joueurs inégaux (suspects) ?
                 </p>
                 <p>
-                  Les cinq variantes testées sont ci-dessous. Le verdict
-                  suit.
+                  Les {VERDICT_TOTALS.variants} variantes sont ci-dessous —{" "}
+                  {VERDICT_TOTALS.tested} avec des résultats de tournoi, une
+                  qui n'a jamais été entraînée. Le verdict suit.
                 </p>
               </>}
             />
@@ -1818,7 +1826,9 @@ function Scene7Experiments() {
 
         <aside className="hidden lg:flex flex-col gap-6 mt-2 mono text-[11px] tracking-[0.18em] uppercase text-paper-3">
           <div className="flex flex-col gap-1 pl-4 border-l border-vermilion">
-            <span className="display-italic text-vermilion text-4xl tracking-normal normal-case">5</span>
+            <span className="display-italic text-vermilion text-4xl tracking-normal normal-case">
+              {VERDICT_TOTALS.tested}
+            </span>
             <span>{lang === "fr" ? "variantes testées" : "variants tested"}</span>
           </div>
           <div className="flex flex-col gap-1 pl-4 border-l border-hair">
@@ -1826,12 +1836,16 @@ function Scene7Experiments() {
             <span>{lang === "fr" ? "niveaux par variante" : "levels per variant"}</span>
           </div>
           <div className="flex flex-col gap-1 pl-4 border-l border-hair">
-            <span className="display-italic text-paper-2 text-3xl tracking-normal normal-case">~15&nbsp;000</span>
+            <span className="display-italic text-paper-2 text-3xl tracking-normal normal-case">
+              {nf.format(VERDICT_TOTALS.gamesPerTestedVariant)}
+            </span>
             <span>{lang === "fr" ? "parties par variante" : "games per variant"}</span>
           </div>
           <div className="flex flex-col gap-1 pl-4 border-l border-vermilion">
-            <span className="display-italic text-vermilion text-3xl tracking-normal normal-case">1</span>
-            <span>{lang === "fr" ? "qui passe les trois critères" : "passes all three checks"}</span>
+            <span className="display-italic text-vermilion text-3xl tracking-normal normal-case">
+              {VERDICT.filter((r) => r.verdict === "pass").length}
+            </span>
+            <span>{lang === "fr" ? "qui passent les trois critères" : "pass all three checks"}</span>
           </div>
         </aside>
         </div>
@@ -1993,7 +2007,7 @@ function Scene8Verdict() {
                 : STRINGS.verdict.suddenDeath.paraFr.replace(/^Mort subite\s+/, "")}
             </p>
             <p className="text-paper-3 mono text-[11px]">
-              {STRINGS.verdict.suddenDeath.tag[lang]}
+              <VerdictTag id="LC1-2" />
             </p>
           </div>
           <div className="space-y-4">
@@ -2007,7 +2021,7 @@ function Scene8Verdict() {
                 : STRINGS.verdict.classic.paraFr.replace(/^Classique · 29\s+/, "")}
             </p>
             <p className="text-paper-3 mono text-[11px]">
-              {STRINGS.verdict.classic.tag[lang]}
+              <VerdictTag id="LC3-29" />
             </p>
           </div>
         </div>
@@ -2015,8 +2029,9 @@ function Scene8Verdict() {
         <div className="pt-6 border-t border-hair text-[1.0625rem] md:text-[1.125rem] leading-[1.75] text-paper-2 max-w-[60ch]">
           <EnFr
             en={<p>
-              Of the three variants that didn't survive, the most
-              instructive failure was the one with a hard move cap and no
+              Of the variants that didn't ship, the most instructive —
+              and the only one the numbers actually reject — is the one
+              with a hard move cap and no
               tie-breaker. Under that rule the game is secretly decided
               by parity: whoever has to move on the capping turn loses,
               so whichever colour's parity matches the cap wins regardless
@@ -2027,8 +2042,9 @@ function Scene8Verdict() {
               isn't really a rule about the board.
             </p>}
             fr={<p>
-              Des trois variantes qui n'ont pas survécu, l'échec le plus
-              instructif était celle au plafond strict, sans départage.
+              Des variantes qui ne sont pas livrées, la plus instructive —
+              et la seule que les chiffres rejettent vraiment — est celle
+              au plafond strict, sans départage.
               Sous cette règle, la partie est décidée en secret par la
               parité : celui qui doit jouer au coup de plafond perd, donc
               la couleur dont la parité tombe juste gagne, quelle que
@@ -2050,12 +2066,13 @@ function VerdictTable() {
   const ref = useReveal<HTMLDivElement>();
   const { lang } = useLang();
   const headers = STRINGS.scene8.tableHeaders;
-  // sort: winners first, then warns, then fails — visual priority of the
-  // "podium" reading.
+  // sort: passes first, then warns, then fails, then the variant that never
+  // ran — visual priority of the "podium" reading.
   const sorted = [...VERDICT].sort((a, b) => {
-    const order = { pass: 0, warn: 1, fail: 2 } as const;
-    return order[a.verdict as keyof typeof order] - order[b.verdict as keyof typeof order];
+    const order = { pass: 0, warn: 1, fail: 2, untested: 3 } as const;
+    return order[a.verdict] - order[b.verdict];
   });
+  const nf = new Intl.NumberFormat(lang === "fr" ? "fr-FR" : "en-US");
   return (
     <div ref={ref} className="reveal delay-1 relative">
       {/* dot-matrix paper frame: tractor-feed sprocket holes on either
@@ -2070,7 +2087,11 @@ function VerdictTable() {
             {lang === "en" ? "tournament.out · page 1 of 1" : "tournoi.out · page 1 sur 1"}
           </span>
           <span className="text-paper-3">
-            {lang === "en" ? "5 variants · 15,000 games" : "5 variantes · 15 000 parties"}
+            {tf(STRINGS.scene8.tableMeta[lang], {
+              tested: VERDICT_TOTALS.tested,
+              variants: VERDICT_TOTALS.variants,
+              games: nf.format(VERDICT_TOTALS.games),
+            })}
           </span>
         </div>
         <div className="overflow-x-auto px-4 py-2">
@@ -2086,10 +2107,13 @@ function VerdictTable() {
         </thead>
         <tbody>
           {sorted.map((row, i) => {
-            const balanceOk = Math.abs(row.balance - 0.5) <= 0.05;
-            const skillOk = row.skill >= 0.75;
+            const balanceOk =
+              row.balance !== null &&
+              Math.abs(row.balance - 0.5) <= VERDICT_THRESHOLDS.balanceTolerance;
+            const skillOk = row.skill !== null && row.skill >= VERDICT_THRESHOLDS.minSkill;
+            const drawsOk = row.draws !== null && row.draws <= VERDICT_THRESHOLDS.maxDraws;
             const labelI18n = STRINGS.verdict.labels[row.id as keyof typeof STRINGS.verdict.labels];
-            const failI18n = STRINGS.verdict.failReasons[row.id as keyof typeof STRINGS.verdict.failReasons];
+            const noteI18n = STRINGS.verdict.notes[row.id as keyof typeof STRINGS.verdict.notes];
             const failed = row.verdict === "fail";
             return (
               <motion.tr
@@ -2098,28 +2122,29 @@ function VerdictTable() {
                 initial={{ opacity: 0, x: -16 }}
                 transition={{ duration: 0.55, ease: "easeOut", delay: i * 0.08 }}
                 className={`align-middle border-b border-hair relative ${
-                  row.winner
+                  row.shipped
                     ? "bg-vermilion/[0.06]"
-                    : failed
+                    : failed || row.verdict === "untested"
                     ? "opacity-60"
                     : ""
                 }`}
               >
                 <td className="py-5 pr-4">
                   <div className="flex items-baseline gap-3">
-                    {row.winner && (
+                    {row.shipped && (
                       <motion.span
                         className="display italic text-vermilion text-2xl"
+                        title={STRINGS.scene8.shippedStar[lang]}
                         initial={{ scale: 0, rotate: -45 }}
                         whileInView={{ scale: 1, rotate: 0 }}
                         viewport={{ once: true }}
                         transition={{ delay: i * 0.08 + 0.4, type: "spring", stiffness: 280, damping: 18 }}
                       >
-                        ★
+                        ★<span className="sr-only">{STRINGS.scene8.shippedStar[lang]}</span>
                       </motion.span>
                     )}
                     <div>
-                      <div className={`display text-lg ${row.winner ? "text-paper font-semibold" : "text-paper"} ${failed ? "line-through decoration-vermilion/60" : ""}`}>
+                      <div className={`display text-lg ${row.shipped ? "text-paper font-semibold" : "text-paper"} ${failed ? "line-through decoration-vermilion/60" : ""}`}>
                         {labelI18n ? labelI18n[lang] : row.label}
                       </div>
                       <div className="mono text-[10px] tracking-[0.2em] uppercase text-paper-3">
@@ -2130,12 +2155,12 @@ function VerdictTable() {
                 </td>
                 <MetricCell value={row.balance} ok={balanceOk} />
                 <MetricCell value={row.skill} ok={skillOk} />
-                <MetricCell value={row.draws} ok={row.draws <= 0.1} />
+                <MetricCell value={row.draws} ok={drawsOk} />
                 <td className="py-5 pl-4">
-                  <VerdictBadge verdict={row.verdict as "pass" | "fail" | "warn"} />
-                  {row.failReason && (
+                  <VerdictBadge verdict={row.verdict} />
+                  {noteI18n && (
                     <div className="mono text-[10px] text-paper-3 mt-1 max-w-[18ch]">
-                      {failI18n ? failI18n[lang] : row.failReason}
+                      {noteI18n[lang]}
                     </div>
                   )}
                 </td>
@@ -2145,8 +2170,41 @@ function VerdictTable() {
           </tbody>
         </table>
         </div>
+        {/* The table claims things about a real machine run; this is where the
+            reader is told exactly which file each column comes from, and what
+            the star means. Without it the numbers are just decoration. */}
+        <div className="mono text-[10px] leading-[1.7] text-paper-3 px-4 py-3 border-t border-dashed border-hair space-y-1">
+          <p>{STRINGS.scene8.legendStar[lang]}</p>
+          <p>{STRINGS.scene8.legendMetrics[lang]}</p>
+          <p>
+            {tf(STRINGS.scene8.legendThresholds[lang], {
+              balance: FMT.pctLang(0.5 - VERDICT_THRESHOLDS.balanceTolerance, 0, lang),
+              balanceHigh: FMT.pctLang(0.5 + VERDICT_THRESHOLDS.balanceTolerance, 0, lang),
+              skill: FMT.pctLang(VERDICT_THRESHOLDS.minSkill, 0, lang),
+              draws: FMT.pctLang(VERDICT_THRESHOLDS.maxDraws, 0, lang),
+            })}
+          </p>
+        </div>
       </div>
     </div>
+  );
+}
+
+/** The mono strapline under each shipped-variant paragraph. Its figures are
+ *  the same derived values the table renders, so the two can never disagree. */
+function VerdictTag({ id }: { id: string }) {
+  const { lang } = useLang();
+  const row = VERDICT.find((r) => r.id === id);
+  if (!row || row.balance === null || row.skill === null || row.draws === null) return null;
+  return (
+    <>
+      {tf(STRINGS.verdict.tagTemplate[lang], {
+        id: row.id,
+        balance: FMT.pctLang(row.balance, 0, lang),
+        skill: FMT.pctLang(row.skill, 0, lang),
+        draws: FMT.pctLang(row.draws, 1, lang),
+      })}
+    </>
   );
 }
 
@@ -2176,7 +2234,22 @@ function SprocketColumn({ side }: { side: "left" | "right" }) {
   );
 }
 
-function MetricCell({ value, ok }: { value: number; ok: boolean }) {
+/** A metric with no tournament behind it renders as an em dash, never a
+ *  number and never a zero-length bar that could be misread as 0 %. */
+function MetricCell({ value, ok }: { value: number | null; ok: boolean }) {
+  const { lang } = useLang();
+  if (value === null) {
+    return (
+      <td className="py-5 pr-4 min-w-[140px]">
+        <span
+          className="mono text-[12px] text-paper-3"
+          aria-label={STRINGS.scene8.noMeasurement[lang]}
+        >
+          —
+        </span>
+      </td>
+    );
+  }
   const pct = value * 100;
   return (
     <td className="py-5 pr-4 min-w-[140px]">
@@ -2192,29 +2265,32 @@ function MetricCell({ value, ok }: { value: number; ok: boolean }) {
           />
         </div>
         <span className={`mono text-[12px] tabular-nums ${ok ? "text-paper" : "text-paper-3"}`}>
-          {FMT.pct(value, 1)}
+          {FMT.pctLang(value, 1, lang)}
         </span>
       </div>
     </td>
   );
 }
 
-function VerdictBadge({ verdict }: { verdict: "pass" | "fail" | "warn" }) {
+function VerdictBadge({ verdict }: { verdict: VerdictLevel }) {
   const { lang } = useLang();
   // PASS uses the act's primary accent (phosphor green in Act II, gold
   // in Act III). FAIL uses the act's "regression" second voice (rust
   // in Act II, navy-soft in Act III). WARN sits between, in the
   // mid-tone paper colour.
-  const map = {
+  // UNTESTED is not a grade — it is the absence of one, so it borrows the
+  // faintest ink on the page and a dashed border to read as "no result".
+  const map: Record<VerdictLevel, { color: string; bg: string; border?: string }> = {
     pass: { color: "var(--color-vermilion)", bg: "color-mix(in oklab, var(--color-vermilion) 12%, transparent)" },
     warn: { color: "var(--color-paper-2)",   bg: "color-mix(in oklab, var(--color-paper-2) 6%, transparent)" },
     fail: { color: "var(--color-second)",    bg: "color-mix(in oklab, var(--color-second) 10%, transparent)" },
+    untested: { color: "var(--color-paper-3)", bg: "transparent", border: "dashed" },
   };
   const s = map[verdict];
   return (
     <span
       className="mono inline-flex items-center gap-1 text-[10px] tracking-[0.22em] uppercase px-2 py-1 rounded-sm"
-      style={{ color: s.color, background: s.bg, border: `1px solid ${s.color}` }}
+      style={{ color: s.color, background: s.bg, border: `1px ${s.border ?? "solid"} ${s.color}` }}
     >
       {STRINGS.scene8.badges[verdict][lang]}
     </span>

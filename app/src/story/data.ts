@@ -206,54 +206,8 @@ export const FAILED_RUN_DAYS = [
   { day: 6, states: 49_000_000 },
 ];
 
-/** Scene 8 verdict rows. */
-export const VERDICT = [
-  {
-    id: "LC1-2",
-    label: "Sudden Death",
-    balance: 0.52,
-    skill: 0.82,
-    draws: 0.0,
-    verdict: "pass",
-    winner: true,
-  },
-  {
-    id: "LC2-30",
-    label: "Hard Cap \u00B7 30",
-    balance: 0.58,
-    skill: 0.61,
-    draws: 0.0,
-    verdict: "fail",
-    failReason: "Parity of cap decides winner \u2014 skill barely matters.",
-  },
-  {
-    id: "LC3-29",
-    label: "Classic \u00B7 29",
-    balance: 0.5,
-    skill: 0.77,
-    draws: 0.055,
-    verdict: "pass",
-    winner: true,
-  },
-  {
-    id: "LC3-40",
-    label: "Long Soft Cap",
-    balance: 0.51,
-    skill: 0.72,
-    draws: 0.14,
-    verdict: "warn",
-    failReason: "Draw rate creeps. Readable but flat.",
-  },
-  {
-    id: "LC1-3",
-    label: "Triple Repeat",
-    balance: 0.48,
-    skill: 0.69,
-    draws: 0.0,
-    verdict: "warn",
-    failReason: "Balanced, but defensive play dominates.",
-  },
-];
+/* The Scene 8 verdict rows used to live here as a hand-typed array. They are
+   now derived from the committed tournament JSON: see `./verdict.ts`. */
 
 /**
  * Glossary terms. Every Term used in the narrative should be listed here.
@@ -506,5 +460,14 @@ export const FMT = {
   },
   pct(n: number, digits = 0): string {
     return (n * 100).toFixed(digits) + "%";
+  },
+  /**
+   * Percentage with the right typography per language: French takes a comma
+   * decimal separator and a non-breaking space before the sign, English
+   * neither. Used wherever a derived figure sits next to French prose.
+   */
+  pctLang(n: number, digits: number, lang: "en" | "fr"): string {
+    const s = FMT.pct(n, digits);
+    return lang === "fr" ? s.replace(".", ",").replace("%", " %") : s;
   },
 };

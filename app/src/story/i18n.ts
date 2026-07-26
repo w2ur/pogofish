@@ -55,24 +55,49 @@ export const STRINGS = {
     h2C: { en: " one?",                                               fr: "\u00A0?" },
   },
   scene8: {
-    h2A: { en: "Two survive all three ",       fr: "Deux tiennent les trois " },
+    h2A: { en: "Three clear all three ",       fr: "Trois tiennent les trois " },
     h2B: { en: "axes",                         fr: "critères" },
-    h2C: { en: ". Three do not.",              fr: ". Les trois autres, non." },
+    h2C: { en: ". One fails. One never ran.",  fr: ". Une cède. Une n'a jamais été jouée." },
     intro: {
-      en: "Balance, skill, and earned draws — pass or fail, per variant, per metric. The bars below are the tournament results compressed into three numbers. The full per-game logs are checked into the repository, but the story they tell is visible from across the room.",
-      fr: "Équilibre, hiérarchie des forces, nuls mérités : chaque variante passe ou ne passe pas, critère par critère. Les barres qui suivent résument un tournoi de plusieurs milliers de parties en trois chiffres ; les relevés partie par partie dorment dans le dépôt, mais l'histoire qu'ils racontent se voit de loin.",
+      en: "Balance, skill, and earned draws — pass or fail, per variant, per metric. The bars below are the tournament results compressed into three numbers. The result files are checked into the repository, and the story they tell is visible from across the room.",
+      fr: "Équilibre, hiérarchie des forces, nuls mérités : chaque variante passe ou ne passe pas, critère par critère. Les barres qui suivent résument les tournois en trois chiffres ; les fichiers de résultats sont versionnés dans le dépôt, et l'histoire qu'ils racontent se voit de loin.",
     },
     tableHeaders: {
-      variant: { en: "variant", fr: "variante" },
-      balance: { en: "balance", fr: "équilibre" },
-      skill:   { en: "skill",   fr: "hiérarchie" },
-      draws:   { en: "draws",   fr: "nuls" },
-      verdict: { en: "verdict", fr: "verdict" },
+      variant: { en: "variant",              fr: "variante" },
+      balance: { en: "white win share",      fr: "part de victoires blanches" },
+      skill:   { en: "win rate vs random",   fr: "victoires contre l'aléatoire" },
+      draws:   { en: "draw share",           fr: "part de nuls" },
+      verdict: { en: "verdict",              fr: "verdict" },
+    },
+    tableMeta: {
+      en: "{tested} of {variants} variants tested · {games} games",
+      fr: "{tested} variantes testées sur {variants} · {games} parties",
+    },
+    shippedStar: {
+      en: "shipped in the playable app",
+      fr: "livrée dans le jeu jouable",
+    },
+    noMeasurement: {
+      en: "not measured",
+      fr: "non mesuré",
+    },
+    legendStar: {
+      en: "★ marks the variants whose models ship in the playable app — not a ranking.",
+      fr: "★ signale les variantes dont les modèles sont livrés dans le jeu jouable — ce n'est pas un classement.",
+    },
+    legendMetrics: {
+      en: "White win share and draw share come from the model-against-itself tournament; win rate vs random is that model against a player picking legal moves at random. Both files are committed under src/data/tournaments/.",
+      fr: "La part de victoires blanches et la part de nuls viennent du tournoi du modèle contre lui-même ; les victoires contre l'aléatoire opposent ce modèle à un joueur qui tire un coup légal au hasard. Les deux fichiers sont versionnés dans src/data/tournaments/.",
+    },
+    legendThresholds: {
+      en: "Verdict is computed, not written: pass needs a white win share between {balance} and {balanceHigh}, at least {skill} against random, and at most {draws} draws. A white win share outside that band fails outright.",
+      fr: "Le verdict est calculé, pas rédigé : pour tenir, il faut une part de victoires blanches entre {balance} et {balanceHigh}, au moins {skill} contre l'aléatoire, et au plus {draws} de nuls. Hors de cette fourchette d'équilibre, la variante cède d'office.",
     },
     badges: {
-      pass: { en: "pass", fr: "tient" },
-      warn: { en: "warn", fr: "réserve" },
-      fail: { en: "fail", fr: "cède" },
+      pass:     { en: "pass",     fr: "tient" },
+      warn:     { en: "warn",     fr: "réserve" },
+      fail:     { en: "fail",     fr: "cède" },
+      untested: { en: "not run",  fr: "non testée" },
     },
   },
   scene11: {
@@ -122,20 +147,27 @@ export const STRINGS = {
       "LC3-40": { en: "Long Soft Cap",    fr: "Plafond souple long" },
       "LC1-3":  { en: "Triple Repeat",    fr: "Triple répétition" },
     },
-    failReasons: {
-      "LC2-30": { en: "Parity of cap decides winner — skill barely matters.", fr: "La parité du plafond tranche à la place des joueurs." },
-      "LC3-40": { en: "Draw rate creeps. Readable but flat.",                  fr: "Les nuls s'installent. Jouable, mais sans relief." },
-      "LC1-3":  { en: "Balanced on paper, defensive in play.",                  fr: "Équilibré sur le papier, défensif en pratique." },
+    /* Row notes. Only two rows have one, and both say something the
+       committed tournament files support: LC2-30 misses the balance band,
+       LC1-3 has no file at all. */
+    notes: {
+      "LC2-30": { en: "The cap's parity, not the play, picks the winning colour.", fr: "C'est la parité du plafond, pas le jeu, qui choisit la couleur gagnante." },
+      "LC1-3":  { en: "Never trained. No tournament was run.",                     fr: "Jamais entraînée. Aucun tournoi n'a été joué." },
+    },
+    /* The two tag lines are templates: the numbers are filled in from the
+       committed tournament JSON at render time, so they cannot drift away
+       from the table sitting directly above them. */
+    tagTemplate: {
+      en: "{id} · {balance} white · {skill} vs random · {draws} draws",
+      fr: "{id} · {balance} de blanches · {skill} contre l'aléatoire · {draws} de nuls",
     },
     suddenDeath: {
-      paraEn: "Sudden Death wins on elegance. Repeat a position, you lose. Every move is consequential because the cost of stalling is built into the rule itself, not bolted on with a move counter. The network learned this quickly: strong AlphaZero beat strong DQN 82 % of the time, and zero games ended in a draw. A game that either decides or continues.",
-      paraFr: "Mort subite gagne par élégance. Répéter une position vous fait perdre, et le coût de l'attentisme est inscrit dans la règle elle-même plutôt que greffé par un compteur : chaque pose engage quelque chose. Le réseau l'a compris vite. Un AlphaZero entraîné bat un DQN entraîné 82 fois sur cent, et pas une partie n'a fini sur un nul. Un jeu qui tranche, ou qui continue.",
-      tag:    { en: "LC1-2 · 52 % W · 82 % skill · 0 % draws", fr: "LC1-2 · 52 % B · 82 % niveau · 0 % nuls" },
+      paraEn: "Sudden Death wins on elegance. Repeat a position, you lose. Every move is consequential because the cost of stalling is built into the rule itself, not bolted on with a move counter. The network learned this quickly: the trained AlphaZero model beat the DQN baseline in every game they played, and not one game of the tournament ended in a draw. A game that either decides or continues.",
+      paraFr: "Mort subite gagne par élégance. Répéter une position vous fait perdre, et le coût de l'attentisme est inscrit dans la règle elle-même plutôt que greffé par un compteur : chaque pose engage quelque chose. Le réseau l'a compris vite : l'AlphaZero entraîné a battu le DQN de référence à toutes leurs parties, et pas une partie du tournoi n'a fini sur un nul. Un jeu qui tranche, ou qui continue.",
     },
     classic: {
-      paraEn: "Classic · 29 wins on feel. A move budget you can hear ticking, a clean tiebreaker (most towers), and draws that exist but are earned — strong players drew each other 5.5 % of the time, no mismatched pair ever did. It is the rule I would pick if I were teaching a ten-year-old the game, which is the highest compliment a rule change can earn.",
-      paraFr: "Classique · 29 gagne à l'oreille. Un budget de coups qu'on entend décompter, un départage propre (le plus de tours), et des nuls qui existent mais qui se paient : les joueurs forts en ont fait 5,5 % entre eux, jamais une paire déséquilibrée n'en a arraché un. C'est la règle que je choisirais pour apprendre le jeu à un enfant de dix ans — et, pour une règle, c'est difficile de recevoir un plus beau compliment.",
-      tag:    { en: "LC3-29 · 50 % W · 77 % skill · 5.5 % draws", fr: "LC3-29 · 50 % B · 77 % niveau · 5,5 % nuls" },
+      paraEn: "Classic · 29 wins on feel. A move budget you can hear ticking, a clean tiebreaker (most towers), and draws that exist but are earned — the trained network drew a modest share of its games against itself, and almost none against a random player. It is the rule I would pick if I were teaching a ten-year-old the game, which is the highest compliment a rule change can earn.",
+      paraFr: "Classique · 29 gagne à l'oreille. Un budget de coups qu'on entend décompter, un départage propre (le plus de tours), et des nuls qui existent mais qui se paient : le réseau entraîné en a fait une petite part contre lui-même, et presque aucun contre un joueur aléatoire. C'est la règle que je choisirais pour apprendre le jeu à un enfant de dix ans — et, pour une règle, c'est difficile de recevoir un plus beau compliment.",
     },
   },
   charts: {
