@@ -100,3 +100,28 @@ cp models/$V-v2/tournament_*.json app/src/data/tournaments/$V/
 
 The tournament is not seeded, so re-running will not reproduce these files
 exactly. The committed files are the runs that the article reports.
+
+## The other data file on the page — and why its numbers differ
+
+Scene XI ("what it learned") does **not** read this directory. It fetches
+`app/public/data/lc3-29-insights.json`, produced by a different binary
+(`crates/train/src/bin/analyze.rs`) from a different checkpoint:
+
+```bash
+./target/release/analyze models/lc3-29 app/public/data/lc3-29-insights.json 500
+```
+
+Four differences matter, because that file reports White winning **65.2 %** of
+games while this directory's `lc3-29/tournament_balance.json` reports **50.0 %**
+for the same rule variant:
+
+| | verdict table (this directory) | Scene XI insights |
+|---|---|---|
+| checkpoint | `models/lc3-29-v2` | `models/lc3-29` |
+| simulations per move | 100 | 200 |
+| move selection | greedy (`--tau 0.0`) throughout | temperature 0.5 for the first six plies, greedy after |
+| colours | the two players alternate sides | pure self-play, one net on both sides |
+
+Both figures are real; they are measurements of different things. The page says
+so where the 65 % is rendered — if you change either pipeline, keep that sentence
+true.
