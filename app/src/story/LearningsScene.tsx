@@ -67,7 +67,11 @@ export function LearningsScene() {
   const developmentProbe = findProbe(data, "development");
   const midgameProbe = findProbe(data, "midgame");
 
-  // Capture-timing: find the peak ply and how many games captured in plies 6-10.
+  // Capture-timing. Each histogram bin counts the games that captured at *that*
+  // ply, so a bin never exceeds games_played — but summing a window counts a game
+  // once per ply it captured on. `capturesInWindow` is therefore a count of
+  // capture events, not of games, and may exceed games_played. See
+  // aggregate_capture_timing in crates/train/src/analyze.rs.
   const capturePeakPly = data.capture_timing_histogram
     .map((v, i) => ({ v, i }))
     .reduce((a, b) => (b.v > a.v ? b : a), { v: -1, i: 0 });
@@ -162,15 +166,18 @@ export function LearningsScene() {
           detail={
             <EnFr
               en={<>
-                {capturesInWindow} of {data.games_played} games record a capture in plies
-                6–10. After move 15, captures are rare — the network trades early, then
+                Plies 6–10 alone account for {capturesInWindow} captures across the{" "}
+                {data.games_played} games — a game can capture more than once in that
+                window. After move 15, captures are rare: the network trades early, then
                 plays for tempo.
               </>}
               fr={<>
-                {capturesInWindow} parties sur {data.games_played} voient une
-                capture se produire entre les demi-coups 6 et 10. Passé le
-                coup 15, les captures se raréfient : le réseau règle ses
-                échanges tôt, puis joue pour le tempo.
+                Les demi-coups 6 à 10 concentrent à eux seuls{" "}
+                {capturesInWindow} captures sur l'ensemble des{" "}
+                {data.games_played} parties — une même partie peut capturer
+                plusieurs fois dans cette fenêtre. Passé le coup 15, les
+                captures se raréfient : le réseau règle ses échanges tôt, puis
+                joue pour le tempo.
               </>}
             />
           }
