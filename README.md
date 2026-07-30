@@ -1,3 +1,8 @@
+---
+name: "Pogofish"
+tagline_en: "A longform piece about training an AI to play a forgotten board game"
+---
+
 # Pogofish
 
 A longform article about training an AI to play a forgotten 3×3 board game — with the playable game inlined at the climax. Bilingual FR/EN (English at `/`, French at `/fr`, both prerendered). Single-page web app; no server.
