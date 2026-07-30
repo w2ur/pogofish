@@ -1,6 +1,9 @@
 ---
 name: "Pogofish"
+tagline_fr: "Un article au long cours sur l'entraînement d'une IA à un jeu de plateau oublié"
 tagline_en: "A longform piece about training an AI to play a forgotten board game"
+facts_fr: "Un moteur Rust compilé en WASM, un agent AlphaZero après un mur du minimax et un DQN raté, des enseignements tirés de 500 parties d'auto-apprentissage, sans serveur — une application monopage bilingue prérendue."
+facts_en: "A Rust engine compiled to WASM, an AlphaZero agent reached after a minimax wall and a failed DQN, insights drawn from 500 self-play games, no server — a prerendered bilingual single-page app."
 ---
 
 # Pogofish
