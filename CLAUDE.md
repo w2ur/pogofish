@@ -65,9 +65,14 @@ wasm-pack build crates/wasm --target web --out-dir ../../wasm-pkg
 
 ### ONNX export
 ```bash
-pip install -r tools/requirements.txt
-python tools/export_onnx.py models/lc2-30/model_best.pt models/lc2-30/model_best.onnx --arch mlp_small
+uv run --with-requirements tools/requirements.txt \
+  python tools/export_onnx.py models/lc2-30/model_best.pt models/lc2-30/model_best.onnx --arch mlp_small
 ```
+
+One command, no venv and no install step: uv builds a throwaway environment from
+`tools/requirements.txt` and caches it. uv is the sole Python manager on this
+machine — there is no bare `python`/`pip` on PATH, so the old two-line form does
+not run at all.
 
 ### Web app
 ```bash
