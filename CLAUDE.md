@@ -35,7 +35,7 @@ Bilingual FR/EN.
 ### Rust workspace
 ```bash
 cargo check --workspace       # type check all crates
-cargo test --workspace        # run all tests (74 tests)
+cargo test --workspace        # run all tests
 cargo build --release -p pogofish-cli --bin pogofish   # CLI game
 cargo build --release -p pogofish-train --bin train     # training binary
 ```
@@ -69,51 +69,24 @@ uv run --with-requirements tools/requirements.txt \
   python tools/export_onnx.py models/lc2-30/model_best.pt models/lc2-30/model_best.onnx --arch mlp_small
 ```
 
-One command, no venv and no install step: uv builds a throwaway environment from
-`tools/requirements.txt` and caches it. uv is the sole Python manager on this
-machine — there is no bare `python`/`pip` on PATH, so the old two-line form does
-not run at all.
-
 ### Web app
 ```bash
 cd app
 npm install
 npm run dev        # dev server
 npm run build      # production build (tsc → vite → prerender; see below)
-npx vitest run     # run tests (41 tests)
+npx vitest run     # run tests
 ```
 
 ### Prerendering
 
-`npm run build` ends with `node scripts/prerender.mjs`: it serves the fresh
-`dist/` with `vite preview`, drives it in headless Chromium (Playwright), waits
-for the whole article (including the lazy Act III chunks) to render, and writes
-two per-language documents: `dist/index.html` (English, x-default) and
-`dist/fr/index.html` (French). Language is URL-authoritative (see `LangContext`),
-so `/` and `/fr` each render their own language; the French head
-(canonical/og:url/og:locale/title/description) is rewritten during the snapshot.
-The app is otherwise a pure client-rendered SPA, so this is what lets non-JS
-consumers (Bing, AI crawlers like GPTBot/ClaudeBot/PerplexityBot, social/RSS
-unfurlers) and first paint see the article. React still boots and re-renders on
-the client — deliberately **no hydration**, because the gsap/motion/lenis scroll
-stack initialises imperatively and would mismatch.
+`npm run build` ends with `node scripts/prerender.mjs`, producing static
+`dist/index.html` (English) and `dist/fr/index.html` (French) from the SPA.
 
-- Needs Chromium: `npm install` pulls `@playwright/browser-chromium` +
-  `playwright-core`. CI sets `PLAYWRIGHT_BROWSERS_PATH=0` (in `app/netlify.toml`)
-  so the binary lands in `node_modules` and Netlify's cache keeps it.
-- Failure is non-fatal: a prerender error logs a warning and ships the CSR shell
-  instead, so it never blocks a deploy.
-- i18n: `/fr` is a real prerendered URL with reciprocal `hreflang`
-  (en/fr/x-default) and its own canonical. `app/netlify.toml` routes `/fr` → the
-  French document; `vite.config.ts` `navigateFallbackDenylist` stops the service
-  worker shadowing `/fr` with the English shell; and an inline script in
-  `index.html` redirects French browsers from `/` to `/fr` on first visit
-  (honouring an explicit stored choice).
-- Caveat: vite-plugin-pwa computes its precache manifest during `vite build`,
-  before the prerender rewrite, so the recorded `index.html` revision is the
-  shell's. In practice the shell's asset hashes change whenever content changes,
-  so the service worker still updates (returning users may see the previous
-  render for one extra navigation under `autoUpdate`).
+**Prerender / build pipeline / `/fr` routing: load the `pogofish-prerendering`
+skill** before touching `scripts/prerender.mjs`, `app/netlify.toml` build
+settings, vite-plugin-pwa precache config, or French i18n routing. It explains
+why hydration is deliberately disabled and the precache-manifest caveat.
 
 ## Project Structure
 
@@ -143,8 +116,8 @@ archive/
 
 ## Testing
 
-- Rust workspace: `cargo test --workspace` (74 tests: engine, search, train)
-- Web app: `cd app && npx vitest run` (41 tests)
+- Rust workspace: `cargo test --workspace` (engine, search, train)
+- Web app: `cd app && npx vitest run`
 - Property tests: engine invariants via proptest (piece conservation, no stalemate, legal moves apply)
 
 ## Build Warning Exceptions
@@ -156,15 +129,9 @@ archive/
 ## Deployment
 
 Netlify — static deploy of the `app/` build output. No server-side code. Live at
-`https://pogofish.revah.paris`.
-
-- Netlify **base directory must be `app`** — that is where `netlify.toml` lives
-  (it sets `publish = "dist"`, the SPA redirect, and immutable cache headers).
-- `app/netlify.toml` `[build.environment]` sets `NODE_VERSION = "20"` and
-  `PLAYWRIGHT_BROWSERS_PATH = "0"` (so the prerender step's Chromium is cached
-  across builds).
-- `npm run build` prerenders `dist/index.html` in headless Chromium — see
-  **Prerendering** above.
+`https://pogofish.revah.paris`. Base directory must be `app` (that is where
+`netlify.toml` lives). See the `pogofish-prerendering` skill for build-config
+detail.
 
 ## Project-Specific Rules
 

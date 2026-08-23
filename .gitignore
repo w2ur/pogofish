@@ -37,8 +37,13 @@ wandb/
 docs/plans/
 PLAN.md
 .superpowers/
-.claude/
 .playwright-mcp/
+
+# Claude Code — local state only; skills and shared config are tracked
+.claude/agent-memory/
+.claude/projects/
+.claude/agent-memory-local/
+.claude/worktrees/
 
 # Build artifacts
 *.tsbuildinfo
