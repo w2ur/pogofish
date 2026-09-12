@@ -88,31 +88,12 @@ skill** before touching `scripts/prerender.mjs`, `app/netlify.toml` build
 settings, vite-plugin-pwa precache config, or French i18n routing. It explains
 why hydration is deliberately disabled and the precache-manifest caveat.
 
-## Project Structure
+## Committed artifacts
 
-```
-crates/
-  engine/            # Game engine: types, state, legal moves, rules (LC1/LC2/LC3)
-  search/            # Minimax (alpha-beta + TT), MCTS (PUCT), checkpointer
-  train/             # AlphaZero: net, encoding, self-play, gatekeeper, training loop
-  cli/               # Terminal UI (crossterm, curses-style)
-  wasm/              # wasm-bindgen wrappers for browser
-wasm-pkg/            # Built WASM package (committed for web app)
-tools/
-  export_onnx.py     # Python ONNX export sidecar
-  verify_onnx.js     # Node.js ONNX load verification
-app/
-  src/
-    engine/          # TS shim over WASM (adapts Rust serde format to old TS API)
-    ai/              # AI system (Random, Minimax, ONNX-based DQN/AlphaZero, MCTS)
-    components/      # React UI components
-    hooks/           # Custom hooks (useAI, useGame)
-    stores/          # React context providers
-  public/
-    models/          # ONNX models + minimax table (committed)
-archive/
-  2026-04-phase5-snapshot/  # Pre-rewrite Python + TS code (reference only)
-```
+`wasm-pkg/` (built WASM package) and `app/public/models/` (ONNX models +
+minimax table) are committed, not built in CI — regenerate and commit them
+together. `archive/2026-04-phase5-snapshot/` is the pre-rewrite Python + TS
+code, reference only: never import from it.
 
 ## Testing
 
@@ -123,7 +104,6 @@ archive/
 ## Build Warning Exceptions
 
 - `DeprecationWarning: You are using the legacy TorchScript-based ONNX export` — emitted by PyTorch 2.9+ in `tools/export_onnx.py`. Using the legacy path intentionally until `onnxscript` is added.
-- `warning: method cells_mut is never used` in engine crate — `pub(crate)` accessor reserved for future use by testing helpers.
 - `(!) Some chunks are larger than 500 kB after minification` — emitted by `vite build` for the main `index-*.js` chunk (≈637 kB raw, **214 kB gzipped**). Accepted rather than split: the article is prerendered, so JS never gates first paint, and the two heavy interactive scenes (`PlayScene`, `GlossaryConstellation`) already lazy-load as their own chunks. Splitting the remaining bundle would trade a measurable improvement for none. Do not silence it with `build.chunkSizeWarningLimit` — that would also hide a real regression. Revisit if the gzipped figure passes ~250 kB.
 
 ## Deployment
