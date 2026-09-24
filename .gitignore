@@ -40,7 +40,7 @@ PLAN.md
 .playwright-mcp/
 
 # Claude Code — local state only; skills and shared config are tracked
-.claude/agent-memory/
+**/.claude/agent-memory/
 .claude/projects/
 .claude/agent-memory-local/
 .claude/worktrees/
