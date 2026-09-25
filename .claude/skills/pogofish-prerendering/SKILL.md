@@ -42,6 +42,6 @@ Netlify — static deploy of the `app/` build output. No server-side code. Live 
 
 - Netlify **base directory must be `app`** — that is where `netlify.toml` lives
   (it sets `publish = "dist"`, the SPA redirect, and immutable cache headers).
-- `app/netlify.toml` `[build.environment]` sets `NODE_VERSION = "20"` and
+- `app/netlify.toml` `[build.environment]` sets `NODE_VERSION = "24"` and
   `PLAYWRIGHT_BROWSERS_PATH = "0"` (so the prerender step's Chromium is cached
   across builds).
