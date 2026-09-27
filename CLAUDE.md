@@ -123,7 +123,7 @@ detail.
 ## Project-Specific Rules
 
 - The state-space size has never been measured. Do not state one; the same goes for any runtime or memory figure that was not measured.
-- Three rule variants under experiment: LC1 (repetition loss), LC2 (hard move cap: the player to move at the cap loses), LC3 (soft cap with draws).
+- Round 2 trains on the **uncapped game** (decided 2026-09-27, `docs/experiments/v2-ruleset.md`): base rule only, 1,000-ply safety limit treated as truncation (policy targets kept, value targets dropped, never a draw). If more than 5 % of self-play games truncate over three consecutive iterations, stop and switch to a repetition rule. The round-1 variants remain in the engine: LC1 (repetition loss), LC2 (hard move cap: the player to move at the cap loses), LC3 (soft cap with draws).
 - Training artifacts go in `models/` (gitignored). 8 GB RAM M2 Mac — keep neural nets small.
 - The WASM shim at `app/src/engine/` translates between Rust serde format (snake_case, "White"/"Red") and old TS format (camelCase, "W"/"R"). Do not modify the Rust serialization to match TS — the shim handles it.
 - Checkpoint loading is strict (`crates/train/src/checkpoint.rs`): a missing, unexpected or reshaped tensor is an error. Never load weights by copying only the names that match; that is how round 1 evaluated a "DQN" with random heads.

@@ -1,6 +1,6 @@
 # Round 2 training ruleset — decision memo
 
-Date: 2026-09-27 · Plan task 1.3 · **Status: waiting for the owner's choice.**
+Date: 2026-09-27 · Plan task 1.3 · **Status: decided 2026-09-27 — option A.**
 
 ## The question
 
@@ -109,5 +109,14 @@ after it.
 
 ## Decision
 
-Pending. The owner picks A, B (with `repetitions` value), C (with cap) or something
-else; the choice and its date go here and into CLAUDE.md's project rules.
+**Option A, decided by the owner on 2026-09-27** ("I trust you on the ruleset"),
+with the switch rule as recommended, now fixed in advance:
+
+- Training plays the uncapped game: base rule only, no move count or repetition
+  in the observation.
+- Safety limit: 1,000 plies. A game that reaches it is truncated: its positions
+  keep their policy targets and drop their value targets. It is never a draw.
+- The self-play truncation rate is logged every iteration. If it exceeds **5 %**
+  (of games in an iteration, over three consecutive iterations), training stops
+  and switches to option B (third occurrence of a position loses for the player
+  who caused it). Runs before and after such a switch are not compared.
