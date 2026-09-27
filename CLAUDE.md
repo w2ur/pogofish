@@ -9,7 +9,7 @@ Pogofish is a browser-based Pogo board game with AI opponents trained via AlphaZ
 ### Rust workspace (`crates/`)
 - Rust 1.79+ (stable toolchain)
 - `pogofish-engine` — Game rules, state, legal moves, rule variants (LC1/LC2/LC3)
-- `pogofish-search` — Minimax (alpha-beta + TT), MCTS (PUCT), checkpointer
+- `pogofish-search` — Minimax (alpha-beta + TT), MCTS (PUCT), checkpointer, scripted `random`/`greedy` players (seeded, no dependency)
 - `pogofish-train` — AlphaZero training (tch-rs/libtorch), self-play, gatekeeper
 - `pogofish-cli` — Curses-style terminal UI (crossterm)
 - `pogofish-wasm` — wasm-bindgen wrappers for browser use

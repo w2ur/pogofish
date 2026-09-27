@@ -25,7 +25,7 @@ Then open `http://localhost:5173`. The CTA in the bottom-right (`▶ Play`) or t
 ### `crates/` — Rust workspace
 
 - `pogofish-engine` — game rules, state, legal moves, rule variants (LC1/LC2/LC3).
-- `pogofish-search` — minimax (alpha-beta + transposition table), MCTS (PUCT), checkpointer.
+- `pogofish-search` — minimax (alpha-beta + transposition table), MCTS (PUCT), checkpointer, and two scripted baselines: `random` and `greedy` (wins when it can, else maximises own stacks on top minus the opponent's).
 - `pogofish-train` — AlphaZero training via tch-rs/libtorch, self-play, gatekeeper, and an `analyze` binary that produces the insights JSON the article reads.
 - `pogofish-cli` — terminal UI (crossterm, curses-style).
 - `pogofish-wasm` — wasm-bindgen wrappers for the browser.

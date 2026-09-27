@@ -28,6 +28,12 @@ pub fn is_terminal(state: &GameState, rules: &RuleSet) -> Option<Outcome> {
     }
 }
 
+/// The game's own end, with no variant rule: a player with no stack on top
+/// has lost. Use this to play the uncapped game.
+pub fn base_outcome(state: &GameState) -> Option<Outcome> {
+    base_terminal(state)
+}
+
 /// Base terminal: all non-empty cells have the same top color → that color wins.
 /// Matches the TS engine's isTerminal + winner logic.
 fn base_terminal(state: &GameState) -> Option<Outcome> {
