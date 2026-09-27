@@ -1,4 +1,7 @@
-# AlphaZero run configuration — plan task 4.3
+# AlphaZero run configuration — plan task 4.3 (uncapped game)
+
+**Superseded:** these runs were stopped by the ruleset switch rule
+(`v2-az-uncapped.md`); round 2 continues on `lc1-2` (`v2-az-lc1-run.md`).
 
 Date: 2026-09-27. Written before the runs start; not changed after.
 

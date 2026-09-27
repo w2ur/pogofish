@@ -1,6 +1,6 @@
 # Round 2 training ruleset — decision memo
 
-Date: 2026-09-27 · Plan task 1.3 · **Status: decided 2026-09-27 — option A.**
+Date: 2026-09-27 · Plan task 1.3 · **Status: decided 2026-09-27 — option A; switched to option B (`lc1-2`) the same day when the switch rule fired, see the last section.**
 
 ## The question
 
@@ -120,3 +120,23 @@ with the switch rule as recommended, now fixed in advance:
   (of games in an iteration, over three consecutive iterations), training stops
   and switches to option B (third occurrence of a position loses for the player
   who caused it). Runs before and after such a switch are not compared.
+
+## Switch to option B (2026-09-27)
+
+The switch rule fired during the first AlphaZero runs: at iteration 70 (seed 3) and
+130 (seed 2), with truncation rising as the agents learned to hold
+(`v2-az-uncapped.md`). The owner chose to follow the rule rather than amend it.
+
+- **Round 2 now trains on `lc1-2`:** a position occurring for the third time
+  (same board, same player to move) loses for the player whose move produced it.
+  The base rule still applies first.
+- The network input gains the current position's repetition count
+  (`mover-relative-repetition`); the search key reads the whole history, so the
+  search stays exact. The input is still not a complete Markov state under LC1
+  (it omits which *other* positions were seen); that residual is documented, not
+  hidden.
+- The 1,000-ply safety limit and the truncation stop stay in force. Under `lc1-2`
+  a game cannot last forever in principle, but the limit still guards run time, and
+  truncations remain non-results.
+- Runs on the uncapped game are not compared with runs on `lc1-2`.
+
