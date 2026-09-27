@@ -45,3 +45,15 @@ fn initial_state_move_count_is_zero() {
 fn initial_state_history_is_empty() {
     assert_eq!(initial_state().history_len(), 0);
 }
+
+#[test]
+fn forget_history_keeps_the_position() {
+    use pogofish_engine::{apply_move, legal_moves};
+    let s0 = pogofish_engine::initial_state();
+    let mut s1 = apply_move(&s0, legal_moves(&s0)[0]).unwrap();
+    assert_eq!(s1.history_len(), 1);
+    let before = (s1.cells().clone(), s1.to_move(), s1.move_count(), s1.key());
+    s1.forget_history();
+    assert_eq!(s1.history_len(), 0);
+    assert_eq!((s1.cells().clone(), s1.to_move(), s1.move_count(), s1.key()), before);
+}

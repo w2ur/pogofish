@@ -47,6 +47,13 @@ cargo run --release -p pogofish-cli
 # u undo, Shift+R redo, q quit
 ```
 
+### Measuring the game
+```bash
+# Uncapped games between random/greedy players; refuses to run if its own
+# falsification check fails. Unfinished games (safety limit) are never draws.
+cargo run --release -p pogofish-search --bin measure -- --games 20000 --seed 1 --out docs/experiments/v2-measure.json
+```
+
 ### Training
 ```bash
 # Requires libtorch — tch-rs downloads it automatically during build.

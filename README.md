@@ -64,6 +64,9 @@ cd app && npm run build
 # Terminal game
 cargo run --release -p pogofish-cli
 
+# Measure the uncapped game with scripted players (JSON report; ~2 s)
+cargo run --release -p pogofish-search --bin measure -- --games 20000 --seed 1 --out docs/experiments/v2-measure.json
+
 # Train (requires libtorch; tch-rs downloads it)
 DYLD_LIBRARY_PATH=$(find target/release/build -path "*/torch-sys-*/out/libtorch/libtorch/lib" | head -1) \
   ./target/release/train lc3-29 models/lc3-29 mlp_small

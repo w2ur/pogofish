@@ -64,6 +64,13 @@ impl GameState {
         self.history = h;
     }
 
+    /// Drop the position history. Only the variant rules read it (LC1
+    /// repetition); a caller playing the uncapped game can call this after
+    /// each move so `apply_move` stops copying an ever-growing history.
+    pub fn forget_history(&mut self) {
+        self.history.clear();
+    }
+
     /// Returns the top piece color of a cell, or None if empty.
     pub fn cell_owner(&self, cell_idx: usize) -> Option<Color> {
         self.cells[cell_idx].last().copied()
