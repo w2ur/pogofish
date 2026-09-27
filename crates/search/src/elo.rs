@@ -73,45 +73,45 @@ pub fn fit(results: &[PairResult], anchor: &str) -> Result<Ladder, String> {
         if played <= 0.0 {
             continue;
         }
-        let v = VIRTUAL_DRAWS_PER_PAIRING;
-        wins[i][j] += r.a_wins + 0.5 * (r.draws + v);
-        wins[j][i] += r.a_losses + 0.5 * (r.draws + v);
-        games[i][j] += played + v;
-        games[j][i] += played + v;
+        wins[i][j] += r.a_wins + 0.5 * r.draws;
+        wins[j][i] += r.a_losses + 0.5 * r.draws;
+        games[i][j] += played;
+        games[j][i] += played;
+    }
+    // The prior: one virtual draw per distinct pairing, however many reports
+    // (or orientations, A–B and B–A) it arrived in.
+    for i in 0..n {
+        for j in 0..n {
+            if games[i][j] > 0.0 {
+                wins[i][j] += 0.5 * VIRTUAL_DRAWS_PER_PAIRING;
+                games[i][j] += VIRTUAL_DRAWS_PER_PAIRING;
+            }
+        }
     }
     check_connected(&games, anchor_idx)?;
 
     // Newton's method on the free parameters (all but the anchor).
     let free: Vec<usize> = (0..n).filter(|&i| i != anchor_idx).collect();
     let mut theta = vec![0.0f64; n];
-    let mut info = vec![vec![0.0; free.len()]; free.len()];
-    for _ in 0..100 {
-        let mut grad = vec![0.0; free.len()];
-        for row in info.iter_mut() {
-            row.iter_mut().for_each(|x| *x = 0.0);
-        }
-        for (fi, &i) in free.iter().enumerate() {
-            for j in 0..n {
-                if games[i][j] == 0.0 {
-                    continue;
-                }
-                let p = 1.0 / (1.0 + (theta[j] - theta[i]).exp());
-                grad[fi] += wins[i][j] - games[i][j] * p;
-                let w = games[i][j] * p * (1.0 - p);
-                info[fi][fi] += w;
-                if let Some(fj) = free.iter().position(|&x| x == j) {
-                    info[fi][fj] -= w;
-                }
-            }
-        }
+    let mut converged = false;
+    for _ in 0..MAX_NEWTON_STEPS {
+        let (grad, info) = gradient_and_information(&theta, &free, &wins, &games);
         let step = solve(&info, &grad).ok_or("information matrix is singular")?;
         for (fi, &i) in free.iter().enumerate() {
             theta[i] += step[fi];
         }
-        if step.iter().all(|s| s.abs() < 1e-12) {
+        if step.iter().all(|s| s.abs() < 1e-10) {
+            converged = true;
             break;
         }
     }
+    if !converged {
+        return Err(format!(
+            "the fit did not converge in {MAX_NEWTON_STEPS} Newton steps"
+        ));
+    }
+    // Intervals from the information at the final estimate.
+    let (_, info) = gradient_and_information(&theta, &free, &wins, &games);
     let cov = invert(&info).ok_or("information matrix is singular")?;
 
     let mut ratings: Vec<Rating> = index
@@ -141,6 +141,35 @@ pub fn fit(results: &[PairResult], anchor: &str) -> Result<Ladder, String> {
         virtual_draws_per_pairing: VIRTUAL_DRAWS_PER_PAIRING,
         ratings,
     })
+}
+
+const MAX_NEWTON_STEPS: usize = 200;
+
+/// Gradient of the log-likelihood and the Fisher information, over the free
+/// parameters.
+fn gradient_and_information(
+    theta: &[f64],
+    free: &[usize],
+    wins: &[Vec<f64>],
+    games: &[Vec<f64>],
+) -> (Vec<f64>, Vec<Vec<f64>>) {
+    let mut grad = vec![0.0; free.len()];
+    let mut info = vec![vec![0.0; free.len()]; free.len()];
+    for (fi, &i) in free.iter().enumerate() {
+        for j in 0..theta.len() {
+            if games[i][j] == 0.0 {
+                continue;
+            }
+            let p = 1.0 / (1.0 + (theta[j] - theta[i]).exp());
+            grad[fi] += wins[i][j] - games[i][j] * p;
+            let w = games[i][j] * p * (1.0 - p);
+            info[fi][fi] += w;
+            if let Some(fj) = free.iter().position(|&x| x == j) {
+                info[fi][fj] -= w;
+            }
+        }
+    }
+    (grad, info)
 }
 
 fn check_connected(games: &[Vec<f64>], start: usize) -> Result<(), String> {
@@ -307,5 +336,36 @@ mod tests {
             expected("u", 0.0, "v", 0.0, 10.0),
         ];
         assert!(fit(&split, "x").is_err());
+    }
+
+    /// Review finding: a pairing split across reports (or given in both
+    /// orientations) must get the same single virtual draw as one report.
+    #[test]
+    fn the_prior_is_per_pairing_not_per_report() {
+        let sweep = |a: &str, b: &str, w: f64| PairResult {
+            a: a.into(),
+            b: b.into(),
+            a_wins: w,
+            draws: 0.0,
+            a_losses: 0.0,
+        };
+        let one = fit(&[sweep("g", "r", 400.0)], "r").unwrap();
+        let split = fit(&[sweep("g", "r", 200.0), sweep("g", "r", 200.0)], "r").unwrap();
+        let flipped = fit(
+            &[
+                sweep("g", "r", 200.0),
+                PairResult {
+                    a: "r".into(),
+                    b: "g".into(),
+                    a_wins: 0.0,
+                    draws: 0.0,
+                    a_losses: 200.0,
+                },
+            ],
+            "r",
+        )
+        .unwrap();
+        assert!((elo_of(&one, "g") - elo_of(&split, "g")).abs() < 1e-6);
+        assert!((elo_of(&one, "g") - elo_of(&flipped, "g")).abs() < 1e-6);
     }
 }

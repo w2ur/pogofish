@@ -53,7 +53,7 @@ fn main() -> anyhow::Result<()> {
             // Fresh objects per match, so a player can meet itself.
             let mut a = agent_from_spec(&specs[x])?;
             let mut b = agent_from_spec(&specs[y])?;
-            let r = run_match(a.as_mut(), b.as_mut(), &cfg);
+            let r = run_match(a.as_mut(), b.as_mut(), &cfg).map_err(anyhow::Error::msg)?;
             eprintln!(
                 "{} vs {}: score {:.3} [{:.3}, {:.3}] | W{} D{} L{} U{} | distinct games {} / {}",
                 r.player_a,

@@ -138,10 +138,19 @@ struct GameLog {
     white_result: Option<f64>,
 }
 
+/// Give up drawing an opening after this many tries (each try ended the game).
+pub const MAX_OPENING_TRIES: u32 = 10_000;
+
 /// Draw an opening: `plies` uniformly random moves that do not end the game.
-/// Retries with the next draw from `rng` if one does.
-pub fn random_opening(rules: &RuleSet, plies: u32, rng: &mut SplitMix64) -> (GameState, Vec<Move>) {
-    'draw: loop {
+/// Retries with the next draw from `rng` if one does, and errors after
+/// [`MAX_OPENING_TRIES`] (for example LC2 with a cap no longer than the
+/// opening, where every opening ends the game).
+pub fn random_opening(
+    rules: &RuleSet,
+    plies: u32,
+    rng: &mut SplitMix64,
+) -> Result<(GameState, Vec<Move>), String> {
+    'draw: for _ in 0..MAX_OPENING_TRIES {
         let mut s = initial_state();
         let mut moves = Vec::new();
         for _ in 0..plies {
@@ -153,8 +162,11 @@ pub fn random_opening(rules: &RuleSet, plies: u32, rng: &mut SplitMix64) -> (Gam
                 continue 'draw;
             }
         }
-        return (s, moves);
+        return Ok((s, moves));
     }
+    Err(format!(
+        "no {plies}-ply opening that leaves the game running under {rules} in {MAX_OPENING_TRIES} tries"
+    ))
 }
 
 fn play(
@@ -201,8 +213,12 @@ fn play(
 }
 
 /// Play the match. `a` and `b` must be distinct objects; to play a player
-/// against itself, build it twice.
-pub fn run_match(a: &mut dyn Agent, b: &mut dyn Agent, cfg: &ArenaConfig) -> ArenaReport {
+/// against itself, build it twice. Errors if no opening can be drawn.
+pub fn run_match(
+    a: &mut dyn Agent,
+    b: &mut dyn Agent,
+    cfg: &ArenaConfig,
+) -> Result<ArenaReport, String> {
     let mut rec = Record::default();
     let mut as_white = Record::default();
     let mut as_red = Record::default();
@@ -215,7 +231,7 @@ pub fn run_match(a: &mut dyn Agent, b: &mut dyn Agent, cfg: &ArenaConfig) -> Are
 
     for pair in 0..cfg.pairs {
         let mut rng = SplitMix64::new(crate::measure::game_seed(cfg.seed, 7, pair as u64));
-        let (start, opening) = random_opening(&cfg.rules, cfg.opening_plies, &mut rng);
+        let (start, opening) = random_opening(&cfg.rules, cfg.opening_plies, &mut rng)?;
         openings.insert(opening.clone());
         let mut a_results = [None; 2];
         for (game, slot) in a_results.iter_mut().enumerate() {
@@ -275,7 +291,7 @@ pub fn run_match(a: &mut dyn Agent, b: &mut dyn Agent, cfg: &ArenaConfig) -> Are
         let half = 1.96 * (var / n as f64).sqrt();
         [(score - half).max(0.0), (score + half).min(1.0)]
     };
-    ArenaReport {
+    Ok(ArenaReport {
         player_a: a.name(),
         player_b: b.name(),
         config: cfg.clone(),
@@ -295,7 +311,7 @@ pub fn run_match(a: &mut dyn Agent, b: &mut dyn Agent, cfg: &ArenaConfig) -> Are
         distinct_openings: openings.len(),
         distinct_games: sequences.len(),
         distinct_positions_after_opening: positions.len(),
-    }
+    })
 }
 
 #[cfg(test)]
@@ -309,8 +325,10 @@ mod tests {
     #[test]
     fn openings_are_legal_non_terminal_and_reproducible() {
         for seed in 0..50 {
-            let (s, moves) = random_opening(&RuleSet::Uncapped, 6, &mut SplitMix64::new(seed));
-            let (s2, moves2) = random_opening(&RuleSet::Uncapped, 6, &mut SplitMix64::new(seed));
+            let (s, moves) =
+                random_opening(&RuleSet::Uncapped, 6, &mut SplitMix64::new(seed)).unwrap();
+            let (s2, moves2) =
+                random_opening(&RuleSet::Uncapped, 6, &mut SplitMix64::new(seed)).unwrap();
             assert_eq!(moves, moves2);
             assert_eq!(s.key(), s2.key());
             assert_eq!(moves.len(), 6);
@@ -320,7 +338,7 @@ mod tests {
 
     #[test]
     fn counts_add_up_and_colours_alternate() {
-        let r = run_match(&mut Scripted::Greedy, &mut Scripted::Random, &cfg(50));
+        let r = run_match(&mut Scripted::Greedy, &mut Scripted::Random, &cfg(50)).unwrap();
         assert_eq!(r.games, 100);
         let total = |x: Record| x.wins + x.draws + x.losses + x.unfinished;
         assert_eq!(total(r.a), 100);
@@ -332,15 +350,15 @@ mod tests {
 
     #[test]
     fn a_match_is_reproducible_from_its_seed() {
-        let x = run_match(&mut Scripted::Random, &mut Scripted::Random, &cfg(30));
-        let y = run_match(&mut Scripted::Random, &mut Scripted::Random, &cfg(30));
+        let x = run_match(&mut Scripted::Random, &mut Scripted::Random, &cfg(30)).unwrap();
+        let y = run_match(&mut Scripted::Random, &mut Scripted::Random, &cfg(30)).unwrap();
         assert_eq!((x.a, x.distinct_games), (y.a, y.distinct_games));
     }
 
     /// Plan task 3.2, check 1: a real gap is detected.
     #[test]
     fn greedy_beats_random_significantly() {
-        let r = run_match(&mut Scripted::Greedy, &mut Scripted::Random, &cfg(100));
+        let r = run_match(&mut Scripted::Greedy, &mut Scripted::Random, &cfg(100)).unwrap();
         assert!(r.significant && r.ci95[0] > 0.5, "{r:?}");
     }
 
@@ -350,7 +368,7 @@ mod tests {
     fn self_matches_are_not_significant() {
         for p in [Scripted::Random, Scripted::Greedy, Scripted::FirstLegal] {
             let (mut a, mut b) = (p, p);
-            let r = run_match(&mut a, &mut b, &cfg(200));
+            let r = run_match(&mut a, &mut b, &cfg(200)).unwrap();
             assert!(r.ci95[0] <= 0.5 && 0.5 <= r.ci95[1], "{}: {r:?}", p.name());
         }
     }
@@ -365,7 +383,7 @@ mod tests {
         let mut c = cfg(500);
         c.swap_colours = false;
         let (mut a, mut b) = (Scripted::Greedy, Scripted::Greedy);
-        let r = run_match(&mut a, &mut b, &c);
+        let r = run_match(&mut a, &mut b, &c).unwrap();
         assert!(r.significant, "{r:?}");
     }
 
@@ -373,7 +391,7 @@ mod tests {
     /// report flags it.
     #[test]
     fn first_legal_loses_to_random() {
-        let r = run_match(&mut Scripted::FirstLegal, &mut Scripted::Random, &cfg(200));
+        let r = run_match(&mut Scripted::FirstLegal, &mut Scripted::Random, &cfg(200)).unwrap();
         assert!(r.significant && r.ci95[1] < 0.5, "{r:?}");
     }
 
@@ -382,10 +400,10 @@ mod tests {
         // First-legal against itself from 20 openings replays one line per
         // opening and colour assignment: at most 20 distinct games.
         let (mut a, mut b) = (Scripted::FirstLegal, Scripted::FirstLegal);
-        let det = run_match(&mut a, &mut b, &cfg(20));
+        let det = run_match(&mut a, &mut b, &cfg(20)).unwrap();
         assert!(det.distinct_games <= det.distinct_openings, "{det:?}");
         let (mut a, mut b) = (Scripted::Random, Scripted::Random);
-        let rnd = run_match(&mut a, &mut b, &cfg(20));
+        let rnd = run_match(&mut a, &mut b, &cfg(20)).unwrap();
         assert_eq!(rnd.distinct_games, 40);
         assert!(rnd.distinct_positions_after_opening > 3 * det.distinct_positions_after_opening);
     }
@@ -394,9 +412,17 @@ mod tests {
     fn unfinished_pairs_are_not_scored() {
         let mut c = cfg(10);
         c.max_plies = 5; // opening is 4 plies; no game can end within 5
-        let r = run_match(&mut Scripted::Random, &mut Scripted::Random, &c);
+        let r = run_match(&mut Scripted::Random, &mut Scripted::Random, &c).unwrap();
         assert_eq!(r.a.unfinished, 20);
         assert_eq!(r.scored_pairs, 0);
         assert!(r.score.is_nan());
+    }
+
+    /// Review finding: an impossible opening used to hang the arena forever.
+    #[test]
+    fn an_impossible_opening_is_an_error_not_a_hang() {
+        let c = ArenaConfig::new(RuleSet::LC2 { cap: 4 }, 2, 4, 1000, 1);
+        let err = run_match(&mut Scripted::Random, &mut Scripted::Greedy, &c).unwrap_err();
+        assert!(err.contains("no 4-ply opening"), "{err}");
     }
 }
