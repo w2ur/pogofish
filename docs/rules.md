@@ -104,6 +104,17 @@ to move.
 Which of these (or none) the next training round uses is decided from measurements
 in `docs/experiments/v2-ruleset.md`.
 
+## Symmetry
+
+The 8 symmetries of the square (4 rotations, 4 reflections) preserve Manhattan
+distance, so they map legal moves to legal moves and wins to wins. This is checked,
+not assumed: `crates/engine/tests/symmetry.rs` verifies on sampled positions that
+each symmetry maps the legal-move set onto the transformed position's, that every
+move commutes with it, and that the outcome is unchanged. Run over all 362,880
+permutations of the 9 cells, the check passes for exactly those 8, and rejects
+every other permutation. Round 2 may use all 8 for data augmentation
+(`symmetry::verified_symmetries`), under rules that do not read the history.
+
 ## Mutation check
 
 Each regression position was run against a one-line mutation of the rule it pins

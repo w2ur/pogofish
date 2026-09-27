@@ -3,6 +3,7 @@ mod legal;
 pub mod notation;
 mod rules;
 mod state;
+pub mod symmetry;
 pub mod testing;
 mod types;
 

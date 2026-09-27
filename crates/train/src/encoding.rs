@@ -1,3 +1,4 @@
+use pogofish_engine::symmetry::{transform_move, CellMap};
 use pogofish_engine::{legal_moves, Color, GameState, Move};
 use tch::Tensor;
 
@@ -55,6 +56,17 @@ pub fn legal_move_mask(state: &GameState) -> Tensor {
         mask[move_to_index(&m)] = 1.0;
     }
     Tensor::from_slice(&mask)
+}
+
+/// Permute a policy vector by a board symmetry: the probability of move `m`
+/// moves to the index of the transformed move. For data augmentation, pair
+/// it with `state_to_tensor(&transform_state(state, perm))`.
+pub fn transform_policy(policy: &[f32; ACTION_SIZE], perm: &CellMap) -> [f32; ACTION_SIZE] {
+    let mut out = [0f32; ACTION_SIZE];
+    for (idx, &p) in policy.iter().enumerate() {
+        out[move_to_index(&transform_move(index_to_move(idx), perm))] = p;
+    }
+    out
 }
 
 #[cfg(test)]
@@ -159,6 +171,31 @@ mod tests {
             assert!((m.from_cell as usize) < NUM_CELLS);
             assert!((m.to_cell as usize) < NUM_CELLS);
             assert!(m.num_pieces >= 1 && m.num_pieces <= 3);
+        }
+    }
+
+    #[test]
+    fn transformed_policy_lands_on_the_transformed_legal_moves() {
+        use pogofish_engine::symmetry::{transform_state, verified_symmetries};
+        use pogofish_engine::{apply_move, legal_moves};
+        let s0 = initial_state();
+        let s = apply_move(&s0, legal_moves(&s0)[3]).unwrap();
+        let moves = legal_moves(&s);
+        let mut policy = [0f32; ACTION_SIZE];
+        for (i, m) in moves.iter().enumerate() {
+            policy[move_to_index(m)] = (i + 1) as f32;
+        }
+        for perm in verified_symmetries() {
+            let t = transform_policy(&policy, &perm);
+            let mask: Vec<f32> = legal_move_mask(&transform_state(&s, &perm)).try_into().unwrap();
+            for idx in 0..ACTION_SIZE {
+                assert_eq!(t[idx] > 0.0, mask[idx] == 1.0, "index {idx}");
+            }
+            for (i, m) in moves.iter().enumerate() {
+                assert_eq!(t[move_to_index(&transform_move(*m, &perm))], (i + 1) as f32);
+            }
+            let total: f32 = t.iter().sum();
+            assert_eq!(total, policy.iter().sum::<f32>());
         }
     }
 }
