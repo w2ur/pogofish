@@ -98,3 +98,19 @@ should be tried there, and measured, not assumed: 4.2 runs it as a comparison.
 ./target/release/arena uncapped td:models/td-mr-s1/weights.pt greedy random --pairs 200 --seed 7
 uv run tools/plot_td_curve.py docs/experiments/v2-td.json docs/experiments/v2-td.png
 ```
+
+## Under `lc1-2` (after the ruleset switch)
+
+When round 2 moved to `lc1-2` (`v2-ruleset.md`), the TD baseline was retrained with
+the same settings (λ 0.7, learning rate 0.1, 50,000 games) and the
+`mover-relative-repetition` features, so that it plays the ruleset it is compared on.
+Raw data: `lc1_2_runs` in `v2-td.json`.
+
+| Seed | vs greedy (training eval) | vs greedy, fresh openings (arena seed 7) | vs random, fresh openings | Truncated self-play games |
+|---|---|---|---|---|
+| 1 | 0.800 [0.763, 0.837] | 0.785 [0.748, 0.822] | 1.000 | 0 of 50,000 |
+| 2 | 0.810 [0.774, 0.846] | 0.740 [0.702, 0.778] | 1.000 | 0 |
+| 3 | 0.793 [0.754, 0.831] | 0.777 [0.741, 0.814] | 1.000 | 0 |
+
+The criterion holds under `lc1-2` too. These are the TD agents the AlphaZero
+criterion 1 compares against (`models/td-lc1-sN`).

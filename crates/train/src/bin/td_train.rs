@@ -1,8 +1,8 @@
 //! TD(λ) self-play training (plan task 4.1). Resumable: rerun the same
 //! command after Ctrl+C (or with a larger --iterations to extend the run).
 //!
-//! Usage: td_train <out_dir> [--iterations N] [--games G] [--lambda L] [--lr LR]
-//!                 [--hidden 128x64] [--features mover-relative|absolute] [--temp-start T] [--temp-end T] [--temp-decay N]
+//! Usage: td_train <out_dir> [--rules R] [--iterations N] [--games G] [--lambda L] [--lr LR]
+//!                 [--hidden 128x64] [--features mover-relative|mover-relative-repetition|absolute] [--temp-start T] [--temp-end T] [--temp-decay N]
 //!                 [--eval-every K] [--eval-pairs P] [--checkpoint-every K]
 //!                 [--max-plies P] [--seed S]
 
@@ -13,7 +13,7 @@ use std::path::PathBuf;
 fn main() -> anyhow::Result<()> {
     let raw: Vec<String> = std::env::args().skip(1).collect();
     let Some(dir) = raw.first().filter(|a| !a.starts_with("--")) else {
-        bail!("usage: td_train <out_dir> [--iterations N] [--games G] [--lambda L] [--lr LR] [--hidden 128x64] [--features mover-relative|absolute] [--temp-start T] [--temp-end T] [--temp-decay N] [--eval-every K] [--eval-pairs P] [--checkpoint-every K] [--max-plies P] [--seed S]");
+        bail!("usage: td_train <out_dir> [--iterations N] [--games G] [--lambda L] [--lr LR] [--hidden 128x64] [--features mover-relative|mover-relative-repetition|absolute] [--temp-start T] [--temp-end T] [--temp-decay N] [--eval-every K] [--eval-pairs P] [--checkpoint-every K] [--max-plies P] [--seed S]");
     };
     let mut cfg = TdConfig::default();
     let mut i = 1;
@@ -23,6 +23,7 @@ fn main() -> anyhow::Result<()> {
             .get(i + 1)
             .with_context(|| format!("{flag} needs a value"))?;
         match flag {
+            "--rules" => cfg.rules = v.clone(),
             "--iterations" => cfg.iterations = v.parse()?,
             "--games" => cfg.games_per_iteration = v.parse()?,
             "--lambda" => cfg.lambda = v.parse()?,

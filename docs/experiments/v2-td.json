@@ -1956,5 +1956,1699 @@
    "distinct_games": 400,
    "distinct_positions_after_opening": 2976
   }
- ]
+ ],
+ "lc1_2_runs": {
+  "lc1-2 s1": {
+   "config": {
+    "rules": "lc1-2",
+    "features": "mover-relative-repetition",
+    "hidden": [
+     128,
+     64
+    ],
+    "lambda": 0.7,
+    "lr": 0.1,
+    "batch_size": 64,
+    "iterations": 1000,
+    "games_per_iteration": 50,
+    "temp_start": 0.5,
+    "temp_end": 0.02,
+    "temp_decay_iterations": 1000,
+    "max_plies": 1000,
+    "eval_every": 50,
+    "eval_pairs": 200,
+    "checkpoint_every": 50,
+    "seed": 1
+   },
+   "truncated_games": 0,
+   "games": 50000,
+   "evals": [
+    {
+     "iteration": 50,
+     "games_played": 2500,
+     "vs_greedy": {
+      "ci95": [
+       0.4862849865136087,
+       0.5687150134863912
+      ],
+      "score": 0.5275,
+      "unfinished": 0
+     },
+     "vs_random": {
+      "ci95": [
+       0.9926,
+       1.0
+      ],
+      "score": 0.9975,
+      "unfinished": 0
+     }
+    },
+    {
+     "iteration": 100,
+     "games_played": 5000,
+     "vs_greedy": {
+      "ci95": [
+       0.5300164477585115,
+       0.6149835522414885
+      ],
+      "score": 0.5725,
+      "unfinished": 0
+     },
+     "vs_random": {
+      "ci95": [
+       0.9926,
+       1.0
+      ],
+      "score": 0.9975,
+      "unfinished": 0
+     }
+    },
+    {
+     "iteration": 150,
+     "games_played": 7500,
+     "vs_greedy": {
+      "ci95": [
+       0.5752556813013685,
+       0.6597443186986316
+      ],
+      "score": 0.6175,
+      "unfinished": 0
+     },
+     "vs_random": {
+      "ci95": [
+       0.9926,
+       1.0
+      ],
+      "score": 0.9975,
+      "unfinished": 0
+     }
+    },
+    {
+     "iteration": 200,
+     "games_played": 10000,
+     "vs_greedy": {
+      "ci95": [
+       0.5665268730844087,
+       0.6534731269155912
+      ],
+      "score": 0.61,
+      "unfinished": 0
+     },
+     "vs_random": {
+      "ci95": [
+       0.9926,
+       1.0
+      ],
+      "score": 0.9975,
+      "unfinished": 0
+     }
+    },
+    {
+     "iteration": 250,
+     "games_played": 12500,
+     "vs_greedy": {
+      "ci95": [
+       0.5858192324697643,
+       0.6691807675302356
+      ],
+      "score": 0.6275,
+      "unfinished": 0
+     },
+     "vs_random": {
+      "ci95": [
+       0.9926,
+       1.0
+      ],
+      "score": 0.9975,
+      "unfinished": 0
+     }
+    },
+    {
+     "iteration": 300,
+     "games_played": 15000,
+     "vs_greedy": {
+      "ci95": [
+       0.6244266939253265,
+       0.7055733060746736
+      ],
+      "score": 0.665,
+      "unfinished": 0
+     },
+     "vs_random": {
+      "ci95": [
+       0.9926,
+       1.0
+      ],
+      "score": 0.9975,
+      "unfinished": 0
+     }
+    },
+    {
+     "iteration": 350,
+     "games_played": 17500,
+     "vs_greedy": {
+      "ci95": [
+       0.6491599369029767,
+       0.7308400630970232
+      ],
+      "score": 0.69,
+      "unfinished": 0
+     },
+     "vs_random": {
+      "ci95": [
+       0.9926,
+       1.0
+      ],
+      "score": 0.9975,
+      "unfinished": 0
+     }
+    },
+    {
+     "iteration": 400,
+     "games_played": 20000,
+     "vs_greedy": {
+      "ci95": [
+       0.6804159258568944,
+       0.7645840741431057
+      ],
+      "score": 0.7225,
+      "unfinished": 0
+     },
+     "vs_random": {
+      "ci95": [
+       0.9880877866448339,
+       1.0
+      ],
+      "score": 0.995,
+      "unfinished": 0
+     }
+    },
+    {
+     "iteration": 450,
+     "games_played": 22500,
+     "vs_greedy": {
+      "ci95": [
+       0.7138221012819176,
+       0.7911778987180823
+      ],
+      "score": 0.7525,
+      "unfinished": 0
+     },
+     "vs_random": {
+      "ci95": [
+       0.9926,
+       1.0
+      ],
+      "score": 0.9975,
+      "unfinished": 0
+     }
+    },
+    {
+     "iteration": 500,
+     "games_played": 25000,
+     "vs_greedy": {
+      "ci95": [
+       0.7440850276519361,
+       0.8209149723480639
+      ],
+      "score": 0.7825,
+      "unfinished": 0
+     },
+     "vs_random": {
+      "ci95": [
+       0.9926,
+       1.0
+      ],
+      "score": 0.9975,
+      "unfinished": 0
+     }
+    },
+    {
+     "iteration": 550,
+     "games_played": 27500,
+     "vs_greedy": {
+      "ci95": [
+       0.7428219981831262,
+       0.8171780018168738
+      ],
+      "score": 0.78,
+      "unfinished": 0
+     },
+     "vs_random": {
+      "ci95": [
+       0.9926,
+       1.0
+      ],
+      "score": 0.9975,
+      "unfinished": 0
+     }
+    },
+    {
+     "iteration": 600,
+     "games_played": 30000,
+     "vs_greedy": {
+      "ci95": [
+       0.7652648209545917,
+       0.8347351790454084
+      ],
+      "score": 0.8,
+      "unfinished": 0
+     },
+     "vs_random": {
+      "ci95": [
+       0.9926,
+       1.0
+      ],
+      "score": 0.9975,
+      "unfinished": 0
+     }
+    },
+    {
+     "iteration": 650,
+     "games_played": 32500,
+     "vs_greedy": {
+      "ci95": [
+       0.7625890672470302,
+       0.8374109327529698
+      ],
+      "score": 0.8,
+      "unfinished": 0
+     },
+     "vs_random": {
+      "ci95": [
+       0.9926,
+       1.0
+      ],
+      "score": 0.9975,
+      "unfinished": 0
+     }
+    },
+    {
+     "iteration": 700,
+     "games_played": 35000,
+     "vs_greedy": {
+      "ci95": [
+       0.7594477339949975,
+       0.8305522660050025
+      ],
+      "score": 0.795,
+      "unfinished": 0
+     },
+     "vs_random": {
+      "ci95": [
+       0.9926,
+       1.0
+      ],
+      "score": 0.9975,
+      "unfinished": 0
+     }
+    },
+    {
+     "iteration": 750,
+     "games_played": 37500,
+     "vs_greedy": {
+      "ci95": [
+       0.7498079290691626,
+       0.8251920709308374
+      ],
+      "score": 0.7875,
+      "unfinished": 0
+     },
+     "vs_random": {
+      "ci95": [
+       0.9926,
+       1.0
+      ],
+      "score": 0.9975,
+      "unfinished": 0
+     }
+    },
+    {
+     "iteration": 800,
+     "games_played": 40000,
+     "vs_greedy": {
+      "ci95": [
+       0.7812836824305471,
+       0.8537163175694529
+      ],
+      "score": 0.8175,
+      "unfinished": 0
+     },
+     "vs_random": {
+      "ci95": [
+       0.9926,
+       1.0
+      ],
+      "score": 0.9975,
+      "unfinished": 0
+     }
+    },
+    {
+     "iteration": 850,
+     "games_played": 42500,
+     "vs_greedy": {
+      "ci95": [
+       0.7645145763211689,
+       0.8404854236788311
+      ],
+      "score": 0.8025,
+      "unfinished": 0
+     },
+     "vs_random": {
+      "ci95": [
+       0.9926,
+       1.0
+      ],
+      "score": 0.9975,
+      "unfinished": 0
+     }
+    },
+    {
+     "iteration": 900,
+     "games_played": 45000,
+     "vs_greedy": {
+      "ci95": [
+       0.7748779414758351,
+       0.845122058524165
+      ],
+      "score": 0.81,
+      "unfinished": 0
+     },
+     "vs_random": {
+      "ci95": [
+       0.9926,
+       1.0
+      ],
+      "score": 0.9975,
+      "unfinished": 0
+     }
+    },
+    {
+     "iteration": 950,
+     "games_played": 47500,
+     "vs_greedy": {
+      "ci95": [
+       0.7781578148861789,
+       0.8468421851138211
+      ],
+      "score": 0.8125,
+      "unfinished": 0
+     },
+     "vs_random": {
+      "ci95": [
+       0.9926,
+       1.0
+      ],
+      "score": 0.9975,
+      "unfinished": 0
+     }
+    },
+    {
+     "iteration": 1000,
+     "games_played": 50000,
+     "vs_greedy": {
+      "ci95": [
+       0.763239741800219,
+       0.8367602581997811
+      ],
+      "score": 0.8,
+      "unfinished": 0
+     },
+     "vs_random": {
+      "ci95": [
+       0.9926,
+       1.0
+      ],
+      "score": 0.9975,
+      "unfinished": 0
+     }
+    }
+   ],
+   "arena_confirmation_seed7": [
+    {
+     "player_a": "td:models/td-lc1-s1/weights.pt",
+     "player_b": "greedy",
+     "config": {
+      "rules": {
+       "LC1": {
+        "repetitions": 2
+       }
+      },
+      "pairs": 200,
+      "opening_plies": 4,
+      "max_plies": 1000,
+      "seed": 7
+     },
+     "games": 400,
+     "a": {
+      "wins": 314,
+      "draws": 0,
+      "losses": 86,
+      "unfinished": 0
+     },
+     "a_as_white": {
+      "wins": 177,
+      "draws": 0,
+      "losses": 23,
+      "unfinished": 0
+     },
+     "a_as_red": {
+      "wins": 137,
+      "draws": 0,
+      "losses": 63,
+      "unfinished": 0
+     },
+     "scored_pairs": 200,
+     "score": 0.785,
+     "ci95": [
+      0.7479064715988594,
+      0.8220935284011407
+     ],
+     "significant": true,
+     "white_score": 0.6,
+     "distinct_openings": 197,
+     "distinct_games": 389,
+     "distinct_positions_after_opening": 3756
+    },
+    {
+     "player_a": "td:models/td-lc1-s1/weights.pt",
+     "player_b": "random",
+     "config": {
+      "rules": {
+       "LC1": {
+        "repetitions": 2
+       }
+      },
+      "pairs": 200,
+      "opening_plies": 4,
+      "max_plies": 1000,
+      "seed": 7
+     },
+     "games": 400,
+     "a": {
+      "wins": 400,
+      "draws": 0,
+      "losses": 0,
+      "unfinished": 0
+     },
+     "a_as_white": {
+      "wins": 200,
+      "draws": 0,
+      "losses": 0,
+      "unfinished": 0
+     },
+     "a_as_red": {
+      "wins": 200,
+      "draws": 0,
+      "losses": 0,
+      "unfinished": 0
+     },
+     "scored_pairs": 200,
+     "score": 1.0,
+     "ci95": [
+      1.0,
+      1.0
+     ],
+     "significant": true,
+     "white_score": 0.5,
+     "distinct_openings": 197,
+     "distinct_games": 400,
+     "distinct_positions_after_opening": 3170
+    },
+    {
+     "player_a": "greedy",
+     "player_b": "random",
+     "config": {
+      "rules": {
+       "LC1": {
+        "repetitions": 2
+       }
+      },
+      "pairs": 200,
+      "opening_plies": 4,
+      "max_plies": 1000,
+      "seed": 7
+     },
+     "games": 400,
+     "a": {
+      "wins": 398,
+      "draws": 0,
+      "losses": 2,
+      "unfinished": 0
+     },
+     "a_as_white": {
+      "wins": 199,
+      "draws": 0,
+      "losses": 1,
+      "unfinished": 0
+     },
+     "a_as_red": {
+      "wins": 199,
+      "draws": 0,
+      "losses": 1,
+      "unfinished": 0
+     },
+     "scored_pairs": 200,
+     "score": 0.995,
+     "ci95": [
+      0.9880877866448339,
+      1.0
+     ],
+     "significant": true,
+     "white_score": 0.5,
+     "distinct_openings": 197,
+     "distinct_games": 399,
+     "distinct_positions_after_opening": 2734
+    }
+   ]
+  },
+  "lc1-2 s2": {
+   "config": {
+    "rules": "lc1-2",
+    "features": "mover-relative-repetition",
+    "hidden": [
+     128,
+     64
+    ],
+    "lambda": 0.7,
+    "lr": 0.1,
+    "batch_size": 64,
+    "iterations": 1000,
+    "games_per_iteration": 50,
+    "temp_start": 0.5,
+    "temp_end": 0.02,
+    "temp_decay_iterations": 1000,
+    "max_plies": 1000,
+    "eval_every": 50,
+    "eval_pairs": 200,
+    "checkpoint_every": 50,
+    "seed": 2
+   },
+   "truncated_games": 0,
+   "games": 50000,
+   "evals": [
+    {
+     "iteration": 50,
+     "games_played": 2500,
+     "vs_greedy": {
+      "ci95": [
+       0.5084495629580688,
+       0.5865504370419312
+      ],
+      "score": 0.5475,
+      "unfinished": 0
+     },
+     "vs_random": {
+      "ci95": [
+       0.9926,
+       1.0
+      ],
+      "score": 0.9975,
+      "unfinished": 0
+     }
+    },
+    {
+     "iteration": 100,
+     "games_played": 5000,
+     "vs_greedy": {
+      "ci95": [
+       0.5152194992338455,
+       0.5947805007661546
+      ],
+      "score": 0.555,
+      "unfinished": 0
+     },
+     "vs_random": {
+      "ci95": [
+       0.9926,
+       1.0
+      ],
+      "score": 0.9975,
+      "unfinished": 0
+     }
+    },
+    {
+     "iteration": 150,
+     "games_played": 7500,
+     "vs_greedy": {
+      "ci95": [
+       0.5612264798286276,
+       0.6437735201713725
+      ],
+      "score": 0.6025,
+      "unfinished": 0
+     },
+     "vs_random": {
+      "ci95": [
+       0.9926,
+       1.0
+      ],
+      "score": 0.9975,
+      "unfinished": 0
+     }
+    },
+    {
+     "iteration": 200,
+     "games_played": 10000,
+     "vs_greedy": {
+      "ci95": [
+       0.5473110443478248,
+       0.6326889556521751
+      ],
+      "score": 0.59,
+      "unfinished": 0
+     },
+     "vs_random": {
+      "ci95": [
+       0.9926,
+       1.0
+      ],
+      "score": 0.9975,
+      "unfinished": 0
+     }
+    },
+    {
+     "iteration": 250,
+     "games_played": 12500,
+     "vs_greedy": {
+      "ci95": [
+       0.5729339017509527,
+       0.6520660982490474
+      ],
+      "score": 0.6125,
+      "unfinished": 0
+     },
+     "vs_random": {
+      "ci95": [
+       0.9880877866448339,
+       1.0
+      ],
+      "score": 0.995,
+      "unfinished": 0
+     }
+    },
+    {
+     "iteration": 300,
+     "games_played": 15000,
+     "vs_greedy": {
+      "ci95": [
+       0.592908759072533,
+       0.677091240927467
+      ],
+      "score": 0.635,
+      "unfinished": 0
+     },
+     "vs_random": {
+      "ci95": [
+       0.9926,
+       1.0
+      ],
+      "score": 0.9975,
+      "unfinished": 0
+     }
+    },
+    {
+     "iteration": 350,
+     "games_played": 17500,
+     "vs_greedy": {
+      "ci95": [
+       0.6449937338346853,
+       0.7300062661653147
+      ],
+      "score": 0.6875,
+      "unfinished": 0
+     },
+     "vs_random": {
+      "ci95": [
+       0.9926,
+       1.0
+      ],
+      "score": 0.9975,
+      "unfinished": 0
+     }
+    },
+    {
+     "iteration": 400,
+     "games_played": 20000,
+     "vs_greedy": {
+      "ci95": [
+       0.6711447095252463,
+       0.7538552904747537
+      ],
+      "score": 0.7125,
+      "unfinished": 0
+     },
+     "vs_random": {
+      "ci95": [
+       0.9926,
+       1.0
+      ],
+      "score": 0.9975,
+      "unfinished": 0
+     }
+    },
+    {
+     "iteration": 450,
+     "games_played": 22500,
+     "vs_greedy": {
+      "ci95": [
+       0.7428219981831262,
+       0.8171780018168738
+      ],
+      "score": 0.78,
+      "unfinished": 0
+     },
+     "vs_random": {
+      "ci95": [
+       0.9926,
+       1.0
+      ],
+      "score": 0.9975,
+      "unfinished": 0
+     }
+    },
+    {
+     "iteration": 500,
+     "games_played": 25000,
+     "vs_greedy": {
+      "ci95": [
+       0.7543325352709083,
+       0.8256674647290918
+      ],
+      "score": 0.79,
+      "unfinished": 0
+     },
+     "vs_random": {
+      "ci95": [
+       0.9926,
+       1.0
+      ],
+      "score": 0.9975,
+      "unfinished": 0
+     }
+    },
+    {
+     "iteration": 550,
+     "games_played": 27500,
+     "vs_greedy": {
+      "ci95": [
+       0.7645769288478648,
+       0.8354230711521353
+      ],
+      "score": 0.8,
+      "unfinished": 0
+     },
+     "vs_random": {
+      "ci95": [
+       0.9880877866448339,
+       1.0
+      ],
+      "score": 0.995,
+      "unfinished": 0
+     }
+    },
+    {
+     "iteration": 600,
+     "games_played": 30000,
+     "vs_greedy": {
+      "ci95": [
+       0.7871468221240346,
+       0.8578531778759654
+      ],
+      "score": 0.8225,
+      "unfinished": 0
+     },
+     "vs_random": {
+      "ci95": [
+       0.9880877866448339,
+       1.0
+      ],
+      "score": 0.995,
+      "unfinished": 0
+     }
+    },
+    {
+     "iteration": 650,
+     "games_played": 32500,
+     "vs_greedy": {
+      "ci95": [
+       0.7542739394059144,
+       0.8307260605940856
+      ],
+      "score": 0.7925,
+      "unfinished": 0
+     },
+     "vs_random": {
+      "ci95": [
+       0.9926,
+       1.0
+      ],
+      "score": 0.9975,
+      "unfinished": 0
+     }
+    },
+    {
+     "iteration": 700,
+     "games_played": 35000,
+     "vs_greedy": {
+      "ci95": [
+       0.7613370250979148,
+       0.8336629749020852
+      ],
+      "score": 0.7975,
+      "unfinished": 0
+     },
+     "vs_random": {
+      "ci95": [
+       0.9926,
+       1.0
+      ],
+      "score": 0.9975,
+      "unfinished": 0
+     }
+    },
+    {
+     "iteration": 750,
+     "games_played": 37500,
+     "vs_greedy": {
+      "ci95": [
+       0.7581152303632546,
+       0.8318847696367455
+      ],
+      "score": 0.795,
+      "unfinished": 0
+     },
+     "vs_random": {
+      "ci95": [
+       0.9880877866448339,
+       1.0
+      ],
+      "score": 0.995,
+      "unfinished": 0
+     }
+    },
+    {
+     "iteration": 800,
+     "games_played": 40000,
+     "vs_greedy": {
+      "ci95": [
+       0.7257807917942627,
+       0.7992192082057372
+      ],
+      "score": 0.7625,
+      "unfinished": 0
+     },
+     "vs_random": {
+      "ci95": [
+       0.9926,
+       1.0
+      ],
+      "score": 0.9975,
+      "unfinished": 0
+     }
+    },
+    {
+     "iteration": 850,
+     "games_played": 42500,
+     "vs_greedy": {
+      "ci95": [
+       0.744143602997092,
+       0.815856397002908
+      ],
+      "score": 0.78,
+      "unfinished": 0
+     },
+     "vs_random": {
+      "ci95": [
+       0.9880877866448339,
+       1.0
+      ],
+      "score": 0.995,
+      "unfinished": 0
+     }
+    },
+    {
+     "iteration": 900,
+     "games_played": 45000,
+     "vs_greedy": {
+      "ci95": [
+       0.7397476434374086,
+       0.8102523565625914
+      ],
+      "score": 0.775,
+      "unfinished": 0
+     },
+     "vs_random": {
+      "ci95": [
+       0.9926,
+       1.0
+      ],
+      "score": 0.9975,
+      "unfinished": 0
+     }
+    },
+    {
+     "iteration": 950,
+     "games_played": 47500,
+     "vs_greedy": {
+      "ci95": [
+       0.7626971532672466,
+       0.8323028467327533
+      ],
+      "score": 0.7975,
+      "unfinished": 0
+     },
+     "vs_random": {
+      "ci95": [
+       0.9840557072290209,
+       1.0
+      ],
+      "score": 0.9925,
+      "unfinished": 0
+     }
+    },
+    {
+     "iteration": 1000,
+     "games_played": 50000,
+     "vs_greedy": {
+      "ci95": [
+       0.7741974819110788,
+       0.8458025180889213
+      ],
+      "score": 0.81,
+      "unfinished": 0
+     },
+     "vs_random": {
+      "ci95": [
+       0.9926,
+       1.0
+      ],
+      "score": 0.9975,
+      "unfinished": 0
+     }
+    }
+   ],
+   "arena_confirmation_seed7": [
+    {
+     "player_a": "td:models/td-lc1-s2/weights.pt",
+     "player_b": "greedy",
+     "config": {
+      "rules": {
+       "LC1": {
+        "repetitions": 2
+       }
+      },
+      "pairs": 200,
+      "opening_plies": 4,
+      "max_plies": 1000,
+      "seed": 7
+     },
+     "games": 400,
+     "a": {
+      "wins": 296,
+      "draws": 0,
+      "losses": 104,
+      "unfinished": 0
+     },
+     "a_as_white": {
+      "wins": 167,
+      "draws": 0,
+      "losses": 33,
+      "unfinished": 0
+     },
+     "a_as_red": {
+      "wins": 129,
+      "draws": 0,
+      "losses": 71,
+      "unfinished": 0
+     },
+     "scored_pairs": 200,
+     "score": 0.74,
+     "ci95": [
+      0.7019748932451387,
+      0.7780251067548613
+     ],
+     "significant": true,
+     "white_score": 0.595,
+     "distinct_openings": 197,
+     "distinct_games": 390,
+     "distinct_positions_after_opening": 3619
+    },
+    {
+     "player_a": "td:models/td-lc1-s2/weights.pt",
+     "player_b": "random",
+     "config": {
+      "rules": {
+       "LC1": {
+        "repetitions": 2
+       }
+      },
+      "pairs": 200,
+      "opening_plies": 4,
+      "max_plies": 1000,
+      "seed": 7
+     },
+     "games": 400,
+     "a": {
+      "wins": 400,
+      "draws": 0,
+      "losses": 0,
+      "unfinished": 0
+     },
+     "a_as_white": {
+      "wins": 200,
+      "draws": 0,
+      "losses": 0,
+      "unfinished": 0
+     },
+     "a_as_red": {
+      "wins": 200,
+      "draws": 0,
+      "losses": 0,
+      "unfinished": 0
+     },
+     "scored_pairs": 200,
+     "score": 1.0,
+     "ci95": [
+      1.0,
+      1.0
+     ],
+     "significant": true,
+     "white_score": 0.5,
+     "distinct_openings": 197,
+     "distinct_games": 400,
+     "distinct_positions_after_opening": 3090
+    },
+    {
+     "player_a": "greedy",
+     "player_b": "random",
+     "config": {
+      "rules": {
+       "LC1": {
+        "repetitions": 2
+       }
+      },
+      "pairs": 200,
+      "opening_plies": 4,
+      "max_plies": 1000,
+      "seed": 7
+     },
+     "games": 400,
+     "a": {
+      "wins": 398,
+      "draws": 0,
+      "losses": 2,
+      "unfinished": 0
+     },
+     "a_as_white": {
+      "wins": 199,
+      "draws": 0,
+      "losses": 1,
+      "unfinished": 0
+     },
+     "a_as_red": {
+      "wins": 199,
+      "draws": 0,
+      "losses": 1,
+      "unfinished": 0
+     },
+     "scored_pairs": 200,
+     "score": 0.995,
+     "ci95": [
+      0.9880877866448339,
+      1.0
+     ],
+     "significant": true,
+     "white_score": 0.5,
+     "distinct_openings": 197,
+     "distinct_games": 399,
+     "distinct_positions_after_opening": 2734
+    }
+   ]
+  },
+  "lc1-2 s3": {
+   "config": {
+    "rules": "lc1-2",
+    "features": "mover-relative-repetition",
+    "hidden": [
+     128,
+     64
+    ],
+    "lambda": 0.7,
+    "lr": 0.1,
+    "batch_size": 64,
+    "iterations": 1000,
+    "games_per_iteration": 50,
+    "temp_start": 0.5,
+    "temp_end": 0.02,
+    "temp_decay_iterations": 1000,
+    "max_plies": 1000,
+    "eval_every": 50,
+    "eval_pairs": 200,
+    "checkpoint_every": 50,
+    "seed": 3
+   },
+   "truncated_games": 0,
+   "games": 50000,
+   "evals": [
+    {
+     "iteration": 50,
+     "games_played": 2500,
+     "vs_greedy": {
+      "ci95": [
+       0.4903105927831351,
+       0.5696894072168649
+      ],
+      "score": 0.53,
+      "unfinished": 0
+     },
+     "vs_random": {
+      "ci95": [
+       0.9926,
+       1.0
+      ],
+      "score": 0.9975,
+      "unfinished": 0
+     }
+    },
+    {
+     "iteration": 100,
+     "games_played": 5000,
+     "vs_greedy": {
+      "ci95": [
+       0.49133303054818744,
+       0.5786669694518126
+      ],
+      "score": 0.535,
+      "unfinished": 0
+     },
+     "vs_random": {
+      "ci95": [
+       0.9926,
+       1.0
+      ],
+      "score": 0.9975,
+      "unfinished": 0
+     }
+    },
+    {
+     "iteration": 150,
+     "games_played": 7500,
+     "vs_greedy": {
+      "ci95": [
+       0.5358220956112572,
+       0.6241779043887428
+      ],
+      "score": 0.58,
+      "unfinished": 0
+     },
+     "vs_random": {
+      "ci95": [
+       0.9926,
+       1.0
+      ],
+      "score": 0.9975,
+      "unfinished": 0
+     }
+    },
+    {
+     "iteration": 200,
+     "games_played": 10000,
+     "vs_greedy": {
+      "ci95": [
+       0.5764139944841772,
+       0.6585860055158229
+      ],
+      "score": 0.6175,
+      "unfinished": 0
+     },
+     "vs_random": {
+      "ci95": [
+       0.9880877866448339,
+       1.0
+      ],
+      "score": 0.995,
+      "unfinished": 0
+     }
+    },
+    {
+     "iteration": 250,
+     "games_played": 12500,
+     "vs_greedy": {
+      "ci95": [
+       0.6011797341264689,
+       0.6838202658735311
+      ],
+      "score": 0.6425,
+      "unfinished": 0
+     },
+     "vs_random": {
+      "ci95": [
+       0.9926,
+       1.0
+      ],
+      "score": 0.9975,
+      "unfinished": 0
+     }
+    },
+    {
+     "iteration": 300,
+     "games_played": 15000,
+     "vs_greedy": {
+      "ci95": [
+       0.551946027649972,
+       0.633053972350028
+      ],
+      "score": 0.5925,
+      "unfinished": 0
+     },
+     "vs_random": {
+      "ci95": [
+       0.9926,
+       1.0
+      ],
+      "score": 0.9975,
+      "unfinished": 0
+     }
+    },
+    {
+     "iteration": 350,
+     "games_played": 17500,
+     "vs_greedy": {
+      "ci95": [
+       0.6119563993398677,
+       0.6980436006601324
+      ],
+      "score": 0.655,
+      "unfinished": 0
+     },
+     "vs_random": {
+      "ci95": [
+       0.9926,
+       1.0
+      ],
+      "score": 0.9975,
+      "unfinished": 0
+     }
+    },
+    {
+     "iteration": 400,
+     "games_played": 20000,
+     "vs_greedy": {
+      "ci95": [
+       0.6631418078866399,
+       0.7418581921133601
+      ],
+      "score": 0.7025,
+      "unfinished": 0
+     },
+     "vs_random": {
+      "ci95": [
+       0.9880877866448339,
+       1.0
+      ],
+      "score": 0.995,
+      "unfinished": 0
+     }
+    },
+    {
+     "iteration": 450,
+     "games_played": 22500,
+     "vs_greedy": {
+      "ci95": [
+       0.7434768222554115,
+       0.8165231777445886
+      ],
+      "score": 0.78,
+      "unfinished": 0
+     },
+     "vs_random": {
+      "ci95": [
+       0.9880877866448339,
+       1.0
+      ],
+      "score": 0.995,
+      "unfinished": 0
+     }
+    },
+    {
+     "iteration": 500,
+     "games_played": 25000,
+     "vs_greedy": {
+      "ci95": [
+       0.7517801414972387,
+       0.8232198585027612
+      ],
+      "score": 0.7875,
+      "unfinished": 0
+     },
+     "vs_random": {
+      "ci95": [
+       0.9880877866448339,
+       1.0
+      ],
+      "score": 0.995,
+      "unfinished": 0
+     }
+    },
+    {
+     "iteration": 550,
+     "games_played": 27500,
+     "vs_greedy": {
+      "ci95": [
+       0.7517801414972387,
+       0.8232198585027612
+      ],
+      "score": 0.7875,
+      "unfinished": 0
+     },
+     "vs_random": {
+      "ci95": [
+       0.9926,
+       1.0
+      ],
+      "score": 0.9975,
+      "unfinished": 0
+     }
+    },
+    {
+     "iteration": 600,
+     "games_played": 30000,
+     "vs_greedy": {
+      "ci95": [
+       0.7601330771137201,
+       0.82986692288628
+      ],
+      "score": 0.795,
+      "unfinished": 0
+     },
+     "vs_random": {
+      "ci95": [
+       0.9880877866448339,
+       1.0
+      ],
+      "score": 0.995,
+      "unfinished": 0
+     }
+    },
+    {
+     "iteration": 650,
+     "games_played": 32500,
+     "vs_greedy": {
+      "ci95": [
+       0.7440850276519361,
+       0.8209149723480639
+      ],
+      "score": 0.7825,
+      "unfinished": 0
+     },
+     "vs_random": {
+      "ci95": [
+       0.9926,
+       1.0
+      ],
+      "score": 0.9975,
+      "unfinished": 0
+     }
+    },
+    {
+     "iteration": 700,
+     "games_played": 35000,
+     "vs_greedy": {
+      "ci95": [
+       0.775571847443666,
+       0.8444281525563341
+      ],
+      "score": 0.81,
+      "unfinished": 0
+     },
+     "vs_random": {
+      "ci95": [
+       0.9926,
+       1.0
+      ],
+      "score": 0.9975,
+      "unfinished": 0
+     }
+    },
+    {
+     "iteration": 750,
+     "games_played": 37500,
+     "vs_greedy": {
+      "ci95": [
+       0.8181646825493143,
+       0.8818353174506857
+      ],
+      "score": 0.85,
+      "unfinished": 0
+     },
+     "vs_random": {
+      "ci95": [
+       0.9880877866448339,
+       1.0
+      ],
+      "score": 0.995,
+      "unfinished": 0
+     }
+    },
+    {
+     "iteration": 800,
+     "games_played": 40000,
+     "vs_greedy": {
+      "ci95": [
+       0.769042797633714,
+       0.8409572023662861
+      ],
+      "score": 0.805,
+      "unfinished": 0
+     },
+     "vs_random": {
+      "ci95": [
+       0.9880877866448339,
+       1.0
+      ],
+      "score": 0.995,
+      "unfinished": 0
+     }
+    },
+    {
+     "iteration": 850,
+     "games_played": 42500,
+     "vs_greedy": {
+      "ci95": [
+       0.7530041805974468,
+       0.8269958194025533
+      ],
+      "score": 0.79,
+      "unfinished": 0
+     },
+     "vs_random": {
+      "ci95": [
+       0.9926,
+       1.0
+      ],
+      "score": 0.9975,
+      "unfinished": 0
+     }
+    },
+    {
+     "iteration": 900,
+     "games_played": 45000,
+     "vs_greedy": {
+      "ci95": [
+       0.8001884874354018,
+       0.8698115125645981
+      ],
+      "score": 0.835,
+      "unfinished": 0
+     },
+     "vs_random": {
+      "ci95": [
+       0.9880877866448339,
+       1.0
+      ],
+      "score": 0.995,
+      "unfinished": 0
+     }
+    },
+    {
+     "iteration": 950,
+     "games_played": 47500,
+     "vs_greedy": {
+      "ci95": [
+       0.7956560582975936,
+       0.8643439417024064
+      ],
+      "score": 0.83,
+      "unfinished": 0
+     },
+     "vs_random": {
+      "ci95": [
+       0.9880877866448339,
+       1.0
+      ],
+      "score": 0.995,
+      "unfinished": 0
+     }
+    },
+    {
+     "iteration": 1000,
+     "games_played": 50000,
+     "vs_greedy": {
+      "ci95": [
+       0.7536478055307635,
+       0.8313521944692365
+      ],
+      "score": 0.7925,
+      "unfinished": 0
+     },
+     "vs_random": {
+      "ci95": [
+       0.9926,
+       1.0
+      ],
+      "score": 0.9975,
+      "unfinished": 0
+     }
+    }
+   ],
+   "arena_confirmation_seed7": [
+    {
+     "player_a": "td:models/td-lc1-s3/weights.pt",
+     "player_b": "greedy",
+     "config": {
+      "rules": {
+       "LC1": {
+        "repetitions": 2
+       }
+      },
+      "pairs": 200,
+      "opening_plies": 4,
+      "max_plies": 1000,
+      "seed": 7
+     },
+     "games": 400,
+     "a": {
+      "wins": 311,
+      "draws": 0,
+      "losses": 89,
+      "unfinished": 0
+     },
+     "a_as_white": {
+      "wins": 172,
+      "draws": 0,
+      "losses": 28,
+      "unfinished": 0
+     },
+     "a_as_red": {
+      "wins": 139,
+      "draws": 0,
+      "losses": 61,
+      "unfinished": 0
+     },
+     "scored_pairs": 200,
+     "score": 0.7775,
+     "ci95": [
+      0.7409388520737047,
+      0.8140611479262952
+     ],
+     "significant": true,
+     "white_score": 0.5825,
+     "distinct_openings": 197,
+     "distinct_games": 389,
+     "distinct_positions_after_opening": 3571
+    },
+    {
+     "player_a": "td:models/td-lc1-s3/weights.pt",
+     "player_b": "random",
+     "config": {
+      "rules": {
+       "LC1": {
+        "repetitions": 2
+       }
+      },
+      "pairs": 200,
+      "opening_plies": 4,
+      "max_plies": 1000,
+      "seed": 7
+     },
+     "games": 400,
+     "a": {
+      "wins": 400,
+      "draws": 0,
+      "losses": 0,
+      "unfinished": 0
+     },
+     "a_as_white": {
+      "wins": 200,
+      "draws": 0,
+      "losses": 0,
+      "unfinished": 0
+     },
+     "a_as_red": {
+      "wins": 200,
+      "draws": 0,
+      "losses": 0,
+      "unfinished": 0
+     },
+     "scored_pairs": 200,
+     "score": 1.0,
+     "ci95": [
+      1.0,
+      1.0
+     ],
+     "significant": true,
+     "white_score": 0.5,
+     "distinct_openings": 197,
+     "distinct_games": 400,
+     "distinct_positions_after_opening": 2955
+    },
+    {
+     "player_a": "greedy",
+     "player_b": "random",
+     "config": {
+      "rules": {
+       "LC1": {
+        "repetitions": 2
+       }
+      },
+      "pairs": 200,
+      "opening_plies": 4,
+      "max_plies": 1000,
+      "seed": 7
+     },
+     "games": 400,
+     "a": {
+      "wins": 398,
+      "draws": 0,
+      "losses": 2,
+      "unfinished": 0
+     },
+     "a_as_white": {
+      "wins": 199,
+      "draws": 0,
+      "losses": 1,
+      "unfinished": 0
+     },
+     "a_as_red": {
+      "wins": 199,
+      "draws": 0,
+      "losses": 1,
+      "unfinished": 0
+     },
+     "scored_pairs": 200,
+     "score": 0.995,
+     "ci95": [
+      0.9880877866448339,
+      1.0
+     ],
+     "significant": true,
+     "white_score": 0.5,
+     "distinct_openings": 197,
+     "distinct_games": 399,
+     "distinct_positions_after_opening": 2734
+    }
+   ]
+  }
+ }
 }
