@@ -1,3 +1,4 @@
+use crate::checkpoint::{load_var_store_strict, save_var_store};
 use crate::gatekeeper::gatekeeper;
 use crate::metrics::append_metrics;
 use crate::net::{make_var_store, ArchConfig, AzNet};
@@ -108,25 +109,6 @@ impl GameWindow {
     }
 }
 
-/// Save a VarStore using Tensor::save_multi (cross-process compatible).
-fn save_vs(vs: &nn::VarStore, path: &std::path::Path) -> anyhow::Result<()> {
-    let vars = vs.variables();
-    let named: Vec<(&str, &Tensor)> = vars.iter().map(|(k, v)| (k.as_str(), v)).collect();
-    Tensor::save_multi(&named, path)?;
-    Ok(())
-}
-
-/// Load a VarStore from a file saved by save_vs.
-fn load_vs(vs: &mut nn::VarStore, path: &std::path::Path) -> anyhow::Result<()> {
-    let named = Tensor::load_multi(path)?;
-    let mut var_map = vs.variables();
-    for (name, tensor) in named {
-        if let Some(var) = var_map.get_mut(&name) {
-            tch::no_grad(|| var.copy_(&tensor));
-        }
-    }
-    Ok(())
-}
 
 /// Count completed iterations by reading existing metrics.jsonl lines.
 fn count_completed_iterations(metrics_path: &std::path::Path) -> u32 {
@@ -168,10 +150,10 @@ pub fn train(rules: &RuleSet, cfg: &TrainConfig) -> anyhow::Result<()> {
 
     // Load existing best model if resuming
     if start_iteration > 1 && best_path.exists() {
-        load_vs(&mut best_vs, &best_path).context("loading existing best model for resume")?;
+        load_var_store_strict(&mut best_vs, &best_path).context("loading existing best model for resume")?;
         println!("Loaded best model from {}", best_path.display());
     } else {
-        save_vs(&best_vs, &best_path).context("saving initial best model")?;
+        save_var_store(&best_vs, &best_path).context("saving initial best model")?;
     }
 
     let mut window = GameWindow::new(cfg.window_capacity);
@@ -190,7 +172,7 @@ pub fn train(rules: &RuleSet, cfg: &TrainConfig) -> anyhow::Result<()> {
     for iteration in start_iteration..=cfg.iterations {
         if interrupted.load(Ordering::Relaxed) {
             println!("\nInterrupted before iteration {iteration}. Saving best model...");
-            save_vs(&best_vs, &best_path).context("saving best model on interrupt")?;
+            save_var_store(&best_vs, &best_path).context("saving best model on interrupt")?;
             println!("Best model saved to {}. Safe to exit.", best_path.display());
             return Ok(());
         }
@@ -203,7 +185,7 @@ pub fn train(rules: &RuleSet, cfg: &TrainConfig) -> anyhow::Result<()> {
         for game_idx in 0..cfg.games_per_iteration {
             if interrupted.load(Ordering::Relaxed) {
                 println!("\n  Interrupted during self-play. Saving best model...");
-                save_vs(&best_vs, &best_path).context("saving best model on interrupt")?;
+                save_var_store(&best_vs, &best_path).context("saving best model on interrupt")?;
                 println!(
                     "  Best model saved to {}. Safe to exit.",
                     best_path.display()
@@ -333,7 +315,7 @@ pub fn train(rules: &RuleSet, cfg: &TrainConfig) -> anyhow::Result<()> {
                 .context("promoting challenger to best")?;
             best_vs = new_best_vs;
             best_net = new_best_net;
-            save_vs(&best_vs, &best_path).context("saving best model")?;
+            save_var_store(&best_vs, &best_path).context("saving best model")?;
             // Flush stale examples from earlier generations so the new model
             // trains primarily on data it generated.
             window.evict_oldest_half();
@@ -348,7 +330,7 @@ pub fn train(rules: &RuleSet, cfg: &TrainConfig) -> anyhow::Result<()> {
 
         // Save checkpoint (always, so we can resume even without adoption)
         let checkpoint_path = cfg.output_dir.join(format!("checkpoint_{iteration:04}.pt"));
-        save_vs(&best_vs, &checkpoint_path).context("saving checkpoint")?;
+        save_var_store(&best_vs, &checkpoint_path).context("saving checkpoint")?;
 
         // --- Metrics ---
         let iter_secs = iter_start.elapsed().as_secs_f64();

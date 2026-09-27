@@ -119,5 +119,6 @@ detail.
 - Three rule variants under experiment: LC1 (repetition loss), LC2 (hard move cap: the player to move at the cap loses), LC3 (soft cap with draws).
 - Training artifacts go in `models/` (gitignored). 8 GB RAM M2 Mac — keep neural nets small.
 - The WASM shim at `app/src/engine/` translates between Rust serde format (snake_case, "White"/"Red") and old TS format (camelCase, "W"/"R"). Do not modify the Rust serialization to match TS — the shim handles it.
+- Checkpoint loading is strict (`crates/train/src/checkpoint.rs`): a missing, unexpected or reshaped tensor is an error. Never load weights by copying only the names that match; that is how round 1 evaluated a "DQN" with random heads.
 - tch-rs uses `|` as path separator in saved .pt files. The Python export script remaps to `.` when loading.
 - **Deliberate identity, not the portfolio default:** ink `#121010` on a warm paper ground, a vermilion accent `#d94f2c`, Instrument Serif for display, Newsreader for body and JetBrains Mono for figures (`app/src/index.css` `@theme`). It meets three items of the global avoid-list (cream ground, clay-red accent, mono labels) on purpose — the owner chose to keep it (2026-09-25). Do not "fix" it toward the defaults.

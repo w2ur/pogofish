@@ -163,16 +163,10 @@ pub fn run(model_dir: &Path, output: &Path, num_games: usize) -> anyhow::Result<
 // ---------------------------------------------------------------------------
 
 fn load_model(path: &Path, arch: &ArchConfig) -> anyhow::Result<(AzNet, nn::VarStore)> {
-    let vs = make_var_store();
+    let mut vs = make_var_store();
     let net = AzNet::from_config(&vs.root(), arch);
-    let named = tch::Tensor::load_multi(path)
+    net.load(&mut vs, path)
         .with_context(|| format!("failed to load model weights from {}", path.display()))?;
-    let mut var_map = vs.variables();
-    for (name, tensor) in named {
-        if let Some(var) = var_map.get_mut(&name) {
-            tch::no_grad(|| var.copy_(&tensor));
-        }
-    }
     Ok((net, vs))
 }
 

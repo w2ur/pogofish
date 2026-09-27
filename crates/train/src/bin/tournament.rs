@@ -29,17 +29,10 @@ fn load_player(spec: &str, arch: &ArchConfig) -> anyhow::Result<Player> {
     }
     let path = Path::new(spec);
     anyhow::ensure!(path.exists(), "model file not found: {spec}");
-    let vs = make_var_store();
+    let mut vs = make_var_store();
     let net = AzNet::from_config(&vs.root(), arch);
-    // Load using Tensor::load_multi for cross-process compatibility
-    let named = tch::Tensor::load_multi(path)
+    net.load(&mut vs, path)
         .with_context(|| format!("failed to load model weights from {spec}"))?;
-    let mut var_map = vs.variables();
-    for (name, tensor) in named {
-        if let Some(var) = var_map.get_mut(&name) {
-            tch::no_grad(|| var.copy_(&tensor));
-        }
-    }
     Ok(Player::Model { net, _vs: vs })
 }
 

@@ -75,22 +75,13 @@ impl DqnNet {
 
     /// Save the variable store to a file (cross-process compatible).
     pub fn save(&self, vs: &nn::VarStore, path: &std::path::Path) -> anyhow::Result<()> {
-        let vars = vs.variables();
-        let named: Vec<(&str, &Tensor)> = vars.iter().map(|(k, v)| (k.as_str(), v)).collect();
-        Tensor::save_multi(&named, path)?;
-        Ok(())
+        crate::checkpoint::save_var_store(vs, path)
     }
 
-    /// Load weights from a file into the variable store.
+    /// Load weights from a file into the variable store. Fails on any
+    /// missing, unexpected or reshaped tensor.
     pub fn load(&self, vs: &mut nn::VarStore, path: &std::path::Path) -> anyhow::Result<()> {
-        let named = Tensor::load_multi(path)?;
-        let mut var_map = vs.variables();
-        for (name, tensor) in named {
-            if let Some(var) = var_map.get_mut(&name) {
-                tch::no_grad(|| var.copy_(&tensor));
-            }
-        }
-        Ok(())
+        crate::checkpoint::load_var_store_strict(vs, path)
     }
 }
 
