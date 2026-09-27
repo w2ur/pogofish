@@ -1,5 +1,6 @@
 use pogofish_engine::{
-    apply_move, is_terminal, legal_moves, GameState, Move, Outcome, RuleSet, StateKey,
+    apply_move, is_terminal, legal_moves, search_key, GameState, Move, Outcome, RuleSet,
+    StateKey,
 };
 use std::collections::hash_map::Entry;
 use std::collections::HashMap;
@@ -54,7 +55,7 @@ impl Mcts {
             self.simulate(root, rules);
             self.stats.total_simulations += 1;
         }
-        let root_key = root.key();
+        let root_key = search_key(root, rules);
         let root_node = self
             .nodes
             .get(&root_key)
@@ -72,7 +73,7 @@ impl Mcts {
             return outcome_value(outcome, state);
         }
 
-        let key = state.key();
+        let key = search_key(state, rules);
         if let Entry::Vacant(slot) = self.nodes.entry(key.clone()) {
             let moves = legal_moves(state);
             let n = moves.len().max(1) as f32;
@@ -83,7 +84,7 @@ impl Mcts {
                     let next = apply_move(state, *m).expect("legal move");
                     Edge {
                         mv: *m,
-                        child_key: next.key(),
+                        child_key: search_key(&next, rules),
                         visits: 0,
                         value_sum: 0.0,
                         prior: uniform_prior,

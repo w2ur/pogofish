@@ -59,8 +59,10 @@ cargo run --release -p pogofish-search --bin measure -- --games 20000 --seed 1 -
 # Requires libtorch — tch-rs downloads it automatically during build.
 # At runtime, set DYLD_LIBRARY_PATH to the downloaded libtorch lib dir:
 DYLD_LIBRARY_PATH=$(find target/release/build -path "*/torch-sys-*/out/libtorch/libtorch/lib" | head -1) \
-  ./target/release/train lc2-30 models/lc2-30 mlp_small
+  ./target/release/train uncapped models/uncapped mlp_small
 
+# Only rulesets whose board encoding is Markov are accepted (today: `uncapped`);
+# lc1/lc2/lc3 are refused, see docs/experiments/v1-verdict.md defect 3.
 # Training resumes automatically if interrupted (reads metrics.jsonl).
 # Ctrl+C triggers graceful shutdown saving the best model.
 ```

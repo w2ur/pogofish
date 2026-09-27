@@ -1,7 +1,8 @@
 use crate::encoding::{legal_move_mask, move_to_index, state_to_tensor, ACTION_SIZE};
 use crate::net::AzNet;
 use pogofish_engine::{
-    apply_move, is_terminal, legal_moves, Color, GameState, Move, Outcome, RuleSet, StateKey,
+    apply_move, is_terminal, legal_moves, search_key, Color, GameState, Move, Outcome, RuleSet,
+    StateKey,
 };
 use rand::Rng;
 use std::collections::HashMap;
@@ -90,14 +91,14 @@ impl<'a> NeuralMcts<'a> {
         // Expand root first if needed, applying Dirichlet noise
         self.expand_if_needed(root, rules);
         if add_noise {
-            self.apply_dirichlet(root);
+            self.apply_dirichlet(root, rules);
         }
 
         for _ in 0..self.cfg.num_simulations {
             self.simulate(root, rules);
         }
 
-        let root_key = root.key();
+        let root_key = search_key(root, rules);
         let mut dist = [0f32; ACTION_SIZE];
         if let Some(node) = self.nodes.get(&root_key) {
             for edge in &node.edges {
@@ -115,7 +116,7 @@ impl<'a> NeuralMcts<'a> {
     }
 
     fn expand_if_needed(&mut self, state: &GameState, rules: &RuleSet) {
-        let key = state.key();
+        let key = search_key(state, rules);
         if self.nodes.contains_key(&key) {
             return;
         }
@@ -149,11 +150,10 @@ impl<'a> NeuralMcts<'a> {
             })
             .collect();
         self.nodes.insert(key, Node { edges });
-        let _ = rules; // used implicitly via is_terminal in simulate
     }
 
-    fn apply_dirichlet(&mut self, state: &GameState) {
-        let key = state.key();
+    fn apply_dirichlet(&mut self, state: &GameState, rules: &RuleSet) {
+        let key = search_key(state, rules);
         let node = match self.nodes.get_mut(&key) {
             Some(n) => n,
             None => return,
@@ -175,7 +175,7 @@ impl<'a> NeuralMcts<'a> {
             return outcome_value_for_mover(outcome, state);
         }
 
-        let key = state.key();
+        let key = search_key(state, rules);
         if !self.nodes.contains_key(&key) {
             // Leaf: expand and return net value estimate
             self.expand_if_needed(state, rules);
@@ -232,8 +232,8 @@ impl<'a> NeuralMcts<'a> {
 
     /// Select a move from the root visit counts.
     /// tau=1.0 → proportional to visit counts; tau=0 → greedy.
-    fn select_move(&self, root: &GameState, tau: f32, rng: &mut impl Rng) -> Move {
-        let key = root.key();
+    fn select_move(&self, root: &GameState, rules: &RuleSet, tau: f32, rng: &mut impl Rng) -> Move {
+        let key = search_key(root, rules);
         let node = self.nodes.get(&key).expect("root must be expanded");
         if tau == 0.0 {
             node.edges
@@ -272,7 +272,7 @@ pub fn neural_mcts_greedy_move(
     let mut mcts = NeuralMcts::new(net, cfg);
     let _dist = mcts.run(state, rules, false); // no Dirichlet noise
     let mut rng = rand::thread_rng();
-    mcts.select_move(state, 0.0, &mut rng) // tau=0: greedy
+    mcts.select_move(state, rules, 0.0, &mut rng) // tau=0: greedy
 }
 
 /// Run MCTS from `state` and return a move sampled with the given temperature.
@@ -288,7 +288,7 @@ pub fn neural_mcts_move_with_tau(
 ) -> pogofish_engine::Move {
     let mut mcts = NeuralMcts::new(net, cfg);
     let _dist = mcts.run(state, rules, false); // no Dirichlet noise
-    mcts.select_move(state, tau, rng)
+    mcts.select_move(state, rules, tau, rng)
 }
 
 /// Play one full self-play game from the initial position using neural MCTS.
@@ -322,7 +322,7 @@ pub fn play_game_from(
         let mut mcts = NeuralMcts::new(net, cfg);
         let tau = if history.len() < 10 { 1.0 } else { 0.0 };
         let dist = mcts.run(&state, rules, true);
-        let mv = mcts.select_move(&state, tau, &mut rng);
+        let mv = mcts.select_move(&state, rules, tau, &mut rng);
 
         history.push((state_to_tensor(&state), dist, state.to_move()));
         state = apply_move(&state, mv).expect("legal move selected by MCTS");

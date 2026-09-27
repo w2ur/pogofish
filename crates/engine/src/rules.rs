@@ -1,4 +1,4 @@
-use crate::state::GameState;
+use crate::state::{GameState, StateKey};
 use crate::types::{Color, Outcome};
 use serde::{Deserialize, Serialize};
 
@@ -61,6 +61,39 @@ impl std::str::FromStr for RuleSet {
             _ => Err(usage()),
         }
     }
+}
+
+impl RuleSet {
+    /// True when the rule depends on nothing but the board and the player to
+    /// move, so `GameState::key` (and the network's board encoding) is a
+    /// Markov state. Only `Uncapped` qualifies: LC1 reads the history, LC2 and
+    /// LC3 the move count.
+    pub fn board_is_markov(&self) -> bool {
+        matches!(self, RuleSet::Uncapped)
+    }
+}
+
+/// Key for search trees and transposition tables under `rules`: the board
+/// and player to move, plus exactly what the rule reads beyond them — the
+/// number of earlier occurrences of this position for LC1, the move count for
+/// LC2 and LC3. Two states share a key only if the rule cannot tell them
+/// apart, so transpositions are kept wherever they are sound.
+pub fn search_key(state: &GameState, rules: &RuleSet) -> StateKey {
+    let mut key = state.key();
+    match *rules {
+        RuleSet::Uncapped => {}
+        RuleSet::LC1 { .. } => {
+            let current = key.clone();
+            let seen = state.history_iter().filter(|k| **k == current).count();
+            key.0.push(0xF1);
+            key.0.extend_from_slice(&(seen.min(u16::MAX as usize) as u16).to_le_bytes());
+        }
+        RuleSet::LC2 { .. } | RuleSet::LC3 { .. } => {
+            key.0.push(0xF2);
+            key.0.extend_from_slice(&state.move_count().to_le_bytes());
+        }
+    }
+    key
 }
 
 /// The game's own end, with no variant rule: a player with no stack on top

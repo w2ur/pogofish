@@ -136,6 +136,14 @@ fn count_completed_iterations(metrics_path: &std::path::Path) -> u32 {
 /// every adoption, and SIGINT triggers a graceful shutdown saving the current
 /// best model before exiting. Resumes from the last completed iteration.
 pub fn train(rules: &RuleSet, cfg: &TrainConfig) -> anyhow::Result<()> {
+    // The network sees only the board and the player to move. Under a rule
+    // that also reads the move count or the history, two positions with the
+    // same input can have different outcomes (round-1 defect 3).
+    anyhow::ensure!(
+        rules.board_is_markov(),
+        "refusing to train under {rules}: the network input is not a Markov state for it \
+         (it omits the move count and repetition history); train under `uncapped`"
+    );
     std::fs::create_dir_all(&cfg.output_dir)
         .with_context(|| format!("creating output dir: {}", cfg.output_dir.display()))?;
 

@@ -71,7 +71,7 @@ cargo run --release -p pogofish-search --bin measure -- --games 20000 --seed 1 -
 
 # Train (requires libtorch; tch-rs downloads it)
 DYLD_LIBRARY_PATH=$(find target/release/build -path "*/torch-sys-*/out/libtorch/libtorch/lib" | head -1) \
-  ./target/release/train lc3-29 models/lc3-29 mlp_small
+  ./target/release/train uncapped models/uncapped mlp_small   # only Markov rulesets are accepted
 
 # Regenerate the "what the AI learned" JSON
 DYLD_LIBRARY_PATH=$(find target/release/build -path "*/torch-sys-*/out/libtorch/libtorch/lib" | head -1) \
