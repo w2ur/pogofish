@@ -159,3 +159,32 @@ fn the_truncation_rule_stops_training() {
         .contains("\"iteration\": 3"));
     let _ = std::fs::remove_dir_all(d);
 }
+
+/// The arena loads checkpoints with the features and architecture their
+/// run was trained with, read from the run's config.json.
+#[test]
+fn arena_players_load_with_their_runs_features() {
+    use pogofish_engine::{initial_state, legal_moves, RuleSet};
+    use pogofish_search::rng::SplitMix64;
+    use pogofish_train::encoding::Features;
+    let d = tmp("agent-cfg");
+    let cfg = TrainConfig {
+        rules: "lc1-2".into(),
+        features: Features::MoverRelativeRepetition,
+        truncation_stop_iterations: 0,
+        ..tiny(1)
+    };
+    train(&cfg, &d).unwrap();
+    for path in [d.join("weights.pt"), d.join("checkpoints/iter_00001.pt")] {
+        let spec = format!("net:{}:4", path.display());
+        let mut agent = pogofish_train::agents::agent_from_spec(&spec).unwrap();
+        let s = initial_state();
+        let m = agent.choose(
+            &s,
+            &RuleSet::LC1 { repetitions: 2 },
+            &mut SplitMix64::new(0),
+        );
+        assert!(legal_moves(&s).contains(&m));
+    }
+    let _ = std::fs::remove_dir_all(d);
+}
