@@ -8,8 +8,9 @@ pub enum RuleSet {
     /// repetitions=1 means the first repetition triggers a loss for the
     /// player whose move produced the repeated position.
     LC1 { repetitions: u8 },
-    /// Hard cap: game ends on move `cap`. The to-move player wins iff they
-    /// control ALL towers; otherwise they lose. No draws.
+    /// Hard cap: if nobody has won by move `cap`, the player to move at the
+    /// cap loses. No draws. The cap's parity therefore fixes which colour
+    /// loses a game that reaches it (White for an even cap, Red for odd).
     LC2 { cap: u16 },
     /// Soft cap: game ends on move `cap`. Player with more towers wins.
     /// Ties are earned draws. Earlier wins (base terminal) still apply.
@@ -73,15 +74,8 @@ fn check_lc2(state: &GameState, cap: u16) -> Option<Outcome> {
     if state.move_count() < cap {
         return None;
     }
-    // At the cap, the to-move player wins iff they control ALL towers.
-    let all_same_color = base_terminal(state);
-    if let Some(outcome) = all_same_color {
-        // Already handled by base_terminal above, but if we get here
-        // it means base_terminal returned None earlier. Check if to_move
-        // controls all towers explicitly.
-        return Some(outcome);
-    }
-    // to-move player does NOT control all towers → they lose
+    // `is_terminal` has already ruled out a base win, so the player to move
+    // does not own every stack: they lose.
     Some(match state.to_move() {
         Color::White => Outcome::WinRed,
         Color::Red => Outcome::WinWhite,

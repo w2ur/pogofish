@@ -43,7 +43,7 @@ LC1-2 (Sudden Death) and LC3-29 (Classic) AlphaZero models ship as ONNX under `a
 Pogo is played on a 3×3 grid. Each player starts with 6 pieces in 3 stacks of 2. Pick 1–3 pieces from the top of a stack you own, jump them a Manhattan distance determined by the count (1→d1, 2→d2, 3→d1|d3), and land on any cell — stacking on top. The top piece owns the stack. Win by topping every remaining stack. Three rule variants resolve the infinite-game problem:
 
 - **LC1** — repeating a board position loses.
-- **LC2** — hard move cap; player to move at cap must own all stacks or loses.
+- **LC2** — hard move cap; if nobody has won by the cap, the player to move at the cap loses (so the cap's parity picks the loser).
 - **LC3** — soft move cap; most stacks wins, ties are draws.
 
 The web article ships **LC1-2** (fast, sudden-death) and **LC3-29** (balanced, draws possible — the default).

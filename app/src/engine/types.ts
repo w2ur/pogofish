@@ -44,7 +44,7 @@ export const DISTANCES: Record<number, readonly number[]> = {
 /**
  * Rule variant — must match Rust serde format exactly.
  * LC1: loss on Nth repetition of the (board, to_move) tuple.
- * LC2: hard move cap — player who hasn't consolidated all towers by cap loses.
+ * LC2: hard move cap — if nobody has won by the cap, the player to move loses.
  * LC3: soft cap — player with more towers at cap wins; ties are earned draws.
  */
 export type RuleSet =

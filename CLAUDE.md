@@ -116,7 +116,7 @@ detail.
 ## Project-Specific Rules
 
 - State space is ~10M+ positions. Tabular methods hit a wall. Deep RL (AlphaZero) is required.
-- Three rule variants under experiment: LC1 (repetition loss), LC2 (hard move cap), LC3 (soft cap with draws).
+- Three rule variants under experiment: LC1 (repetition loss), LC2 (hard move cap: the player to move at the cap loses), LC3 (soft cap with draws).
 - Training artifacts go in `models/` (gitignored). 8 GB RAM M2 Mac — keep neural nets small.
 - The WASM shim at `app/src/engine/` translates between Rust serde format (snake_case, "White"/"Red") and old TS format (camelCase, "W"/"R"). Do not modify the Rust serialization to match TS — the shim handles it.
 - tch-rs uses `|` as path separator in saved .pt files. The Python export script remaps to `.` when loading.
