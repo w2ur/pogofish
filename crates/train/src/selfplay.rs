@@ -33,8 +33,25 @@ pub struct TrainingExample {
     pub state: Tensor,
     /// MCTS visit-count distribution [ACTION_SIZE].
     pub policy: Tensor,
-    /// Game outcome from this position's player's perspective (+1.0 / -1.0 / 0.0).
-    pub value: f32,
+    /// Game outcome from this position's player's perspective (+1.0 / -1.0 /
+    /// 0.0 for a draw). `None` when the game was truncated: a truncation is
+    /// not a result, so the position has no value target.
+    pub value: Option<f32>,
+}
+
+/// How a self-play game stopped.
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub enum GameEnd {
+    /// The rules ended the game.
+    Terminated(Outcome),
+    /// The safety limit (`SelfPlayConfig::max_moves`) stopped it first.
+    Truncated,
+}
+
+/// A finished self-play game: how it ended and one example per position.
+pub struct SelfPlayGame {
+    pub end: GameEnd,
+    pub examples: Vec<TrainingExample>,
 }
 
 // --------------------------------------------------------------------------
@@ -274,54 +291,59 @@ pub fn neural_mcts_move_with_tau(
     mcts.select_move(state, tau, rng)
 }
 
-/// Play one full self-play game using neural MCTS.
-///
-/// Returns one `TrainingExample` per position in the game.
-pub fn play_one_game(net: &AzNet, rules: &RuleSet, cfg: &SelfPlayConfig) -> Vec<TrainingExample> {
+/// Play one full self-play game from the initial position using neural MCTS.
+pub fn play_one_game(net: &AzNet, rules: &RuleSet, cfg: &SelfPlayConfig) -> SelfPlayGame {
+    play_game_from(net, &pogofish_engine::initial_state(), rules, cfg)
+}
+
+/// Play a self-play game from `start`. It stops when the rules end it
+/// (`Terminated`, every example gets a value target) or after
+/// `cfg.max_moves` moves (`Truncated`, examples keep their policy targets and
+/// get no value target).
+pub fn play_game_from(
+    net: &AzNet,
+    start: &GameState,
+    rules: &RuleSet,
+    cfg: &SelfPlayConfig,
+) -> SelfPlayGame {
     let mut rng = rand::thread_rng();
-    let mut state = pogofish_engine::initial_state();
+    let mut state = start.clone();
     // Store (state_tensor, policy_dist, current_player) — value assigned retroactively
     let mut history: Vec<(Tensor, [f32; ACTION_SIZE], Color)> = Vec::new();
 
-    let mut outcome: Option<Outcome> = None;
-    for move_num in 0..cfg.max_moves {
+    let end = loop {
         if let Some(o) = is_terminal(&state, rules) {
-            outcome = Some(o);
-            break;
+            break GameEnd::Terminated(o);
+        }
+        if history.len() >= cfg.max_moves as usize {
+            break GameEnd::Truncated;
         }
 
         let mut mcts = NeuralMcts::new(net, cfg);
-        let tau = if move_num < 10 { 1.0 } else { 0.0 };
+        let tau = if history.len() < 10 { 1.0 } else { 0.0 };
         let dist = mcts.run(&state, rules, true);
         let mv = mcts.select_move(&state, tau, &mut rng);
 
         history.push((state_to_tensor(&state), dist, state.to_move()));
         state = apply_move(&state, mv).expect("legal move selected by MCTS");
-    }
+    };
 
-    // If game hit move limit without terminal, treat as draw (value 0 for both)
-    let game_outcome = outcome;
-
-    history
+    let examples = history
         .into_iter()
-        .map(|(state_tensor, dist, player)| {
-            let value = match game_outcome {
-                None => 0.0,
-                Some(Outcome::DrawEarned) => 0.0,
-                Some(o) => match o.winner() {
+        .map(|(state_tensor, dist, player)| TrainingExample {
+            state: state_tensor,
+            policy: Tensor::from_slice(&dist),
+            value: match end {
+                GameEnd::Truncated => None,
+                GameEnd::Terminated(o) => Some(match o.winner() {
                     Some(winner) if winner == player => 1.0,
                     Some(_) => -1.0,
                     None => 0.0,
-                },
-            };
-            let policy = Tensor::from_slice(&dist);
-            TrainingExample {
-                state: state_tensor,
-                policy,
-                value,
-            }
+                }),
+            },
         })
-        .collect()
+        .collect();
+    SelfPlayGame { end, examples }
 }
 
 // --------------------------------------------------------------------------
@@ -411,7 +433,7 @@ mod tests {
     fn play_one_game_nonempty() {
         let (_vs, net, cfg) = make_net_and_cfg();
         let rules = RuleSet::LC1 { repetitions: 1 };
-        let examples = play_one_game(&net, &rules, &cfg);
+        let examples = play_one_game(&net, &rules, &cfg).examples;
         assert!(
             !examples.is_empty(),
             "game should produce at least one training example"
@@ -422,7 +444,7 @@ mod tests {
     fn training_example_policy_len() {
         let (_vs, net, cfg) = make_net_and_cfg();
         let rules = RuleSet::LC1 { repetitions: 1 };
-        let examples = play_one_game(&net, &rules, &cfg);
+        let examples = play_one_game(&net, &rules, &cfg).examples;
         for ex in &examples {
             assert_eq!(ex.policy.size(), vec![ACTION_SIZE as i64]);
         }
@@ -432,9 +454,9 @@ mod tests {
     fn training_example_value_bounded() {
         let (_vs, net, cfg) = make_net_and_cfg();
         let rules = RuleSet::LC1 { repetitions: 1 };
-        let examples = play_one_game(&net, &rules, &cfg);
+        let examples = play_one_game(&net, &rules, &cfg).examples;
         for ex in &examples {
-            assert!(ex.value >= -1.0 && ex.value <= 1.0);
+            assert!(ex.value.map_or(true, |v| (-1.0..=1.0).contains(&v)));
         }
     }
 }

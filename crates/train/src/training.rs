@@ -2,7 +2,7 @@ use crate::checkpoint::{load_var_store_strict, save_var_store};
 use crate::gatekeeper::gatekeeper;
 use crate::metrics::append_metrics;
 use crate::net::{make_var_store, ArchConfig, AzNet};
-use crate::selfplay::{play_one_game, SelfPlayConfig, TrainingExample};
+use crate::selfplay::{play_one_game, GameEnd, SelfPlayConfig, TrainingExample};
 use anyhow::Context;
 use pogofish_engine::RuleSet;
 use std::collections::VecDeque;
@@ -80,18 +80,22 @@ impl GameWindow {
         self.games.push_back(game);
     }
 
-    fn collect_examples(&self) -> (Vec<Tensor>, Vec<Tensor>, Vec<f32>) {
+    /// States, policy targets, value targets and value mask (1.0 where the
+    /// example has a value target, 0.0 for positions of truncated games).
+    fn collect_examples(&self) -> (Vec<Tensor>, Vec<Tensor>, Vec<f32>, Vec<f32>) {
         let mut states = Vec::new();
         let mut policies = Vec::new();
         let mut values = Vec::new();
+        let mut mask = Vec::new();
         for game in &self.games {
             for ex in game {
                 states.push(ex.state.shallow_clone());
                 policies.push(ex.policy.shallow_clone());
-                values.push(ex.value);
+                values.push(ex.value.unwrap_or(0.0));
+                mask.push(if ex.value.is_some() { 1.0 } else { 0.0 });
             }
         }
-        (states, policies, values)
+        (states, policies, values, mask)
     }
 
     fn total_examples(&self) -> usize {
@@ -109,6 +113,14 @@ impl GameWindow {
     }
 }
 
+
+/// Mean squared value error over the examples whose mask is 1; positions of
+/// truncated games (mask 0) contribute nothing. Zero when the batch has no
+/// value target at all.
+pub fn masked_value_loss(pred: &Tensor, target: &Tensor, mask: &Tensor) -> Tensor {
+    let squared = (pred - target).pow_tensor_scalar(2) * mask;
+    squared.sum(Kind::Float) / mask.sum(Kind::Float).clamp_min(1.0)
+}
 
 /// Count completed iterations by reading existing metrics.jsonl lines.
 fn count_completed_iterations(metrics_path: &std::path::Path) -> u32 {
@@ -182,6 +194,7 @@ pub fn train(rules: &RuleSet, cfg: &TrainConfig) -> anyhow::Result<()> {
 
         // --- Self-play phase ---
         println!("  Self-play: {} games...", cfg.games_per_iteration);
+        let mut truncated_games = 0u32;
         for game_idx in 0..cfg.games_per_iteration {
             if interrupted.load(Ordering::Relaxed) {
                 println!("\n  Interrupted during self-play. Saving best model...");
@@ -193,8 +206,11 @@ pub fn train(rules: &RuleSet, cfg: &TrainConfig) -> anyhow::Result<()> {
                 return Ok(());
             }
 
-            let examples = play_one_game(&best_net, rules, &selfplay_cfg);
-            window.push(examples);
+            let game = play_one_game(&best_net, rules, &selfplay_cfg);
+            if game.end == GameEnd::Truncated {
+                truncated_games += 1;
+            }
+            window.push(game.examples);
             if (game_idx + 1) % 10 == 0 || game_idx + 1 == cfg.games_per_iteration {
                 print!("\r  Self-play {}/{}", game_idx + 1, cfg.games_per_iteration);
                 use std::io::Write;
@@ -202,10 +218,15 @@ pub fn train(rules: &RuleSet, cfg: &TrainConfig) -> anyhow::Result<()> {
             }
         }
         println!();
-        println!("  Window: {} examples", window.total_examples());
+        println!(
+            "  Window: {} examples | truncated this iteration: {}/{}",
+            window.total_examples(),
+            truncated_games,
+            cfg.games_per_iteration
+        );
 
         // --- Training phase ---
-        let (states, policies, values) = window.collect_examples();
+        let (states, policies, values, value_mask) = window.collect_examples();
         let n = states.len();
         if n < cfg.batch_size {
             println!("  Skipping training: not enough examples ({n})");
@@ -235,6 +256,9 @@ pub fn train(rules: &RuleSet, cfg: &TrainConfig) -> anyhow::Result<()> {
         let values_tensor = Tensor::from_slice(&values)
             .unsqueeze(1)
             .to_kind(Kind::Float);
+        let mask_tensor = Tensor::from_slice(&value_mask)
+            .unsqueeze(1)
+            .to_kind(Kind::Float);
 
         println!(
             "  Training: {} epochs on {} examples (lr={:.6})",
@@ -255,6 +279,7 @@ pub fn train(rules: &RuleSet, cfg: &TrainConfig) -> anyhow::Result<()> {
                 let s_batch = states_tensor.index_select(0, &idx);
                 let p_batch = policies_tensor.index_select(0, &idx);
                 let v_batch = values_tensor.index_select(0, &idx);
+                let m_batch = mask_tensor.index_select(0, &idx);
 
                 let (policy_logits, value_pred) = challenger_net.forward(&s_batch);
 
@@ -262,9 +287,7 @@ pub fn train(rules: &RuleSet, cfg: &TrainConfig) -> anyhow::Result<()> {
                 let policy_loss = -(p_batch * log_probs)
                     .sum_dim_intlist(&[-1i64][..], false, Kind::Float)
                     .mean(Kind::Float);
-                let value_loss = (value_pred - v_batch)
-                    .pow_tensor_scalar(2)
-                    .mean(Kind::Float);
+                let value_loss = masked_value_loss(&value_pred, &v_batch, &m_batch);
                 let loss = policy_loss + value_loss;
 
                 opt.backward_step(&loss);
@@ -341,6 +364,7 @@ pub fn train(rules: &RuleSet, cfg: &TrainConfig) -> anyhow::Result<()> {
         let entry = serde_json::json!({
             "iteration": iteration,
             "window_examples": window.total_examples(),
+            "truncated_games": truncated_games,
             "avg_loss": (last_avg_loss * 10000.0).round() / 10000.0,
             "best_loss": if best_loss == f64::MAX { serde_json::Value::Null } else { serde_json::json!((best_loss * 10000.0).round() / 10000.0) },
             "lr": (lr * 1e8).round() / 1e8,
