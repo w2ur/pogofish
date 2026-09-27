@@ -2,15 +2,15 @@
 name: "Pogofish"
 tagline_fr: "Un article au long cours sur l'entraînement d'une IA à un jeu de plateau oublié"
 tagline_en: "A longform piece about training an AI to play a forgotten board game"
-facts_fr: "Moteur Rust en WASM, inférence ONNX côté client, 500 parties d'auto-apprentissage."
-facts_en: "A Rust engine in WASM, client-side ONNX inference, 500 self-play games."
+facts_fr: "Moteur Rust en WASM, inférence ONNX côté client."
+facts_en: "A Rust engine in WASM, client-side ONNX inference."
 ---
 
 # Pogofish
 
 A longform article about training an AI to play a forgotten 3×3 board game — with the playable game inlined at the climax. Bilingual FR/EN (English at `/`, French at `/fr`, both prerendered). Single-page web app; no server.
 
-The article walks through a real build: why the problem is harder than it looks, why a minimax solver hits a wall, a failed DQN attempt, an AlphaZero agent that worked, a rule-variant sweep that picked the playable balance, and a section showing what the trained network actually learned about winning from 500 self-play games.
+The article tells the first round of the build: the game, a minimax solver, a DQN attempt, an AlphaZero run, a rule-variant sweep, and a section on what the trained network learned. That round's evaluation has since been found unreliable, and a second round is under way that re-measures everything before claiming it.
 
 ## Read it
 
