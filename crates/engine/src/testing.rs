@@ -82,3 +82,9 @@ pub fn state_at_move_count_with_equal_towers(count: u16) -> GameState {
     }
     GameState::new(cells, Color::White, count, Vec::new())
 }
+
+/// Build an arbitrary position for hand-written regression tests.
+/// `cells` lists stacks bottom to top; history starts empty.
+pub fn position(cells: [Cell; NUM_CELLS], to_move: Color, move_count: u16) -> GameState {
+    GameState::new(cells, to_move, move_count, Vec::new())
+}

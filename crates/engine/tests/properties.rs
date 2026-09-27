@@ -54,4 +54,21 @@ proptest! {
             prop_assert_eq!(total_pieces(&s), 12, "piece count changed from 12");
         }
     }
+
+    /// Invariant: the moved pieces land on top, so the mover always owns the
+    /// destination and can never lose by their own move under the base rule.
+    #[test]
+    fn mover_owns_destination_after_move(seed in 0u64..1000) {
+        let mut s = initial_state();
+        let mut rng = seed;
+        for _ in 0..30 {
+            let moves = legal_moves(&s);
+            if moves.is_empty() { break; }
+            let idx = (rng as usize) % moves.len();
+            rng = rng.wrapping_mul(6364136223846793005).wrapping_add(1442695040888963407);
+            let mover = s.to_move();
+            s = apply_move(&s, moves[idx]).unwrap();
+            prop_assert_eq!(s.cell_owner(moves[idx].to_cell as usize), Some(mover));
+        }
+    }
 }
