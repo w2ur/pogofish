@@ -67,6 +67,19 @@ fn training_refuses_features_that_miss_what_the_rule_reads() {
         assert!(format!("{err}").contains("lacks what the rule"), "{err}");
     }
     assert!(!d.exists(), "nothing may be written");
+    // The ablation override is explicit and recorded in the run's config.
+    let ablation = TrainConfig {
+        rules: "lc1-2".into(),
+        features: Features::MoverRelative,
+        allow_missing_features: true,
+        truncation_stop_iterations: 0,
+        ..tiny(1)
+    };
+    assert_eq!(train(&ablation, &d).unwrap(), TrainStop::Finished);
+    assert!(std::fs::read_to_string(d.join("config.json"))
+        .unwrap()
+        .contains("\"allow_missing_features\": true"));
+    let _ = std::fs::remove_dir_all(&d);
 }
 
 /// The chosen ruleset (lc1-2) trains with the repetition feature, and the

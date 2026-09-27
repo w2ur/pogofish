@@ -7,7 +7,7 @@
 //!              [--weight-decay W] [--no-augment] [--max-moves P]
 //!              [--checkpoint-every K] [--eval-every K] [--eval-pairs P] [--eval-sims S]
 //!              [--truncation-stop-rate R] [--truncation-stop-iterations N (0 = off)]
-//!              [--seed S]
+//!              [--allow-missing-features (ablation only)] [--seed S]
 
 use anyhow::{bail, Context};
 use pogofish_train::training::{train, TrainConfig, TrainStop};
@@ -24,6 +24,11 @@ fn main() -> anyhow::Result<()> {
         let flag = raw[i].as_str();
         if flag == "--no-augment" {
             cfg.augment = false;
+            i += 1;
+            continue;
+        }
+        if flag == "--allow-missing-features" {
+            cfg.allow_missing_features = true;
             i += 1;
             continue;
         }

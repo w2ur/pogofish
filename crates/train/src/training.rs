@@ -67,6 +67,10 @@ pub struct TrainConfig {
     /// truncated for `truncation_stop_iterations` consecutive iterations.
     pub truncation_stop_rate: f64,
     pub truncation_stop_iterations: u32,
+    /// Train even though the features lack what the rule reads. Only for the
+    /// ablation that measures what that information is worth (task 5.2).
+    #[serde(default)]
+    pub allow_missing_features: bool,
     pub seed: u64,
 }
 
@@ -98,6 +102,7 @@ impl Default for TrainConfig {
             eval_sims: 50,
             truncation_stop_rate: 0.05,
             truncation_stop_iterations: 3,
+            allow_missing_features: false,
             seed: 1,
         }
     }
@@ -330,7 +335,7 @@ pub fn train(cfg: &TrainConfig, dir: &Path) -> anyhow::Result<TrainStop> {
     // that also reads the move count or the history, two positions with the
     // same input can have different outcomes (round-1 defect 3).
     ensure!(
-        cfg.features.suffice_for(&rules),
+        cfg.features.suffice_for(&rules) || cfg.allow_missing_features,
         "refusing to train under {rules} with {:?} features: the network input lacks what the rule \
          reads (the move count for lc2/lc3; the repetition count for lc1, which needs \
          mover-relative-repetition)",
