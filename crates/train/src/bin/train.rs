@@ -6,6 +6,7 @@
 //!              [--buffer P] [--train-steps K] [--batch B] [--lr LR] [--momentum M]
 //!              [--weight-decay W] [--no-augment] [--max-moves P]
 //!              [--checkpoint-every K] [--eval-every K] [--eval-pairs P] [--eval-sims S]
+//!              [--truncation-stop-rate R] [--truncation-stop-iterations N (0 = off)]
 //!              [--seed S]
 
 use anyhow::{bail, Context};
@@ -52,6 +53,8 @@ fn main() -> anyhow::Result<()> {
             "--eval-every" => cfg.eval_every = v.parse()?,
             "--eval-pairs" => cfg.eval_pairs = v.parse()?,
             "--eval-sims" => cfg.eval_sims = v.parse()?,
+            "--truncation-stop-rate" => cfg.truncation_stop_rate = v.parse()?,
+            "--truncation-stop-iterations" => cfg.truncation_stop_iterations = v.parse()?,
             "--seed" => cfg.seed = v.parse()?,
             _ => bail!("unknown flag {flag}"),
         }
@@ -61,6 +64,14 @@ fn main() -> anyhow::Result<()> {
     match train(&cfg, &PathBuf::from(dir))? {
         TrainStop::Finished => eprintln!("finished"),
         TrainStop::Interrupted => eprintln!("interrupted; rerun the same command to resume"),
+        TrainStop::TruncationRule => {
+            eprintln!(
+                "stopped by the switch rule: more than {:.0}% of self-play games truncated for {} consecutive iterations (docs/experiments/v2-ruleset.md)",
+                cfg.truncation_stop_rate * 100.0,
+                cfg.truncation_stop_iterations
+            );
+            std::process::exit(3);
+        }
     }
     Ok(())
 }

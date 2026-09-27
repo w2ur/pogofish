@@ -21,6 +21,9 @@ fn args(dir: &Path) -> Vec<String> {
         ("--batch", "16"),
         ("--eval-every", "0"),
         ("--checkpoint-every", "10"),
+        // Untrained tiny nets shuffle; this test is about resuming, not the
+        // truncation switch rule.
+        ("--truncation-stop-iterations", "0"),
     ] {
         a.push(k.into());
         a.push(v.into());

@@ -62,6 +62,11 @@ pub struct TrainConfig {
     pub eval_every: u32,
     pub eval_pairs: u32,
     pub eval_sims: u32,
+    /// The ruleset switch rule (docs/experiments/v2-ruleset.md): stop when
+    /// more than `truncation_stop_rate` of an iteration's self-play games are
+    /// truncated for `truncation_stop_iterations` consecutive iterations.
+    pub truncation_stop_rate: f64,
+    pub truncation_stop_iterations: u32,
     pub seed: u64,
 }
 
@@ -91,6 +96,8 @@ impl Default for TrainConfig {
             eval_every: 5,
             eval_pairs: 100,
             eval_sims: 50,
+            truncation_stop_rate: 0.05,
+            truncation_stop_iterations: 3,
             seed: 1,
         }
     }
@@ -116,6 +123,10 @@ pub struct TrainState {
     pub iteration: u32,
     pub games_played: u64,
     pub rng_state: u64,
+    /// Consecutive iterations, up to the last completed, whose truncation
+    /// rate exceeded `truncation_stop_rate`.
+    #[serde(default)]
+    pub over_truncation_limit: u32,
 }
 
 /// One replay-buffer entry. The board is stored in the lossless absolute
@@ -170,6 +181,8 @@ impl Paths {
 pub enum TrainStop {
     Finished,
     Interrupted,
+    /// The switch rule fired: too many truncated games for too long.
+    TruncationRule,
 }
 
 /// Mean squared value error over the examples whose mask is 1; positions of
@@ -348,6 +361,7 @@ pub fn train(cfg: &TrainConfig, dir: &Path) -> anyhow::Result<TrainStop> {
             iteration: 0,
             games_played: 0,
             rng_state: cfg.seed,
+            over_truncation_limit: 0,
         }
     };
     std::fs::write(
@@ -357,6 +371,13 @@ pub fn train(cfg: &TrainConfig, dir: &Path) -> anyhow::Result<TrainStop> {
 
     let sp = cfg.selfplay();
     let symmetries = verified_symmetries();
+    let rule_fired = |s: &TrainState| {
+        cfg.truncation_stop_iterations > 0
+            && s.over_truncation_limit >= cfg.truncation_stop_iterations
+    };
+    if rule_fired(&state) {
+        return Ok(TrainStop::TruncationRule);
+    }
     while state.iteration < cfg.iterations {
         let started = Instant::now();
         let mut rng = SplitMix64::new(state.rng_state);
@@ -431,6 +452,11 @@ pub fn train(cfg: &TrainConfig, dir: &Path) -> anyhow::Result<TrainStop> {
         state.iteration += 1;
         state.games_played += cfg.games_per_iteration as u64;
         state.rng_state = rng.state();
+        if truncated as f64 > cfg.truncation_stop_rate * cfg.games_per_iteration as f64 {
+            state.over_truncation_limit += 1;
+        } else {
+            state.over_truncation_limit = 0;
+        }
 
         let n = cfg.games_per_iteration.max(1) as f64;
         let mut entry = serde_json::json!({
@@ -476,6 +502,9 @@ pub fn train(cfg: &TrainConfig, dir: &Path) -> anyhow::Result<TrainStop> {
         std::fs::write(&tmp, serde_json::to_string_pretty(&state)? + "\n")?;
         std::fs::rename(&tmp, paths.f("state.json"))?;
         eprintln!("{entry}");
+        if rule_fired(&state) {
+            return Ok(TrainStop::TruncationRule);
+        }
     }
     Ok(TrainStop::Finished)
 }

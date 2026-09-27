@@ -101,3 +101,24 @@ fn a_run_extended_in_two_parts_equals_one_run() {
     let _ = std::fs::remove_dir_all(one);
     let _ = std::fs::remove_dir_all(two);
 }
+
+/// The ruleset switch rule stops training by itself: with a 2-ply limit every
+/// game truncates, so the run stops after 3 iterations of 10, and a resumed
+/// run stops again at once instead of carrying on.
+#[test]
+fn the_truncation_rule_stops_training() {
+    let d = tmp("truncation");
+    let cfg = TrainConfig {
+        max_moves: 2,
+        iterations: 10,
+        ..tiny(10)
+    };
+    assert_eq!(train(&cfg, &d).unwrap(), TrainStop::TruncationRule);
+    let state = std::fs::read_to_string(d.join("state.json")).unwrap();
+    assert!(state.contains("\"iteration\": 3"), "{state}");
+    assert_eq!(train(&cfg, &d).unwrap(), TrainStop::TruncationRule);
+    assert!(std::fs::read_to_string(d.join("state.json"))
+        .unwrap()
+        .contains("\"iteration\": 3"));
+    let _ = std::fs::remove_dir_all(d);
+}
