@@ -10,7 +10,7 @@ Pogofish is a browser-based Pogo board game with AI opponents trained via AlphaZ
 - Rust 1.79+ (stable toolchain)
 - `pogofish-engine` — Game rules, state, legal moves, rulesets (`Uncapped`, LC1/LC2/LC3; `RuleSet` parses and prints `uncapped`, `lc1-N`, …)
 - `pogofish-search` — Minimax (alpha-beta + TT), MCTS (PUCT), checkpointer, scripted `random`/`greedy` players (seeded, no dependency)
-- `pogofish-train` — AlphaZero training (tch-rs/libtorch), self-play, gatekeeper
+- `pogofish-train` — AlphaZero training (tch-rs/libtorch), self-play, gatekeeper, `arena` evaluation binary
 - `pogofish-cli` — Curses-style terminal UI (crossterm)
 - `pogofish-wasm` — wasm-bindgen wrappers for browser use
 
@@ -53,6 +53,17 @@ cargo run --release -p pogofish-cli
 # falsification check fails. Unfinished games (safety limit) are never draws.
 cargo run --release -p pogofish-search --bin measure -- --games 20000 --seed 1 --out docs/experiments/v2-measure.json
 ```
+
+### Evaluating players (arena)
+```bash
+# Every pair of players: colours swapped over random openings, score with a
+# 95% CI, distinct games and distinct positions after the opening.
+# Players: random, greedy, first-legal, mcts-uniform:SIMS, net:PATH[:SIMS[:ARCH]]
+./target/release/arena uncapped greedy random net:models/uncapped/model_best.pt:100 \
+  --pairs 200 --opening 4 --seed 1 --out arena.json
+```
+Evaluate with `arena` only; the round-1 `tournament` binary has no colour-swapped
+openings, no CI and counts truncations as draws.
 
 ### Training
 ```bash

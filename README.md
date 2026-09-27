@@ -26,7 +26,7 @@ Then open `http://localhost:5173`. The CTA in the bottom-right (`▶ Play`) or t
 
 - `pogofish-engine` — game rules, state, legal moves, rule variants (LC1/LC2/LC3).
 - `pogofish-search` — minimax (alpha-beta + transposition table), MCTS (PUCT), checkpointer, and two scripted baselines: `random` and `greedy` (wins when it can, else maximises own stacks on top minus the opponent's).
-- `pogofish-train` — AlphaZero training via tch-rs/libtorch, self-play, gatekeeper, and an `analyze` binary that produces the insights JSON the article reads.
+- `pogofish-train` — AlphaZero training via tch-rs/libtorch, self-play, gatekeeper, the `arena` evaluation binary, and an `analyze` binary that produces the insights JSON the article reads.
 - `pogofish-cli` — terminal UI (crossterm, curses-style).
 - `pogofish-wasm` — wasm-bindgen wrappers for the browser.
 
@@ -68,6 +68,9 @@ cargo run --release -p pogofish-cli
 
 # Measure the uncapped game with scripted players (JSON report; ~2 s)
 cargo run --release -p pogofish-search --bin measure -- --games 20000 --seed 1 --out docs/experiments/v2-measure.json
+
+# Evaluate players against each other (colours swapped, random openings, 95% CI)
+./target/release/arena uncapped greedy random mcts-uniform:200 --pairs 200 --out arena.json
 
 # Train (requires libtorch; tch-rs downloads it)
 DYLD_LIBRARY_PATH=$(find target/release/build -path "*/torch-sys-*/out/libtorch/libtorch/lib" | head -1) \

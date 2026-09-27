@@ -17,6 +17,10 @@ name = "dqn_train"
 path = "src/bin/dqn_train.rs"
 
 [[bin]]
+name = "arena"
+path = "src/bin/arena.rs"
+
+[[bin]]
 name = "analyze"
 path = "src/bin/analyze.rs"
 

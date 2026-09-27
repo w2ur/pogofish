@@ -13,6 +13,9 @@ pub enum Scripted {
     /// choice, and otherwise maximises (own stacks on top − opponent's)
     /// after the move. Ties are broken uniformly at random.
     Greedy,
+    /// Deliberately weak: always plays the first legal move in engine
+    /// order. A control for the evaluation harness, not a baseline.
+    FirstLegal,
 }
 
 impl Scripted {
@@ -20,6 +23,7 @@ impl Scripted {
         match self {
             Scripted::Random => "random",
             Scripted::Greedy => "greedy",
+            Scripted::FirstLegal => "first-legal",
         }
     }
 
@@ -27,6 +31,7 @@ impl Scripted {
         match name {
             "random" => Some(Scripted::Random),
             "greedy" => Some(Scripted::Greedy),
+            "first-legal" => Some(Scripted::FirstLegal),
             _ => None,
         }
     }
@@ -39,6 +44,7 @@ impl Scripted {
         match self {
             Scripted::Random => moves[rng.below(moves.len())],
             Scripted::Greedy => greedy(state, &moves, rules, rng),
+            Scripted::FirstLegal => moves[0],
         }
     }
 }
@@ -208,7 +214,7 @@ mod tests {
 
     #[test]
     fn names_round_trip() {
-        for p in [Scripted::Random, Scripted::Greedy] {
+        for p in [Scripted::Random, Scripted::Greedy, Scripted::FirstLegal] {
             assert_eq!(Scripted::from_name(p.name()), Some(p));
         }
         assert_eq!(Scripted::from_name("minimax"), None);
