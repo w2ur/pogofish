@@ -3,10 +3,14 @@ use pogofish_engine::{apply_move_under, initial_state, is_terminal, Color, Outco
 use rand::Rng;
 
 pub struct GatekeeperResult {
+    /// Challenger's score over finished games (draws count half); 0 when no
+    /// game finished. Unfinished games are not results and are left out.
     pub win_rate: f64,
     pub wins: u32,
     pub losses: u32,
     pub draws: u32,
+    /// Games stopped by the safety limit.
+    pub unfinished: u32,
 }
 
 /// Play `num_games` between `challenger` and `best`, alternating who plays White.
@@ -28,6 +32,7 @@ pub fn gatekeeper(
     let mut wins = 0u32;
     let mut losses = 0u32;
     let mut draws = 0u32;
+    let mut unfinished = 0u32;
     let mut rng = rand::thread_rng();
 
     for game_idx in 0..num_games {
@@ -49,7 +54,7 @@ pub fn gatekeeper(
             &mut rng,
         );
         match outcome {
-            None => draws += 1,
+            None => unfinished += 1,
             Some(Outcome::DrawEarned) => draws += 1,
             Some(o) => match o.winner() {
                 Some(w) if w == challenger_color => wins += 1,
@@ -71,6 +76,7 @@ pub fn gatekeeper(
         wins,
         losses,
         draws,
+        unfinished,
     }
 }
 

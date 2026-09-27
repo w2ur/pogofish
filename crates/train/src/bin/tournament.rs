@@ -196,6 +196,13 @@ fn main() -> anyhow::Result<()> {
     let args = parse_args()?;
 
     let rules = parse_ruleset(&args.variant)?;
+    // This round-1 binary scores games that hit the move limit as draws.
+    // Under the uncapped game that is the normal way a long game stops, and
+    // a truncation is not a result: use `arena` instead.
+    anyhow::ensure!(
+        rules != RuleSet::Uncapped,
+        "tournament does not support `uncapped` (it scores truncations as draws); use `arena`"
+    );
     let arch = ArchConfig::from_name(&args.arch_name)?;
 
     // Load players
@@ -207,7 +214,7 @@ fn main() -> anyhow::Result<()> {
 
     // Determine max moves from the variant cap
     let max_moves: u16 = match &rules {
-        RuleSet::Uncapped => 1000,
+        RuleSet::Uncapped => unreachable!("refused above"),
         RuleSet::LC1 { .. } => 200,
         RuleSet::LC2 { cap } => cap.saturating_mul(2).max(200),
         RuleSet::LC3 { cap } => cap.saturating_mul(2).max(200),

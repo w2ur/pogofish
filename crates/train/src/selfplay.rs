@@ -21,7 +21,7 @@ impl Default for SelfPlayConfig {
         Self {
             num_simulations: 100,
             c_puct: 1.5,
-            max_moves: 200,
+            max_moves: 1000,
             dirichlet_alpha: 0.3,
             dirichlet_epsilon: 0.25,
         }

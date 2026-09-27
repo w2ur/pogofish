@@ -53,7 +53,8 @@ impl Default for TrainConfig {
             dirichlet_epsilon: 0.25,
             gatekeeper_games: 80,
             gatekeeper_threshold: 0.55,
-            max_moves: 200,
+            // The round-2 safety limit (docs/experiments/v2-ruleset.md).
+            max_moves: 1000,
             output_dir: PathBuf::from("models/alphazero"),
         }
     }
@@ -331,8 +332,8 @@ pub fn train(rules: &RuleSet, cfg: &TrainConfig) -> anyhow::Result<()> {
             0.1, // slight randomness to break determinism; still mostly picks best move
         );
         println!(
-            "  Challenger: win_rate={:.3} (W:{} L:{} D:{})",
-            result.win_rate, result.wins, result.losses, result.draws
+            "  Challenger: win_rate={:.3} (W:{} L:{} D:{} unfinished:{})",
+            result.win_rate, result.wins, result.losses, result.draws, result.unfinished
         );
 
         let adopted = result.win_rate >= cfg.gatekeeper_threshold;
@@ -380,6 +381,7 @@ pub fn train(rules: &RuleSet, cfg: &TrainConfig) -> anyhow::Result<()> {
             "gatekeeper_wins": result.wins,
             "gatekeeper_losses": result.losses,
             "gatekeeper_draws": result.draws,
+            "gatekeeper_unfinished": result.unfinished,
             "adopted": adopted,
             "iter_seconds": (iter_secs * 10.0).round() / 10.0,
             "total_seconds": (total_secs * 10.0).round() / 10.0,
