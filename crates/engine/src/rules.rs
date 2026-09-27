@@ -74,19 +74,26 @@ impl RuleSet {
 }
 
 /// Key for search trees and transposition tables under `rules`: the board
-/// and player to move, plus exactly what the rule reads beyond them — the
-/// number of earlier occurrences of this position for LC1, the move count for
-/// LC2 and LC3. Two states share a key only if the rule cannot tell them
-/// apart, so transpositions are kept wherever they are sound.
+/// and player to move, plus what the rule reads beyond them, now or later in
+/// the game — the move count for LC2 and LC3, and for LC1 the whole history
+/// as a multiset (a repetition count alone is not enough: whether a *future*
+/// move repeats depends on which positions were seen). Two states share a key
+/// only if the rule gives them the same future, so transpositions are kept
+/// wherever that is sound: fully under Uncapped, across move orders that
+/// visit the same positions under LC1.
 pub fn search_key(state: &GameState, rules: &RuleSet) -> StateKey {
     let mut key = state.key();
     match *rules {
         RuleSet::Uncapped => {}
         RuleSet::LC1 { .. } => {
-            let current = key.clone();
-            let seen = state.history_iter().filter(|k| **k == current).count();
+            let mut seen: Vec<&StateKey> = state.history_iter().collect();
+            seen.sort_unstable_by(|a, b| a.0.cmp(&b.0));
             key.0.push(0xF1);
-            key.0.extend_from_slice(&(seen.min(u16::MAX as usize) as u16).to_le_bytes());
+            for k in seen {
+                // Length-prefixed so that concatenations stay unambiguous.
+                key.0.push(k.0.len() as u8);
+                key.0.extend_from_slice(&k.0);
+            }
         }
         RuleSet::LC2 { .. } | RuleSet::LC3 { .. } => {
             key.0.push(0xF2);

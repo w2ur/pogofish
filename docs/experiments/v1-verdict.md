@@ -149,6 +149,10 @@ Invalidates: the solver outputs (`models/lc*-16-v2/minimax.jsonl.gz`,
 owner-measured) and the minimax table the web app uses for LC2-50
 (`app/public/models/minimax_table.json.gz`, `app/src/ai/player.ts:173`). Round 2
 does not use solving (owner decision 2026-09-25), so this is recorded, not fixed.
+Round 2 added `pogofish_engine::search_key` and uses it in both MCTS
+implementations; the minimax tables were deliberately left on `GameState::key`,
+because switching would change the solver's output format that the web app's table
+reads. Anyone reviving the solver must fix both the key and the bound flags first.
 
 ## What still stands
 
