@@ -1,5 +1,5 @@
 use anyhow::Context;
-use pogofish_engine::{apply_move, initial_state, is_terminal, legal_moves, Color, Outcome, RuleSet};
+use pogofish_engine::{apply_move_under, initial_state, is_terminal, legal_moves, Color, Outcome, RuleSet};
 use pogofish_train::net::{make_var_store, AzNet, ArchConfig};
 use pogofish_train::selfplay::{neural_mcts_move_with_tau, SelfPlayConfig};
 use rand::Rng;
@@ -181,7 +181,7 @@ fn play_game(
             Color::Red => red_player,
         };
         let mv = pick_move(current_player, &state, rules, cfg, tau, rng);
-        state = apply_move(&state, mv).expect("move selected by player must be legal");
+        state = apply_move_under(&state, mv, rules).expect("move selected by player must be legal");
     }
 
     // Exceeded move limit — treat as draw

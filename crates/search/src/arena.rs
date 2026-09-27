@@ -12,8 +12,8 @@ use crate::mcts::{Mcts, MctsConfig};
 use crate::players::Scripted;
 use crate::rng::SplitMix64;
 use pogofish_engine::{
-    apply_move, initial_state, is_terminal, legal_moves, Color, GameState, Move, Outcome, RuleSet,
-    StateKey,
+    apply_move, apply_move_under, initial_state, is_terminal, legal_moves, Color, GameState, Move,
+    Outcome, RuleSet, StateKey,
 };
 use serde::Serialize;
 use std::collections::HashSet;
@@ -203,10 +203,7 @@ fn play(
             Color::Red => &mut *red,
         };
         let m = agent.choose(&s, &cfg.rules, rng);
-        s = apply_move(&s, m).expect("agents must play legal moves");
-        if cfg.rules == RuleSet::Uncapped {
-            s.forget_history();
-        }
+        s = apply_move_under(&s, m, &cfg.rules).expect("agents must play legal moves");
         moves.push(m);
         seen_after_opening.insert(s.key());
     }

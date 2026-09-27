@@ -57,3 +57,23 @@ fn forget_history_keeps_the_position() {
     assert_eq!(s1.history_len(), 0);
     assert_eq!((s1.cells().clone(), s1.to_move(), s1.move_count(), s1.key()), before);
 }
+
+#[test]
+fn apply_move_under_keeps_history_only_where_the_rule_reads_it() {
+    use pogofish_engine::{apply_move_under, legal_moves, RuleSet};
+    let s0 = pogofish_engine::initial_state();
+    let m = legal_moves(&s0)[0];
+    for rules in [RuleSet::Uncapped, RuleSet::LC2 { cap: 30 }, RuleSet::LC3 { cap: 30 }] {
+        let mut s = s0.clone();
+        for _ in 0..3 {
+            let mv = legal_moves(&s)[0];
+            s = apply_move_under(&s, mv, &rules).unwrap();
+        }
+        assert_eq!(s.history_len(), 0, "{rules}");
+        assert_eq!(s.move_count(), 3, "{rules}");
+    }
+    let lc1 = RuleSet::LC1 { repetitions: 1 };
+    let s1 = apply_move_under(&s0, m, &lc1).unwrap();
+    assert_eq!(s1.history_len(), 1);
+    assert_eq!(s1.key(), pogofish_engine::apply_move(&s0, m).unwrap().key());
+}

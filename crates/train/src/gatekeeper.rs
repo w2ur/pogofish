@@ -1,5 +1,5 @@
 use crate::net::AzNet;
-use pogofish_engine::{apply_move, initial_state, is_terminal, Color, Outcome, RuleSet};
+use pogofish_engine::{apply_move_under, initial_state, is_terminal, Color, Outcome, RuleSet};
 use rand::Rng;
 
 pub struct GatekeeperResult {
@@ -109,7 +109,7 @@ fn play_game_with_tau(
             best
         };
         let mv = neural_mcts_move_with_tau(net, &state, rules, &cfg, temperature, rng);
-        state = apply_move(&state, mv).expect("legal move");
+        state = apply_move_under(&state, mv, rules).expect("legal move");
     }
     is_terminal(&state, rules)
 }

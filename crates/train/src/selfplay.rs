@@ -1,7 +1,7 @@
 use crate::encoding::{legal_move_mask, move_to_index, state_to_tensor, ACTION_SIZE};
 use crate::net::AzNet;
 use pogofish_engine::{
-    apply_move, is_terminal, legal_moves, search_key, Color, GameState, Move, Outcome, RuleSet,
+    apply_move_under, is_terminal, legal_moves, search_key, Color, GameState, Move, Outcome, RuleSet,
     StateKey,
 };
 use rand::Rng;
@@ -226,7 +226,7 @@ impl<'a> NeuralMcts<'a> {
         };
 
         let chosen_mv = self.nodes.get(&key).unwrap().edges[best_idx].mv;
-        let next = apply_move(state, chosen_mv).expect("legal move");
+        let next = apply_move_under(state, chosen_mv, rules).expect("legal move");
         let child_value = self.simulate(&next, rules, path);
         let value = -child_value; // negate: child's value is from opponent's view
 
@@ -332,7 +332,7 @@ pub fn play_game_from(
         let mv = mcts.select_move(&state, rules, tau, &mut rng);
 
         history.push((state_to_tensor(&state), dist, state.to_move()));
-        state = apply_move(&state, mv).expect("legal move selected by MCTS");
+        state = apply_move_under(&state, mv, rules).expect("legal move selected by MCTS");
     };
 
     let examples = history

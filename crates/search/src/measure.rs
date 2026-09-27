@@ -5,8 +5,7 @@
 use crate::players::Scripted;
 use crate::rng::SplitMix64;
 use pogofish_engine::{
-    apply_move, is_terminal, legal_moves, Color, GameState, Outcome, RuleSet,
-    StateKey,
+    apply_move_under, is_terminal, legal_moves, Color, GameState, Outcome, RuleSet, StateKey,
 };
 use serde::Serialize;
 use std::collections::HashMap;
@@ -96,10 +95,7 @@ pub fn play_game(
         };
         record.branching.push(legal_moves(&state).len() as u16);
         let m = player.choose(&state, rules, rng);
-        state = apply_move(&state, m).expect("scripted players only play legal moves");
-        if *rules == RuleSet::Uncapped {
-            state.forget_history();
-        }
+        state = apply_move_under(&state, m, rules).expect("scripted players only play legal moves");
         record.plies += 1;
         reps.record(&state, record.plies);
     }
@@ -142,7 +138,14 @@ pub fn play_many(
             scope.spawn(move || {
                 for (i, slot) in chunk.iter_mut().enumerate() {
                     let mut rng = SplitMix64::new(game_seed(base_seed, pairing, offset + i as u64));
-                    *slot = Some(play_game(start, &RuleSet::Uncapped, white, red, max_plies, &mut rng));
+                    *slot = Some(play_game(
+                        start,
+                        &RuleSet::Uncapped,
+                        white,
+                        red,
+                        max_plies,
+                        &mut rng,
+                    ));
                 }
             });
         }
@@ -367,6 +370,7 @@ pub fn falsification_check(games_per_pairing: u32, seed: u64) -> FalsificationCh
 #[cfg(test)]
 mod tests {
     use super::*;
+    use pogofish_engine::apply_move;
 
     #[test]
     fn falsification_position_really_ends_on_every_move() {
@@ -391,9 +395,23 @@ mod tests {
     fn a_game_that_hits_the_limit_is_unfinished_not_a_draw() {
         let s = pogofish_engine::initial_state();
         let mut rng = SplitMix64::new(0);
-        let r = play_game(&s, &RuleSet::Uncapped, Scripted::Random, Scripted::Random, 0, &mut rng);
+        let r = play_game(
+            &s,
+            &RuleSet::Uncapped,
+            Scripted::Random,
+            Scripted::Random,
+            0,
+            &mut rng,
+        );
         assert_eq!((r.plies, r.outcome), (0, None));
-        let r = play_game(&s, &RuleSet::Uncapped, Scripted::Random, Scripted::Random, 3, &mut rng);
+        let r = play_game(
+            &s,
+            &RuleSet::Uncapped,
+            Scripted::Random,
+            Scripted::Random,
+            3,
+            &mut rng,
+        );
         assert_eq!(r.plies, 3);
         assert_eq!(r.outcome, None);
         assert_eq!(r.branching.len(), 3);

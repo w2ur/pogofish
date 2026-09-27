@@ -1,5 +1,5 @@
 use pogofish_engine::{
-    apply_move, is_terminal, legal_moves, search_key, GameState, Move, Outcome, RuleSet,
+    apply_move_under, is_terminal, legal_moves, search_key, GameState, Move, Outcome, RuleSet,
     StateKey,
 };
 use std::collections::hash_map::Entry;
@@ -73,7 +73,12 @@ impl Mcts {
     /// game), the search graph has cycles, and following one would recurse
     /// forever. A position met again on the path is evaluated as a leaf
     /// (value 0: no estimate is available) and not expanded further.
-    fn simulate(&mut self, state: &GameState, rules: &RuleSet, path: &mut HashSet<StateKey>) -> f32 {
+    fn simulate(
+        &mut self,
+        state: &GameState,
+        rules: &RuleSet,
+        path: &mut HashSet<StateKey>,
+    ) -> f32 {
         if let Some(outcome) = is_terminal(state, rules) {
             return outcome_value(outcome, state);
         }
@@ -89,7 +94,7 @@ impl Mcts {
             let edges: Vec<Edge> = moves
                 .iter()
                 .map(|m| {
-                    let next = apply_move(state, *m).expect("legal move");
+                    let next = apply_move_under(state, *m, rules).expect("legal move");
                     Edge {
                         mv: *m,
                         child_key: search_key(&next, rules),
@@ -104,7 +109,14 @@ impl Mcts {
         }
 
         // Selection via PUCT — pick edge with highest score
-        let total_visits: u32 = self.nodes.get(&key).unwrap().edges.iter().map(|e| e.visits).sum();
+        let total_visits: u32 = self
+            .nodes
+            .get(&key)
+            .unwrap()
+            .edges
+            .iter()
+            .map(|e| e.visits)
+            .sum();
         let parent_sqrt = ((total_visits + 1) as f32).sqrt();
         let best_idx = {
             let node = self.nodes.get(&key).unwrap();
@@ -127,7 +139,7 @@ impl Mcts {
         };
 
         let chosen_move = self.nodes.get(&key).unwrap().edges[best_idx].mv;
-        let next = apply_move(state, chosen_move).expect("legal move");
+        let next = apply_move_under(state, chosen_move, rules).expect("legal move");
         let child_value = self.simulate(&next, rules, path);
         let value = -child_value; // Negate: child's value is from opponent's perspective
 

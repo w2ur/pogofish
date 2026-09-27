@@ -71,6 +71,11 @@ impl RuleSet {
     pub fn board_is_markov(&self) -> bool {
         matches!(self, RuleSet::Uncapped)
     }
+
+    /// True when the rule reads the position history (only LC1).
+    pub fn reads_history(&self) -> bool {
+        matches!(self, RuleSet::LC1 { .. })
+    }
 }
 
 /// Key for search trees and transposition tables under `rules`: the board
