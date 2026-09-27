@@ -10,7 +10,7 @@ Pogofish is a browser-based Pogo board game with AI opponents trained via AlphaZ
 - Rust 1.79+ (stable toolchain)
 - `pogofish-engine` — Game rules, state, legal moves, rulesets (`Uncapped`, LC1/LC2/LC3; `RuleSet` parses and prints `uncapped`, `lc1-N`, …)
 - `pogofish-search` — Minimax (alpha-beta + TT), MCTS (PUCT), checkpointer, scripted `random`/`greedy` players (seeded, no dependency)
-- `pogofish-train` — AlphaZero training (tch-rs/libtorch), self-play, gatekeeper, `arena` evaluation binary
+- `pogofish-train` — AlphaZero training (tch-rs/libtorch), self-play, gatekeeper, TD(λ) value learning (`td_train`), `arena` evaluation binary
 - `pogofish-cli` — Curses-style terminal UI (crossterm)
 - `pogofish-wasm` — wasm-bindgen wrappers for browser use
 
@@ -23,7 +23,7 @@ Pogofish is a browser-based Pogo board game with AI opponents trained via AlphaZ
 - Rust WASM engine (via `pogofish-wasm`)
 
 ### Tools (`tools/`)
-- Python 3.11+ — ONNX export sidecar (`export_onnx.py`), Elo ladder plot (`plot_ladder.py`, PEP 723: `uv run`)
+- Python 3.11+ — ONNX export sidecar (`export_onnx.py`), Elo ladder and TD curve plots (`plot_ladder.py`, `plot_td_curve.py`, PEP 723: `uv run`)
 - Node.js — ONNX verification (`verify_onnx.js`)
 
 ## User-Facing Language
@@ -69,6 +69,14 @@ uv run tools/plot_ladder.py ladder.json ladder.png
 ```
 Evaluate with `arena` only; the round-1 `tournament` binary has no colour-swapped
 openings, no CI and counts truncations as draws.
+
+### TD(λ) value learning
+```bash
+# Resumable (rerun after Ctrl+C, or raise --iterations to extend); see docs/experiments/v2-td.md
+./target/release/td_train models/td-mr-s1 --iterations 1000 --temp-decay 1000 --eval-every 50 \
+  --eval-pairs 200 --lambda 0.7 --lr 0.1 --seed 1
+# In the arena: td:models/td-mr-s1/weights.pt[:128x64]
+```
 
 ### Training
 ```bash

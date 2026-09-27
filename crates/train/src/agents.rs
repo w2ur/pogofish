@@ -48,7 +48,8 @@ impl Agent for NetAgent {
 
 /// Build a player from its name:
 /// `random`, `greedy`, `first-legal`, `mcts-uniform:SIMS`,
-/// or `net:PATH[:SIMS[:ARCH]]` (defaults 100 simulations, `mlp_small`).
+/// `net:PATH[:SIMS[:ARCH]]` (defaults 100 simulations, `mlp_small`),
+/// or `td:PATH[:HIDDEN]` (a TD value net playing greedily; default `128x64`).
 pub fn agent_from_spec(spec: &str) -> anyhow::Result<Box<dyn Agent>> {
     if let Some(p) = Scripted::from_name(spec) {
         return Ok(Box::new(p));
@@ -58,6 +59,19 @@ pub fn agent_from_spec(spec: &str) -> anyhow::Result<Box<dyn Agent>> {
             .parse()
             .with_context(|| format!("simulations in '{spec}'"))?;
         return Ok(Box::new(UniformMcts { simulations }));
+    }
+    if let Some(rest) = spec.strip_prefix("td:") {
+        let (path, hidden) = match rest.rsplit_once(':') {
+            Some((p, h)) if h.chars().all(|c| c.is_ascii_digit() || c == 'x') => (p, h),
+            _ => (rest, "128x64"),
+        };
+        anyhow::ensure!(!path.is_empty(), "td: needs a path");
+        let hidden = crate::td::parse_hidden(hidden)?;
+        return Ok(Box::new(crate::td::TdCheckpoint::load(
+            Path::new(path),
+            &hidden,
+            crate::td::TdFeatures::MoverRelative,
+        )?));
     }
     if let Some(rest) = spec.strip_prefix("net:") {
         let mut parts = rest.split(':');
@@ -77,7 +91,7 @@ pub fn agent_from_spec(spec: &str) -> anyhow::Result<Box<dyn Agent>> {
         }
         return Ok(Box::new(NetAgent::load(Path::new(path), &arch, sims)?));
     }
-    bail!("unknown player '{spec}' (random, greedy, first-legal, mcts-uniform:N, net:PATH[:SIMS[:ARCH]])")
+    bail!("unknown player '{spec}' (random, greedy, first-legal, mcts-uniform:N, net:PATH[:SIMS[:ARCH]], td:PATH[:HIDDEN])")
 }
 
 #[cfg(test)]
@@ -99,6 +113,8 @@ mod tests {
             "gready",
             "mcts-uniform:x",
             "net:",
+            "td:",
+            "td:/nonexistent.pt",
             "net:/nonexistent.pt",
         ] {
             assert!(agent_from_spec(bad).is_err(), "{bad}");

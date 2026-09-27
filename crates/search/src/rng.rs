@@ -12,6 +12,17 @@ impl SplitMix64 {
         Self { state: seed }
     }
 
+    /// The internal state; `SplitMix64::new(g.state())` continues exactly
+    /// where `g` is, so a checkpoint can save and restore the generator.
+    pub fn state(&self) -> u64 {
+        self.state
+    }
+
+    /// Uniform float in [0, 1).
+    pub fn unit_f64(&mut self) -> f64 {
+        (self.next_u64() >> 11) as f64 / (1u64 << 53) as f64
+    }
+
     pub fn next_u64(&mut self) -> u64 {
         self.state = self.state.wrapping_add(0x9E37_79B9_7F4A_7C15);
         let mut z = self.state;

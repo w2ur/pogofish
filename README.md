@@ -26,7 +26,7 @@ Then open `http://localhost:5173`. The CTA in the bottom-right (`▶ Play`) or t
 
 - `pogofish-engine` — game rules, state, legal moves, rule variants (LC1/LC2/LC3).
 - `pogofish-search` — minimax (alpha-beta + transposition table), MCTS (PUCT), checkpointer, and two scripted baselines: `random` and `greedy` (wins when it can, else maximises own stacks on top minus the opponent's).
-- `pogofish-train` — AlphaZero training via tch-rs/libtorch, self-play, gatekeeper, the `arena` evaluation binary, and an `analyze` binary that produces the insights JSON the article reads.
+- `pogofish-train` — AlphaZero training via tch-rs/libtorch, self-play, gatekeeper, TD(λ) value learning (`td_train`), the `arena` evaluation binary, and an `analyze` binary that produces the insights JSON the article reads.
 - `pogofish-cli` — terminal UI (crossterm, curses-style).
 - `pogofish-wasm` — wasm-bindgen wrappers for the browser.
 
@@ -68,6 +68,9 @@ cargo run --release -p pogofish-cli
 
 # Measure the uncapped game with scripted players (JSON report; ~2 s)
 cargo run --release -p pogofish-search --bin measure -- --games 20000 --seed 1 --out docs/experiments/v2-measure.json
+
+# TD(λ) value learning (resumable; docs/experiments/v2-td.md)
+./target/release/td_train models/td-mr-s1 --iterations 1000 --temp-decay 1000 --lambda 0.7 --lr 0.1 --seed 1
 
 # Evaluate players against each other (colours swapped, random openings, 95% CI)
 ./target/release/arena uncapped greedy random mcts-uniform:200 --pairs 200 --out arena.json
