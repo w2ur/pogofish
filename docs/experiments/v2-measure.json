@@ -1,0 +1,4919 @@
+{
+  "what": "Uncapped Pogo (base rule only) between scripted players, from the initial position",
+  "machine": {
+    "os": "linux",
+    "arch": "x86_64",
+    "cpu": "Intel(R) Xeon(R) Processor @ 2.10GHz",
+    "threads_used": 4
+  },
+  "run": {
+    "games_per_pairing": 20000,
+    "seed": 1,
+    "max_plies": 1000,
+    "wall_seconds": 1.589579826,
+    "games_per_second": 50327.7650429869,
+    "peak_rss_mib": 12.6171875
+  },
+  "falsification_check": {
+    "description": "LC2 cap 10, initial board at move 9, White to move: every legal move ends the game with a White win; each game must last exactly 1 ply",
+    "games": 200,
+    "ended_in_one_ply_with_white_win": 200,
+    "passed": true
+  },
+  "pairings": [
+    {
+      "white": "random",
+      "red": "random",
+      "games": 20000,
+      "decisive": 19989,
+      "unfinished": 11,
+      "decisive_rate": 0.99945,
+      "white_wins": 10017,
+      "red_wins": 9972,
+      "decisive_length": {
+        "n": 19989,
+        "mean": 131.01370753914654,
+        "min": 3,
+        "p10": 22,
+        "median": 93,
+        "p90": 290,
+        "max": 967
+      },
+      "ended_by_ply": [
+        [
+          10,
+          0.028
+        ],
+        [
+          20,
+          0.09095
+        ],
+        [
+          30,
+          0.1595
+        ],
+        [
+          50,
+          0.28595
+        ],
+        [
+          100,
+          0.5266
+        ],
+        [
+          200,
+          0.7902
+        ],
+        [
+          500,
+          0.98175
+        ],
+        [
+          1000,
+          0.99945
+        ]
+      ],
+      "mean_branching": 15.920484304516675,
+      "branching_by_ply": [
+        {
+          "ply": 0,
+          "games": 20000,
+          "mean_legal_moves": 16.0
+        },
+        {
+          "ply": 1,
+          "games": 20000,
+          "mean_legal_moves": 15.02205
+        },
+        {
+          "ply": 2,
+          "games": 20000,
+          "mean_legal_moves": 15.83755
+        },
+        {
+          "ply": 3,
+          "games": 19981,
+          "mean_legal_moves": 15.511986387067715
+        },
+        {
+          "ply": 4,
+          "games": 19954,
+          "mean_legal_moves": 15.66011827202566
+        },
+        {
+          "ply": 5,
+          "games": 19902,
+          "mean_legal_moves": 15.550999899507588
+        },
+        {
+          "ply": 6,
+          "games": 19837,
+          "mean_legal_moves": 15.734637293945656
+        },
+        {
+          "ply": 7,
+          "games": 19744,
+          "mean_legal_moves": 15.63416734197731
+        },
+        {
+          "ply": 8,
+          "games": 19647,
+          "mean_legal_moves": 15.76876876876877
+        },
+        {
+          "ply": 9,
+          "games": 19552,
+          "mean_legal_moves": 15.640190261865794
+        },
+        {
+          "ply": 10,
+          "games": 19440,
+          "mean_legal_moves": 15.894958847736625
+        },
+        {
+          "ply": 11,
+          "games": 19345,
+          "mean_legal_moves": 15.71139829413285
+        },
+        {
+          "ply": 12,
+          "games": 19228,
+          "mean_legal_moves": 15.858227584772207
+        },
+        {
+          "ply": 13,
+          "games": 19109,
+          "mean_legal_moves": 15.736877910932021
+        },
+        {
+          "ply": 14,
+          "games": 18989,
+          "mean_legal_moves": 15.875085575859709
+        },
+        {
+          "ply": 15,
+          "games": 18871,
+          "mean_legal_moves": 15.80467383816438
+        },
+        {
+          "ply": 16,
+          "games": 18741,
+          "mean_legal_moves": 15.890080572007896
+        },
+        {
+          "ply": 17,
+          "games": 18609,
+          "mean_legal_moves": 15.81691654575743
+        },
+        {
+          "ply": 18,
+          "games": 18454,
+          "mean_legal_moves": 15.90581987644955
+        },
+        {
+          "ply": 19,
+          "games": 18322,
+          "mean_legal_moves": 15.823490885274534
+        },
+        {
+          "ply": 20,
+          "games": 18181,
+          "mean_legal_moves": 15.952642868929102
+        },
+        {
+          "ply": 21,
+          "games": 18054,
+          "mean_legal_moves": 15.860086407444333
+        },
+        {
+          "ply": 22,
+          "games": 17911,
+          "mean_legal_moves": 16.00446652894869
+        },
+        {
+          "ply": 23,
+          "games": 17770,
+          "mean_legal_moves": 15.833708497467642
+        },
+        {
+          "ply": 24,
+          "games": 17627,
+          "mean_legal_moves": 16.05015033755035
+        },
+        {
+          "ply": 25,
+          "games": 17497,
+          "mean_legal_moves": 15.856832599874265
+        },
+        {
+          "ply": 26,
+          "games": 17376,
+          "mean_legal_moves": 15.950448895027625
+        },
+        {
+          "ply": 27,
+          "games": 17228,
+          "mean_legal_moves": 15.945553749709775
+        },
+        {
+          "ply": 28,
+          "games": 17091,
+          "mean_legal_moves": 15.916973845883799
+        },
+        {
+          "ply": 29,
+          "games": 16947,
+          "mean_legal_moves": 15.908066324423201
+        },
+        {
+          "ply": 30,
+          "games": 16810,
+          "mean_legal_moves": 15.980249851279
+        },
+        {
+          "ply": 31,
+          "games": 16682,
+          "mean_legal_moves": 15.884366382927707
+        },
+        {
+          "ply": 32,
+          "games": 16542,
+          "mean_legal_moves": 15.930177729416032
+        },
+        {
+          "ply": 33,
+          "games": 16424,
+          "mean_legal_moves": 15.945993667803215
+        },
+        {
+          "ply": 34,
+          "games": 16284,
+          "mean_legal_moves": 15.935703758290346
+        },
+        {
+          "ply": 35,
+          "games": 16155,
+          "mean_legal_moves": 15.892293407613742
+        },
+        {
+          "ply": 36,
+          "games": 16037,
+          "mean_legal_moves": 15.962337095466733
+        },
+        {
+          "ply": 37,
+          "games": 15916,
+          "mean_legal_moves": 15.971726564463433
+        },
+        {
+          "ply": 38,
+          "games": 15808,
+          "mean_legal_moves": 15.933577935222672
+        },
+        {
+          "ply": 39,
+          "games": 15689,
+          "mean_legal_moves": 15.886544712856141
+        },
+        {
+          "ply": 40,
+          "games": 15534,
+          "mean_legal_moves": 16.068494914381358
+        },
+        {
+          "ply": 41,
+          "games": 15403,
+          "mean_legal_moves": 15.90677140816724
+        },
+        {
+          "ply": 42,
+          "games": 15281,
+          "mean_legal_moves": 15.98815522544336
+        },
+        {
+          "ply": 43,
+          "games": 15149,
+          "mean_legal_moves": 16.033005478909498
+        },
+        {
+          "ply": 44,
+          "games": 15030,
+          "mean_legal_moves": 15.91230871590153
+        },
+        {
+          "ply": 45,
+          "games": 14901,
+          "mean_legal_moves": 16.013824575531842
+        },
+        {
+          "ply": 46,
+          "games": 14782,
+          "mean_legal_moves": 15.972940062237857
+        },
+        {
+          "ply": 47,
+          "games": 14651,
+          "mean_legal_moves": 16.01522080404068
+        },
+        {
+          "ply": 48,
+          "games": 14521,
+          "mean_legal_moves": 15.856208250120515
+        },
+        {
+          "ply": 49,
+          "games": 14397,
+          "mean_legal_moves": 15.995276793776481
+        },
+        {
+          "ply": 50,
+          "games": 14281,
+          "mean_legal_moves": 15.983194454169876
+        },
+        {
+          "ply": 51,
+          "games": 14158,
+          "mean_legal_moves": 15.96758016669021
+        },
+        {
+          "ply": 52,
+          "games": 14058,
+          "mean_legal_moves": 15.925949637217244
+        },
+        {
+          "ply": 53,
+          "games": 13939,
+          "mean_legal_moves": 16.004591434105745
+        },
+        {
+          "ply": 54,
+          "games": 13816,
+          "mean_legal_moves": 15.953314997104806
+        },
+        {
+          "ply": 55,
+          "games": 13706,
+          "mean_legal_moves": 15.981030205749306
+        },
+        {
+          "ply": 56,
+          "games": 13592,
+          "mean_legal_moves": 15.90339905826957
+        },
+        {
+          "ply": 57,
+          "games": 13484,
+          "mean_legal_moves": 15.97448828240878
+        },
+        {
+          "ply": 58,
+          "games": 13384,
+          "mean_legal_moves": 15.973924088463837
+        },
+        {
+          "ply": 59,
+          "games": 13253,
+          "mean_legal_moves": 16.03025730023391
+        },
+        {
+          "ply": 60,
+          "games": 13152,
+          "mean_legal_moves": 15.888001824817518
+        },
+        {
+          "ply": 61,
+          "games": 13046,
+          "mean_legal_moves": 15.96795952782462
+        },
+        {
+          "ply": 62,
+          "games": 12919,
+          "mean_legal_moves": 15.972056660732255
+        },
+        {
+          "ply": 63,
+          "games": 12814,
+          "mean_legal_moves": 16.017324800998907
+        },
+        {
+          "ply": 64,
+          "games": 12717,
+          "mean_legal_moves": 16.02225367618149
+        },
+        {
+          "ply": 65,
+          "games": 12616,
+          "mean_legal_moves": 15.974001268230818
+        },
+        {
+          "ply": 66,
+          "games": 12517,
+          "mean_legal_moves": 15.99432771430854
+        },
+        {
+          "ply": 67,
+          "games": 12420,
+          "mean_legal_moves": 15.928099838969404
+        },
+        {
+          "ply": 68,
+          "games": 12318,
+          "mean_legal_moves": 15.952589706121124
+        },
+        {
+          "ply": 69,
+          "games": 12206,
+          "mean_legal_moves": 15.921677863345895
+        },
+        {
+          "ply": 70,
+          "games": 12110,
+          "mean_legal_moves": 15.940297274979356
+        },
+        {
+          "ply": 71,
+          "games": 12004,
+          "mean_legal_moves": 15.924691769410197
+        },
+        {
+          "ply": 72,
+          "games": 11894,
+          "mean_legal_moves": 15.96098873381537
+        },
+        {
+          "ply": 73,
+          "games": 11800,
+          "mean_legal_moves": 15.96313559322034
+        },
+        {
+          "ply": 74,
+          "games": 11701,
+          "mean_legal_moves": 15.99692333988548
+        },
+        {
+          "ply": 75,
+          "games": 11626,
+          "mean_legal_moves": 15.90959917426458
+        },
+        {
+          "ply": 76,
+          "games": 11524,
+          "mean_legal_moves": 15.996355432141618
+        },
+        {
+          "ply": 77,
+          "games": 11426,
+          "mean_legal_moves": 15.934535270435848
+        },
+        {
+          "ply": 78,
+          "games": 11337,
+          "mean_legal_moves": 15.931110523066067
+        },
+        {
+          "ply": 79,
+          "games": 11231,
+          "mean_legal_moves": 15.875790223488558
+        },
+        {
+          "ply": 80,
+          "games": 11149,
+          "mean_legal_moves": 16.006099201722126
+        },
+        {
+          "ply": 81,
+          "games": 11067,
+          "mean_legal_moves": 15.968735881449353
+        },
+        {
+          "ply": 82,
+          "games": 10969,
+          "mean_legal_moves": 15.945026893973926
+        },
+        {
+          "ply": 83,
+          "games": 10876,
+          "mean_legal_moves": 15.953475542478852
+        },
+        {
+          "ply": 84,
+          "games": 10782,
+          "mean_legal_moves": 15.897514375811538
+        },
+        {
+          "ply": 85,
+          "games": 10692,
+          "mean_legal_moves": 15.931911709689487
+        },
+        {
+          "ply": 86,
+          "games": 10595,
+          "mean_legal_moves": 15.988201982067013
+        },
+        {
+          "ply": 87,
+          "games": 10509,
+          "mean_legal_moves": 15.891236083357123
+        },
+        {
+          "ply": 88,
+          "games": 10421,
+          "mean_legal_moves": 16.014489972171578
+        },
+        {
+          "ply": 89,
+          "games": 10330,
+          "mean_legal_moves": 15.962923523717329
+        },
+        {
+          "ply": 90,
+          "games": 10252,
+          "mean_legal_moves": 15.971810378462738
+        },
+        {
+          "ply": 91,
+          "games": 10174,
+          "mean_legal_moves": 15.965205425594654
+        },
+        {
+          "ply": 92,
+          "games": 10080,
+          "mean_legal_moves": 15.983333333333333
+        },
+        {
+          "ply": 93,
+          "games": 9999,
+          "mean_legal_moves": 15.913991399139913
+        },
+        {
+          "ply": 94,
+          "games": 9933,
+          "mean_legal_moves": 15.978959025470653
+        },
+        {
+          "ply": 95,
+          "games": 9849,
+          "mean_legal_moves": 15.965580261955528
+        },
+        {
+          "ply": 96,
+          "games": 9769,
+          "mean_legal_moves": 15.973589927321118
+        },
+        {
+          "ply": 97,
+          "games": 9694,
+          "mean_legal_moves": 15.918403135960387
+        },
+        {
+          "ply": 98,
+          "games": 9614,
+          "mean_legal_moves": 16.013417932182236
+        },
+        {
+          "ply": 99,
+          "games": 9543,
+          "mean_legal_moves": 15.887875930001048
+        },
+        {
+          "ply": 100,
+          "games": 9468,
+          "mean_legal_moves": 15.969898605830165
+        },
+        {
+          "ply": 101,
+          "games": 9391,
+          "mean_legal_moves": 15.909487807475243
+        },
+        {
+          "ply": 102,
+          "games": 9326,
+          "mean_legal_moves": 15.953677889770534
+        },
+        {
+          "ply": 103,
+          "games": 9251,
+          "mean_legal_moves": 15.876013403956328
+        },
+        {
+          "ply": 104,
+          "games": 9167,
+          "mean_legal_moves": 15.954728918948401
+        },
+        {
+          "ply": 105,
+          "games": 9095,
+          "mean_legal_moves": 15.912479384277075
+        },
+        {
+          "ply": 106,
+          "games": 9011,
+          "mean_legal_moves": 15.94850737986905
+        },
+        {
+          "ply": 107,
+          "games": 8932,
+          "mean_legal_moves": 16.050044782803404
+        },
+        {
+          "ply": 108,
+          "games": 8871,
+          "mean_legal_moves": 15.927403900349454
+        },
+        {
+          "ply": 109,
+          "games": 8802,
+          "mean_legal_moves": 15.991933651442855
+        },
+        {
+          "ply": 110,
+          "games": 8734,
+          "mean_legal_moves": 15.909548889397756
+        },
+        {
+          "ply": 111,
+          "games": 8654,
+          "mean_legal_moves": 15.985324705338572
+        },
+        {
+          "ply": 112,
+          "games": 8583,
+          "mean_legal_moves": 15.88418967726902
+        },
+        {
+          "ply": 113,
+          "games": 8515,
+          "mean_legal_moves": 15.965942454492072
+        },
+        {
+          "ply": 114,
+          "games": 8452,
+          "mean_legal_moves": 15.918362517747278
+        },
+        {
+          "ply": 115,
+          "games": 8389,
+          "mean_legal_moves": 16.081773751341043
+        },
+        {
+          "ply": 116,
+          "games": 8321,
+          "mean_legal_moves": 15.858430477106117
+        },
+        {
+          "ply": 117,
+          "games": 8255,
+          "mean_legal_moves": 15.9671714112659
+        },
+        {
+          "ply": 118,
+          "games": 8197,
+          "mean_legal_moves": 15.993046236427961
+        },
+        {
+          "ply": 119,
+          "games": 8127,
+          "mean_legal_moves": 15.927156392272671
+        },
+        {
+          "ply": 120,
+          "games": 8065,
+          "mean_legal_moves": 15.8820830750155
+        },
+        {
+          "ply": 121,
+          "games": 8002,
+          "mean_legal_moves": 15.993501624593852
+        },
+        {
+          "ply": 122,
+          "games": 7932,
+          "mean_legal_moves": 16.018028240040344
+        },
+        {
+          "ply": 123,
+          "games": 7865,
+          "mean_legal_moves": 15.934774316592499
+        },
+        {
+          "ply": 124,
+          "games": 7805,
+          "mean_legal_moves": 16.08122998078155
+        },
+        {
+          "ply": 125,
+          "games": 7737,
+          "mean_legal_moves": 15.9037094481065
+        },
+        {
+          "ply": 126,
+          "games": 7672,
+          "mean_legal_moves": 15.981360792492179
+        },
+        {
+          "ply": 127,
+          "games": 7610,
+          "mean_legal_moves": 15.927726675427069
+        },
+        {
+          "ply": 128,
+          "games": 7546,
+          "mean_legal_moves": 15.93731778425656
+        },
+        {
+          "ply": 129,
+          "games": 7491,
+          "mean_legal_moves": 15.922306768121747
+        },
+        {
+          "ply": 130,
+          "games": 7446,
+          "mean_legal_moves": 16.032097770615096
+        },
+        {
+          "ply": 131,
+          "games": 7392,
+          "mean_legal_moves": 15.8612012987013
+        },
+        {
+          "ply": 132,
+          "games": 7324,
+          "mean_legal_moves": 15.97405789186237
+        },
+        {
+          "ply": 133,
+          "games": 7259,
+          "mean_legal_moves": 15.94158975065436
+        },
+        {
+          "ply": 134,
+          "games": 7207,
+          "mean_legal_moves": 15.930345497433052
+        },
+        {
+          "ply": 135,
+          "games": 7145,
+          "mean_legal_moves": 15.952694191742477
+        },
+        {
+          "ply": 136,
+          "games": 7082,
+          "mean_legal_moves": 15.830979949166903
+        },
+        {
+          "ply": 137,
+          "games": 7022,
+          "mean_legal_moves": 16.024067217317004
+        },
+        {
+          "ply": 138,
+          "games": 6951,
+          "mean_legal_moves": 15.832398216084016
+        },
+        {
+          "ply": 139,
+          "games": 6890,
+          "mean_legal_moves": 16.0355587808418
+        },
+        {
+          "ply": 140,
+          "games": 6827,
+          "mean_legal_moves": 15.826278013768858
+        },
+        {
+          "ply": 141,
+          "games": 6772,
+          "mean_legal_moves": 16.052717070289425
+        },
+        {
+          "ply": 142,
+          "games": 6715,
+          "mean_legal_moves": 15.912137006701414
+        },
+        {
+          "ply": 143,
+          "games": 6658,
+          "mean_legal_moves": 15.934815259837789
+        },
+        {
+          "ply": 144,
+          "games": 6605,
+          "mean_legal_moves": 15.888720666161998
+        },
+        {
+          "ply": 145,
+          "games": 6542,
+          "mean_legal_moves": 16.059614796698256
+        },
+        {
+          "ply": 146,
+          "games": 6487,
+          "mean_legal_moves": 15.86912286110683
+        },
+        {
+          "ply": 147,
+          "games": 6433,
+          "mean_legal_moves": 16.134462925540184
+        },
+        {
+          "ply": 148,
+          "games": 6383,
+          "mean_legal_moves": 15.865110449631835
+        },
+        {
+          "ply": 149,
+          "games": 6332,
+          "mean_legal_moves": 16.11923562855338
+        },
+        {
+          "ply": 150,
+          "games": 6288,
+          "mean_legal_moves": 15.98043893129771
+        },
+        {
+          "ply": 151,
+          "games": 6246,
+          "mean_legal_moves": 16.006564201088697
+        },
+        {
+          "ply": 152,
+          "games": 6201,
+          "mean_legal_moves": 15.980809546847283
+        },
+        {
+          "ply": 153,
+          "games": 6160,
+          "mean_legal_moves": 15.94594155844156
+        },
+        {
+          "ply": 154,
+          "games": 6098,
+          "mean_legal_moves": 15.960970810101673
+        },
+        {
+          "ply": 155,
+          "games": 6036,
+          "mean_legal_moves": 15.939695162359179
+        },
+        {
+          "ply": 156,
+          "games": 5993,
+          "mean_legal_moves": 16.09594526948106
+        },
+        {
+          "ply": 157,
+          "games": 5954,
+          "mean_legal_moves": 15.90796103459859
+        },
+        {
+          "ply": 158,
+          "games": 5913,
+          "mean_legal_moves": 16.02266193133773
+        },
+        {
+          "ply": 159,
+          "games": 5859,
+          "mean_legal_moves": 16.04232804232804
+        },
+        {
+          "ply": 160,
+          "games": 5808,
+          "mean_legal_moves": 15.964359504132231
+        },
+        {
+          "ply": 161,
+          "games": 5764,
+          "mean_legal_moves": 16.0029493407356
+        },
+        {
+          "ply": 162,
+          "games": 5707,
+          "mean_legal_moves": 15.957946381636587
+        },
+        {
+          "ply": 163,
+          "games": 5657,
+          "mean_legal_moves": 15.9351246243592
+        },
+        {
+          "ply": 164,
+          "games": 5605,
+          "mean_legal_moves": 16.03978590544157
+        },
+        {
+          "ply": 165,
+          "games": 5553,
+          "mean_legal_moves": 15.900234107689537
+        },
+        {
+          "ply": 166,
+          "games": 5504,
+          "mean_legal_moves": 16.032885174418606
+        },
+        {
+          "ply": 167,
+          "games": 5459,
+          "mean_legal_moves": 15.916101850155707
+        },
+        {
+          "ply": 168,
+          "games": 5407,
+          "mean_legal_moves": 16.035139633808026
+        },
+        {
+          "ply": 169,
+          "games": 5362,
+          "mean_legal_moves": 15.859007832898172
+        },
+        {
+          "ply": 170,
+          "games": 5306,
+          "mean_legal_moves": 16.05842442517904
+        },
+        {
+          "ply": 171,
+          "games": 5272,
+          "mean_legal_moves": 15.855083459787556
+        },
+        {
+          "ply": 172,
+          "games": 5226,
+          "mean_legal_moves": 16.065059318790663
+        },
+        {
+          "ply": 173,
+          "games": 5189,
+          "mean_legal_moves": 15.82983233763731
+        },
+        {
+          "ply": 174,
+          "games": 5140,
+          "mean_legal_moves": 16.127821011673152
+        },
+        {
+          "ply": 175,
+          "games": 5100,
+          "mean_legal_moves": 15.93686274509804
+        },
+        {
+          "ply": 176,
+          "games": 5059,
+          "mean_legal_moves": 15.913619292350267
+        },
+        {
+          "ply": 177,
+          "games": 5027,
+          "mean_legal_moves": 16.017306544658844
+        },
+        {
+          "ply": 178,
+          "games": 5000,
+          "mean_legal_moves": 15.9892
+        },
+        {
+          "ply": 179,
+          "games": 4961,
+          "mean_legal_moves": 15.963112275750857
+        },
+        {
+          "ply": 180,
+          "games": 4919,
+          "mean_legal_moves": 15.950193128684692
+        },
+        {
+          "ply": 181,
+          "games": 4880,
+          "mean_legal_moves": 15.88032786885246
+        },
+        {
+          "ply": 182,
+          "games": 4839,
+          "mean_legal_moves": 15.926431080801818
+        },
+        {
+          "ply": 183,
+          "games": 4796,
+          "mean_legal_moves": 15.97185154295246
+        },
+        {
+          "ply": 184,
+          "games": 4768,
+          "mean_legal_moves": 15.800755033557047
+        },
+        {
+          "ply": 185,
+          "games": 4736,
+          "mean_legal_moves": 15.963471283783784
+        },
+        {
+          "ply": 186,
+          "games": 4696,
+          "mean_legal_moves": 16.025340715502555
+        },
+        {
+          "ply": 187,
+          "games": 4654,
+          "mean_legal_moves": 15.87709497206704
+        },
+        {
+          "ply": 188,
+          "games": 4619,
+          "mean_legal_moves": 16.01580428664213
+        },
+        {
+          "ply": 189,
+          "games": 4589,
+          "mean_legal_moves": 15.783612987578993
+        },
+        {
+          "ply": 190,
+          "games": 4547,
+          "mean_legal_moves": 16.07917308115241
+        },
+        {
+          "ply": 191,
+          "games": 4506,
+          "mean_legal_moves": 15.948735019973368
+        },
+        {
+          "ply": 192,
+          "games": 4470,
+          "mean_legal_moves": 15.931543624161074
+        },
+        {
+          "ply": 193,
+          "games": 4438,
+          "mean_legal_moves": 16.021406038756197
+        },
+        {
+          "ply": 194,
+          "games": 4407,
+          "mean_legal_moves": 15.788972089857046
+        },
+        {
+          "ply": 195,
+          "games": 4380,
+          "mean_legal_moves": 16.03698630136986
+        },
+        {
+          "ply": 196,
+          "games": 4331,
+          "mean_legal_moves": 15.942969291156777
+        },
+        {
+          "ply": 197,
+          "games": 4294,
+          "mean_legal_moves": 16.02771308802981
+        },
+        {
+          "ply": 198,
+          "games": 4260,
+          "mean_legal_moves": 15.833333333333334
+        },
+        {
+          "ply": 199,
+          "games": 4230,
+          "mean_legal_moves": 16.17304964539007
+        },
+        {
+          "ply": 200,
+          "games": 4196,
+          "mean_legal_moves": 15.830314585319352
+        },
+        {
+          "ply": 201,
+          "games": 4161,
+          "mean_legal_moves": 16.1521268925739
+        },
+        {
+          "ply": 202,
+          "games": 4127,
+          "mean_legal_moves": 15.780470075115096
+        },
+        {
+          "ply": 203,
+          "games": 4098,
+          "mean_legal_moves": 16.03001464128843
+        },
+        {
+          "ply": 204,
+          "games": 4061,
+          "mean_legal_moves": 15.805220389066733
+        },
+        {
+          "ply": 205,
+          "games": 4030,
+          "mean_legal_moves": 16.142183622828785
+        },
+        {
+          "ply": 206,
+          "games": 3997,
+          "mean_legal_moves": 15.85864398298724
+        },
+        {
+          "ply": 207,
+          "games": 3969,
+          "mean_legal_moves": 16.039052658100278
+        },
+        {
+          "ply": 208,
+          "games": 3934,
+          "mean_legal_moves": 15.904168784951704
+        },
+        {
+          "ply": 209,
+          "games": 3902,
+          "mean_legal_moves": 15.90235776524859
+        },
+        {
+          "ply": 210,
+          "games": 3872,
+          "mean_legal_moves": 15.87680785123967
+        },
+        {
+          "ply": 211,
+          "games": 3840,
+          "mean_legal_moves": 15.99765625
+        },
+        {
+          "ply": 212,
+          "games": 3824,
+          "mean_legal_moves": 15.905334728033473
+        },
+        {
+          "ply": 213,
+          "games": 3785,
+          "mean_legal_moves": 16.010303830911493
+        },
+        {
+          "ply": 214,
+          "games": 3747,
+          "mean_legal_moves": 15.893247931678676
+        },
+        {
+          "ply": 215,
+          "games": 3717,
+          "mean_legal_moves": 15.968792036588647
+        },
+        {
+          "ply": 216,
+          "games": 3697,
+          "mean_legal_moves": 15.968623208006491
+        },
+        {
+          "ply": 217,
+          "games": 3659,
+          "mean_legal_moves": 15.832194588685434
+        },
+        {
+          "ply": 218,
+          "games": 3634,
+          "mean_legal_moves": 16.104292790313703
+        },
+        {
+          "ply": 219,
+          "games": 3604,
+          "mean_legal_moves": 15.809378468368479
+        },
+        {
+          "ply": 220,
+          "games": 3576,
+          "mean_legal_moves": 15.996644295302014
+        },
+        {
+          "ply": 221,
+          "games": 3548,
+          "mean_legal_moves": 15.96674182638106
+        },
+        {
+          "ply": 222,
+          "games": 3517,
+          "mean_legal_moves": 15.834233721922093
+        },
+        {
+          "ply": 223,
+          "games": 3480,
+          "mean_legal_moves": 16.07126436781609
+        },
+        {
+          "ply": 224,
+          "games": 3458,
+          "mean_legal_moves": 15.622035858877965
+        },
+        {
+          "ply": 225,
+          "games": 3421,
+          "mean_legal_moves": 16.037123648056124
+        },
+        {
+          "ply": 226,
+          "games": 3398,
+          "mean_legal_moves": 15.763095938787522
+        },
+        {
+          "ply": 227,
+          "games": 3376,
+          "mean_legal_moves": 16.04265402843602
+        },
+        {
+          "ply": 228,
+          "games": 3335,
+          "mean_legal_moves": 15.996701649175412
+        },
+        {
+          "ply": 229,
+          "games": 3300,
+          "mean_legal_moves": 16.06030303030303
+        },
+        {
+          "ply": 230,
+          "games": 3277,
+          "mean_legal_moves": 15.936527311565456
+        },
+        {
+          "ply": 231,
+          "games": 3249,
+          "mean_legal_moves": 15.99661434287473
+        },
+        {
+          "ply": 232,
+          "games": 3224,
+          "mean_legal_moves": 15.968672456575682
+        },
+        {
+          "ply": 233,
+          "games": 3201,
+          "mean_legal_moves": 15.959075288972196
+        },
+        {
+          "ply": 234,
+          "games": 3168,
+          "mean_legal_moves": 15.920454545454545
+        },
+        {
+          "ply": 235,
+          "games": 3141,
+          "mean_legal_moves": 15.849411015600127
+        },
+        {
+          "ply": 236,
+          "games": 3118,
+          "mean_legal_moves": 15.91853752405388
+        },
+        {
+          "ply": 237,
+          "games": 3084,
+          "mean_legal_moves": 15.98313878080415
+        },
+        {
+          "ply": 238,
+          "games": 3061,
+          "mean_legal_moves": 15.99313949689644
+        },
+        {
+          "ply": 239,
+          "games": 3030,
+          "mean_legal_moves": 15.948514851485148
+        },
+        {
+          "ply": 240,
+          "games": 3007,
+          "mean_legal_moves": 15.908546724309943
+        },
+        {
+          "ply": 241,
+          "games": 2981,
+          "mean_legal_moves": 15.895672593089568
+        },
+        {
+          "ply": 242,
+          "games": 2955,
+          "mean_legal_moves": 15.966835871404399
+        },
+        {
+          "ply": 243,
+          "games": 2924,
+          "mean_legal_moves": 16.0249658002736
+        },
+        {
+          "ply": 244,
+          "games": 2903,
+          "mean_legal_moves": 15.934205993799518
+        },
+        {
+          "ply": 245,
+          "games": 2886,
+          "mean_legal_moves": 16.05232155232155
+        },
+        {
+          "ply": 246,
+          "games": 2862,
+          "mean_legal_moves": 15.85674353598882
+        },
+        {
+          "ply": 247,
+          "games": 2839,
+          "mean_legal_moves": 15.805213103205354
+        },
+        {
+          "ply": 248,
+          "games": 2815,
+          "mean_legal_moves": 16.00177619893428
+        },
+        {
+          "ply": 249,
+          "games": 2793,
+          "mean_legal_moves": 15.989616899391336
+        },
+        {
+          "ply": 250,
+          "games": 2773,
+          "mean_legal_moves": 15.956725567976921
+        },
+        {
+          "ply": 251,
+          "games": 2748,
+          "mean_legal_moves": 15.87882096069869
+        },
+        {
+          "ply": 252,
+          "games": 2725,
+          "mean_legal_moves": 15.930275229357798
+        },
+        {
+          "ply": 253,
+          "games": 2711,
+          "mean_legal_moves": 16.00959055699004
+        },
+        {
+          "ply": 254,
+          "games": 2685,
+          "mean_legal_moves": 15.776163873370578
+        },
+        {
+          "ply": 255,
+          "games": 2670,
+          "mean_legal_moves": 15.873033707865169
+        },
+        {
+          "ply": 256,
+          "games": 2646,
+          "mean_legal_moves": 15.9572940287226
+        },
+        {
+          "ply": 257,
+          "games": 2623,
+          "mean_legal_moves": 15.941288600838734
+        },
+        {
+          "ply": 258,
+          "games": 2604,
+          "mean_legal_moves": 15.851382488479263
+        },
+        {
+          "ply": 259,
+          "games": 2578,
+          "mean_legal_moves": 15.87121799844841
+        },
+        {
+          "ply": 260,
+          "games": 2559,
+          "mean_legal_moves": 15.999218444704963
+        },
+        {
+          "ply": 261,
+          "games": 2530,
+          "mean_legal_moves": 15.91304347826087
+        },
+        {
+          "ply": 262,
+          "games": 2511,
+          "mean_legal_moves": 16.05416168857029
+        },
+        {
+          "ply": 263,
+          "games": 2493,
+          "mean_legal_moves": 15.890092258323305
+        },
+        {
+          "ply": 264,
+          "games": 2478,
+          "mean_legal_moves": 16.053268765133172
+        },
+        {
+          "ply": 265,
+          "games": 2462,
+          "mean_legal_moves": 15.756701868399675
+        },
+        {
+          "ply": 266,
+          "games": 2445,
+          "mean_legal_moves": 16.006952965235175
+        },
+        {
+          "ply": 267,
+          "games": 2417,
+          "mean_legal_moves": 15.894083574679355
+        },
+        {
+          "ply": 268,
+          "games": 2395,
+          "mean_legal_moves": 16.10062630480167
+        },
+        {
+          "ply": 269,
+          "games": 2380,
+          "mean_legal_moves": 15.849579831932774
+        },
+        {
+          "ply": 270,
+          "games": 2363,
+          "mean_legal_moves": 16.192975031739316
+        },
+        {
+          "ply": 271,
+          "games": 2345,
+          "mean_legal_moves": 15.84136460554371
+        },
+        {
+          "ply": 272,
+          "games": 2326,
+          "mean_legal_moves": 16.103611349957006
+        },
+        {
+          "ply": 273,
+          "games": 2306,
+          "mean_legal_moves": 15.770164787510842
+        },
+        {
+          "ply": 274,
+          "games": 2289,
+          "mean_legal_moves": 16.191786806465707
+        },
+        {
+          "ply": 275,
+          "games": 2264,
+          "mean_legal_moves": 15.889575971731448
+        },
+        {
+          "ply": 276,
+          "games": 2243,
+          "mean_legal_moves": 16.15113687026304
+        },
+        {
+          "ply": 277,
+          "games": 2221,
+          "mean_legal_moves": 15.95677622692481
+        },
+        {
+          "ply": 278,
+          "games": 2207,
+          "mean_legal_moves": 16.090167648391482
+        },
+        {
+          "ply": 279,
+          "games": 2190,
+          "mean_legal_moves": 16.07853881278539
+        },
+        {
+          "ply": 280,
+          "games": 2180,
+          "mean_legal_moves": 15.860550458715597
+        },
+        {
+          "ply": 281,
+          "games": 2161,
+          "mean_legal_moves": 16.07866728366497
+        },
+        {
+          "ply": 282,
+          "games": 2140,
+          "mean_legal_moves": 15.866822429906541
+        },
+        {
+          "ply": 283,
+          "games": 2129,
+          "mean_legal_moves": 15.839361202442461
+        },
+        {
+          "ply": 284,
+          "games": 2112,
+          "mean_legal_moves": 15.974431818181818
+        },
+        {
+          "ply": 285,
+          "games": 2094,
+          "mean_legal_moves": 15.785100286532952
+        },
+        {
+          "ply": 286,
+          "games": 2075,
+          "mean_legal_moves": 16.054939759036145
+        },
+        {
+          "ply": 287,
+          "games": 2060,
+          "mean_legal_moves": 15.9
+        },
+        {
+          "ply": 288,
+          "games": 2043,
+          "mean_legal_moves": 15.966715614292706
+        },
+        {
+          "ply": 289,
+          "games": 2021,
+          "mean_legal_moves": 15.836219693221178
+        },
+        {
+          "ply": 290,
+          "games": 2009,
+          "mean_legal_moves": 15.894474863115978
+        },
+        {
+          "ply": 291,
+          "games": 1991,
+          "mean_legal_moves": 15.822199899547966
+        },
+        {
+          "ply": 292,
+          "games": 1977,
+          "mean_legal_moves": 16.039959534648457
+        },
+        {
+          "ply": 293,
+          "games": 1957,
+          "mean_legal_moves": 15.975983648441492
+        },
+        {
+          "ply": 294,
+          "games": 1949,
+          "mean_legal_moves": 15.984094407388405
+        },
+        {
+          "ply": 295,
+          "games": 1932,
+          "mean_legal_moves": 16.255175983436853
+        },
+        {
+          "ply": 296,
+          "games": 1904,
+          "mean_legal_moves": 15.784138655462185
+        },
+        {
+          "ply": 297,
+          "games": 1891,
+          "mean_legal_moves": 15.860391327340032
+        },
+        {
+          "ply": 298,
+          "games": 1878,
+          "mean_legal_moves": 15.781150159744408
+        },
+        {
+          "ply": 299,
+          "games": 1860,
+          "mean_legal_moves": 15.923118279569893
+        },
+        {
+          "ply": 300,
+          "games": 1842,
+          "mean_legal_moves": 15.82084690553746
+        },
+        {
+          "ply": 301,
+          "games": 1830,
+          "mean_legal_moves": 16.005464480874316
+        },
+        {
+          "ply": 302,
+          "games": 1825,
+          "mean_legal_moves": 15.913424657534247
+        },
+        {
+          "ply": 303,
+          "games": 1810,
+          "mean_legal_moves": 15.958011049723757
+        },
+        {
+          "ply": 304,
+          "games": 1795,
+          "mean_legal_moves": 15.870194986072423
+        },
+        {
+          "ply": 305,
+          "games": 1781,
+          "mean_legal_moves": 16.17630544637844
+        },
+        {
+          "ply": 306,
+          "games": 1771,
+          "mean_legal_moves": 15.483907396950876
+        },
+        {
+          "ply": 307,
+          "games": 1764,
+          "mean_legal_moves": 16.145691609977323
+        },
+        {
+          "ply": 308,
+          "games": 1756,
+          "mean_legal_moves": 15.716400911161731
+        },
+        {
+          "ply": 309,
+          "games": 1747,
+          "mean_legal_moves": 16.187178019461935
+        },
+        {
+          "ply": 310,
+          "games": 1723,
+          "mean_legal_moves": 15.912942542077772
+        },
+        {
+          "ply": 311,
+          "games": 1708,
+          "mean_legal_moves": 15.980093676814988
+        },
+        {
+          "ply": 312,
+          "games": 1696,
+          "mean_legal_moves": 15.961674528301886
+        },
+        {
+          "ply": 313,
+          "games": 1687,
+          "mean_legal_moves": 16.028452874925904
+        },
+        {
+          "ply": 314,
+          "games": 1676,
+          "mean_legal_moves": 16.048926014319807
+        },
+        {
+          "ply": 315,
+          "games": 1666,
+          "mean_legal_moves": 15.743097238895558
+        },
+        {
+          "ply": 316,
+          "games": 1645,
+          "mean_legal_moves": 16.071732522796353
+        },
+        {
+          "ply": 317,
+          "games": 1636,
+          "mean_legal_moves": 15.885085574572127
+        },
+        {
+          "ply": 318,
+          "games": 1628,
+          "mean_legal_moves": 15.978501228501228
+        },
+        {
+          "ply": 319,
+          "games": 1621,
+          "mean_legal_moves": 16.099321406539172
+        },
+        {
+          "ply": 320,
+          "games": 1616,
+          "mean_legal_moves": 16.191212871287128
+        },
+        {
+          "ply": 321,
+          "games": 1607,
+          "mean_legal_moves": 15.843186060983198
+        },
+        {
+          "ply": 322,
+          "games": 1596,
+          "mean_legal_moves": 16.328320802005013
+        },
+        {
+          "ply": 323,
+          "games": 1576,
+          "mean_legal_moves": 15.684644670050762
+        },
+        {
+          "ply": 324,
+          "games": 1564,
+          "mean_legal_moves": 16.20012787723785
+        },
+        {
+          "ply": 325,
+          "games": 1549,
+          "mean_legal_moves": 15.92963202065849
+        },
+        {
+          "ply": 326,
+          "games": 1538,
+          "mean_legal_moves": 15.971391417425227
+        },
+        {
+          "ply": 327,
+          "games": 1526,
+          "mean_legal_moves": 15.894495412844037
+        },
+        {
+          "ply": 328,
+          "games": 1514,
+          "mean_legal_moves": 15.897622192866578
+        },
+        {
+          "ply": 329,
+          "games": 1500,
+          "mean_legal_moves": 15.841333333333333
+        },
+        {
+          "ply": 330,
+          "games": 1485,
+          "mean_legal_moves": 15.903030303030302
+        },
+        {
+          "ply": 331,
+          "games": 1475,
+          "mean_legal_moves": 15.733559322033898
+        },
+        {
+          "ply": 332,
+          "games": 1464,
+          "mean_legal_moves": 15.932377049180328
+        },
+        {
+          "ply": 333,
+          "games": 1448,
+          "mean_legal_moves": 15.925414364640885
+        },
+        {
+          "ply": 334,
+          "games": 1438,
+          "mean_legal_moves": 15.915159944367177
+        },
+        {
+          "ply": 335,
+          "games": 1425,
+          "mean_legal_moves": 15.95859649122807
+        },
+        {
+          "ply": 336,
+          "games": 1415,
+          "mean_legal_moves": 16.028975265017667
+        },
+        {
+          "ply": 337,
+          "games": 1403,
+          "mean_legal_moves": 15.879543834640057
+        },
+        {
+          "ply": 338,
+          "games": 1394,
+          "mean_legal_moves": 16.040172166427546
+        },
+        {
+          "ply": 339,
+          "games": 1374,
+          "mean_legal_moves": 15.692867540029113
+        },
+        {
+          "ply": 340,
+          "games": 1364,
+          "mean_legal_moves": 16.10923753665689
+        },
+        {
+          "ply": 341,
+          "games": 1349,
+          "mean_legal_moves": 15.816160118606374
+        },
+        {
+          "ply": 342,
+          "games": 1338,
+          "mean_legal_moves": 16.16965620328849
+        },
+        {
+          "ply": 343,
+          "games": 1327,
+          "mean_legal_moves": 15.869630746043708
+        },
+        {
+          "ply": 344,
+          "games": 1322,
+          "mean_legal_moves": 15.959909228441754
+        },
+        {
+          "ply": 345,
+          "games": 1313,
+          "mean_legal_moves": 15.876618431073876
+        },
+        {
+          "ply": 346,
+          "games": 1300,
+          "mean_legal_moves": 16.12153846153846
+        },
+        {
+          "ply": 347,
+          "games": 1283,
+          "mean_legal_moves": 15.899454403741231
+        },
+        {
+          "ply": 348,
+          "games": 1274,
+          "mean_legal_moves": 15.832810047095762
+        },
+        {
+          "ply": 349,
+          "games": 1264,
+          "mean_legal_moves": 15.744462025316455
+        },
+        {
+          "ply": 350,
+          "games": 1258,
+          "mean_legal_moves": 15.789348171701112
+        },
+        {
+          "ply": 351,
+          "games": 1247,
+          "mean_legal_moves": 15.586206896551724
+        },
+        {
+          "ply": 352,
+          "games": 1237,
+          "mean_legal_moves": 16.0250606305578
+        },
+        {
+          "ply": 353,
+          "games": 1226,
+          "mean_legal_moves": 15.62642740619902
+        },
+        {
+          "ply": 354,
+          "games": 1220,
+          "mean_legal_moves": 15.964754098360656
+        },
+        {
+          "ply": 355,
+          "games": 1206,
+          "mean_legal_moves": 16.119402985074625
+        },
+        {
+          "ply": 356,
+          "games": 1192,
+          "mean_legal_moves": 15.865771812080537
+        },
+        {
+          "ply": 357,
+          "games": 1184,
+          "mean_legal_moves": 16.183277027027028
+        },
+        {
+          "ply": 358,
+          "games": 1172,
+          "mean_legal_moves": 16.031569965870307
+        },
+        {
+          "ply": 359,
+          "games": 1160,
+          "mean_legal_moves": 16.44655172413793
+        },
+        {
+          "ply": 360,
+          "games": 1158,
+          "mean_legal_moves": 15.816062176165802
+        },
+        {
+          "ply": 361,
+          "games": 1151,
+          "mean_legal_moves": 16.252823631624675
+        },
+        {
+          "ply": 362,
+          "games": 1141,
+          "mean_legal_moves": 15.776511831726555
+        },
+        {
+          "ply": 363,
+          "games": 1133,
+          "mean_legal_moves": 16.23477493380406
+        },
+        {
+          "ply": 364,
+          "games": 1118,
+          "mean_legal_moves": 15.913237924865832
+        },
+        {
+          "ply": 365,
+          "games": 1112,
+          "mean_legal_moves": 16.070143884892087
+        },
+        {
+          "ply": 366,
+          "games": 1108,
+          "mean_legal_moves": 15.967509025270758
+        },
+        {
+          "ply": 367,
+          "games": 1101,
+          "mean_legal_moves": 16.00363306085377
+        },
+        {
+          "ply": 368,
+          "games": 1093,
+          "mean_legal_moves": 16.024702653247942
+        },
+        {
+          "ply": 369,
+          "games": 1086,
+          "mean_legal_moves": 16.056169429097604
+        },
+        {
+          "ply": 370,
+          "games": 1081,
+          "mean_legal_moves": 15.932469935245143
+        },
+        {
+          "ply": 371,
+          "games": 1069,
+          "mean_legal_moves": 16.174929840972872
+        },
+        {
+          "ply": 372,
+          "games": 1064,
+          "mean_legal_moves": 15.673872180451127
+        },
+        {
+          "ply": 373,
+          "games": 1054,
+          "mean_legal_moves": 16.22675521821632
+        },
+        {
+          "ply": 374,
+          "games": 1043,
+          "mean_legal_moves": 15.826462128475551
+        },
+        {
+          "ply": 375,
+          "games": 1031,
+          "mean_legal_moves": 16.093113482056257
+        },
+        {
+          "ply": 376,
+          "games": 1018,
+          "mean_legal_moves": 15.841846758349705
+        },
+        {
+          "ply": 377,
+          "games": 1011,
+          "mean_legal_moves": 16.179030662710186
+        },
+        {
+          "ply": 378,
+          "games": 999,
+          "mean_legal_moves": 15.945945945945946
+        },
+        {
+          "ply": 379,
+          "games": 993,
+          "mean_legal_moves": 15.899295065458208
+        },
+        {
+          "ply": 380,
+          "games": 986,
+          "mean_legal_moves": 16.023326572008113
+        },
+        {
+          "ply": 381,
+          "games": 978,
+          "mean_legal_moves": 15.98875255623722
+        },
+        {
+          "ply": 382,
+          "games": 966,
+          "mean_legal_moves": 16.001035196687372
+        },
+        {
+          "ply": 383,
+          "games": 957,
+          "mean_legal_moves": 16.117032392894462
+        },
+        {
+          "ply": 384,
+          "games": 948,
+          "mean_legal_moves": 15.963080168776372
+        },
+        {
+          "ply": 385,
+          "games": 938,
+          "mean_legal_moves": 16.00319829424307
+        },
+        {
+          "ply": 386,
+          "games": 929,
+          "mean_legal_moves": 15.919268030139936
+        },
+        {
+          "ply": 387,
+          "games": 921,
+          "mean_legal_moves": 15.761129207383279
+        },
+        {
+          "ply": 388,
+          "games": 914,
+          "mean_legal_moves": 15.87636761487965
+        },
+        {
+          "ply": 389,
+          "games": 904,
+          "mean_legal_moves": 15.89712389380531
+        },
+        {
+          "ply": 390,
+          "games": 897,
+          "mean_legal_moves": 16.225195094760313
+        },
+        {
+          "ply": 391,
+          "games": 891,
+          "mean_legal_moves": 15.775533108866442
+        },
+        {
+          "ply": 392,
+          "games": 883,
+          "mean_legal_moves": 16.36466591166478
+        },
+        {
+          "ply": 393,
+          "games": 880,
+          "mean_legal_moves": 15.660227272727273
+        },
+        {
+          "ply": 394,
+          "games": 879,
+          "mean_legal_moves": 16.341296928327644
+        },
+        {
+          "ply": 395,
+          "games": 866,
+          "mean_legal_moves": 15.870669745958429
+        },
+        {
+          "ply": 396,
+          "games": 860,
+          "mean_legal_moves": 16.22093023255814
+        },
+        {
+          "ply": 397,
+          "games": 854,
+          "mean_legal_moves": 15.648711943793911
+        },
+        {
+          "ply": 398,
+          "games": 848,
+          "mean_legal_moves": 16.09198113207547
+        },
+        {
+          "ply": 399,
+          "games": 841,
+          "mean_legal_moves": 15.794292508917955
+        },
+        {
+          "ply": 400,
+          "games": 829,
+          "mean_legal_moves": 16.01447527141134
+        },
+        {
+          "ply": 401,
+          "games": 815,
+          "mean_legal_moves": 16.296932515337424
+        },
+        {
+          "ply": 402,
+          "games": 809,
+          "mean_legal_moves": 15.84919653893696
+        },
+        {
+          "ply": 403,
+          "games": 805,
+          "mean_legal_moves": 16.211180124223603
+        },
+        {
+          "ply": 404,
+          "games": 798,
+          "mean_legal_moves": 15.661654135338345
+        },
+        {
+          "ply": 405,
+          "games": 793,
+          "mean_legal_moves": 16.01513240857503
+        },
+        {
+          "ply": 406,
+          "games": 784,
+          "mean_legal_moves": 16.03061224489796
+        },
+        {
+          "ply": 407,
+          "games": 781,
+          "mean_legal_moves": 16.06145966709347
+        },
+        {
+          "ply": 408,
+          "games": 775,
+          "mean_legal_moves": 15.749677419354839
+        },
+        {
+          "ply": 409,
+          "games": 773,
+          "mean_legal_moves": 16.135834411384216
+        },
+        {
+          "ply": 410,
+          "games": 768,
+          "mean_legal_moves": 15.959635416666666
+        },
+        {
+          "ply": 411,
+          "games": 761,
+          "mean_legal_moves": 16.176084099868593
+        },
+        {
+          "ply": 412,
+          "games": 757,
+          "mean_legal_moves": 15.997357992073976
+        },
+        {
+          "ply": 413,
+          "games": 750,
+          "mean_legal_moves": 16.0
+        },
+        {
+          "ply": 414,
+          "games": 742,
+          "mean_legal_moves": 16.258760107816713
+        },
+        {
+          "ply": 415,
+          "games": 737,
+          "mean_legal_moves": 16.006784260515605
+        },
+        {
+          "ply": 416,
+          "games": 729,
+          "mean_legal_moves": 16.12894375857339
+        },
+        {
+          "ply": 417,
+          "games": 723,
+          "mean_legal_moves": 15.409405255878285
+        },
+        {
+          "ply": 418,
+          "games": 717,
+          "mean_legal_moves": 15.95397489539749
+        },
+        {
+          "ply": 419,
+          "games": 709,
+          "mean_legal_moves": 16.073342736248236
+        },
+        {
+          "ply": 420,
+          "games": 698,
+          "mean_legal_moves": 15.865329512893982
+        },
+        {
+          "ply": 421,
+          "games": 690,
+          "mean_legal_moves": 16.356521739130436
+        },
+        {
+          "ply": 422,
+          "games": 684,
+          "mean_legal_moves": 16.054093567251464
+        },
+        {
+          "ply": 423,
+          "games": 683,
+          "mean_legal_moves": 16.002928257686676
+        },
+        {
+          "ply": 424,
+          "games": 674,
+          "mean_legal_moves": 15.710682492581602
+        },
+        {
+          "ply": 425,
+          "games": 669,
+          "mean_legal_moves": 16.144992526158447
+        },
+        {
+          "ply": 426,
+          "games": 658,
+          "mean_legal_moves": 16.01063829787234
+        },
+        {
+          "ply": 427,
+          "games": 649,
+          "mean_legal_moves": 16.221879815100156
+        },
+        {
+          "ply": 428,
+          "games": 642,
+          "mean_legal_moves": 15.873831775700934
+        },
+        {
+          "ply": 429,
+          "games": 634,
+          "mean_legal_moves": 16.458990536277604
+        },
+        {
+          "ply": 430,
+          "games": 625,
+          "mean_legal_moves": 15.896
+        },
+        {
+          "ply": 431,
+          "games": 624,
+          "mean_legal_moves": 16.23878205128205
+        },
+        {
+          "ply": 432,
+          "games": 620,
+          "mean_legal_moves": 15.951612903225806
+        },
+        {
+          "ply": 433,
+          "games": 613,
+          "mean_legal_moves": 15.691680261011419
+        },
+        {
+          "ply": 434,
+          "games": 603,
+          "mean_legal_moves": 15.698175787728026
+        },
+        {
+          "ply": 435,
+          "games": 599,
+          "mean_legal_moves": 16.106844741235392
+        },
+        {
+          "ply": 436,
+          "games": 597,
+          "mean_legal_moves": 15.847571189279732
+        },
+        {
+          "ply": 437,
+          "games": 594,
+          "mean_legal_moves": 15.755892255892256
+        },
+        {
+          "ply": 438,
+          "games": 590,
+          "mean_legal_moves": 15.950847457627118
+        },
+        {
+          "ply": 439,
+          "games": 581,
+          "mean_legal_moves": 16.08261617900172
+        },
+        {
+          "ply": 440,
+          "games": 573,
+          "mean_legal_moves": 15.928446771378708
+        },
+        {
+          "ply": 441,
+          "games": 567,
+          "mean_legal_moves": 16.088183421516757
+        },
+        {
+          "ply": 442,
+          "games": 560,
+          "mean_legal_moves": 15.7
+        },
+        {
+          "ply": 443,
+          "games": 553,
+          "mean_legal_moves": 15.96745027124774
+        },
+        {
+          "ply": 444,
+          "games": 548,
+          "mean_legal_moves": 15.908759124087592
+        },
+        {
+          "ply": 445,
+          "games": 545,
+          "mean_legal_moves": 16.188990825688073
+        },
+        {
+          "ply": 446,
+          "games": 540,
+          "mean_legal_moves": 15.783333333333333
+        },
+        {
+          "ply": 447,
+          "games": 533,
+          "mean_legal_moves": 16.397748592870546
+        },
+        {
+          "ply": 448,
+          "games": 532,
+          "mean_legal_moves": 15.740601503759398
+        },
+        {
+          "ply": 449,
+          "games": 531,
+          "mean_legal_moves": 16.519774011299436
+        },
+        {
+          "ply": 450,
+          "games": 527,
+          "mean_legal_moves": 15.633776091081593
+        },
+        {
+          "ply": 451,
+          "games": 525,
+          "mean_legal_moves": 16.36952380952381
+        },
+        {
+          "ply": 452,
+          "games": 521,
+          "mean_legal_moves": 15.216890595009597
+        },
+        {
+          "ply": 453,
+          "games": 519,
+          "mean_legal_moves": 16.215799614643544
+        },
+        {
+          "ply": 454,
+          "games": 516,
+          "mean_legal_moves": 15.76937984496124
+        },
+        {
+          "ply": 455,
+          "games": 509,
+          "mean_legal_moves": 16.25343811394892
+        },
+        {
+          "ply": 456,
+          "games": 508,
+          "mean_legal_moves": 15.840551181102363
+        },
+        {
+          "ply": 457,
+          "games": 504,
+          "mean_legal_moves": 16.03174603174603
+        },
+        {
+          "ply": 458,
+          "games": 499,
+          "mean_legal_moves": 15.360721442885772
+        },
+        {
+          "ply": 459,
+          "games": 497,
+          "mean_legal_moves": 16.251509054325957
+        },
+        {
+          "ply": 460,
+          "games": 494,
+          "mean_legal_moves": 15.621457489878543
+        },
+        {
+          "ply": 461,
+          "games": 493,
+          "mean_legal_moves": 16.10547667342799
+        },
+        {
+          "ply": 462,
+          "games": 492,
+          "mean_legal_moves": 15.512195121951219
+        },
+        {
+          "ply": 463,
+          "games": 487,
+          "mean_legal_moves": 16.71663244353183
+        },
+        {
+          "ply": 464,
+          "games": 479,
+          "mean_legal_moves": 15.08768267223382
+        },
+        {
+          "ply": 465,
+          "games": 475,
+          "mean_legal_moves": 16.33684210526316
+        },
+        {
+          "ply": 466,
+          "games": 472,
+          "mean_legal_moves": 15.569915254237289
+        },
+        {
+          "ply": 467,
+          "games": 466,
+          "mean_legal_moves": 16.901287553648068
+        },
+        {
+          "ply": 468,
+          "games": 462,
+          "mean_legal_moves": 15.344155844155845
+        },
+        {
+          "ply": 469,
+          "games": 461,
+          "mean_legal_moves": 16.694143167028198
+        },
+        {
+          "ply": 470,
+          "games": 459,
+          "mean_legal_moves": 14.969498910675382
+        },
+        {
+          "ply": 471,
+          "games": 456,
+          "mean_legal_moves": 16.74780701754386
+        },
+        {
+          "ply": 472,
+          "games": 452,
+          "mean_legal_moves": 15.41150442477876
+        },
+        {
+          "ply": 473,
+          "games": 449,
+          "mean_legal_moves": 16.160356347438753
+        },
+        {
+          "ply": 474,
+          "games": 446,
+          "mean_legal_moves": 15.77354260089686
+        },
+        {
+          "ply": 475,
+          "games": 442,
+          "mean_legal_moves": 16.15610859728507
+        },
+        {
+          "ply": 476,
+          "games": 440,
+          "mean_legal_moves": 15.972727272727273
+        },
+        {
+          "ply": 477,
+          "games": 437,
+          "mean_legal_moves": 16.123569794050344
+        },
+        {
+          "ply": 478,
+          "games": 434,
+          "mean_legal_moves": 15.80184331797235
+        },
+        {
+          "ply": 479,
+          "games": 432,
+          "mean_legal_moves": 16.377314814814813
+        },
+        {
+          "ply": 480,
+          "games": 430,
+          "mean_legal_moves": 15.653488372093022
+        },
+        {
+          "ply": 481,
+          "games": 426,
+          "mean_legal_moves": 15.80281690140845
+        },
+        {
+          "ply": 482,
+          "games": 418,
+          "mean_legal_moves": 16.330143540669855
+        },
+        {
+          "ply": 483,
+          "games": 414,
+          "mean_legal_moves": 15.746376811594203
+        },
+        {
+          "ply": 484,
+          "games": 413,
+          "mean_legal_moves": 15.58595641646489
+        },
+        {
+          "ply": 485,
+          "games": 411,
+          "mean_legal_moves": 16.30170316301703
+        },
+        {
+          "ply": 486,
+          "games": 407,
+          "mean_legal_moves": 15.815724815724815
+        },
+        {
+          "ply": 487,
+          "games": 403,
+          "mean_legal_moves": 16.55334987593052
+        },
+        {
+          "ply": 488,
+          "games": 397,
+          "mean_legal_moves": 15.526448362720403
+        },
+        {
+          "ply": 489,
+          "games": 393,
+          "mean_legal_moves": 16.173027989821882
+        },
+        {
+          "ply": 490,
+          "games": 391,
+          "mean_legal_moves": 16.191815856777495
+        },
+        {
+          "ply": 491,
+          "games": 388,
+          "mean_legal_moves": 15.824742268041238
+        },
+        {
+          "ply": 492,
+          "games": 382,
+          "mean_legal_moves": 15.829842931937172
+        },
+        {
+          "ply": 493,
+          "games": 380,
+          "mean_legal_moves": 15.863157894736842
+        },
+        {
+          "ply": 494,
+          "games": 379,
+          "mean_legal_moves": 15.775725593667547
+        },
+        {
+          "ply": 495,
+          "games": 375,
+          "mean_legal_moves": 15.68
+        },
+        {
+          "ply": 496,
+          "games": 373,
+          "mean_legal_moves": 16.22520107238606
+        },
+        {
+          "ply": 497,
+          "games": 371,
+          "mean_legal_moves": 15.765498652291106
+        },
+        {
+          "ply": 498,
+          "games": 368,
+          "mean_legal_moves": 15.915760869565217
+        },
+        {
+          "ply": 499,
+          "games": 367,
+          "mean_legal_moves": 16.60217983651226
+        },
+        {
+          "ply": 500,
+          "games": 365,
+          "mean_legal_moves": 15.810958904109588
+        },
+        {
+          "ply": 501,
+          "games": 363,
+          "mean_legal_moves": 16.03581267217631
+        },
+        {
+          "ply": 502,
+          "games": 359,
+          "mean_legal_moves": 15.565459610027855
+        },
+        {
+          "ply": 503,
+          "games": 356,
+          "mean_legal_moves": 16.46067415730337
+        },
+        {
+          "ply": 504,
+          "games": 351,
+          "mean_legal_moves": 15.851851851851851
+        },
+        {
+          "ply": 505,
+          "games": 346,
+          "mean_legal_moves": 16.838150289017342
+        },
+        {
+          "ply": 506,
+          "games": 344,
+          "mean_legal_moves": 15.688953488372093
+        },
+        {
+          "ply": 507,
+          "games": 342,
+          "mean_legal_moves": 16.406432748538013
+        },
+        {
+          "ply": 508,
+          "games": 339,
+          "mean_legal_moves": 15.71386430678466
+        },
+        {
+          "ply": 509,
+          "games": 336,
+          "mean_legal_moves": 16.05654761904762
+        },
+        {
+          "ply": 510,
+          "games": 333,
+          "mean_legal_moves": 15.771771771771771
+        },
+        {
+          "ply": 511,
+          "games": 329,
+          "mean_legal_moves": 16.085106382978722
+        },
+        {
+          "ply": 512,
+          "games": 328,
+          "mean_legal_moves": 15.75609756097561
+        },
+        {
+          "ply": 513,
+          "games": 326,
+          "mean_legal_moves": 16.217791411042946
+        },
+        {
+          "ply": 514,
+          "games": 325,
+          "mean_legal_moves": 15.806153846153846
+        },
+        {
+          "ply": 515,
+          "games": 322,
+          "mean_legal_moves": 15.819875776397515
+        },
+        {
+          "ply": 516,
+          "games": 319,
+          "mean_legal_moves": 16.128526645768027
+        },
+        {
+          "ply": 517,
+          "games": 315,
+          "mean_legal_moves": 15.901587301587302
+        },
+        {
+          "ply": 518,
+          "games": 312,
+          "mean_legal_moves": 16.16025641025641
+        },
+        {
+          "ply": 519,
+          "games": 307,
+          "mean_legal_moves": 15.811074918566776
+        },
+        {
+          "ply": 520,
+          "games": 305,
+          "mean_legal_moves": 16.495081967213114
+        },
+        {
+          "ply": 521,
+          "games": 304,
+          "mean_legal_moves": 15.539473684210526
+        },
+        {
+          "ply": 522,
+          "games": 303,
+          "mean_legal_moves": 16.247524752475247
+        },
+        {
+          "ply": 523,
+          "games": 301,
+          "mean_legal_moves": 15.990033222591363
+        },
+        {
+          "ply": 524,
+          "games": 300,
+          "mean_legal_moves": 16.1
+        },
+        {
+          "ply": 525,
+          "games": 299,
+          "mean_legal_moves": 15.966555183946488
+        },
+        {
+          "ply": 526,
+          "games": 293,
+          "mean_legal_moves": 16.177474402730375
+        },
+        {
+          "ply": 527,
+          "games": 293,
+          "mean_legal_moves": 15.583617747440274
+        },
+        {
+          "ply": 528,
+          "games": 293,
+          "mean_legal_moves": 15.969283276450511
+        },
+        {
+          "ply": 529,
+          "games": 291,
+          "mean_legal_moves": 15.360824742268042
+        },
+        {
+          "ply": 530,
+          "games": 290,
+          "mean_legal_moves": 16.079310344827586
+        },
+        {
+          "ply": 531,
+          "games": 287,
+          "mean_legal_moves": 15.554006968641115
+        },
+        {
+          "ply": 532,
+          "games": 285,
+          "mean_legal_moves": 16.126315789473683
+        },
+        {
+          "ply": 533,
+          "games": 282,
+          "mean_legal_moves": 15.52482269503546
+        },
+        {
+          "ply": 534,
+          "games": 282,
+          "mean_legal_moves": 16.03900709219858
+        },
+        {
+          "ply": 535,
+          "games": 276,
+          "mean_legal_moves": 15.78623188405797
+        },
+        {
+          "ply": 536,
+          "games": 274,
+          "mean_legal_moves": 16.036496350364963
+        },
+        {
+          "ply": 537,
+          "games": 272,
+          "mean_legal_moves": 15.926470588235293
+        },
+        {
+          "ply": 538,
+          "games": 270,
+          "mean_legal_moves": 15.329629629629629
+        },
+        {
+          "ply": 539,
+          "games": 267,
+          "mean_legal_moves": 15.805243445692884
+        },
+        {
+          "ply": 540,
+          "games": 264,
+          "mean_legal_moves": 15.943181818181818
+        },
+        {
+          "ply": 541,
+          "games": 261,
+          "mean_legal_moves": 16.18773946360153
+        },
+        {
+          "ply": 542,
+          "games": 257,
+          "mean_legal_moves": 15.817120622568094
+        },
+        {
+          "ply": 543,
+          "games": 255,
+          "mean_legal_moves": 15.843137254901961
+        },
+        {
+          "ply": 544,
+          "games": 253,
+          "mean_legal_moves": 16.039525691699605
+        },
+        {
+          "ply": 545,
+          "games": 252,
+          "mean_legal_moves": 15.988095238095237
+        },
+        {
+          "ply": 546,
+          "games": 249,
+          "mean_legal_moves": 15.847389558232932
+        },
+        {
+          "ply": 547,
+          "games": 245,
+          "mean_legal_moves": 15.66530612244898
+        },
+        {
+          "ply": 548,
+          "games": 243,
+          "mean_legal_moves": 16.637860082304528
+        },
+        {
+          "ply": 549,
+          "games": 241,
+          "mean_legal_moves": 15.618257261410788
+        },
+        {
+          "ply": 550,
+          "games": 241,
+          "mean_legal_moves": 16.38174273858921
+        },
+        {
+          "ply": 551,
+          "games": 235,
+          "mean_legal_moves": 15.565957446808511
+        },
+        {
+          "ply": 552,
+          "games": 235,
+          "mean_legal_moves": 15.382978723404255
+        },
+        {
+          "ply": 553,
+          "games": 232,
+          "mean_legal_moves": 15.698275862068966
+        },
+        {
+          "ply": 554,
+          "games": 230,
+          "mean_legal_moves": 16.430434782608696
+        },
+        {
+          "ply": 555,
+          "games": 229,
+          "mean_legal_moves": 15.06113537117904
+        },
+        {
+          "ply": 556,
+          "games": 229,
+          "mean_legal_moves": 15.88646288209607
+        },
+        {
+          "ply": 557,
+          "games": 225,
+          "mean_legal_moves": 15.622222222222222
+        },
+        {
+          "ply": 558,
+          "games": 221,
+          "mean_legal_moves": 16.43891402714932
+        },
+        {
+          "ply": 559,
+          "games": 219,
+          "mean_legal_moves": 15.511415525114156
+        },
+        {
+          "ply": 560,
+          "games": 216,
+          "mean_legal_moves": 16.22222222222222
+        },
+        {
+          "ply": 561,
+          "games": 214,
+          "mean_legal_moves": 15.602803738317757
+        },
+        {
+          "ply": 562,
+          "games": 211,
+          "mean_legal_moves": 16.37440758293839
+        },
+        {
+          "ply": 563,
+          "games": 209,
+          "mean_legal_moves": 15.69377990430622
+        },
+        {
+          "ply": 564,
+          "games": 208,
+          "mean_legal_moves": 16.509615384615383
+        },
+        {
+          "ply": 565,
+          "games": 205,
+          "mean_legal_moves": 16.517073170731706
+        },
+        {
+          "ply": 566,
+          "games": 204,
+          "mean_legal_moves": 16.38235294117647
+        },
+        {
+          "ply": 567,
+          "games": 203,
+          "mean_legal_moves": 15.724137931034482
+        },
+        {
+          "ply": 568,
+          "games": 202,
+          "mean_legal_moves": 15.648514851485148
+        },
+        {
+          "ply": 569,
+          "games": 202,
+          "mean_legal_moves": 16.06930693069307
+        },
+        {
+          "ply": 570,
+          "games": 199,
+          "mean_legal_moves": 15.22110552763819
+        },
+        {
+          "ply": 571,
+          "games": 197,
+          "mean_legal_moves": 16.583756345177665
+        },
+        {
+          "ply": 572,
+          "games": 195,
+          "mean_legal_moves": 14.78974358974359
+        },
+        {
+          "ply": 573,
+          "games": 194,
+          "mean_legal_moves": 16.298969072164947
+        },
+        {
+          "ply": 574,
+          "games": 192,
+          "mean_legal_moves": 14.666666666666666
+        },
+        {
+          "ply": 575,
+          "games": 192,
+          "mean_legal_moves": 16.90625
+        },
+        {
+          "ply": 576,
+          "games": 191,
+          "mean_legal_moves": 15.188481675392671
+        },
+        {
+          "ply": 577,
+          "games": 189,
+          "mean_legal_moves": 16.677248677248677
+        },
+        {
+          "ply": 578,
+          "games": 186,
+          "mean_legal_moves": 15.14516129032258
+        },
+        {
+          "ply": 579,
+          "games": 183,
+          "mean_legal_moves": 17.065573770491802
+        },
+        {
+          "ply": 580,
+          "games": 183,
+          "mean_legal_moves": 15.224043715846994
+        },
+        {
+          "ply": 581,
+          "games": 183,
+          "mean_legal_moves": 16.557377049180328
+        },
+        {
+          "ply": 582,
+          "games": 183,
+          "mean_legal_moves": 15.475409836065573
+        },
+        {
+          "ply": 583,
+          "games": 180,
+          "mean_legal_moves": 16.4
+        },
+        {
+          "ply": 584,
+          "games": 178,
+          "mean_legal_moves": 16.00561797752809
+        },
+        {
+          "ply": 585,
+          "games": 176,
+          "mean_legal_moves": 15.75
+        },
+        {
+          "ply": 586,
+          "games": 174,
+          "mean_legal_moves": 15.471264367816092
+        },
+        {
+          "ply": 587,
+          "games": 172,
+          "mean_legal_moves": 15.703488372093023
+        },
+        {
+          "ply": 588,
+          "games": 169,
+          "mean_legal_moves": 16.40828402366864
+        },
+        {
+          "ply": 589,
+          "games": 168,
+          "mean_legal_moves": 15.845238095238095
+        },
+        {
+          "ply": 590,
+          "games": 166,
+          "mean_legal_moves": 16.481927710843372
+        },
+        {
+          "ply": 591,
+          "games": 164,
+          "mean_legal_moves": 15.573170731707316
+        },
+        {
+          "ply": 592,
+          "games": 163,
+          "mean_legal_moves": 16.478527607361965
+        },
+        {
+          "ply": 593,
+          "games": 163,
+          "mean_legal_moves": 15.374233128834355
+        },
+        {
+          "ply": 594,
+          "games": 162,
+          "mean_legal_moves": 17.080246913580247
+        },
+        {
+          "ply": 595,
+          "games": 162,
+          "mean_legal_moves": 14.944444444444445
+        },
+        {
+          "ply": 596,
+          "games": 160,
+          "mean_legal_moves": 16.275
+        },
+        {
+          "ply": 597,
+          "games": 158,
+          "mean_legal_moves": 15.632911392405063
+        },
+        {
+          "ply": 598,
+          "games": 156,
+          "mean_legal_moves": 15.762820512820513
+        },
+        {
+          "ply": 599,
+          "games": 156,
+          "mean_legal_moves": 15.60897435897436
+        },
+        {
+          "ply": 600,
+          "games": 155,
+          "mean_legal_moves": 16.251612903225805
+        },
+        {
+          "ply": 601,
+          "games": 154,
+          "mean_legal_moves": 16.27922077922078
+        },
+        {
+          "ply": 602,
+          "games": 153,
+          "mean_legal_moves": 16.294117647058822
+        },
+        {
+          "ply": 603,
+          "games": 150,
+          "mean_legal_moves": 16.02
+        },
+        {
+          "ply": 604,
+          "games": 148,
+          "mean_legal_moves": 15.547297297297296
+        },
+        {
+          "ply": 605,
+          "games": 148,
+          "mean_legal_moves": 16.756756756756758
+        },
+        {
+          "ply": 606,
+          "games": 147,
+          "mean_legal_moves": 14.97278911564626
+        },
+        {
+          "ply": 607,
+          "games": 144,
+          "mean_legal_moves": 17.666666666666668
+        },
+        {
+          "ply": 608,
+          "games": 141,
+          "mean_legal_moves": 15.47517730496454
+        },
+        {
+          "ply": 609,
+          "games": 138,
+          "mean_legal_moves": 16.73913043478261
+        },
+        {
+          "ply": 610,
+          "games": 137,
+          "mean_legal_moves": 14.306569343065693
+        },
+        {
+          "ply": 611,
+          "games": 136,
+          "mean_legal_moves": 16.78676470588235
+        },
+        {
+          "ply": 612,
+          "games": 133,
+          "mean_legal_moves": 14.443609022556391
+        },
+        {
+          "ply": 613,
+          "games": 133,
+          "mean_legal_moves": 16.037593984962406
+        },
+        {
+          "ply": 614,
+          "games": 133,
+          "mean_legal_moves": 14.947368421052632
+        },
+        {
+          "ply": 615,
+          "games": 129,
+          "mean_legal_moves": 17.069767441860463
+        },
+        {
+          "ply": 616,
+          "games": 128,
+          "mean_legal_moves": 15.75
+        },
+        {
+          "ply": 617,
+          "games": 128,
+          "mean_legal_moves": 16.5703125
+        },
+        {
+          "ply": 618,
+          "games": 128,
+          "mean_legal_moves": 15.578125
+        },
+        {
+          "ply": 619,
+          "games": 127,
+          "mean_legal_moves": 15.811023622047244
+        },
+        {
+          "ply": 620,
+          "games": 127,
+          "mean_legal_moves": 15.905511811023622
+        },
+        {
+          "ply": 621,
+          "games": 127,
+          "mean_legal_moves": 14.905511811023622
+        },
+        {
+          "ply": 622,
+          "games": 125,
+          "mean_legal_moves": 16.68
+        },
+        {
+          "ply": 623,
+          "games": 122,
+          "mean_legal_moves": 14.704918032786885
+        },
+        {
+          "ply": 624,
+          "games": 121,
+          "mean_legal_moves": 17.115702479338843
+        },
+        {
+          "ply": 625,
+          "games": 120,
+          "mean_legal_moves": 14.683333333333334
+        },
+        {
+          "ply": 626,
+          "games": 120,
+          "mean_legal_moves": 16.758333333333333
+        },
+        {
+          "ply": 627,
+          "games": 118,
+          "mean_legal_moves": 15.703389830508474
+        },
+        {
+          "ply": 628,
+          "games": 117,
+          "mean_legal_moves": 16.367521367521366
+        },
+        {
+          "ply": 629,
+          "games": 117,
+          "mean_legal_moves": 15.64102564102564
+        },
+        {
+          "ply": 630,
+          "games": 117,
+          "mean_legal_moves": 16.692307692307693
+        },
+        {
+          "ply": 631,
+          "games": 117,
+          "mean_legal_moves": 16.11965811965812
+        },
+        {
+          "ply": 632,
+          "games": 117,
+          "mean_legal_moves": 17.444444444444443
+        },
+        {
+          "ply": 633,
+          "games": 115,
+          "mean_legal_moves": 15.791304347826086
+        },
+        {
+          "ply": 634,
+          "games": 114,
+          "mean_legal_moves": 16.45614035087719
+        },
+        {
+          "ply": 635,
+          "games": 114,
+          "mean_legal_moves": 15.078947368421053
+        },
+        {
+          "ply": 636,
+          "games": 114,
+          "mean_legal_moves": 16.842105263157894
+        },
+        {
+          "ply": 637,
+          "games": 113,
+          "mean_legal_moves": 14.88495575221239
+        },
+        {
+          "ply": 638,
+          "games": 112,
+          "mean_legal_moves": 17.553571428571427
+        },
+        {
+          "ply": 639,
+          "games": 112,
+          "mean_legal_moves": 15.901785714285714
+        },
+        {
+          "ply": 640,
+          "games": 111,
+          "mean_legal_moves": 16.234234234234233
+        },
+        {
+          "ply": 641,
+          "games": 111,
+          "mean_legal_moves": 16.17117117117117
+        },
+        {
+          "ply": 642,
+          "games": 111,
+          "mean_legal_moves": 16.063063063063062
+        },
+        {
+          "ply": 643,
+          "games": 111,
+          "mean_legal_moves": 15.855855855855856
+        },
+        {
+          "ply": 644,
+          "games": 111,
+          "mean_legal_moves": 16.063063063063062
+        },
+        {
+          "ply": 645,
+          "games": 111,
+          "mean_legal_moves": 16.324324324324323
+        },
+        {
+          "ply": 646,
+          "games": 110,
+          "mean_legal_moves": 15.1
+        },
+        {
+          "ply": 647,
+          "games": 109,
+          "mean_legal_moves": 16.192660550458715
+        },
+        {
+          "ply": 648,
+          "games": 109,
+          "mean_legal_moves": 15.779816513761467
+        },
+        {
+          "ply": 649,
+          "games": 107,
+          "mean_legal_moves": 16.299065420560748
+        },
+        {
+          "ply": 650,
+          "games": 106,
+          "mean_legal_moves": 16.32075471698113
+        },
+        {
+          "ply": 651,
+          "games": 106,
+          "mean_legal_moves": 15.122641509433961
+        },
+        {
+          "ply": 652,
+          "games": 106,
+          "mean_legal_moves": 16.264150943396228
+        },
+        {
+          "ply": 653,
+          "games": 103,
+          "mean_legal_moves": 15.262135922330097
+        },
+        {
+          "ply": 654,
+          "games": 103,
+          "mean_legal_moves": 16.16504854368932
+        },
+        {
+          "ply": 655,
+          "games": 103,
+          "mean_legal_moves": 14.766990291262136
+        },
+        {
+          "ply": 656,
+          "games": 103,
+          "mean_legal_moves": 15.728155339805825
+        },
+        {
+          "ply": 657,
+          "games": 103,
+          "mean_legal_moves": 15.893203883495145
+        },
+        {
+          "ply": 658,
+          "games": 102,
+          "mean_legal_moves": 15.72549019607843
+        },
+        {
+          "ply": 659,
+          "games": 100,
+          "mean_legal_moves": 16.66
+        },
+        {
+          "ply": 660,
+          "games": 100,
+          "mean_legal_moves": 16.21
+        },
+        {
+          "ply": 661,
+          "games": 99,
+          "mean_legal_moves": 16.595959595959595
+        },
+        {
+          "ply": 662,
+          "games": 99,
+          "mean_legal_moves": 15.080808080808081
+        },
+        {
+          "ply": 663,
+          "games": 97,
+          "mean_legal_moves": 15.804123711340207
+        },
+        {
+          "ply": 664,
+          "games": 97,
+          "mean_legal_moves": 15.587628865979381
+        },
+        {
+          "ply": 665,
+          "games": 95,
+          "mean_legal_moves": 16.273684210526316
+        },
+        {
+          "ply": 666,
+          "games": 95,
+          "mean_legal_moves": 16.4
+        },
+        {
+          "ply": 667,
+          "games": 94,
+          "mean_legal_moves": 16.819148936170212
+        },
+        {
+          "ply": 668,
+          "games": 93,
+          "mean_legal_moves": 15.24731182795699
+        },
+        {
+          "ply": 669,
+          "games": 92,
+          "mean_legal_moves": 16.51086956521739
+        },
+        {
+          "ply": 670,
+          "games": 92,
+          "mean_legal_moves": 15.956521739130435
+        },
+        {
+          "ply": 671,
+          "games": 92,
+          "mean_legal_moves": 16.23913043478261
+        },
+        {
+          "ply": 672,
+          "games": 91,
+          "mean_legal_moves": 16.065934065934066
+        },
+        {
+          "ply": 673,
+          "games": 91,
+          "mean_legal_moves": 16.065934065934066
+        },
+        {
+          "ply": 674,
+          "games": 90,
+          "mean_legal_moves": 15.755555555555556
+        },
+        {
+          "ply": 675,
+          "games": 90,
+          "mean_legal_moves": 16.355555555555554
+        },
+        {
+          "ply": 676,
+          "games": 89,
+          "mean_legal_moves": 15.325842696629213
+        },
+        {
+          "ply": 677,
+          "games": 89,
+          "mean_legal_moves": 16.629213483146067
+        },
+        {
+          "ply": 678,
+          "games": 89,
+          "mean_legal_moves": 15.764044943820224
+        },
+        {
+          "ply": 679,
+          "games": 85,
+          "mean_legal_moves": 16.03529411764706
+        },
+        {
+          "ply": 680,
+          "games": 84,
+          "mean_legal_moves": 15.095238095238095
+        },
+        {
+          "ply": 681,
+          "games": 84,
+          "mean_legal_moves": 16.75
+        },
+        {
+          "ply": 682,
+          "games": 83,
+          "mean_legal_moves": 14.662650602409638
+        },
+        {
+          "ply": 683,
+          "games": 83,
+          "mean_legal_moves": 17.132530120481928
+        },
+        {
+          "ply": 684,
+          "games": 83,
+          "mean_legal_moves": 15.397590361445783
+        },
+        {
+          "ply": 685,
+          "games": 82,
+          "mean_legal_moves": 16.170731707317074
+        },
+        {
+          "ply": 686,
+          "games": 82,
+          "mean_legal_moves": 15.463414634146341
+        },
+        {
+          "ply": 687,
+          "games": 82,
+          "mean_legal_moves": 15.914634146341463
+        },
+        {
+          "ply": 688,
+          "games": 81,
+          "mean_legal_moves": 14.567901234567902
+        },
+        {
+          "ply": 689,
+          "games": 80,
+          "mean_legal_moves": 17.7125
+        },
+        {
+          "ply": 690,
+          "games": 80,
+          "mean_legal_moves": 14.375
+        },
+        {
+          "ply": 691,
+          "games": 80,
+          "mean_legal_moves": 17.5375
+        },
+        {
+          "ply": 692,
+          "games": 80,
+          "mean_legal_moves": 14.0
+        },
+        {
+          "ply": 693,
+          "games": 80,
+          "mean_legal_moves": 16.725
+        },
+        {
+          "ply": 694,
+          "games": 79,
+          "mean_legal_moves": 14.810126582278482
+        },
+        {
+          "ply": 695,
+          "games": 79,
+          "mean_legal_moves": 15.822784810126583
+        },
+        {
+          "ply": 696,
+          "games": 77,
+          "mean_legal_moves": 16.77922077922078
+        },
+        {
+          "ply": 697,
+          "games": 76,
+          "mean_legal_moves": 15.052631578947368
+        },
+        {
+          "ply": 698,
+          "games": 74,
+          "mean_legal_moves": 16.7972972972973
+        },
+        {
+          "ply": 699,
+          "games": 74,
+          "mean_legal_moves": 14.783783783783784
+        },
+        {
+          "ply": 700,
+          "games": 74,
+          "mean_legal_moves": 17.08108108108108
+        },
+        {
+          "ply": 701,
+          "games": 74,
+          "mean_legal_moves": 15.986486486486486
+        },
+        {
+          "ply": 702,
+          "games": 74,
+          "mean_legal_moves": 15.527027027027026
+        },
+        {
+          "ply": 703,
+          "games": 74,
+          "mean_legal_moves": 16.16216216216216
+        },
+        {
+          "ply": 704,
+          "games": 73,
+          "mean_legal_moves": 16.602739726027398
+        },
+        {
+          "ply": 705,
+          "games": 73,
+          "mean_legal_moves": 14.917808219178083
+        },
+        {
+          "ply": 706,
+          "games": 72,
+          "mean_legal_moves": 17.166666666666668
+        },
+        {
+          "ply": 707,
+          "games": 71,
+          "mean_legal_moves": 15.23943661971831
+        },
+        {
+          "ply": 708,
+          "games": 70,
+          "mean_legal_moves": 17.142857142857142
+        },
+        {
+          "ply": 709,
+          "games": 70,
+          "mean_legal_moves": 15.442857142857143
+        },
+        {
+          "ply": 710,
+          "games": 70,
+          "mean_legal_moves": 15.357142857142858
+        },
+        {
+          "ply": 711,
+          "games": 69,
+          "mean_legal_moves": 15.376811594202898
+        },
+        {
+          "ply": 712,
+          "games": 68,
+          "mean_legal_moves": 16.264705882352942
+        },
+        {
+          "ply": 713,
+          "games": 68,
+          "mean_legal_moves": 14.544117647058824
+        },
+        {
+          "ply": 714,
+          "games": 67,
+          "mean_legal_moves": 16.432835820895523
+        },
+        {
+          "ply": 715,
+          "games": 65,
+          "mean_legal_moves": 14.692307692307692
+        },
+        {
+          "ply": 716,
+          "games": 64,
+          "mean_legal_moves": 15.828125
+        },
+        {
+          "ply": 717,
+          "games": 63,
+          "mean_legal_moves": 15.380952380952381
+        },
+        {
+          "ply": 718,
+          "games": 63,
+          "mean_legal_moves": 15.46031746031746
+        },
+        {
+          "ply": 719,
+          "games": 63,
+          "mean_legal_moves": 15.333333333333334
+        },
+        {
+          "ply": 720,
+          "games": 62,
+          "mean_legal_moves": 16.177419354838708
+        },
+        {
+          "ply": 721,
+          "games": 62,
+          "mean_legal_moves": 15.338709677419354
+        },
+        {
+          "ply": 722,
+          "games": 62,
+          "mean_legal_moves": 16.56451612903226
+        },
+        {
+          "ply": 723,
+          "games": 62,
+          "mean_legal_moves": 16.20967741935484
+        },
+        {
+          "ply": 724,
+          "games": 62,
+          "mean_legal_moves": 16.387096774193548
+        },
+        {
+          "ply": 725,
+          "games": 62,
+          "mean_legal_moves": 15.241935483870968
+        },
+        {
+          "ply": 726,
+          "games": 62,
+          "mean_legal_moves": 16.241935483870968
+        },
+        {
+          "ply": 727,
+          "games": 62,
+          "mean_legal_moves": 15.048387096774194
+        },
+        {
+          "ply": 728,
+          "games": 61,
+          "mean_legal_moves": 17.311475409836067
+        },
+        {
+          "ply": 729,
+          "games": 60,
+          "mean_legal_moves": 14.9
+        },
+        {
+          "ply": 730,
+          "games": 60,
+          "mean_legal_moves": 16.316666666666666
+        },
+        {
+          "ply": 731,
+          "games": 60,
+          "mean_legal_moves": 15.45
+        },
+        {
+          "ply": 732,
+          "games": 60,
+          "mean_legal_moves": 16.6
+        },
+        {
+          "ply": 733,
+          "games": 60,
+          "mean_legal_moves": 16.183333333333334
+        },
+        {
+          "ply": 734,
+          "games": 59,
+          "mean_legal_moves": 16.28813559322034
+        },
+        {
+          "ply": 735,
+          "games": 59,
+          "mean_legal_moves": 16.338983050847457
+        },
+        {
+          "ply": 736,
+          "games": 59,
+          "mean_legal_moves": 16.084745762711865
+        },
+        {
+          "ply": 737,
+          "games": 59,
+          "mean_legal_moves": 17.0
+        },
+        {
+          "ply": 738,
+          "games": 59,
+          "mean_legal_moves": 14.864406779661017
+        },
+        {
+          "ply": 739,
+          "games": 59,
+          "mean_legal_moves": 15.728813559322035
+        },
+        {
+          "ply": 740,
+          "games": 58,
+          "mean_legal_moves": 15.982758620689655
+        },
+        {
+          "ply": 741,
+          "games": 58,
+          "mean_legal_moves": 16.413793103448278
+        },
+        {
+          "ply": 742,
+          "games": 56,
+          "mean_legal_moves": 15.214285714285714
+        },
+        {
+          "ply": 743,
+          "games": 55,
+          "mean_legal_moves": 15.8
+        },
+        {
+          "ply": 744,
+          "games": 54,
+          "mean_legal_moves": 14.574074074074074
+        },
+        {
+          "ply": 745,
+          "games": 54,
+          "mean_legal_moves": 16.88888888888889
+        },
+        {
+          "ply": 746,
+          "games": 53,
+          "mean_legal_moves": 14.169811320754716
+        },
+        {
+          "ply": 747,
+          "games": 53,
+          "mean_legal_moves": 16.32075471698113
+        },
+        {
+          "ply": 748,
+          "games": 53,
+          "mean_legal_moves": 16.0188679245283
+        },
+        {
+          "ply": 749,
+          "games": 53,
+          "mean_legal_moves": 15.49056603773585
+        },
+        {
+          "ply": 750,
+          "games": 53,
+          "mean_legal_moves": 16.50943396226415
+        },
+        {
+          "ply": 751,
+          "games": 53,
+          "mean_legal_moves": 15.056603773584905
+        },
+        {
+          "ply": 752,
+          "games": 53,
+          "mean_legal_moves": 16.41509433962264
+        },
+        {
+          "ply": 753,
+          "games": 51,
+          "mean_legal_moves": 15.843137254901961
+        },
+        {
+          "ply": 754,
+          "games": 51,
+          "mean_legal_moves": 15.607843137254902
+        },
+        {
+          "ply": 755,
+          "games": 51,
+          "mean_legal_moves": 15.509803921568627
+        },
+        {
+          "ply": 756,
+          "games": 51,
+          "mean_legal_moves": 16.098039215686274
+        },
+        {
+          "ply": 757,
+          "games": 51,
+          "mean_legal_moves": 14.372549019607844
+        },
+        {
+          "ply": 758,
+          "games": 51,
+          "mean_legal_moves": 16.568627450980394
+        },
+        {
+          "ply": 759,
+          "games": 50,
+          "mean_legal_moves": 14.74
+        },
+        {
+          "ply": 760,
+          "games": 49,
+          "mean_legal_moves": 16.46938775510204
+        },
+        {
+          "ply": 761,
+          "games": 49,
+          "mean_legal_moves": 14.16326530612245
+        },
+        {
+          "ply": 762,
+          "games": 46,
+          "mean_legal_moves": 16.67391304347826
+        },
+        {
+          "ply": 763,
+          "games": 46,
+          "mean_legal_moves": 14.543478260869565
+        },
+        {
+          "ply": 764,
+          "games": 46,
+          "mean_legal_moves": 17.043478260869566
+        },
+        {
+          "ply": 765,
+          "games": 46,
+          "mean_legal_moves": 15.673913043478262
+        },
+        {
+          "ply": 766,
+          "games": 46,
+          "mean_legal_moves": 15.717391304347826
+        },
+        {
+          "ply": 767,
+          "games": 45,
+          "mean_legal_moves": 15.688888888888888
+        },
+        {
+          "ply": 768,
+          "games": 45,
+          "mean_legal_moves": 17.733333333333334
+        },
+        {
+          "ply": 769,
+          "games": 45,
+          "mean_legal_moves": 13.933333333333334
+        },
+        {
+          "ply": 770,
+          "games": 45,
+          "mean_legal_moves": 17.42222222222222
+        },
+        {
+          "ply": 771,
+          "games": 45,
+          "mean_legal_moves": 14.355555555555556
+        },
+        {
+          "ply": 772,
+          "games": 45,
+          "mean_legal_moves": 17.533333333333335
+        },
+        {
+          "ply": 773,
+          "games": 43,
+          "mean_legal_moves": 15.69767441860465
+        },
+        {
+          "ply": 774,
+          "games": 43,
+          "mean_legal_moves": 16.674418604651162
+        },
+        {
+          "ply": 775,
+          "games": 42,
+          "mean_legal_moves": 14.571428571428571
+        },
+        {
+          "ply": 776,
+          "games": 41,
+          "mean_legal_moves": 16.78048780487805
+        },
+        {
+          "ply": 777,
+          "games": 39,
+          "mean_legal_moves": 14.897435897435898
+        },
+        {
+          "ply": 778,
+          "games": 39,
+          "mean_legal_moves": 15.282051282051283
+        },
+        {
+          "ply": 779,
+          "games": 38,
+          "mean_legal_moves": 15.68421052631579
+        },
+        {
+          "ply": 780,
+          "games": 38,
+          "mean_legal_moves": 14.5
+        },
+        {
+          "ply": 781,
+          "games": 38,
+          "mean_legal_moves": 15.394736842105264
+        },
+        {
+          "ply": 782,
+          "games": 38,
+          "mean_legal_moves": 15.421052631578947
+        },
+        {
+          "ply": 783,
+          "games": 38,
+          "mean_legal_moves": 15.447368421052632
+        },
+        {
+          "ply": 784,
+          "games": 37,
+          "mean_legal_moves": 14.864864864864865
+        },
+        {
+          "ply": 785,
+          "games": 36,
+          "mean_legal_moves": 16.97222222222222
+        },
+        {
+          "ply": 786,
+          "games": 36,
+          "mean_legal_moves": 15.805555555555555
+        },
+        {
+          "ply": 787,
+          "games": 35,
+          "mean_legal_moves": 15.2
+        },
+        {
+          "ply": 788,
+          "games": 35,
+          "mean_legal_moves": 17.0
+        },
+        {
+          "ply": 789,
+          "games": 35,
+          "mean_legal_moves": 14.371428571428572
+        },
+        {
+          "ply": 790,
+          "games": 35,
+          "mean_legal_moves": 17.37142857142857
+        },
+        {
+          "ply": 791,
+          "games": 34,
+          "mean_legal_moves": 14.676470588235293
+        },
+        {
+          "ply": 792,
+          "games": 34,
+          "mean_legal_moves": 15.617647058823529
+        },
+        {
+          "ply": 793,
+          "games": 34,
+          "mean_legal_moves": 16.205882352941178
+        },
+        {
+          "ply": 794,
+          "games": 34,
+          "mean_legal_moves": 15.264705882352942
+        },
+        {
+          "ply": 795,
+          "games": 34,
+          "mean_legal_moves": 16.852941176470587
+        },
+        {
+          "ply": 796,
+          "games": 34,
+          "mean_legal_moves": 15.470588235294118
+        },
+        {
+          "ply": 797,
+          "games": 34,
+          "mean_legal_moves": 15.794117647058824
+        },
+        {
+          "ply": 798,
+          "games": 33,
+          "mean_legal_moves": 14.93939393939394
+        },
+        {
+          "ply": 799,
+          "games": 33,
+          "mean_legal_moves": 18.0
+        },
+        {
+          "ply": 800,
+          "games": 33,
+          "mean_legal_moves": 14.878787878787879
+        },
+        {
+          "ply": 801,
+          "games": 33,
+          "mean_legal_moves": 17.393939393939394
+        },
+        {
+          "ply": 802,
+          "games": 33,
+          "mean_legal_moves": 15.666666666666666
+        },
+        {
+          "ply": 803,
+          "games": 33,
+          "mean_legal_moves": 16.0
+        },
+        {
+          "ply": 804,
+          "games": 33,
+          "mean_legal_moves": 14.424242424242424
+        },
+        {
+          "ply": 805,
+          "games": 32,
+          "mean_legal_moves": 18.5625
+        },
+        {
+          "ply": 806,
+          "games": 31,
+          "mean_legal_moves": 12.612903225806452
+        },
+        {
+          "ply": 807,
+          "games": 31,
+          "mean_legal_moves": 17.870967741935484
+        },
+        {
+          "ply": 808,
+          "games": 30,
+          "mean_legal_moves": 14.6
+        },
+        {
+          "ply": 809,
+          "games": 30,
+          "mean_legal_moves": 16.266666666666666
+        },
+        {
+          "ply": 810,
+          "games": 30,
+          "mean_legal_moves": 16.533333333333335
+        },
+        {
+          "ply": 811,
+          "games": 30,
+          "mean_legal_moves": 15.1
+        },
+        {
+          "ply": 812,
+          "games": 30,
+          "mean_legal_moves": 15.466666666666667
+        },
+        {
+          "ply": 813,
+          "games": 30,
+          "mean_legal_moves": 16.066666666666666
+        },
+        {
+          "ply": 814,
+          "games": 30,
+          "mean_legal_moves": 15.2
+        },
+        {
+          "ply": 815,
+          "games": 30,
+          "mean_legal_moves": 17.7
+        },
+        {
+          "ply": 816,
+          "games": 30,
+          "mean_legal_moves": 14.2
+        },
+        {
+          "ply": 817,
+          "games": 30,
+          "mean_legal_moves": 17.1
+        },
+        {
+          "ply": 818,
+          "games": 30,
+          "mean_legal_moves": 15.166666666666666
+        },
+        {
+          "ply": 819,
+          "games": 30,
+          "mean_legal_moves": 15.866666666666667
+        },
+        {
+          "ply": 820,
+          "games": 30,
+          "mean_legal_moves": 14.5
+        }
+      ],
+      "games_with_a_repeat": 0.29035,
+      "mean_repeated_plies_per_game": 0.4539,
+      "repeats": [
+        {
+          "occurrences": 2,
+          "fraction_of_games": 0.29035,
+          "ply": {
+            "n": 5807,
+            "mean": 92.13259858791115,
+            "min": 4,
+            "p10": 14,
+            "median": 65,
+            "p90": 206,
+            "max": 681
+          }
+        },
+        {
+          "occurrences": 3,
+          "fraction_of_games": 0.00145,
+          "ply": {
+            "n": 29,
+            "mean": 140.27586206896552,
+            "min": 11,
+            "p10": 21,
+            "median": 93,
+            "p90": 352,
+            "max": 509
+          }
+        },
+        {
+          "occurrences": 4,
+          "fraction_of_games": 0.0,
+          "ply": null
+        }
+      ]
+    },
+    {
+      "white": "greedy",
+      "red": "random",
+      "games": 20000,
+      "decisive": 20000,
+      "unfinished": 0,
+      "decisive_rate": 1.0,
+      "white_wins": 19993,
+      "red_wins": 7,
+      "decisive_length": {
+        "n": 20000,
+        "mean": 8.44505,
+        "min": 3,
+        "p10": 5,
+        "median": 7,
+        "p90": 13,
+        "max": 35
+      },
+      "ended_by_ply": [
+        [
+          10,
+          0.7246
+        ],
+        [
+          20,
+          0.9915
+        ],
+        [
+          30,
+          0.99975
+        ],
+        [
+          50,
+          1.0
+        ],
+        [
+          100,
+          1.0
+        ],
+        [
+          200,
+          1.0
+        ],
+        [
+          500,
+          1.0
+        ],
+        [
+          1000,
+          1.0
+        ]
+      ],
+      "mean_branching": 14.914719273420525,
+      "branching_by_ply": [
+        {
+          "ply": 0,
+          "games": 20000,
+          "mean_legal_moves": 16.0
+        },
+        {
+          "ply": 1,
+          "games": 20000,
+          "mean_legal_moves": 13.32115
+        },
+        {
+          "ply": 2,
+          "games": 20000,
+          "mean_legal_moves": 16.25085
+        },
+        {
+          "ply": 3,
+          "games": 19325,
+          "mean_legal_moves": 10.567296248382924
+        },
+        {
+          "ply": 4,
+          "games": 19325,
+          "mean_legal_moves": 19.834618369987062
+        },
+        {
+          "ply": 5,
+          "games": 14515,
+          "mean_legal_moves": 9.006820530485705
+        },
+        {
+          "ply": 6,
+          "games": 14513,
+          "mean_legal_moves": 20.779852545993247
+        },
+        {
+          "ply": 7,
+          "games": 9420,
+          "mean_legal_moves": 8.116666666666667
+        },
+        {
+          "ply": 8,
+          "games": 9419,
+          "mean_legal_moves": 20.788618749336447
+        },
+        {
+          "ply": 9,
+          "games": 5509,
+          "mean_legal_moves": 7.512978762025776
+        },
+        {
+          "ply": 10,
+          "games": 5508,
+          "mean_legal_moves": 20.856209150326798
+        },
+        {
+          "ply": 11,
+          "games": 2922,
+          "mean_legal_moves": 7.44798083504449
+        },
+        {
+          "ply": 12,
+          "games": 2922,
+          "mean_legal_moves": 20.694729637234772
+        },
+        {
+          "ply": 13,
+          "games": 1425,
+          "mean_legal_moves": 7.76
+        },
+        {
+          "ply": 14,
+          "games": 1425,
+          "mean_legal_moves": 20.331929824561403
+        },
+        {
+          "ply": 15,
+          "games": 672,
+          "mean_legal_moves": 7.940476190476191
+        },
+        {
+          "ply": 16,
+          "games": 670,
+          "mean_legal_moves": 19.68358208955224
+        },
+        {
+          "ply": 17,
+          "games": 332,
+          "mean_legal_moves": 8.581325301204819
+        },
+        {
+          "ply": 18,
+          "games": 331,
+          "mean_legal_moves": 19.709969788519636
+        },
+        {
+          "ply": 19,
+          "games": 170,
+          "mean_legal_moves": 8.229411764705882
+        },
+        {
+          "ply": 20,
+          "games": 170,
+          "mean_legal_moves": 19.370588235294118
+        },
+        {
+          "ply": 21,
+          "games": 83,
+          "mean_legal_moves": 8.397590361445783
+        },
+        {
+          "ply": 22,
+          "games": 83,
+          "mean_legal_moves": 19.204819277108435
+        },
+        {
+          "ply": 23,
+          "games": 39,
+          "mean_legal_moves": 8.487179487179487
+        },
+        {
+          "ply": 24,
+          "games": 39,
+          "mean_legal_moves": 18.487179487179485
+        }
+      ],
+      "games_with_a_repeat": 0.00055,
+      "mean_repeated_plies_per_game": 0.00065,
+      "repeats": [
+        {
+          "occurrences": 2,
+          "fraction_of_games": 0.00055,
+          "ply": {
+            "n": 11,
+            "mean": 14.818181818181818,
+            "min": 9,
+            "p10": 11,
+            "median": 13,
+            "p90": 19,
+            "max": 27
+          }
+        },
+        {
+          "occurrences": 3,
+          "fraction_of_games": 0.0,
+          "ply": null
+        },
+        {
+          "occurrences": 4,
+          "fraction_of_games": 0.0,
+          "ply": null
+        }
+      ]
+    },
+    {
+      "white": "random",
+      "red": "greedy",
+      "games": 20000,
+      "decisive": 20000,
+      "unfinished": 0,
+      "decisive_rate": 1.0,
+      "white_wins": 4,
+      "red_wins": 19996,
+      "decisive_length": {
+        "n": 20000,
+        "mean": 9.0766,
+        "min": 4,
+        "p10": 6,
+        "median": 8,
+        "p90": 14,
+        "max": 38
+      },
+      "ended_by_ply": [
+        [
+          10,
+          0.7593
+        ],
+        [
+          20,
+          0.9927
+        ],
+        [
+          30,
+          0.99965
+        ],
+        [
+          50,
+          1.0
+        ],
+        [
+          100,
+          1.0
+        ],
+        [
+          200,
+          1.0
+        ],
+        [
+          500,
+          1.0
+        ],
+        [
+          1000,
+          1.0
+        ]
+      ],
+      "mean_branching": 14.845916973316,
+      "branching_by_ply": [
+        {
+          "ply": 0,
+          "games": 20000,
+          "mean_legal_moves": 16.0
+        },
+        {
+          "ply": 1,
+          "games": 20000,
+          "mean_legal_moves": 15.0302
+        },
+        {
+          "ply": 2,
+          "games": 20000,
+          "mean_legal_moves": 12.2483
+        },
+        {
+          "ply": 3,
+          "games": 20000,
+          "mean_legal_moves": 18.017
+        },
+        {
+          "ply": 4,
+          "games": 18692,
+          "mean_legal_moves": 9.045313503102932
+        },
+        {
+          "ply": 5,
+          "games": 18692,
+          "mean_legal_moves": 20.27840787502675
+        },
+        {
+          "ply": 6,
+          "games": 13843,
+          "mean_legal_moves": 7.879144694069205
+        },
+        {
+          "ply": 7,
+          "games": 13843,
+          "mean_legal_moves": 21.03366322328975
+        },
+        {
+          "ply": 8,
+          "games": 8528,
+          "mean_legal_moves": 7.693949343339587
+        },
+        {
+          "ply": 9,
+          "games": 8528,
+          "mean_legal_moves": 21.141651031894934
+        },
+        {
+          "ply": 10,
+          "games": 4814,
+          "mean_legal_moves": 7.467386788533444
+        },
+        {
+          "ply": 11,
+          "games": 4813,
+          "mean_legal_moves": 20.99501350509038
+        },
+        {
+          "ply": 12,
+          "games": 2493,
+          "mean_legal_moves": 7.5535499398315284
+        },
+        {
+          "ply": 13,
+          "games": 2493,
+          "mean_legal_moves": 20.57039711191336
+        },
+        {
+          "ply": 14,
+          "games": 1231,
+          "mean_legal_moves": 7.8570268074735985
+        },
+        {
+          "ply": 15,
+          "games": 1230,
+          "mean_legal_moves": 20.422764227642276
+        },
+        {
+          "ply": 16,
+          "games": 605,
+          "mean_legal_moves": 7.99504132231405
+        },
+        {
+          "ply": 17,
+          "games": 604,
+          "mean_legal_moves": 19.882450331125828
+        },
+        {
+          "ply": 18,
+          "games": 282,
+          "mean_legal_moves": 8.372340425531915
+        },
+        {
+          "ply": 19,
+          "games": 282,
+          "mean_legal_moves": 19.918439716312058
+        },
+        {
+          "ply": 20,
+          "games": 146,
+          "mean_legal_moves": 8.808219178082192
+        },
+        {
+          "ply": 21,
+          "games": 146,
+          "mean_legal_moves": 19.78767123287671
+        },
+        {
+          "ply": 22,
+          "games": 70,
+          "mean_legal_moves": 8.571428571428571
+        },
+        {
+          "ply": 23,
+          "games": 69,
+          "mean_legal_moves": 21.44927536231884
+        }
+      ],
+      "games_with_a_repeat": 0.0005,
+      "mean_repeated_plies_per_game": 0.00095,
+      "repeats": [
+        {
+          "occurrences": 2,
+          "fraction_of_games": 0.0005,
+          "ply": {
+            "n": 10,
+            "mean": 13.9,
+            "min": 10,
+            "p10": 10,
+            "median": 13,
+            "p90": 16,
+            "max": 23
+          }
+        },
+        {
+          "occurrences": 3,
+          "fraction_of_games": 0.00005,
+          "ply": {
+            "n": 1,
+            "mean": 27.0,
+            "min": 27,
+            "p10": 27,
+            "median": 27,
+            "p90": 27,
+            "max": 27
+          }
+        },
+        {
+          "occurrences": 4,
+          "fraction_of_games": 0.0,
+          "ply": null
+        }
+      ]
+    },
+    {
+      "white": "greedy",
+      "red": "greedy",
+      "games": 20000,
+      "decisive": 20000,
+      "unfinished": 0,
+      "decisive_rate": 1.0,
+      "white_wins": 5520,
+      "red_wins": 14480,
+      "decisive_length": {
+        "n": 20000,
+        "mean": 13.5254,
+        "min": 6,
+        "p10": 8,
+        "median": 12,
+        "p90": 21,
+        "max": 82
+      },
+      "ended_by_ply": [
+        [
+          10,
+          0.37725
+        ],
+        [
+          20,
+          0.8991
+        ],
+        [
+          30,
+          0.99275
+        ],
+        [
+          50,
+          0.9999
+        ],
+        [
+          100,
+          1.0
+        ],
+        [
+          200,
+          1.0
+        ],
+        [
+          500,
+          1.0
+        ],
+        [
+          1000,
+          1.0
+        ]
+      ],
+      "mean_branching": 12.723930530705191,
+      "branching_by_ply": [
+        {
+          "ply": 0,
+          "games": 20000,
+          "mean_legal_moves": 16.0
+        },
+        {
+          "ply": 1,
+          "games": 20000,
+          "mean_legal_moves": 13.32325
+        },
+        {
+          "ply": 2,
+          "games": 20000,
+          "mean_legal_moves": 11.82895
+        },
+        {
+          "ply": 3,
+          "games": 20000,
+          "mean_legal_moves": 15.677
+        },
+        {
+          "ply": 4,
+          "games": 20000,
+          "mean_legal_moves": 9.13095
+        },
+        {
+          "ply": 5,
+          "games": 20000,
+          "mean_legal_moves": 15.80745
+        },
+        {
+          "ply": 6,
+          "games": 19412,
+          "mean_legal_moves": 9.172007005975685
+        },
+        {
+          "ply": 7,
+          "games": 19412,
+          "mean_legal_moves": 14.558365959200495
+        },
+        {
+          "ply": 8,
+          "games": 15055,
+          "mean_legal_moves": 10.606509465293922
+        },
+        {
+          "ply": 9,
+          "games": 15034,
+          "mean_legal_moves": 14.103365704403352
+        },
+        {
+          "ply": 10,
+          "games": 12455,
+          "mean_legal_moves": 11.451063829787234
+        },
+        {
+          "ply": 11,
+          "games": 11655,
+          "mean_legal_moves": 13.193307593307594
+        },
+        {
+          "ply": 12,
+          "games": 9967,
+          "mean_legal_moves": 11.302397913113273
+        },
+        {
+          "ply": 13,
+          "games": 9080,
+          "mean_legal_moves": 12.705506607929516
+        },
+        {
+          "ply": 14,
+          "games": 7597,
+          "mean_legal_moves": 11.344346452547057
+        },
+        {
+          "ply": 15,
+          "games": 6570,
+          "mean_legal_moves": 12.435768645357687
+        },
+        {
+          "ply": 16,
+          "games": 5197,
+          "mean_legal_moves": 11.653646334423707
+        },
+        {
+          "ply": 17,
+          "games": 4235,
+          "mean_legal_moves": 11.876977567886659
+        },
+        {
+          "ply": 18,
+          "games": 3308,
+          "mean_legal_moves": 11.557436517533253
+        },
+        {
+          "ply": 19,
+          "games": 2639,
+          "mean_legal_moves": 11.557408109132247
+        },
+        {
+          "ply": 20,
+          "games": 2018,
+          "mean_legal_moves": 11.924182358771061
+        },
+        {
+          "ply": 21,
+          "games": 1587,
+          "mean_legal_moves": 11.217391304347826
+        },
+        {
+          "ply": 22,
+          "games": 1236,
+          "mean_legal_moves": 11.905339805825243
+        },
+        {
+          "ply": 23,
+          "games": 931,
+          "mean_legal_moves": 11.063372717508056
+        },
+        {
+          "ply": 24,
+          "games": 727,
+          "mean_legal_moves": 11.690508940852819
+        },
+        {
+          "ply": 25,
+          "games": 550,
+          "mean_legal_moves": 11.218181818181819
+        },
+        {
+          "ply": 26,
+          "games": 427,
+          "mean_legal_moves": 12.091334894613583
+        },
+        {
+          "ply": 27,
+          "games": 315,
+          "mean_legal_moves": 10.793650793650794
+        },
+        {
+          "ply": 28,
+          "games": 242,
+          "mean_legal_moves": 11.061983471074381
+        },
+        {
+          "ply": 29,
+          "games": 192,
+          "mean_legal_moves": 11.125
+        },
+        {
+          "ply": 30,
+          "games": 145,
+          "mean_legal_moves": 11.372413793103448
+        },
+        {
+          "ply": 31,
+          "games": 110,
+          "mean_legal_moves": 11.8
+        },
+        {
+          "ply": 32,
+          "games": 82,
+          "mean_legal_moves": 11.231707317073171
+        },
+        {
+          "ply": 33,
+          "games": 65,
+          "mean_legal_moves": 11.046153846153846
+        },
+        {
+          "ply": 34,
+          "games": 50,
+          "mean_legal_moves": 11.22
+        },
+        {
+          "ply": 35,
+          "games": 39,
+          "mean_legal_moves": 11.051282051282051
+        }
+      ],
+      "games_with_a_repeat": 0.00275,
+      "mean_repeated_plies_per_game": 0.00875,
+      "repeats": [
+        {
+          "occurrences": 2,
+          "fraction_of_games": 0.00275,
+          "ply": {
+            "n": 55,
+            "mean": 20.2,
+            "min": 12,
+            "p10": 13,
+            "median": 20,
+            "p90": 28,
+            "max": 36
+          }
+        },
+        {
+          "occurrences": 3,
+          "fraction_of_games": 0.00035,
+          "ply": {
+            "n": 7,
+            "mean": 29.857142857142858,
+            "min": 23,
+            "p10": 23,
+            "median": 29,
+            "p90": 35,
+            "max": 35
+          }
+        },
+        {
+          "occurrences": 4,
+          "fraction_of_games": 0.00015,
+          "ply": {
+            "n": 3,
+            "mean": 39.333333333333336,
+            "min": 37,
+            "p10": 37,
+            "median": 40,
+            "p90": 41,
+            "max": 41
+          }
+        }
+      ]
+    }
+  ]
+}
