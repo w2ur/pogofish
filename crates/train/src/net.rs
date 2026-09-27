@@ -187,7 +187,7 @@ mod tests {
     #[test]
     fn forward_output_shapes() {
         let (_vs, net) = make_net();
-        let x = Tensor::randn(&[4, STATE_SIZE as i64], (Kind::Float, Device::Cpu));
+        let x = Tensor::randn([4, STATE_SIZE as i64], (Kind::Float, Device::Cpu));
         let _guard = tch::no_grad_guard();
         let (policy, value) = net.forward(&x);
         assert_eq!(policy.size(), vec![4, ACTION_SIZE as i64]);
@@ -199,7 +199,7 @@ mod tests {
         let cfg = ArchConfig::mlp_tiny();
         let vs = make_var_store();
         let net = AzNet::from_config(&vs.root(), &cfg);
-        let x = Tensor::randn(&[4, STATE_SIZE as i64], (Kind::Float, Device::Cpu));
+        let x = Tensor::randn([4, STATE_SIZE as i64], (Kind::Float, Device::Cpu));
         let _guard = tch::no_grad_guard();
         let (policy, value) = net.forward(&x);
         assert_eq!(policy.size(), vec![4, ACTION_SIZE as i64]);
@@ -209,7 +209,7 @@ mod tests {
     #[test]
     fn forward_single_shapes() {
         let (_vs, net) = make_net();
-        let x = Tensor::randn(&[STATE_SIZE as i64], (Kind::Float, Device::Cpu));
+        let x = Tensor::randn([STATE_SIZE as i64], (Kind::Float, Device::Cpu));
         let _guard = tch::no_grad_guard();
         let (policy, value) = net.forward_single(&x);
         assert_eq!(policy.size(), vec![ACTION_SIZE as i64]);
@@ -220,7 +220,7 @@ mod tests {
     fn value_bounded() {
         // tanh output must be in [-1, 1]
         let (_vs, net) = make_net();
-        let x = Tensor::randn(&[16, STATE_SIZE as i64], (Kind::Float, Device::Cpu));
+        let x = Tensor::randn([16, STATE_SIZE as i64], (Kind::Float, Device::Cpu));
         let _guard = tch::no_grad_guard();
         let (_policy, value) = net.forward(&x);
         let max_val = f64::try_from(value.max()).unwrap();

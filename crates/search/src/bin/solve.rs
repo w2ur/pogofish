@@ -155,7 +155,6 @@ fn main() -> anyhow::Result<()> {
 
     // SIGINT handler — sets flag, solver checks it every 100k nodes
     let interrupted = Arc::new(AtomicBool::new(false));
-    let flag = interrupted.clone();
     unsafe {
         libc::signal(libc::SIGINT, {
             extern "C" fn handler(_: libc::c_int) {
@@ -163,7 +162,7 @@ fn main() -> anyhow::Result<()> {
                 // so we use a global atomic.
                 SOLVE_INTERRUPTED.store(true, Ordering::SeqCst);
             }
-            handler as libc::sighandler_t
+            handler as *const () as libc::sighandler_t
         });
     }
     // Bridge: a thread that copies the global flag to our local Arc

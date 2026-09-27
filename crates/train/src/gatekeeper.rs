@@ -14,6 +14,7 @@ pub struct GatekeeperResult {
 /// determinism while still mostly picking the best move; tau=0.0 is fully greedy).
 /// No Dirichlet noise is added.
 /// Returns the challenger's win rate.
+#[allow(clippy::too_many_arguments)]
 pub fn gatekeeper(
     challenger: &AzNet,
     best: &AzNet,
@@ -75,6 +76,7 @@ pub fn gatekeeper(
 
 /// Play a single game between two nets using MCTS with the given temperature.
 /// `challenger_color` determines which net plays which side.
+#[allow(clippy::too_many_arguments)]
 fn play_game_with_tau(
     challenger: &AzNet,
     best: &AzNet,

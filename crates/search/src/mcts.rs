@@ -1,6 +1,7 @@
 use pogofish_engine::{
     apply_move, is_terminal, legal_moves, GameState, Move, Outcome, RuleSet, StateKey,
 };
+use std::collections::hash_map::Entry;
 use std::collections::HashMap;
 
 #[derive(Debug, Clone, Copy)]
@@ -72,7 +73,7 @@ impl Mcts {
         }
 
         let key = state.key();
-        if !self.nodes.contains_key(&key) {
+        if let Entry::Vacant(slot) = self.nodes.entry(key.clone()) {
             let moves = legal_moves(state);
             let n = moves.len().max(1) as f32;
             let uniform_prior = 1.0 / n;
@@ -89,7 +90,7 @@ impl Mcts {
                     }
                 })
                 .collect();
-            self.nodes.insert(key, Node { edges });
+            slot.insert(Node { edges });
             return 0.0;
         }
 

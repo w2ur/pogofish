@@ -60,7 +60,7 @@ fn q_values_have_correct_shape() {
 fn q_values_batch_shape() {
     let vs = make_var_store();
     let net = DqnNet::new(&vs.root(), &[64, 32], 32);
-    let batch = Tensor::randn(&[8, STATE_SIZE as i64], (Kind::Float, Device::Cpu));
+    let batch = Tensor::randn([8, STATE_SIZE as i64], (Kind::Float, Device::Cpu));
 
     let _guard = tch::no_grad_guard();
     let q = net.forward(&batch);

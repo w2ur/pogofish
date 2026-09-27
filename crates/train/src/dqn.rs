@@ -265,7 +265,7 @@ pub fn train_dqn(rules: &RuleSet, cfg: &DqnConfig) -> anyhow::Result<()> {
                     // just move). We negate for the mover's perspective.
                     let reward = terminal_reward_for_mover(outcome);
                     // next state is terminal; we use a zero tensor as a placeholder
-                    let zero_next = Tensor::zeros(&[STATE_SIZE as i64], (Kind::Float, Device::Cpu));
+                    let zero_next = Tensor::zeros([STATE_SIZE as i64], (Kind::Float, Device::Cpu));
                     replay.push(Transition {
                         state: prev_state,
                         action_idx: prev_action,
@@ -469,7 +469,7 @@ mod tests {
     #[test]
     fn forward_output_shape() {
         let (_vs, net) = make_net();
-        let x = Tensor::randn(&[4, STATE_SIZE as i64], (Kind::Float, Device::Cpu));
+        let x = Tensor::randn([4, STATE_SIZE as i64], (Kind::Float, Device::Cpu));
         let _guard = tch::no_grad_guard();
         let q = net.forward(&x);
         assert_eq!(q.size(), vec![4, ACTION_SIZE as i64]);
@@ -478,7 +478,7 @@ mod tests {
     #[test]
     fn forward_single_output_shape() {
         let (_vs, net) = make_net();
-        let x = Tensor::randn(&[STATE_SIZE as i64], (Kind::Float, Device::Cpu));
+        let x = Tensor::randn([STATE_SIZE as i64], (Kind::Float, Device::Cpu));
         let _guard = tch::no_grad_guard();
         let q = net.forward_single(&x);
         assert_eq!(q.size(), vec![ACTION_SIZE as i64]);
@@ -489,10 +489,10 @@ mod tests {
         let mut buf = ReplayBuffer::new(3);
         for i in 0..5 {
             buf.push(Transition {
-                state: Tensor::zeros(&[STATE_SIZE as i64], (Kind::Float, Device::Cpu)),
+                state: Tensor::zeros([STATE_SIZE as i64], (Kind::Float, Device::Cpu)),
                 action_idx: i,
                 reward: 0.0,
-                next_state: Tensor::zeros(&[STATE_SIZE as i64], (Kind::Float, Device::Cpu)),
+                next_state: Tensor::zeros([STATE_SIZE as i64], (Kind::Float, Device::Cpu)),
                 done: false,
             });
         }
@@ -505,10 +505,10 @@ mod tests {
         let mut rng = rand::thread_rng();
         for _ in 0..20 {
             buf.push(Transition {
-                state: Tensor::zeros(&[STATE_SIZE as i64], (Kind::Float, Device::Cpu)),
+                state: Tensor::zeros([STATE_SIZE as i64], (Kind::Float, Device::Cpu)),
                 action_idx: 0,
                 reward: 0.0,
-                next_state: Tensor::zeros(&[STATE_SIZE as i64], (Kind::Float, Device::Cpu)),
+                next_state: Tensor::zeros([STATE_SIZE as i64], (Kind::Float, Device::Cpu)),
                 done: false,
             });
         }
@@ -523,7 +523,7 @@ mod tests {
     fn dqn_net_no_nan_output() {
         // Forward pass on random input should not produce NaN or Inf Q-values.
         let (_vs, net) = make_net();
-        let x = Tensor::randn(&[STATE_SIZE as i64], (Kind::Float, Device::Cpu));
+        let x = Tensor::randn([STATE_SIZE as i64], (Kind::Float, Device::Cpu));
         let _guard = tch::no_grad_guard();
         let q: Vec<f32> = net.forward_single(&x).try_into().unwrap();
         assert_eq!(q.len(), ACTION_SIZE);

@@ -95,6 +95,7 @@ pub fn solve_full(
     (result, tt)
 }
 
+#[allow(clippy::too_many_arguments)]
 fn negamax(
     state: &GameState,
     rules: &RuleSet,
@@ -174,6 +175,7 @@ fn negamax(
     (best_value, best_move)
 }
 
+#[allow(clippy::too_many_arguments)]
 fn negamax_with_progress(
     state: &GameState,
     rules: &RuleSet,

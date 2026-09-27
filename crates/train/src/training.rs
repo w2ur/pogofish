@@ -386,7 +386,7 @@ pub fn train(rules: &RuleSet, cfg: &TrainConfig) -> anyhow::Result<()> {
 /// Register a Ctrl+C handler that sets the flag instead of killing the process.
 fn ctrlc_handler(flag: &Arc<AtomicBool>) {
     let f = flag.clone();
-    let _ = unsafe { libc::signal(libc::SIGINT, sigint_handler as libc::sighandler_t) };
+    let _ = unsafe { libc::signal(libc::SIGINT, sigint_handler as *const () as libc::sighandler_t) };
     // Store the flag in a static so the signal handler can access it
     INTERRUPTED.store(
         flag.as_ref() as *const AtomicBool as usize,
