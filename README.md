@@ -46,6 +46,8 @@ Pogo is played on a 3×3 grid. Each player starts with 6 pieces in 3 stacks of 2
 - **LC2** — hard move cap; if nobody has won by the cap, the player to move at the cap loses (so the cap's parity picks the loser).
 - **LC3** — soft move cap; most stacks wins, ties are draws.
 
+The full rules, each linked to the engine line and the test that pins it, are in [`docs/rules.md`](docs/rules.md).
+
 The web article ships **LC1-2** (fast, sudden-death) and **LC3-29** (balanced, draws possible — the default).
 
 ## Development
