@@ -58,3 +58,25 @@ The plan's ablation, "Markov features on vs off", has nothing to switch under th
 uncapped game: the board alone is already a Markov state (task 2.2), so there are
 no extra features to remove. It is replaced by the ablation 4.1 made necessary:
 **input encoding, absolute vs mover-relative**, one seed, same settings.
+
+## How the criteria will be judged (fixed before results)
+
+Pre-registered criteria are in the plan (Phase 5). Their operational form, written
+while the runs are in progress and before any is read:
+
+1. **Beats the baselines.** For each seed, the final checkpoint (iteration 200)
+   plays `arena` with fresh openings (`--seed 7`, 200 pairs = 400 games, 4-ply
+   openings, 100 simulations per move) against: `random`, `greedy`, the TD agent of
+   the same seed number (`td:models/td-mr-sN/weights.pt`), and its own checkpoint at
+   10 % of training (iteration 20). Passed when every interval's lower bound is above
+   0.5. Distinct positions after the opening are reported for each match.
+2. **Rises and plateaus.** For each seed, checkpoints at iterations 20, 40, …, 200
+   are rated on one ladder: each plays random, greedy, `mcts-uniform:200` and the
+   next checkpoint (100 pairs each, 50 simulations per move, arena seed 11), with
+   random anchored at 0. *Rises*: the last checkpoint's interval lies entirely above
+   the first's. *Plateaus rather than oscillates*: the last three checkpoints'
+   intervals overlap pairwise, and no checkpoint after the first to reach the final
+   checkpoint's lower bound falls below the final's interval afterwards.
+3. **Reproducible.** 1 holds for all three seeds; the spread of scores against
+   greedy across seeds is reported.
+4. **Owner plays.** Needs the owner; a hard stop.
