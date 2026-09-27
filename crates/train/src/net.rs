@@ -1,4 +1,6 @@
-use crate::encoding::{ACTION_SIZE, STATE_SIZE};
+#[cfg(test)]
+use crate::encoding::STATE_SIZE;
+use crate::encoding::{Features, ACTION_SIZE};
 use tch::{
     nn::{self, Module},
     Device, Tensor,
@@ -53,6 +55,7 @@ pub struct AzNet {
     trunk: nn::Sequential,
     policy_head: nn::Sequential,
     value_head: nn::Sequential,
+    features: Features,
 }
 
 impl AzNet {
@@ -66,8 +69,25 @@ impl AzNet {
         policy_head_size: i64,
         value_head_size: i64,
     ) -> Self {
+        Self::with_features(
+            vs,
+            trunk_sizes,
+            policy_head_size,
+            value_head_size,
+            Features::Absolute,
+        )
+    }
+
+    /// Build a new AzNet reading `features` (see `encoding::Features`).
+    pub fn with_features(
+        vs: &nn::Path,
+        trunk_sizes: &[i64],
+        policy_head_size: i64,
+        value_head_size: i64,
+        features: Features,
+    ) -> Self {
         let mut trunk = nn::seq();
-        let mut in_size = STATE_SIZE as i64;
+        let mut in_size = features.size() as i64;
         for (i, &out_size) in trunk_sizes.iter().enumerate() {
             trunk = trunk
                 .add(nn::linear(
@@ -115,7 +135,18 @@ impl AzNet {
             trunk,
             policy_head,
             value_head,
+            features,
         }
+    }
+
+    /// The input encoding this net reads.
+    pub fn features(&self) -> Features {
+        self.features
+    }
+
+    /// Encode a position for this net.
+    pub fn encode(&self, state: &pogofish_engine::GameState) -> Tensor {
+        self.features.encode(state)
     }
 
     /// Forward pass.
@@ -155,6 +186,11 @@ impl AzNet {
     /// Build an AzNet from an ArchConfig and variable store.
     pub fn from_config(vs: &nn::Path, cfg: &ArchConfig) -> Self {
         Self::new(vs, &cfg.trunk_sizes, cfg.head_size, cfg.head_size)
+    }
+
+    /// Build an AzNet from an ArchConfig, reading `features`.
+    pub fn from_config_with(vs: &nn::Path, cfg: &ArchConfig, features: Features) -> Self {
+        Self::with_features(vs, &cfg.trunk_sizes, cfg.head_size, cfg.head_size, features)
     }
 }
 

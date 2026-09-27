@@ -11,7 +11,7 @@ use anyhow::Context;
 use pogofish_engine::{
     apply_move, initial_state, is_terminal, legal_moves, Color, GameState, Move, Outcome, RuleSet,
 };
-use rand::{rngs::StdRng, SeedableRng};
+use pogofish_search::rng::SplitMix64;
 use serde::{Deserialize, Serialize};
 use tch::nn;
 
@@ -113,7 +113,7 @@ pub fn run(model_dir: &Path, output: &Path, num_games: usize) -> anyhow::Result<
         num_games, cfg.num_simulations, variant_label
     );
 
-    let mut rng = StdRng::seed_from_u64(42);
+    let mut rng = SplitMix64::new(42);
     let mut games: Vec<GameRecord> = Vec::with_capacity(num_games);
     for i in 0..num_games {
         let record = play_one(&net, &rules, &cfg, &mut rng);
@@ -182,7 +182,7 @@ struct GameRecord {
     capture_plies: Vec<usize>, // 0-indexed ply positions where a capture occurred
 }
 
-fn play_one(net: &AzNet, rules: &RuleSet, cfg: &SelfPlayConfig, rng: &mut StdRng) -> GameRecord {
+fn play_one(net: &AzNet, rules: &RuleSet, cfg: &SelfPlayConfig, rng: &mut SplitMix64) -> GameRecord {
     let mut state = initial_state();
     let mut moves: Vec<Move> = Vec::new();
     let mut states: Vec<GameState> = Vec::new();

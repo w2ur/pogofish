@@ -1,5 +1,6 @@
 use pogofish_engine::RuleSet;
 use pogofish_engine::{testing::position, Color, Outcome};
+use pogofish_search::rng::SplitMix64;
 use pogofish_train::encoding::ACTION_SIZE;
 use pogofish_train::net::{make_var_store, AzNet};
 use pogofish_train::selfplay::{play_game_from, play_one_game, GameEnd, SelfPlayConfig};
@@ -17,6 +18,7 @@ fn fast_cfg() -> SelfPlayConfig {
         max_moves: 20,
         dirichlet_alpha: 0.3,
         dirichlet_epsilon: 0.25,
+        temperature_moves: 10,
     }
 }
 
@@ -24,7 +26,7 @@ fn fast_cfg() -> SelfPlayConfig {
 fn play_one_game_nonempty() {
     let (_vs, net) = make_net();
     let rules = RuleSet::LC1 { repetitions: 1 };
-    let examples = play_one_game(&net, &rules, &fast_cfg()).examples;
+    let examples = play_one_game(&net, &rules, &fast_cfg(), &mut SplitMix64::new(1)).examples;
     assert!(
         !examples.is_empty(),
         "self-play game should produce at least one example"
@@ -35,11 +37,11 @@ fn play_one_game_nonempty() {
 fn training_examples_have_correct_policy_len() {
     let (_vs, net) = make_net();
     let rules = RuleSet::LC1 { repetitions: 1 };
-    let examples = play_one_game(&net, &rules, &fast_cfg()).examples;
+    let examples = play_one_game(&net, &rules, &fast_cfg(), &mut SplitMix64::new(1)).examples;
     for (i, ex) in examples.iter().enumerate() {
         assert_eq!(
-            ex.policy.size(),
-            vec![ACTION_SIZE as i64],
+            ex.policy.len(),
+            ACTION_SIZE,
             "example {i} has wrong policy shape"
         );
     }
@@ -49,7 +51,7 @@ fn training_examples_have_correct_policy_len() {
 fn training_examples_value_bounded() {
     let (_vs, net) = make_net();
     let rules = RuleSet::LC3 { cap: 30 };
-    let examples = play_one_game(&net, &rules, &fast_cfg()).examples;
+    let examples = play_one_game(&net, &rules, &fast_cfg(), &mut SplitMix64::new(1)).examples;
     for (i, ex) in examples.iter().enumerate() {
         assert!(
             ex.value.map_or(true, |v| (-1.0..=1.0).contains(&v)),
@@ -71,7 +73,7 @@ fn terminated_game_has_value_targets() {
         9,
     );
     let rules = RuleSet::LC2 { cap: 10 };
-    let game = play_game_from(&net, &start, &rules, &fast_cfg());
+    let game = play_game_from(&net, &start, &rules, &fast_cfg(), &mut SplitMix64::new(1));
     assert_eq!(game.end, GameEnd::Terminated(Outcome::WinWhite));
     assert_eq!(game.examples.len(), 1);
     assert_eq!(game.examples[0].value, Some(1.0));
@@ -88,12 +90,12 @@ fn truncated_game_keeps_policies_and_drops_values() {
         max_moves: 2,
         ..fast_cfg()
     };
-    let game = play_one_game(&net, &RuleSet::Uncapped, &cfg);
+    let game = play_one_game(&net, &RuleSet::Uncapped, &cfg, &mut SplitMix64::new(1));
     assert_eq!(game.end, GameEnd::Truncated);
     assert_eq!(game.examples.len(), 2);
     for ex in &game.examples {
         assert_eq!(ex.value, None);
-        let total = f64::try_from(ex.policy.sum(tch::Kind::Float)).unwrap();
+        let total: f64 = ex.policy.iter().map(|&p| p as f64).sum();
         assert!((total - 1.0).abs() < 1e-4, "policy target sums to {total}");
     }
 }
@@ -114,7 +116,13 @@ fn a_win_on_the_last_allowed_move_is_not_a_truncation() {
         max_moves: 1,
         ..fast_cfg()
     };
-    let game = play_game_from(&net, &start, &RuleSet::LC2 { cap: 10 }, &cfg);
+    let game = play_game_from(
+        &net,
+        &start,
+        &RuleSet::LC2 { cap: 10 },
+        &cfg,
+        &mut SplitMix64::new(1),
+    );
     assert_eq!(game.end, GameEnd::Terminated(Outcome::WinWhite));
 }
 
@@ -140,9 +148,13 @@ fn value_loss_ignores_positions_without_a_value_target() {
 #[test]
 fn uncapped_self_play_survives_cycles() {
     let (_vs, net) = make_net();
-    let cfg = SelfPlayConfig { num_simulations: 200, max_moves: 60, ..fast_cfg() };
+    let cfg = SelfPlayConfig {
+        num_simulations: 200,
+        max_moves: 60,
+        ..fast_cfg()
+    };
     for _ in 0..3 {
-        let game = play_one_game(&net, &RuleSet::Uncapped, &cfg);
+        let game = play_one_game(&net, &RuleSet::Uncapped, &cfg, &mut SplitMix64::new(1));
         assert!(!game.examples.is_empty());
     }
 }

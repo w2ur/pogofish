@@ -14,11 +14,9 @@
 //! resumes the run exactly.
 
 use crate::checkpoint::{load_var_store_strict, save_var_store};
-use crate::encoding::{state_to_tensor, MAX_STACK, STATE_SIZE};
 use anyhow::{ensure, Context};
 use pogofish_engine::{
-    apply_move_under, initial_state, is_terminal, legal_moves, Color, GameState, Move, Outcome,
-    RuleSet,
+    apply_move_under, initial_state, is_terminal, legal_moves, GameState, Move, Outcome, RuleSet,
 };
 use pogofish_search::arena::{run_match, Agent, ArenaConfig};
 use pogofish_search::players::Scripted;
@@ -29,50 +27,8 @@ use std::time::Instant;
 use tch::nn::{self, Module, OptimizerConfig};
 use tch::{Kind, Tensor};
 
-/// How a position is turned into the net's input.
-#[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize)]
-#[serde(rename_all = "kebab-case")]
-pub enum TdFeatures {
-    /// The AlphaZero encoding (`encoding::state_to_tensor`): 12 slots per
-    /// cell in absolute colours, bottom to top, plus the player to move.
-    Absolute,
-    /// Per cell, seen from the player to move: 12 slots (+1 own piece, −1
-    /// opponent's, 0 empty), the top's owner (+1, −1, 0) and the height / 12.
-    /// Only raw board facts, restated so that ownership sits in a fixed
-    /// input whatever the stack's height.
-    MoverRelative,
-}
-
-pub const MOVER_RELATIVE_SIZE: usize = 9 * (MAX_STACK + 2);
-
-impl TdFeatures {
-    pub fn size(self) -> usize {
-        match self {
-            TdFeatures::Absolute => STATE_SIZE,
-            TdFeatures::MoverRelative => MOVER_RELATIVE_SIZE,
-        }
-    }
-
-    pub fn encode(self, state: &GameState) -> Tensor {
-        match self {
-            TdFeatures::Absolute => state_to_tensor(state),
-            TdFeatures::MoverRelative => {
-                let me = state.to_move();
-                let side = |c: Color| if c == me { 1.0f32 } else { -1.0 };
-                let mut x = [0f32; MOVER_RELATIVE_SIZE];
-                for (i, stack) in state.cells().iter().enumerate() {
-                    let base = i * (MAX_STACK + 2);
-                    for (slot, &c) in stack.iter().enumerate().take(MAX_STACK) {
-                        x[base + slot] = side(c);
-                    }
-                    x[base + MAX_STACK] = stack.last().map_or(0.0, |&c| side(c));
-                    x[base + MAX_STACK + 1] = stack.len() as f32 / MAX_STACK as f32;
-                }
-                Tensor::from_slice(&x)
-            }
-        }
-    }
-}
+pub use crate::encoding::Features as TdFeatures;
+pub use crate::encoding::MOVER_RELATIVE_SIZE;
 
 pub struct TdNet {
     seq: nn::Sequential,
@@ -569,6 +525,8 @@ pub fn train_td(cfg: &TdConfig, dir: &Path) -> anyhow::Result<TdStop> {
 #[cfg(test)]
 mod tests {
     use super::*;
+    use crate::encoding::{MAX_STACK, STATE_SIZE};
+    use pogofish_engine::Color;
 
     #[test]
     fn lambda_one_is_the_game_result_with_alternating_signs() {

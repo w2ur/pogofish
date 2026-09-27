@@ -10,7 +10,7 @@ Pogofish is a browser-based Pogo board game with AI opponents trained via AlphaZ
 - Rust 1.79+ (stable toolchain)
 - `pogofish-engine` — Game rules, state, legal moves, rulesets (`Uncapped`, LC1/LC2/LC3; `RuleSet` parses and prints `uncapped`, `lc1-N`, …)
 - `pogofish-search` — Minimax (alpha-beta + TT), MCTS (PUCT), checkpointer, scripted `random`/`greedy` players (seeded, no dependency)
-- `pogofish-train` — AlphaZero training (tch-rs/libtorch), self-play, gatekeeper, TD(λ) value learning (`td_train`), `arena` evaluation binary
+- `pogofish-train` — AlphaZero training (tch-rs/libtorch, no gating, exact resume), self-play, TD(λ) value learning (`td_train`), `arena` evaluation binary
 - `pogofish-cli` — Curses-style terminal UI (crossterm)
 - `pogofish-wasm` — wasm-bindgen wrappers for browser use
 
@@ -83,12 +83,14 @@ openings, no CI and counts truncations as draws.
 # Requires libtorch — tch-rs downloads it automatically during build.
 # At runtime, set DYLD_LIBRARY_PATH to the downloaded libtorch lib dir:
 DYLD_LIBRARY_PATH=$(find target/release/build -path "*/torch-sys-*/out/libtorch/libtorch/lib" | head -1) \
-  ./target/release/train uncapped models/uncapped mlp_small
+  ./target/release/train models/az-s1 --features mover-relative --seed 1
 
 # Only rulesets whose board encoding is Markov are accepted (today: `uncapped`);
 # lc1/lc2/lc3 are refused, see docs/experiments/v1-verdict.md defect 3.
-# Training resumes automatically if interrupted (reads metrics.jsonl).
-# Ctrl+C triggers graceful shutdown saving the best model.
+# Resumable: Ctrl+C stops at the next game boundary; rerun the same command to
+# resume (or raise --iterations to extend). A resumed run is bit-identical to an
+# uninterrupted one (weights, momentum, replay buffer, counters, generator).
+# No gating: every --checkpoint-every checkpoint is kept, to be rated with arena/ladder.
 ```
 
 ### WASM build

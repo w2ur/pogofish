@@ -1,5 +1,6 @@
 use pogofish_engine::symmetry::{transform_move, CellMap};
 use pogofish_engine::{legal_moves, Color, GameState, Move};
+use serde::{Deserialize, Serialize};
 use tch::Tensor;
 
 pub const STATE_SIZE: usize = 109; // MAX_STACK * NUM_CELLS + 1 = 12 * 9 + 1
@@ -67,6 +68,51 @@ pub fn transform_policy(policy: &[f32; ACTION_SIZE], perm: &CellMap) -> [f32; AC
         out[move_to_index(&transform_move(index_to_move(idx), perm))] = p;
     }
     out
+}
+
+/// How a position is turned into the net's input.
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize)]
+#[serde(rename_all = "kebab-case")]
+pub enum Features {
+    /// The AlphaZero encoding (`encoding::state_to_tensor`): 12 slots per
+    /// cell in absolute colours, bottom to top, plus the player to move.
+    Absolute,
+    /// Per cell, seen from the player to move: 12 slots (+1 own piece, −1
+    /// opponent's, 0 empty), the top's owner (+1, −1, 0) and the height / 12.
+    /// Only raw board facts, restated so that ownership sits in a fixed
+    /// input whatever the stack's height.
+    MoverRelative,
+}
+
+pub const MOVER_RELATIVE_SIZE: usize = 9 * (MAX_STACK + 2);
+
+impl Features {
+    pub fn size(self) -> usize {
+        match self {
+            Features::Absolute => STATE_SIZE,
+            Features::MoverRelative => MOVER_RELATIVE_SIZE,
+        }
+    }
+
+    pub fn encode(self, state: &GameState) -> Tensor {
+        match self {
+            Features::Absolute => state_to_tensor(state),
+            Features::MoverRelative => {
+                let me = state.to_move();
+                let side = |c: Color| if c == me { 1.0f32 } else { -1.0 };
+                let mut x = [0f32; MOVER_RELATIVE_SIZE];
+                for (i, stack) in state.cells().iter().enumerate() {
+                    let base = i * (MAX_STACK + 2);
+                    for (slot, &c) in stack.iter().enumerate().take(MAX_STACK) {
+                        x[base + slot] = side(c);
+                    }
+                    x[base + MAX_STACK] = stack.last().map_or(0.0, |&c| side(c));
+                    x[base + MAX_STACK + 1] = stack.len() as f32 / MAX_STACK as f32;
+                }
+                Tensor::from_slice(&x)
+            }
+        }
+    }
 }
 
 #[cfg(test)]
@@ -187,7 +233,9 @@ mod tests {
         }
         for perm in verified_symmetries() {
             let t = transform_policy(&policy, &perm);
-            let mask: Vec<f32> = legal_move_mask(&transform_state(&s, &perm)).try_into().unwrap();
+            let mask: Vec<f32> = legal_move_mask(&transform_state(&s, &perm))
+                .try_into()
+                .unwrap();
             for idx in 0..ACTION_SIZE {
                 assert_eq!(t[idx] > 0.0, mask[idx] == 1.0, "index {idx}");
             }

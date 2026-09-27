@@ -144,7 +144,10 @@ fn pick_move(
             let moves = legal_moves(state);
             moves[rng.gen_range(0..moves.len())]
         }
-        Player::Model { net, .. } => neural_mcts_move_with_tau(net, state, rules, cfg, tau, rng),
+        Player::Model { net, .. } => {
+            let mut r = pogofish_search::rng::SplitMix64::new(rng.gen());
+            neural_mcts_move_with_tau(net, state, rules, cfg, tau, &mut r)
+        }
     }
 }
 
