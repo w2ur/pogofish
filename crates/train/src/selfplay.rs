@@ -5,7 +5,7 @@ use pogofish_engine::{
     StateKey,
 };
 use rand::Rng;
-use std::collections::HashMap;
+use std::collections::{HashMap, HashSet};
 use tch::{Kind, Tensor};
 
 pub struct SelfPlayConfig {
@@ -95,7 +95,7 @@ impl<'a> NeuralMcts<'a> {
         }
 
         for _ in 0..self.cfg.num_simulations {
-            self.simulate(root, rules);
+            self.simulate(root, rules, &mut HashSet::new());
         }
 
         let root_key = search_key(root, rules);
@@ -170,14 +170,21 @@ impl<'a> NeuralMcts<'a> {
         }
     }
 
-    fn simulate(&mut self, state: &GameState, rules: &RuleSet) -> f32 {
+    /// One simulation. `path` holds the keys already visited by this
+    /// simulation: under rules that allow a position to recur (the uncapped
+    /// game), the search graph has cycles, and following one would recurse
+    /// forever. A position met again on the path is evaluated as a leaf
+    /// (the network's value estimate) and not expanded further.
+    fn simulate(&mut self, state: &GameState, rules: &RuleSet, path: &mut HashSet<StateKey>) -> f32 {
         if let Some(outcome) = is_terminal(state, rules) {
             return outcome_value_for_mover(outcome, state);
         }
 
         let key = search_key(state, rules);
-        if !self.nodes.contains_key(&key) {
-            // Leaf: expand and return net value estimate
+        let revisit = !path.insert(key.clone());
+        if revisit || !self.nodes.contains_key(&key) {
+            // Leaf (or a cycle back onto the path): expand if new, and return
+            // the net's value estimate.
             self.expand_if_needed(state, rules);
             let state_tensor = state_to_tensor(state);
             let value = {
@@ -220,7 +227,7 @@ impl<'a> NeuralMcts<'a> {
 
         let chosen_mv = self.nodes.get(&key).unwrap().edges[best_idx].mv;
         let next = apply_move(state, chosen_mv).expect("legal move");
-        let child_value = self.simulate(&next, rules);
+        let child_value = self.simulate(&next, rules, path);
         let value = -child_value; // negate: child's value is from opponent's view
 
         let node = self.nodes.get_mut(&key).unwrap();

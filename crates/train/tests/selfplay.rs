@@ -134,3 +134,15 @@ fn value_loss_ignores_positions_without_a_value_target() {
         0.0
     );
 }
+
+/// Regression: neural MCTS recursed around cycles of the uncapped game until
+/// the stack overflowed (found when the arena pitted a net against random).
+#[test]
+fn uncapped_self_play_survives_cycles() {
+    let (_vs, net) = make_net();
+    let cfg = SelfPlayConfig { num_simulations: 200, max_moves: 60, ..fast_cfg() };
+    for _ in 0..3 {
+        let game = play_one_game(&net, &RuleSet::Uncapped, &cfg);
+        assert!(!game.examples.is_empty());
+    }
+}
