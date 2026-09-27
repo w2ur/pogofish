@@ -4,6 +4,10 @@ use serde::{Deserialize, Serialize};
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize)]
 pub enum RuleSet {
+    /// The published game: only the base rule ends it (a player with no
+    /// stack on top has lost). Games may in principle go on forever; callers
+    /// impose their own safety limit and treat it as truncation, not a draw.
+    Uncapped,
     /// Loss on Nth repetition of the (board, to_move) tuple.
     /// repetitions=1 means the first repetition triggers a loss for the
     /// player whose move produced the repeated position.
@@ -22,9 +26,40 @@ pub fn is_terminal(state: &GameState, rules: &RuleSet) -> Option<Outcome> {
         return Some(o);
     }
     match *rules {
+        RuleSet::Uncapped => None,
         RuleSet::LC1 { repetitions } => check_lc1(state, repetitions),
         RuleSet::LC2 { cap } => check_lc2(state, cap),
         RuleSet::LC3 { cap } => check_lc3(state, cap),
+    }
+}
+
+impl std::fmt::Display for RuleSet {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        match *self {
+            RuleSet::Uncapped => write!(f, "uncapped"),
+            RuleSet::LC1 { repetitions } => write!(f, "lc1-{repetitions}"),
+            RuleSet::LC2 { cap } => write!(f, "lc2-{cap}"),
+            RuleSet::LC3 { cap } => write!(f, "lc3-{cap}"),
+        }
+    }
+}
+
+impl std::str::FromStr for RuleSet {
+    type Err = String;
+
+    /// Parses `uncapped`, `lc1-N`, `lc2-N` or `lc3-N`.
+    fn from_str(s: &str) -> Result<Self, Self::Err> {
+        if s == "uncapped" {
+            return Ok(RuleSet::Uncapped);
+        }
+        let usage = || format!("ruleset must be uncapped, lc1-N, lc2-N or lc3-N, got '{s}'");
+        let (kind, n) = s.split_once('-').ok_or_else(usage)?;
+        match kind {
+            "lc1" => Ok(RuleSet::LC1 { repetitions: n.parse().map_err(|_| usage())? }),
+            "lc2" => Ok(RuleSet::LC2 { cap: n.parse().map_err(|_| usage())? }),
+            "lc3" => Ok(RuleSet::LC3 { cap: n.parse().map_err(|_| usage())? }),
+            _ => Err(usage()),
+        }
     }
 }
 

@@ -43,7 +43,7 @@ fn load_player(spec: &str, arch: &ArchConfig) -> anyhow::Result<Player> {
 fn print_usage(prog: &str) {
     eprintln!("Usage: {prog} <variant> <player1> <player2> <num_games> [--sims N] [--tau T] [--arch ARCH]");
     eprintln!();
-    eprintln!("  variant:    lc1-N | lc2-N | lc3-N  (e.g. lc2-15)");
+    eprintln!("  variant:    uncapped | lc1-N | lc2-N | lc3-N  (e.g. lc2-15)");
     eprintln!("  player:     path/to/model.pt | \"random\"");
     eprintln!("  num_games:  total games to play (alternates sides)");
     eprintln!("  --sims N:   MCTS simulations per move (default 100)");
@@ -56,19 +56,7 @@ fn print_usage(prog: &str) {
 }
 
 fn parse_ruleset(variant: &str) -> anyhow::Result<RuleSet> {
-    let parts: Vec<&str> = variant.splitn(2, '-').collect();
-    if parts.len() != 2 {
-        anyhow::bail!("variant must be in format lc1-N, lc2-N, or lc3-N, got: '{variant}'");
-    }
-    let n: u16 = parts[1]
-        .parse()
-        .map_err(|_| anyhow::anyhow!("invalid number in variant: '{variant}'"))?;
-    match parts[0] {
-        "lc1" => Ok(RuleSet::LC1 { repetitions: n as u8 }),
-        "lc2" => Ok(RuleSet::LC2 { cap: n }),
-        "lc3" => Ok(RuleSet::LC3 { cap: n }),
-        other => anyhow::bail!("unknown rule type: '{other}' (expected lc1, lc2, or lc3)"),
-    }
+    variant.parse().map_err(anyhow::Error::msg)
 }
 
 struct Args {
@@ -219,6 +207,7 @@ fn main() -> anyhow::Result<()> {
 
     // Determine max moves from the variant cap
     let max_moves: u16 = match &rules {
+        RuleSet::Uncapped => 1000,
         RuleSet::LC1 { .. } => 200,
         RuleSet::LC2 { cap } => cap.saturating_mul(2).max(200),
         RuleSet::LC3 { cap } => cap.saturating_mul(2).max(200),

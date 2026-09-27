@@ -86,8 +86,10 @@ and White wins even though three Red pieces remain on the board.
 
 ## 5. Ending an endless game (project variants)
 
-The base rules allow games that never end. The engine offers three extra rules,
-chosen per game with `RuleSet`; a base win (section 4) is always checked first.
+The base rules allow games that never end. `RuleSet::Uncapped` plays them as
+published (base rule only; round 2 trains on it, with a safety limit treated as
+truncation). The engine also offers three extra rules from round 1, chosen per
+game with `RuleSet`; a base win (section 4) is always checked first.
 
 | Variant | Rule | Engine | Tests (`crates/engine/tests/rules.rs`) |
 |---|---|---|---|

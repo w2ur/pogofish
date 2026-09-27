@@ -5,7 +5,7 @@ use std::path::PathBuf;
 fn print_usage(prog: &str) {
     eprintln!("Usage: {prog} <variant> <output_dir> [episodes]");
     eprintln!();
-    eprintln!("  variant:    lc1-N | lc2-N | lc3-N  (e.g. lc1-1, lc2-15, lc3-99)");
+    eprintln!("  variant:    uncapped | lc1-N | lc2-N | lc3-N  (e.g. lc1-1, lc2-15, lc3-99)");
     eprintln!("  output_dir: directory to write model and metrics");
     eprintln!("  episodes:   number of training episodes (default: 200000)");
     eprintln!();
@@ -15,19 +15,7 @@ fn print_usage(prog: &str) {
 }
 
 fn parse_ruleset(variant: &str) -> anyhow::Result<RuleSet> {
-    let parts: Vec<&str> = variant.splitn(2, '-').collect();
-    if parts.len() != 2 {
-        anyhow::bail!("variant must be in format lc1-N, lc2-N, or lc3-N, got: '{variant}'");
-    }
-    let n: u16 = parts[1]
-        .parse()
-        .map_err(|_| anyhow::anyhow!("invalid number in variant: '{variant}'"))?;
-    match parts[0] {
-        "lc1" => Ok(RuleSet::LC1 { repetitions: n as u8 }),
-        "lc2" => Ok(RuleSet::LC2 { cap: n }),
-        "lc3" => Ok(RuleSet::LC3 { cap: n }),
-        other => anyhow::bail!("unknown rule type: '{other}' (expected lc1, lc2, or lc3)"),
-    }
+    variant.parse().map_err(anyhow::Error::msg)
 }
 
 fn main() -> anyhow::Result<()> {

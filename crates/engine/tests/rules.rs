@@ -76,3 +76,26 @@ fn lc2_hard_cap_mover_loses_even_with_a_tower_lead() {
     assert_eq!(s.to_move(), pogofish_engine::Color::Red);
     assert_eq!(is_terminal(&s, &rules), Some(Outcome::WinWhite));
 }
+
+#[test]
+fn uncapped_ends_only_on_the_base_rule() {
+    let rules = RuleSet::Uncapped;
+    // Far past every cap, with the start position repeated many times.
+    let s = pogofish_engine::testing::state_at_move_count(5000, pogofish_engine::Color::White);
+    let s = pogofish_engine::testing::state_with_repeated_key(&s, s.key(), 10);
+    assert_eq!(is_terminal(&s, &rules), None);
+    let won = pogofish_engine::testing::state_with_no_red_piles();
+    assert_eq!(is_terminal(&won, &rules), Some(Outcome::WinWhite));
+}
+
+#[test]
+fn rulesets_parse_and_print() {
+    for text in ["uncapped", "lc1-2", "lc2-30", "lc3-29"] {
+        let r: RuleSet = text.parse().unwrap();
+        assert_eq!(r.to_string(), text);
+    }
+    assert_eq!("lc1-3".parse::<RuleSet>(), Ok(RuleSet::LC1 { repetitions: 3 }));
+    for bad in ["", "lc4-3", "lc2-", "lc2-x", "uncapped-1", "lc1-300"] {
+        assert!(bad.parse::<RuleSet>().is_err(), "{bad}");
+    }
+}

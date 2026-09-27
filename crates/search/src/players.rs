@@ -2,7 +2,7 @@
 
 use crate::rng::SplitMix64;
 use pogofish_engine::{
-    apply_move, base_outcome, is_terminal, legal_moves, Color, GameState, Move, Outcome, RuleSet,
+    apply_move, is_terminal, legal_moves, Color, GameState, Move, Outcome, RuleSet,
 };
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
@@ -31,10 +31,9 @@ impl Scripted {
         }
     }
 
-    /// Choose a move. `rules` is `None` for the uncapped game (base rule
-    /// only). Panics if `state` has no legal move, which only happens in a
+    /// Choose a move under `rules`. Panics if `state` has no legal move, which only happens in a
     /// position that is already lost.
-    pub fn choose(self, state: &GameState, rules: Option<&RuleSet>, rng: &mut SplitMix64) -> Move {
+    pub fn choose(self, state: &GameState, rules: &RuleSet, rng: &mut SplitMix64) -> Move {
         let moves = legal_moves(state);
         assert!(!moves.is_empty(), "choose() called with no legal move");
         match self {
@@ -57,7 +56,7 @@ pub fn top_difference(state: &GameState, color: Color) -> i32 {
 fn greedy(
     state: &GameState,
     moves: &[Move],
-    rules: Option<&RuleSet>,
+    rules: &RuleSet,
     rng: &mut SplitMix64,
 ) -> Move {
     let mover = state.to_move();
@@ -65,10 +64,7 @@ fn greedy(
     let mut tied: Vec<Move> = Vec::new();
     for &m in moves {
         let next = apply_move(state, m).expect("legal move");
-        let outcome = match rules {
-            Some(r) => is_terminal(&next, r),
-            None => base_outcome(&next),
-        };
+        let outcome = is_terminal(&next, rules);
         let score = match outcome {
             Some(Outcome::DrawEarned) => 0,
             Some(o) if o.winner() == Some(mover) => i32::MAX,
@@ -90,7 +86,7 @@ fn greedy(
 mod tests {
     use super::*;
     use pogofish_engine::testing::position;
-    use pogofish_engine::{initial_state, Cell};
+    use pogofish_engine::{base_outcome, initial_state, Cell};
     use std::collections::HashSet;
 
     const W: Color = Color::White;
@@ -106,7 +102,7 @@ mod tests {
         let legal: HashSet<Move> = legal_moves(&s).into_iter().collect();
         let mut rng = SplitMix64::new(1);
         let seen: HashSet<Move> = (0..2000)
-            .map(|_| Scripted::Random.choose(&s, None, &mut rng))
+            .map(|_| Scripted::Random.choose(&s, &RuleSet::Uncapped, &mut rng))
             .collect();
         assert_eq!(seen, legal);
     }
@@ -135,7 +131,7 @@ mod tests {
 
         for seed in 0..200 {
             let mut rng = SplitMix64::new(seed);
-            let m = Scripted::Greedy.choose(&s, None, &mut rng);
+            let m = Scripted::Greedy.choose(&s, &RuleSet::Uncapped, &mut rng);
             let next = apply_move(&s, m).unwrap();
             assert_eq!(
                 base_outcome(&next),
@@ -183,7 +179,7 @@ mod tests {
 
         for seed in 0..200 {
             let mut rng = SplitMix64::new(seed);
-            assert_ne!(Scripted::Greedy.choose(&s, Some(&rules), &mut rng), losing);
+            assert_ne!(Scripted::Greedy.choose(&s, &rules, &mut rng), losing);
         }
     }
 
@@ -192,7 +188,7 @@ mod tests {
         let s = initial_state();
         let mut rng = SplitMix64::new(3);
         for _ in 0..50 {
-            let m = Scripted::Greedy.choose(&s, None, &mut rng);
+            let m = Scripted::Greedy.choose(&s, &RuleSet::Uncapped, &mut rng);
             let next = apply_move(&s, m).unwrap();
             // From the start, splitting a stack onto an empty cell gains a top:
             // 4 White tops against 3 Red.
@@ -205,7 +201,7 @@ mod tests {
         let s = initial_state();
         let mut rng = SplitMix64::new(9);
         let seen: HashSet<Move> = (0..500)
-            .map(|_| Scripted::Greedy.choose(&s, None, &mut rng))
+            .map(|_| Scripted::Greedy.choose(&s, &RuleSet::Uncapped, &mut rng))
             .collect();
         assert!(seen.len() > 1, "only ever played {seen:?}");
     }
