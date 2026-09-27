@@ -72,6 +72,10 @@ cargo run --release -p pogofish-search --bin measure -- --games 20000 --seed 1 -
 # Evaluate players against each other (colours swapped, random openings, 95% CI)
 ./target/release/arena uncapped greedy random mcts-uniform:200 --pairs 200 --out arena.json
 
+# Elo ladder from arena reports, and its plot
+cargo run --release -p pogofish-search --bin ladder -- arena.json --out ladder.json
+uv run tools/plot_ladder.py ladder.json ladder.png
+
 # Train (requires libtorch; tch-rs downloads it)
 DYLD_LIBRARY_PATH=$(find target/release/build -path "*/torch-sys-*/out/libtorch/libtorch/lib" | head -1) \
   ./target/release/train uncapped models/uncapped mlp_small   # only Markov rulesets are accepted

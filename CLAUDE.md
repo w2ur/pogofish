@@ -23,7 +23,7 @@ Pogofish is a browser-based Pogo board game with AI opponents trained via AlphaZ
 - Rust WASM engine (via `pogofish-wasm`)
 
 ### Tools (`tools/`)
-- Python 3.11+ — ONNX export sidecar (`export_onnx.py`)
+- Python 3.11+ — ONNX export sidecar (`export_onnx.py`), Elo ladder plot (`plot_ladder.py`, PEP 723: `uv run`)
 - Node.js — ONNX verification (`verify_onnx.js`)
 
 ## User-Facing Language
@@ -61,6 +61,11 @@ cargo run --release -p pogofish-search --bin measure -- --games 20000 --seed 1 -
 # Players: random, greedy, first-legal, mcts-uniform:SIMS, net:PATH[:SIMS[:ARCH]]
 ./target/release/arena uncapped greedy random net:models/uncapped/model_best.pt:100 \
   --pairs 200 --opening 4 --seed 1 --out arena.json
+```
+Rate players from arena reports (Bradley–Terry, 95% CI) and plot:
+```bash
+cargo run --release -p pogofish-search --bin ladder -- arena.json --anchor random --out ladder.json
+uv run tools/plot_ladder.py ladder.json ladder.png
 ```
 Evaluate with `arena` only; the round-1 `tournament` binary has no colour-swapped
 openings, no CI and counts truncations as draws.

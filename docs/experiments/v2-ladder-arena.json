@@ -1,0 +1,412 @@
+[
+  {
+    "player_a": "random",
+    "player_b": "first-legal",
+    "config": {
+      "rules": "Uncapped",
+      "pairs": 200,
+      "opening_plies": 4,
+      "max_plies": 1000,
+      "seed": 1
+    },
+    "games": 400,
+    "a": {
+      "wins": 287,
+      "draws": 0,
+      "losses": 113,
+      "unfinished": 0
+    },
+    "a_as_white": {
+      "wins": 130,
+      "draws": 0,
+      "losses": 70,
+      "unfinished": 0
+    },
+    "a_as_red": {
+      "wins": 157,
+      "draws": 0,
+      "losses": 43,
+      "unfinished": 0
+    },
+    "scored_pairs": 200,
+    "score": 0.7175,
+    "ci95": [
+      0.6749143305062472,
+      0.7600856694937529
+    ],
+    "significant": true,
+    "white_score": 0.4325,
+    "distinct_openings": 200,
+    "distinct_games": 400,
+    "distinct_positions_after_opening": 52407
+  },
+  {
+    "player_a": "random",
+    "player_b": "greedy",
+    "config": {
+      "rules": "Uncapped",
+      "pairs": 200,
+      "opening_plies": 4,
+      "max_plies": 1000,
+      "seed": 1
+    },
+    "games": 400,
+    "a": {
+      "wins": 3,
+      "draws": 0,
+      "losses": 397,
+      "unfinished": 0
+    },
+    "a_as_white": {
+      "wins": 2,
+      "draws": 0,
+      "losses": 198,
+      "unfinished": 0
+    },
+    "a_as_red": {
+      "wins": 1,
+      "draws": 0,
+      "losses": 199,
+      "unfinished": 0
+    },
+    "scored_pairs": 200,
+    "score": 0.0075,
+    "ci95": [
+      0.0,
+      0.015944292770979102
+    ],
+    "significant": true,
+    "white_score": 0.5025,
+    "distinct_openings": 200,
+    "distinct_games": 400,
+    "distinct_positions_after_opening": 2877
+  },
+  {
+    "player_a": "random",
+    "player_b": "mcts-uniform:50",
+    "config": {
+      "rules": "Uncapped",
+      "pairs": 200,
+      "opening_plies": 4,
+      "max_plies": 1000,
+      "seed": 1
+    },
+    "games": 400,
+    "a": {
+      "wins": 35,
+      "draws": 0,
+      "losses": 365,
+      "unfinished": 0
+    },
+    "a_as_white": {
+      "wins": 22,
+      "draws": 0,
+      "losses": 178,
+      "unfinished": 0
+    },
+    "a_as_red": {
+      "wins": 13,
+      "draws": 0,
+      "losses": 187,
+      "unfinished": 0
+    },
+    "scored_pairs": 200,
+    "score": 0.0875,
+    "ci95": [
+      0.058490406196168174,
+      0.11650959380383182
+    ],
+    "significant": true,
+    "white_score": 0.5225,
+    "distinct_openings": 200,
+    "distinct_games": 399,
+    "distinct_positions_after_opening": 13172
+  },
+  {
+    "player_a": "random",
+    "player_b": "mcts-uniform:200",
+    "config": {
+      "rules": "Uncapped",
+      "pairs": 200,
+      "opening_plies": 4,
+      "max_plies": 1000,
+      "seed": 1
+    },
+    "games": 400,
+    "a": {
+      "wins": 4,
+      "draws": 0,
+      "losses": 396,
+      "unfinished": 0
+    },
+    "a_as_white": {
+      "wins": 2,
+      "draws": 0,
+      "losses": 198,
+      "unfinished": 0
+    },
+    "a_as_red": {
+      "wins": 2,
+      "draws": 0,
+      "losses": 198,
+      "unfinished": 0
+    },
+    "scored_pairs": 200,
+    "score": 0.01,
+    "ci95": [
+      0.0002741498672856422,
+      0.019725850132714356
+    ],
+    "significant": true,
+    "white_score": 0.5,
+    "distinct_openings": 200,
+    "distinct_games": 399,
+    "distinct_positions_after_opening": 6433
+  },
+  {
+    "player_a": "first-legal",
+    "player_b": "greedy",
+    "config": {
+      "rules": "Uncapped",
+      "pairs": 200,
+      "opening_plies": 4,
+      "max_plies": 1000,
+      "seed": 1
+    },
+    "games": 400,
+    "a": {
+      "wins": 1,
+      "draws": 0,
+      "losses": 399,
+      "unfinished": 0
+    },
+    "a_as_white": {
+      "wins": 1,
+      "draws": 0,
+      "losses": 199,
+      "unfinished": 0
+    },
+    "a_as_red": {
+      "wins": 0,
+      "draws": 0,
+      "losses": 200,
+      "unfinished": 0
+    },
+    "scored_pairs": 200,
+    "score": 0.0025,
+    "ci95": [
+      0.0,
+      0.007400000000000007
+    ],
+    "significant": true,
+    "white_score": 0.5025,
+    "distinct_openings": 200,
+    "distinct_games": 399,
+    "distinct_positions_after_opening": 3154
+  },
+  {
+    "player_a": "first-legal",
+    "player_b": "mcts-uniform:50",
+    "config": {
+      "rules": "Uncapped",
+      "pairs": 200,
+      "opening_plies": 4,
+      "max_plies": 1000,
+      "seed": 1
+    },
+    "games": 400,
+    "a": {
+      "wins": 1,
+      "draws": 0,
+      "losses": 228,
+      "unfinished": 171
+    },
+    "a_as_white": {
+      "wins": 1,
+      "draws": 0,
+      "losses": 110,
+      "unfinished": 89
+    },
+    "a_as_red": {
+      "wins": 0,
+      "draws": 0,
+      "losses": 118,
+      "unfinished": 82
+    },
+    "scored_pairs": 67,
+    "score": 0.007462686567164179,
+    "ci95": [
+      0.0,
+      0.022089552238805963
+    ],
+    "significant": true,
+    "white_score": 0.519650655021834,
+    "distinct_openings": 200,
+    "distinct_games": 399,
+    "distinct_positions_after_opening": 9581
+  },
+  {
+    "player_a": "first-legal",
+    "player_b": "mcts-uniform:200",
+    "config": {
+      "rules": "Uncapped",
+      "pairs": 200,
+      "opening_plies": 4,
+      "max_plies": 1000,
+      "seed": 1
+    },
+    "games": 400,
+    "a": {
+      "wins": 1,
+      "draws": 0,
+      "losses": 331,
+      "unfinished": 68
+    },
+    "a_as_white": {
+      "wins": 1,
+      "draws": 0,
+      "losses": 176,
+      "unfinished": 23
+    },
+    "a_as_red": {
+      "wins": 0,
+      "draws": 0,
+      "losses": 155,
+      "unfinished": 45
+    },
+    "scored_pairs": 136,
+    "score": 0.003676470588235294,
+    "ci95": [
+      0.0,
+      0.010882352941176468
+    ],
+    "significant": true,
+    "white_score": 0.46987951807228917,
+    "distinct_openings": 200,
+    "distinct_games": 399,
+    "distinct_positions_after_opening": 5711
+  },
+  {
+    "player_a": "greedy",
+    "player_b": "mcts-uniform:50",
+    "config": {
+      "rules": "Uncapped",
+      "pairs": 200,
+      "opening_plies": 4,
+      "max_plies": 1000,
+      "seed": 1
+    },
+    "games": 400,
+    "a": {
+      "wins": 382,
+      "draws": 0,
+      "losses": 18,
+      "unfinished": 0
+    },
+    "a_as_white": {
+      "wins": 193,
+      "draws": 0,
+      "losses": 7,
+      "unfinished": 0
+    },
+    "a_as_red": {
+      "wins": 189,
+      "draws": 0,
+      "losses": 11,
+      "unfinished": 0
+    },
+    "scored_pairs": 200,
+    "score": 0.955,
+    "ci95": [
+      0.935118850624209,
+      0.974881149375791
+    ],
+    "significant": true,
+    "white_score": 0.51,
+    "distinct_openings": 200,
+    "distinct_games": 392,
+    "distinct_positions_after_opening": 3175
+  },
+  {
+    "player_a": "greedy",
+    "player_b": "mcts-uniform:200",
+    "config": {
+      "rules": "Uncapped",
+      "pairs": 200,
+      "opening_plies": 4,
+      "max_plies": 1000,
+      "seed": 1
+    },
+    "games": 400,
+    "a": {
+      "wins": 325,
+      "draws": 0,
+      "losses": 75,
+      "unfinished": 0
+    },
+    "a_as_white": {
+      "wins": 176,
+      "draws": 0,
+      "losses": 24,
+      "unfinished": 0
+    },
+    "a_as_red": {
+      "wins": 149,
+      "draws": 0,
+      "losses": 51,
+      "unfinished": 0
+    },
+    "scored_pairs": 200,
+    "score": 0.8125,
+    "ci95": [
+      0.7761108587901563,
+      0.8488891412098437
+    ],
+    "significant": true,
+    "white_score": 0.5675,
+    "distinct_openings": 200,
+    "distinct_games": 388,
+    "distinct_positions_after_opening": 4285
+  },
+  {
+    "player_a": "mcts-uniform:50",
+    "player_b": "mcts-uniform:200",
+    "config": {
+      "rules": "Uncapped",
+      "pairs": 200,
+      "opening_plies": 4,
+      "max_plies": 1000,
+      "seed": 1
+    },
+    "games": 400,
+    "a": {
+      "wins": 52,
+      "draws": 0,
+      "losses": 329,
+      "unfinished": 19
+    },
+    "a_as_white": {
+      "wins": 30,
+      "draws": 0,
+      "losses": 160,
+      "unfinished": 10
+    },
+    "a_as_red": {
+      "wins": 22,
+      "draws": 0,
+      "losses": 169,
+      "unfinished": 9
+    },
+    "scored_pairs": 182,
+    "score": 0.13736263736263737,
+    "ci95": [
+      0.10143942802876785,
+      0.1732858466965069
+    ],
+    "significant": true,
+    "white_score": 0.5223097112860893,
+    "distinct_openings": 200,
+    "distinct_games": 392,
+    "distinct_positions_after_opening": 5673
+  }
+]
