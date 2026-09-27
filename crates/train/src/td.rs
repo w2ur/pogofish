@@ -394,8 +394,9 @@ pub enum TdStop {
 pub fn train_td(cfg: &TdConfig, dir: &Path) -> anyhow::Result<TdStop> {
     let rules: RuleSet = cfg.rules.parse().map_err(anyhow::Error::msg)?;
     ensure!(
-        rules.board_is_markov(),
-        "refusing to train under {rules}: the board encoding is not a Markov state for it"
+        cfg.features.suffice_for(&rules),
+        "refusing to train under {rules} with {:?} features: the input lacks what the rule reads",
+        cfg.features
     );
     let run = TdRun {
         dir: dir.to_path_buf(),

@@ -82,6 +82,12 @@ pub enum Features {
     /// Only raw board facts, restated so that ownership sits in a fixed
     /// input whatever the stack's height.
     MoverRelative,
+    /// `MoverRelative` plus one input: how many times the current position
+    /// occurred earlier in the game (/ 2). It is what a repetition rule reads
+    /// at the current position. It is not the whole history, so under LC1 the
+    /// input is still not a complete Markov state; the search, whose key and
+    /// terminal checks read the full history, stays exact.
+    MoverRelativeRepetition,
 }
 
 pub const MOVER_RELATIVE_SIZE: usize = 9 * (MAX_STACK + 2);
@@ -91,12 +97,31 @@ impl Features {
         match self {
             Features::Absolute => STATE_SIZE,
             Features::MoverRelative => MOVER_RELATIVE_SIZE,
+            Features::MoverRelativeRepetition => MOVER_RELATIVE_SIZE + 1,
+        }
+    }
+
+    /// Whether these features carry everything `rules` reads at the current
+    /// position: nothing beyond the board under Uncapped, the current
+    /// position's repetition count under LC1. Never for LC2/LC3, which read
+    /// the move count.
+    pub fn suffice_for(self, rules: &pogofish_engine::RuleSet) -> bool {
+        use pogofish_engine::RuleSet;
+        match rules {
+            RuleSet::Uncapped => true,
+            RuleSet::LC1 { .. } => self == Features::MoverRelativeRepetition,
+            RuleSet::LC2 { .. } | RuleSet::LC3 { .. } => false,
         }
     }
 
     pub fn encode(self, state: &GameState) -> Tensor {
         match self {
             Features::Absolute => state_to_tensor(state),
+            Features::MoverRelativeRepetition => {
+                let base = Features::MoverRelative.encode(state);
+                let seen = state.occurrences_before() as f32 / 2.0;
+                Tensor::cat(&[base, Tensor::from_slice(&[seen])], 0)
+            }
             Features::MoverRelative => {
                 let me = state.to_move();
                 let side = |c: Color| if c == me { 1.0f32 } else { -1.0 };
@@ -245,5 +270,39 @@ mod tests {
             let total: f32 = t.iter().sum();
             assert_eq!(total, policy.iter().sum::<f32>());
         }
+    }
+
+    #[test]
+    fn the_repetition_feature_is_the_earlier_occurrence_count() {
+        let s0 = initial_state();
+        for (n, expected) in [(0, 0.0), (1, 0.5), (2, 1.0)] {
+            let x: Vec<f32> = Features::MoverRelativeRepetition
+                .encode(&s0.with_prior_occurrences(n))
+                .try_into()
+                .unwrap();
+            assert_eq!(x.len(), MOVER_RELATIVE_SIZE + 1);
+            assert_eq!(*x.last().unwrap(), expected);
+            let base: Vec<f32> = Features::MoverRelative.encode(&s0).try_into().unwrap();
+            assert_eq!(&x[..MOVER_RELATIVE_SIZE], &base[..]);
+        }
+    }
+
+    #[test]
+    fn which_features_suffice_for_which_rules() {
+        use pogofish_engine::RuleSet;
+        let all = [
+            Features::Absolute,
+            Features::MoverRelative,
+            Features::MoverRelativeRepetition,
+        ];
+        for f in all {
+            assert!(f.suffice_for(&RuleSet::Uncapped));
+            assert!(!f.suffice_for(&RuleSet::LC2 { cap: 30 }));
+            assert!(!f.suffice_for(&RuleSet::LC3 { cap: 30 }));
+        }
+        let lc1 = RuleSet::LC1 { repetitions: 2 };
+        assert!(Features::MoverRelativeRepetition.suffice_for(&lc1));
+        assert!(!Features::MoverRelative.suffice_for(&lc1));
+        assert!(!Features::Absolute.suffice_for(&lc1));
     }
 }

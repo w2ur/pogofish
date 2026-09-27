@@ -138,6 +138,9 @@ struct Example {
     policy: [f32; ACTION_SIZE],
     value: f32,
     has_value: bool,
+    /// Earlier occurrences of the position in its game (for repetition
+    /// features and rules; restored on the decoded position).
+    seen_before: f32,
 }
 
 /// Rebuild a position from its absolute slot encoding (move count and
@@ -212,12 +215,14 @@ fn save_buffer(buffer: &VecDeque<Example>, path: &Path) -> anyhow::Result<()> {
     let policies = Tensor::from_slice(&flat(&|e| e.policy.to_vec())).view([n, ACTION_SIZE as i64]);
     let values = Tensor::from_slice(&flat(&|e| vec![e.value]));
     let has = Tensor::from_slice(&flat(&|e| vec![if e.has_value { 1.0 } else { 0.0 }]));
+    let seen = Tensor::from_slice(&flat(&|e| vec![e.seen_before]));
     Tensor::save_multi(
         &[
             ("boards", &boards),
             ("policies", &policies),
             ("values", &values),
             ("has_value", &has),
+            ("seen_before", &seen),
         ],
         path,
     )
@@ -233,11 +238,12 @@ fn load_buffer(path: &Path) -> anyhow::Result<VecDeque<Example>> {
             .with_context(|| format!("buffer lacks {k}"))?;
         Ok(Vec::<f32>::try_from(t.1.view([-1]))?)
     };
-    let (boards, policies, values, has) = (
+    let (boards, policies, values, has, seen) = (
         get("boards")?,
         get("policies")?,
         get("values")?,
         get("has_value")?,
+        get("seen_before")?,
     );
     ensure!(
         boards.len() == values.len() * STATE_SIZE && policies.len() == values.len() * ACTION_SIZE
@@ -252,6 +258,7 @@ fn load_buffer(path: &Path) -> anyhow::Result<VecDeque<Example>> {
                 .expect("sized"),
             value: values[i],
             has_value: has[i] > 0.5,
+            seen_before: seen[i],
         })
         .collect())
 }
@@ -323,9 +330,11 @@ pub fn train(cfg: &TrainConfig, dir: &Path) -> anyhow::Result<TrainStop> {
     // that also reads the move count or the history, two positions with the
     // same input can have different outcomes (round-1 defect 3).
     ensure!(
-        rules.board_is_markov(),
-        "refusing to train under {rules}: the network input is not a Markov state for it \
-         (it omits the move count and repetition history); train under `uncapped`"
+        cfg.features.suffice_for(&rules),
+        "refusing to train under {rules} with {:?} features: the network input lacks what the rule \
+         reads (the move count for lc2/lc3; the repetition count for lc1, which needs \
+         mover-relative-repetition)",
+        cfg.features
     );
     let arch = ArchConfig::from_name(&cfg.arch)?;
     let paths = Paths {
@@ -402,6 +411,7 @@ pub fn train(cfg: &TrainConfig, dir: &Path) -> anyhow::Result<TrainStop> {
                     policy: ex.policy,
                     value: ex.value.unwrap_or(0.0),
                     has_value: ex.value.is_some(),
+                    seen_before: ex.position.occurrences_before() as f32,
                 });
             }
         }
@@ -427,6 +437,7 @@ pub fn train(cfg: &TrainConfig, dir: &Path) -> anyhow::Result<TrainStop> {
                     } else {
                         (decode_board(&e.board), e.policy)
                     };
+                    let pos = pos.with_prior_occurrences(e.seen_before as usize);
                     xs.push(net.encode(&pos));
                     ps.push(Tensor::from_slice(&pol));
                     vs_.push(e.value);

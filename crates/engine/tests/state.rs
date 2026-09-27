@@ -77,3 +77,26 @@ fn apply_move_under_keeps_history_only_where_the_rule_reads_it() {
     assert_eq!(s1.history_len(), 1);
     assert_eq!(s1.key(), pogofish_engine::apply_move(&s0, m).unwrap().key());
 }
+
+#[test]
+fn occurrences_before_counts_the_current_position_only() {
+    use pogofish_engine::{apply_move, Move};
+    let s0 = pogofish_engine::initial_state();
+    let cycle = [
+        Move { from_cell: 0, num_pieces: 1, to_cell: 3 },
+        Move { from_cell: 6, num_pieces: 1, to_cell: 7 },
+        Move { from_cell: 3, num_pieces: 1, to_cell: 0 },
+        Move { from_cell: 7, num_pieces: 1, to_cell: 6 },
+    ];
+    let mut s = s0.clone();
+    let mut counts = vec![s.occurrences_before()];
+    for m in cycle.iter().cycle().take(8) {
+        s = apply_move(&s, *m).unwrap();
+        counts.push(s.occurrences_before());
+    }
+    assert_eq!(counts, vec![0, 0, 0, 0, 1, 1, 1, 1, 2]);
+    let rebuilt = s.with_prior_occurrences(2);
+    assert_eq!(rebuilt.occurrences_before(), 2);
+    assert_eq!(rebuilt.key(), s.key());
+    assert_eq!(s0.with_prior_occurrences(0).history_len(), 0);
+}

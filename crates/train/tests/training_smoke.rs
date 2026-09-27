@@ -45,23 +45,60 @@ fn smoke_train_writes_its_files() {
     let _ = std::fs::remove_dir_all(d);
 }
 
-/// Regression (round-1 defect 3): training under a rule the board encoding
-/// cannot represent is refused before anything is written.
+/// Regression (round-1 defect 3): training under a rule the network input
+/// cannot represent is refused before anything is written: lc2/lc3 always
+/// (they read the move count), lc1 unless the input has the repetition count.
 #[test]
-fn training_refuses_a_non_markov_ruleset() {
+fn training_refuses_features_that_miss_what_the_rule_reads() {
+    use pogofish_train::encoding::Features;
     let d = tmp("refuse");
-    for rules in ["lc1-1", "lc2-30", "lc3-29"] {
-        let err = train(
-            &TrainConfig {
-                rules: rules.into(),
-                ..tiny(1)
-            },
-            &d,
-        )
-        .expect_err("must refuse");
-        assert!(format!("{err}").contains("not a Markov state"), "{err}");
+    for (rules, features) in [
+        ("lc1-2", Features::MoverRelative),
+        ("lc1-2", Features::Absolute),
+        ("lc2-30", Features::MoverRelativeRepetition),
+        ("lc3-29", Features::MoverRelativeRepetition),
+    ] {
+        let cfg = TrainConfig {
+            rules: rules.into(),
+            features,
+            ..tiny(1)
+        };
+        let err = train(&cfg, &d).expect_err("must refuse");
+        assert!(format!("{err}").contains("lacks what the rule"), "{err}");
     }
     assert!(!d.exists(), "nothing may be written");
+}
+
+/// The chosen ruleset (lc1-2) trains with the repetition feature, and the
+/// replay buffer keeps each position's repetition count across a resume.
+#[test]
+fn lc1_trains_and_resumes_with_the_repetition_feature() {
+    use pogofish_train::encoding::Features;
+    let cfg = |n| TrainConfig {
+        rules: "lc1-2".into(),
+        features: Features::MoverRelativeRepetition,
+        truncation_stop_iterations: 0,
+        ..tiny(n)
+    };
+    let (one, two) = (tmp("lc1-one"), tmp("lc1-two"));
+    assert_eq!(train(&cfg(3), &one).unwrap(), TrainStop::Finished);
+    train(&cfg(1), &two).unwrap();
+    train(&cfg(3), &two).unwrap();
+    for f in ["weights.pt", "buffer.pt"] {
+        for ((n, a), (_, b)) in tensors(&one.join(f))
+            .iter()
+            .zip(tensors(&two.join(f)).iter())
+        {
+            assert!(a.equal(b), "{f}: {n} differs");
+        }
+    }
+    let names: Vec<String> = tensors(&one.join("buffer.pt"))
+        .into_iter()
+        .map(|(n, _)| n)
+        .collect();
+    assert!(names.contains(&"seen_before".to_string()), "{names:?}");
+    let _ = std::fs::remove_dir_all(one);
+    let _ = std::fs::remove_dir_all(two);
 }
 
 #[test]
