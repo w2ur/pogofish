@@ -9,6 +9,7 @@ Pogofish is a browser-based Pogo board game with AI opponents trained via AlphaZ
 ### Rust workspace (`crates/`)
 - Rust 1.79+ (stable toolchain)
 - `pogofish-engine` — Game rules, state, legal moves, rulesets (`Uncapped`, LC1/LC2/LC3; `RuleSet` parses and prints `uncapped`, `lc1-N`, …)
+- `pogofish-infer` — Pure-Rust inference (no libtorch): input features, action indexing, MLP forward pass reading exported `.pfw` weights, and the neural MCTS shared with training (`Evaluator` trait)
 - `pogofish-search` — Minimax (alpha-beta + TT), MCTS (PUCT), checkpointer, scripted `random`/`greedy` players (seeded, no dependency)
 - `pogofish-train` — AlphaZero training (tch-rs/libtorch, no gating, exact resume), self-play, TD(λ) value learning (`td_train`), `arena` evaluation binary
 - `pogofish-cli` — Curses-style terminal UI (crossterm)
@@ -94,6 +95,12 @@ DYLD_LIBRARY_PATH=$(find target/release/build -path "*/torch-sys-*/out/libtorch/
 # resume (or raise --iterations to extend). A resumed run is bit-identical to an
 # uninterrupted one (weights, momentum, replay buffer, counters, generator).
 # No gating: every --checkpoint-every checkpoint is kept, to be rated with arena/ladder.
+```
+
+### Exporting a net for the terminal game
+```bash
+# Checks the pure-Rust copy against the checkpoint (1e-5 on 100 positions) before writing.
+./target/release/export_weights models/az-lc1-s1/checkpoints/iter_00200.pt crates/cli/assets/az-lc1-s1.pfw
 ```
 
 ### WASM build

@@ -21,6 +21,10 @@ name = "td_train"
 path = "src/bin/td_train.rs"
 
 [[bin]]
+name = "export_weights"
+path = "src/bin/export_weights.rs"
+
+[[bin]]
 name = "arena"
 path = "src/bin/arena.rs"
 

@@ -3,6 +3,7 @@ pub mod analyze;
 pub mod checkpoint;
 pub mod dqn;
 pub mod encoding;
+pub mod export;
 pub mod interrupt;
 pub mod metrics;
 pub mod net;
