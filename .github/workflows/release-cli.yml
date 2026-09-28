@@ -16,7 +16,10 @@ jobs:
         include:
           - runner: macos-14        # Apple silicon
             target: aarch64-apple-darwin
-          - runner: macos-13        # Intel
+          # GitHub retired the macos-13 Intel image (2025): cross-compile on
+          # Apple silicon. The tests run on the host (arm64); the code has no
+          # architecture-specific path.
+          - runner: macos-14
             target: x86_64-apple-darwin
     runs-on: ${{ matrix.runner }}
     steps:
