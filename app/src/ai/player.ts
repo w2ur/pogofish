@@ -1,4 +1,4 @@
-import { type GameState, type Move, type RuleSet } from "../engine/types";
+import { type Features, type GameState, type Move, type RuleSet } from "../engine/types";
 import { legalMoves } from "../engine/engine";
 import { actionToIndex, maskedSoftmax } from "../engine/encoding";
 import { randomMove } from "./random";
@@ -40,10 +40,10 @@ function modelPath(rules: RuleSet | undefined, name: string): string {
   return `/models/${name}`;
 }
 
-async function getModel(path: string): Promise<OnnxModel> {
+async function getModel(path: string, features: Features = "absolute"): Promise<OnnxModel> {
   let model = modelCache.get(path);
   if (!model) {
-    model = new OnnxModel();
+    model = new OnnxModel(features);
     await model.load(path);
     modelCache.set(path, model);
   }
@@ -55,10 +55,14 @@ async function getDqnModel(rules?: RuleSet): Promise<OnnxModel> {
   return getModel(path);
 }
 
+/** The round-2 net (az-lc1-s1, the one the terminal game bundles) under
+ *  LC1; round-1 nets, absolute features, elsewhere. */
+export const LC1_NET = { file: "az-lc1-s1.onnx", features: "mover-relative-repetition" } as const;
+
 async function getAlphazeroModel(rules?: RuleSet): Promise<OnnxModel> {
-  const name = (isLC1(rules) || (rules && "LC3" in rules)) ? "alphazero.onnx" : "alphazero_cnn.onnx";
-  const path = modelPath(rules, name);
-  return getModel(path);
+  if (isLC1(rules)) return getModel(modelPath(rules, LC1_NET.file), LC1_NET.features);
+  const name = rules && "LC3" in rules ? "alphazero.onnx" : "alphazero_cnn.onnx";
+  return getModel(modelPath(rules, name));
 }
 
 /** Start background download of the minimax table. */

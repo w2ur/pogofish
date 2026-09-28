@@ -2,6 +2,7 @@
 /* eslint-disable */
 export const memory: WebAssembly.Memory;
 export const apply_move: (a: any, b: any) => [number, number, number];
+export const encode_features: (a: any, b: any) => [number, number, number, number];
 export const initial_state: () => any;
 export const is_terminal: (a: any, b: any) => any;
 export const is_terminal_default: (a: any) => any;

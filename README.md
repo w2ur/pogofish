@@ -36,7 +36,7 @@ React 19 + TypeScript + Vite + Tailwind v4. The entire app is one scroll-driven 
 
 ### `models/` — gitignored training artifacts
 
-LC1-2 (Sudden Death) and LC3-29 (Classic) AlphaZero models ship as ONNX under `app/public/models/`.
+LC1-2 (Sudden Death) and LC3-29 (Classic) AlphaZero models ship as ONNX under `app/public/models/`. The LC1-2 opponent is the round-2 net the terminal game plays (`lc1-2/az-lc1-s1.onnx`, input encoded by the WASM engine; `app/src/ai/parity.test.ts` checks it against the Rust net on 100 positions within 1e-5). The LC3-29 net is round 1.
 
 ## The game itself
 

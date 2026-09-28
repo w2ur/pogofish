@@ -1,8 +1,8 @@
 use pogofish_engine::{
-    apply_move as engine_apply, initial_state as engine_initial,
-    is_terminal as engine_terminal, legal_moves as engine_legal,
-    GameState, Move, RuleSet,
+    apply_move as engine_apply, initial_state as engine_initial, is_terminal as engine_terminal,
+    legal_moves as engine_legal, GameState, Move, RuleSet,
 };
+use pogofish_infer::features::Features;
 use wasm_bindgen::prelude::*;
 
 #[wasm_bindgen]
@@ -18,10 +18,10 @@ pub fn legal_moves(state_js: JsValue) -> JsValue {
 
 #[wasm_bindgen]
 pub fn apply_move(state_js: JsValue, move_js: JsValue) -> Result<JsValue, JsValue> {
-    let s: GameState = serde_wasm_bindgen::from_value(state_js)
-        .map_err(|e| JsValue::from_str(&e.to_string()))?;
-    let m: Move = serde_wasm_bindgen::from_value(move_js)
-        .map_err(|e| JsValue::from_str(&e.to_string()))?;
+    let s: GameState =
+        serde_wasm_bindgen::from_value(state_js).map_err(|e| JsValue::from_str(&e.to_string()))?;
+    let m: Move =
+        serde_wasm_bindgen::from_value(move_js).map_err(|e| JsValue::from_str(&e.to_string()))?;
     let next = engine_apply(&s, m).map_err(|e| JsValue::from_str(&e.to_string()))?;
     Ok(serde_wasm_bindgen::to_value(&next).unwrap())
 }
@@ -75,4 +75,16 @@ pub fn winner_with_rules(state_js: JsValue, rules_js: JsValue) -> JsValue {
         Some(pogofish_engine::Outcome::DrawEarned) => JsValue::from_str("Draw"),
         None => JsValue::NULL,
     }
+}
+
+/// The network input for `state` under `features` ("absolute", "mover-relative",
+/// "mover-relative-repetition"): the same encoding training and the terminal
+/// game use, so the browser cannot drift from them.
+#[wasm_bindgen]
+pub fn encode_features(state_js: JsValue, features_js: JsValue) -> Result<Vec<f32>, JsValue> {
+    let s: GameState =
+        serde_wasm_bindgen::from_value(state_js).map_err(|e| JsValue::from_str(&e.to_string()))?;
+    let f: Features = serde_wasm_bindgen::from_value(features_js)
+        .map_err(|e| JsValue::from_str(&e.to_string()))?;
+    Ok(f.encode(&s))
 }

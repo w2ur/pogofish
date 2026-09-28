@@ -844,6 +844,7 @@ name = "pogofish-wasm"
 version = "0.1.0"
 dependencies = [
  "pogofish-engine",
+ "pogofish-infer",
  "serde",
  "serde-wasm-bindgen",
  "wasm-bindgen",

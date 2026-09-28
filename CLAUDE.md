@@ -112,13 +112,25 @@ DYLD_LIBRARY_PATH=$(find target/release/build -path "*/torch-sys-*/out/libtorch/
 ### WASM build
 ```bash
 wasm-pack build crates/wasm --target web --out-dir ../../wasm-pkg
+# Without wasm-pack (same output): cargo build --release -p pogofish-wasm
+# --target wasm32-unknown-unknown, then wasm-bindgen 0.2.118 --target web
+# --out-dir wasm-pkg, then wasm-opt -O on pogofish_wasm_bg.wasm.
 ```
 
 ### ONNX export
 ```bash
+# --features must be the run's config.json `features` (input size 109/126/127).
 uv run --with-requirements tools/requirements.txt \
-  python tools/export_onnx.py models/lc2-30/model_best.pt models/lc2-30/model_best.onnx --arch mlp_small
+  python tools/export_onnx.py models/az-lc1-s1/checkpoints/iter_00200.pt \
+  app/public/models/lc1-2/az-lc1-s1.onnx --arch mlp_small --features mover-relative-repetition
+# Parity fixture (Rust outputs on 100 lc1-2 positions) for app/src/ai/parity.test.ts:
+cargo run --release -p pogofish-infer --example parity_fixture -- \
+  crates/cli/assets/az-lc1-s1.pfw app/src/ai/parity-lc1-2.json
 ```
+The site's lc1-2 opponent is the same net as the terminal game (`az-lc1-s1`, iteration
+200); its input is encoded by the WASM engine (`encode_features`), never in TypeScript.
+ONNX files are cached CacheFirst for a year by the service worker: a new net needs a
+new file name, never an overwrite. The round-1 `lc1-2/alphazero.onnx` is kept, unused.
 
 ### Web app
 ```bash

@@ -12,9 +12,10 @@ import {
   is_terminal_default,
   winner as wasm_winner,
   winner_with_rules as wasm_winner_with_rules,
+  encode_features,
 } from "pogofish-wasm";
 
-import { type Player, type Cell, type Board, type GameState, type Move, type RuleSet, BOARD_SIZE } from "./types";
+import { type Player, type Cell, type Board, type GameState, type Move, type RuleSet, type Features, BOARD_SIZE } from "./types";
 
 // ── Color conversion ─────────────────────────────────────────────────────────
 
@@ -30,7 +31,7 @@ function fromRustColor(c: RustColor): string {
 
 // ── State conversion ─────────────────────────────────────────────────────────
 
-interface RustState {
+export interface RustState {
   cells: RustColor[][];
   to_move: RustColor;
   move_count: number;
@@ -46,7 +47,7 @@ function toRustState(ts: GameState): RustState {
   };
 }
 
-function fromRustState(rust: RustState): GameState {
+export function fromRustState(rust: RustState): GameState {
   const board: Board = rust.cells.map(
     (cell) => cell.map(fromRustColor) as string[],
   ) as Board;
@@ -121,6 +122,14 @@ export function winner(state: GameState, rules?: RuleSet): Player | null {
 
 export function winnerWithRules(state: GameState, rules: RuleSet): Player | null {
   return winner(state, rules);
+}
+
+/**
+ * The network input for `state`, computed by the Rust engine: the same
+ * encoding training and the terminal game use (crates/infer/src/features.rs).
+ */
+export function encodeFeatures(state: GameState, features: Features): Float32Array {
+  return encode_features(toRustState(state), features);
 }
 
 export function manhattanDistance(a: number, b: number): number {
