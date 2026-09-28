@@ -607,10 +607,24 @@ fn draw_board(
 
 /// The pieces hidden below a tall stack, bottom to top, as small coloured
 /// letters (`w` White, `r` Red) centred in the cell's bottom row.
+/// How many hidden entries fit in one cell row, and the "+N" marker for the rest.
+fn hidden_layout(len: usize) -> (usize, Option<String>) {
+    if len <= CELL_WIDTH {
+        return (len, None);
+    }
+    // At most 15 entries can be hidden, so the marker is at most "+12".
+    let shown = CELL_WIDTH - 3;
+    (shown, Some(format!("+{}", len - shown)))
+}
+
 fn draw_hidden(stdout: &mut impl Write, x: u16, y: u16, hidden: &[PieceEntry]) -> io::Result<()> {
-    let n = hidden.len().min(CELL_WIDTH);
-    let pad_left = (CELL_WIDTH - n) / 2;
+    let (n, more) = hidden_layout(hidden.len());
+    let width = n + more.as_ref().map_or(0, |m| m.len());
+    let pad_left = (CELL_WIDTH - width) / 2;
     at(stdout, y, x, &" ".repeat(CELL_WIDTH))?;
+    if let Some(m) = &more {
+        at(stdout, y, x + (pad_left + n) as u16, m)?;
+    }
     for (i, entry) in hidden.iter().take(n).enumerate() {
         let (ch, fg) = match entry {
             PieceEntry::Piece(PColor::White, _) => ("w", Color::White),
@@ -816,5 +830,23 @@ fn player_name_color(color: PColor) -> (&'static str, Color) {
     match color {
         PColor::White => ("White", Color::White),
         PColor::Red => ("Red", Color::Red),
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    /// Regression: hidden pieces beyond the cell width vanished without a marker.
+    #[test]
+    fn every_hidden_piece_is_shown_or_counted() {
+        for len in 0..=15 {
+            let (shown, more) = hidden_layout(len);
+            let counted = more
+                .as_deref()
+                .map_or(0, |m| m[1..].parse::<usize>().unwrap());
+            assert_eq!(shown + counted, len);
+            assert!(shown + more.map_or(0, |m| m.len()) <= CELL_WIDTH);
+        }
     }
 }

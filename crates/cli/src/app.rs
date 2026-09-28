@@ -298,12 +298,29 @@ pub fn save_record(dir: &std::path::Path, session: &Session) -> anyhow::Result<P
     let stamp = std::time::SystemTime::now()
         .duration_since(std::time::UNIX_EPOCH)?
         .as_secs();
-    let path = dir.join(format!("game-{stamp}.json"));
-    std::fs::write(
-        &path,
-        serde_json::to_string_pretty(&session.record())? + "\n",
-    )?;
-    Ok(path)
+    let text = serde_json::to_string_pretty(&session.record())? + "\n";
+    // Never overwrite an earlier record: two games can end in the same second.
+    for n in 0.. {
+        let name = if n == 0 {
+            format!("game-{stamp}.json")
+        } else {
+            format!("game-{stamp}-{n}.json")
+        };
+        let path = dir.join(name);
+        match std::fs::OpenOptions::new()
+            .write(true)
+            .create_new(true)
+            .open(&path)
+        {
+            Ok(mut f) => {
+                std::io::Write::write_all(&mut f, text.as_bytes())?;
+                return Ok(path);
+            }
+            Err(e) if e.kind() == std::io::ErrorKind::AlreadyExists => continue,
+            Err(e) => return Err(e.into()),
+        }
+    }
+    unreachable!()
 }
 
 pub fn run(settings: Settings) -> anyhow::Result<()> {
@@ -474,6 +491,19 @@ mod tests {
         for name in ["a1", "b2", "c3"] {
             assert!(text.contains(name), "board labelled in notation: {name}");
         }
+    }
+
+    /// Regression: records were named by the second and overwrote each other.
+    #[test]
+    fn records_saved_in_the_same_second_are_all_kept() {
+        let dir = std::env::temp_dir().join(format!("pogofish-cli-same-{}", std::process::id()));
+        let _ = std::fs::remove_dir_all(&dir);
+        let session = Session::new(Color::White, None);
+        let paths: Vec<_> = (0..3)
+            .map(|_| save_record(&dir, &session).unwrap())
+            .collect();
+        assert_eq!(std::fs::read_dir(&dir).unwrap().count(), 3, "{paths:?}");
+        std::fs::remove_dir_all(&dir).unwrap();
     }
 
     #[test]

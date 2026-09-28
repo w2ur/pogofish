@@ -161,6 +161,11 @@ impl Session {
     /// Undo back to the previous position where the human is to move (so,
     /// against the AI, the human's move and the AI's reply).
     pub fn undo(&mut self) -> bool {
+        // Against the AI, undo only back to a position where the human is to move:
+        // nothing would make the AI play from anywhere else.
+        if self.ai.is_some() && !self.history.iter().any(|(s, _)| s.to_move() == self.human) {
+            return false;
+        }
         let Some(top) = self.history.pop() else {
             return false;
         };
@@ -308,6 +313,23 @@ mod tests {
         assert!(s.redo());
         assert_eq!(s.state.key(), after);
         assert_eq!(s.ply(), 2);
+    }
+
+    /// Regression: with the AI moving first, undo used to return to the opening
+    /// with the AI to move and nothing to make it play.
+    #[test]
+    fn undo_never_leaves_the_ai_to_move() {
+        let mut s = vs_ai(Color::Red, 10);
+        s.ai_move().unwrap();
+        assert!(!s.undo(), "nothing of the human's to undo");
+        assert_eq!(s.ply(), 1);
+        let reply = legal_moves(&s.state)[0];
+        s.play(reply).unwrap();
+        s.ai_move().unwrap();
+        assert!(s.undo());
+        assert_eq!(s.ply(), 1);
+        assert_eq!(s.state.to_move(), Color::Red);
+        assert!(!s.undo());
     }
 
     #[test]
