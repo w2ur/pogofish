@@ -65,6 +65,8 @@ cd app && npm run build
 
 # Terminal game against the trained net (see --help)
 cargo run --release -p pogofish-cli -- --colour red --level normal
+# or install it (self-contained binary, the net is embedded; no libtorch):
+cargo install --git https://github.com/w2ur/pogofish pogofish-cli
 
 # Measure the uncapped game with scripted players (JSON report; ~2 s)
 cargo run --release -p pogofish-search --bin measure -- --games 20000 --seed 1 --out docs/experiments/v2-measure.json

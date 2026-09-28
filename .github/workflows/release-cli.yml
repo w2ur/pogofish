@@ -1,0 +1,44 @@
+# Plan task 6.3: release binaries of the terminal game.
+# Runs only when a tag like `cli-v0.1.0` is pushed; nothing runs on branches.
+name: release-cli
+
+on:
+  push:
+    tags: ["cli-v*"]
+
+permissions:
+  contents: write
+
+jobs:
+  build:
+    strategy:
+      matrix:
+        include:
+          - runner: macos-14        # Apple silicon
+            target: aarch64-apple-darwin
+          - runner: macos-13        # Intel
+            target: x86_64-apple-darwin
+    runs-on: ${{ matrix.runner }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: dtolnay/rust-toolchain@stable
+        with:
+          targets: ${{ matrix.target }}
+      # The terminal game needs no libtorch: only its own crates are built.
+      - name: Test
+        run: cargo test --release -p pogofish-engine -p pogofish-infer -p pogofish-cli
+      - name: Build
+        run: cargo build --release -p pogofish-cli --target ${{ matrix.target }}
+      - name: Package
+        run: |
+          dir=pogofish-${GITHUB_REF_NAME#cli-}-${{ matrix.target }}
+          mkdir "$dir"
+          cp target/${{ matrix.target }}/release/pogofish "$dir/"
+          cp README.md docs/rules.md "$dir/"
+          tar czf "$dir.tar.gz" "$dir"
+          shasum -a 256 "$dir.tar.gz" > "$dir.tar.gz.sha256"
+      - uses: softprops/action-gh-release@v2
+        with:
+          files: |
+            pogofish-*.tar.gz
+            pogofish-*.tar.gz.sha256

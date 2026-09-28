@@ -49,7 +49,10 @@ cargo run --release -p pogofish-cli -- --colour red --level normal   # --help fo
 # Arrow keys navigate, Enter selects, 1/2/3 piece count, Esc cancels,
 # h hint, u undo (your move and the AI's reply), Shift+R redo, q quit.
 # Finished games are saved as JSON in ~/.pogofish/games (--no-save to disable).
+cargo install --path crates/cli     # self-contained binary `pogofish` (net embedded)
 ```
+Release binaries (macOS arm64/x86_64): push a tag `cli-vX.Y.Z`; `.github/workflows/release-cli.yml`
+tests, builds and attaches them to a GitHub release. It runs on nothing else.
 
 ### Measuring the game
 ```bash
