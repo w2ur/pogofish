@@ -1,32 +1,14 @@
 use pogofish_engine::symmetry::{transform_move, CellMap};
-use pogofish_engine::{legal_moves, Color, GameState};
+use pogofish_engine::{legal_moves, GameState};
 use tch::Tensor;
 
-pub const STATE_SIZE: usize = 109; // MAX_STACK * NUM_CELLS + 1 = 12 * 9 + 1
 pub use pogofish_infer::actions::{index_to_move, move_to_index, ACTION_SIZE};
-pub const MAX_STACK: usize = 12;
+pub use pogofish_infer::features::{ABSOLUTE_SIZE as STATE_SIZE, MAX_STACK};
 
-/// Encode a GameState into a flat [STATE_SIZE] float tensor.
-/// For each cell (0-8), encode the stack slot-by-slot (bottom to top):
-///   White piece = +1.0, Red = -1.0, empty = 0.0.
-/// Each cell contributes MAX_STACK values.
-/// Final element: current player (+1.0 for White, -1.0 for Red).
+/// The absolute encoding (`Features::Absolute`) as a flat [STATE_SIZE] tensor:
+/// one encoding, defined once in `pogofish-infer`.
 pub fn state_to_tensor(state: &GameState) -> Tensor {
-    let mut data = [0f32; STATE_SIZE];
-    for (cell_idx, cell) in state.cells().iter().enumerate() {
-        let base = cell_idx * MAX_STACK;
-        for (slot, &color) in cell.iter().enumerate().take(MAX_STACK) {
-            data[base + slot] = match color {
-                Color::White => 1.0,
-                Color::Red => -1.0,
-            };
-        }
-    }
-    data[STATE_SIZE - 1] = match state.to_move() {
-        Color::White => 1.0,
-        Color::Red => -1.0,
-    };
-    Tensor::from_slice(&data)
+    encode(Features::Absolute, state)
 }
 
 /// Create a boolean mask of legal actions for a given state.
@@ -61,8 +43,8 @@ pub fn encode(features: Features, state: &GameState) -> Tensor {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use pogofish_engine::Move;
     use pogofish_engine::initial_state;
+    use pogofish_engine::Move;
 
     #[test]
     fn move_roundtrip_all_243() {
