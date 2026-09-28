@@ -65,13 +65,23 @@ pub struct TrainConfig {
     /// The ruleset switch rule (docs/experiments/v2-ruleset.md): stop when
     /// more than `truncation_stop_rate` of an iteration's self-play games are
     /// truncated for `truncation_stop_iterations` consecutive iterations.
+    #[serde(default = "default_truncation_stop_rate")]
     pub truncation_stop_rate: f64,
+    #[serde(default = "default_truncation_stop_iterations")]
     pub truncation_stop_iterations: u32,
     /// Train even though the features lack what the rule reads. Only for the
     /// ablation that measures what that information is worth (task 5.2).
     #[serde(default)]
     pub allow_missing_features: bool,
     pub seed: u64,
+}
+
+fn default_truncation_stop_rate() -> f64 {
+    0.05
+}
+
+fn default_truncation_stop_iterations() -> u32 {
+    3
 }
 
 impl Default for TrainConfig {
@@ -100,8 +110,8 @@ impl Default for TrainConfig {
             eval_every: 5,
             eval_pairs: 100,
             eval_sims: 50,
-            truncation_stop_rate: 0.05,
-            truncation_stop_iterations: 3,
+            truncation_stop_rate: default_truncation_stop_rate(),
+            truncation_stop_iterations: default_truncation_stop_iterations(),
             allow_missing_features: false,
             seed: 1,
         }
@@ -238,15 +248,26 @@ fn load_buffer(path: &Path) -> anyhow::Result<VecDeque<Example>> {
             .with_context(|| format!("buffer lacks {k}"))?;
         Ok(Vec::<f32>::try_from(t.1.view([-1]))?)
     };
-    let (boards, policies, values, has, seen) = (
+    let (boards, policies, values, has) = (
         get("boards")?,
         get("policies")?,
         get("values")?,
         get("has_value")?,
-        get("seen_before")?,
     );
+    // Buffers written before the repetition feature have no counts: zeros.
+    let seen = get("seen_before").unwrap_or_else(|_| vec![0.0; values.len()]);
+    let n = values.len();
     ensure!(
-        boards.len() == values.len() * STATE_SIZE && policies.len() == values.len() * ACTION_SIZE
+        boards.len() == n * STATE_SIZE
+            && policies.len() == n * ACTION_SIZE
+            && has.len() == n
+            && seen.len() == n,
+        "{} is inconsistent: {n} values, {} boards, {} policies, {} value flags, {} repetition counts",
+        path.display(),
+        boards.len() / STATE_SIZE,
+        policies.len() / ACTION_SIZE,
+        has.len(),
+        seen.len()
     );
     Ok((0..values.len())
         .map(|i| Example {
@@ -336,6 +357,13 @@ pub fn train(cfg: &TrainConfig, dir: &Path) -> anyhow::Result<TrainStop> {
          mover-relative-repetition)",
         cfg.features
     );
+    if !rules.board_is_markov() {
+        eprintln!(
+            "note: under {rules} the network input ({:?}) is not a complete Markov state; \
+             the search is exact, the net's estimates are approximations (see encoding::Features)",
+            cfg.features
+        );
+    }
     let arch = ArchConfig::from_name(&cfg.arch)?;
     let paths = Paths {
         dir: dir.to_path_buf(),

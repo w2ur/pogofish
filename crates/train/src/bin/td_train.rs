@@ -32,7 +32,7 @@ fn main() -> anyhow::Result<()> {
             "--features" => {
                 cfg.features = serde_json::from_value(serde_json::Value::String(v.clone()))
                     .with_context(|| {
-                        format!("--features must be absolute or mover-relative, got {v}")
+                        format!("--features must be absolute, mover-relative or mover-relative-repetition, got {v}")
                     })?
             }
             "--temp-start" => cfg.temp_start = v.parse()?,

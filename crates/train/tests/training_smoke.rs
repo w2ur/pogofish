@@ -201,3 +201,36 @@ fn arena_players_load_with_their_runs_features() {
     }
     let _ = std::fs::remove_dir_all(d);
 }
+
+/// Review finding: runs started before the truncation rule and the
+/// repetition count (config without the rule's fields, buffer without
+/// `seen_before`) could not be resumed. They now resume with the defaults.
+#[test]
+fn an_older_run_resumes() {
+    let d = tmp("older");
+    train(&tiny(1), &d).unwrap();
+    let cfg_path = d.join("config.json");
+    let mut cfg: serde_json::Value =
+        serde_json::from_str(&std::fs::read_to_string(&cfg_path).unwrap()).unwrap();
+    for k in [
+        "truncation_stop_rate",
+        "truncation_stop_iterations",
+        "allow_missing_features",
+    ] {
+        cfg.as_object_mut().unwrap().remove(k);
+    }
+    std::fs::write(&cfg_path, serde_json::to_string_pretty(&cfg).unwrap()).unwrap();
+    let buffer = tensors(&d.join("buffer.pt"));
+    let kept: Vec<(&str, &tch::Tensor)> = buffer
+        .iter()
+        .filter(|(n, _)| n != "seen_before")
+        .map(|(n, t)| (n.as_str(), t))
+        .collect();
+    tch::Tensor::save_multi(&kept, d.join("buffer.pt")).unwrap();
+
+    assert_eq!(train(&tiny(2), &d).unwrap(), TrainStop::Finished);
+    assert!(std::fs::read_to_string(d.join("state.json"))
+        .unwrap()
+        .contains("\"iteration\": 2"));
+    let _ = std::fs::remove_dir_all(d);
+}

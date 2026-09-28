@@ -55,9 +55,15 @@ impl std::str::FromStr for RuleSet {
         let usage = || format!("ruleset must be uncapped, lc1-N, lc2-N or lc3-N, got '{s}'");
         let (kind, n) = s.split_once('-').ok_or_else(usage)?;
         match kind {
-            "lc1" => Ok(RuleSet::LC1 { repetitions: n.parse().map_err(|_| usage())? }),
-            "lc2" => Ok(RuleSet::LC2 { cap: n.parse().map_err(|_| usage())? }),
-            "lc3" => Ok(RuleSet::LC3 { cap: n.parse().map_err(|_| usage())? }),
+            "lc1" => Ok(RuleSet::LC1 {
+                repetitions: n.parse().map_err(|_| usage())?,
+            }),
+            "lc2" => Ok(RuleSet::LC2 {
+                cap: n.parse().map_err(|_| usage())?,
+            }),
+            "lc3" => Ok(RuleSet::LC3 {
+                cap: n.parse().map_err(|_| usage())?,
+            }),
             _ => Err(usage()),
         }
     }
@@ -142,9 +148,8 @@ fn base_terminal(state: &GameState) -> Option<Outcome> {
 }
 
 fn check_lc1(state: &GameState, repetitions: u8) -> Option<Outcome> {
-    let current = state.key();
-    let count = state.history_iter().filter(|k| **k == current).count() as u8;
-    if count >= repetitions {
+    // Same count as the repetition feature reads (GameState::occurrences_before).
+    if state.occurrences_before() >= repetitions as usize {
         // The player whose move produced this repeated state loses.
         // That player is the opponent of the current to_move.
         Some(match state.to_move().opponent() {

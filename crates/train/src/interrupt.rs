@@ -1,12 +1,18 @@
 //! Graceful Ctrl+C for long jobs: the first SIGINT sets a flag that the job
-//! polls between units of work, so it can save a resumable checkpoint.
+//! polls between units of work, so it can save a resumable checkpoint. A
+//! second SIGINT exits at once (status 130): the job commits its iterations
+//! atomically (`checkpoint::journal`), so this loses at most the iteration in
+//! progress.
 
 use std::sync::atomic::{AtomicBool, Ordering};
 
 static REQUESTED: AtomicBool = AtomicBool::new(false);
 
 extern "C" fn on_sigint(_: libc::c_int) {
-    REQUESTED.store(true, Ordering::SeqCst);
+    if REQUESTED.swap(true, Ordering::SeqCst) {
+        // Second Ctrl+C: stop now. _exit is async-signal-safe.
+        unsafe { libc::_exit(130) };
+    }
 }
 
 /// Route SIGINT to the flag instead of killing the process.

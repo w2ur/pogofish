@@ -85,8 +85,11 @@ openings, no CI and counts truncations as draws.
 DYLD_LIBRARY_PATH=$(find target/release/build -path "*/torch-sys-*/out/libtorch/libtorch/lib" | head -1) \
   ./target/release/train models/az-s1 --features mover-relative --seed 1
 
-# Only rulesets whose board encoding is Markov are accepted (today: `uncapped`);
-# lc1/lc2/lc3 are refused, see docs/experiments/v1-verdict.md defect 3.
+# The features must carry what the ruleset reads (encoding::Features::suffice_for):
+# any for uncapped, mover-relative-repetition for lc1; lc2/lc3 are refused
+# (move count; docs/experiments/v1-verdict.md defect 3). Under lc1 the input is
+# still not a complete Markov state (it omits which other positions were seen);
+# the search is exact, and train prints a note saying so.
 # Resumable: Ctrl+C stops at the next game boundary; rerun the same command to
 # resume (or raise --iterations to extend). A resumed run is bit-identical to an
 # uninterrupted one (weights, momentum, replay buffer, counters, generator).
@@ -150,7 +153,7 @@ detail.
 
 ## Project-Specific Rules
 
-- The state-space size has never been measured. Do not state one; the same goes for any runtime or memory figure that was not measured.
+- The state-space size has never been measured. Do not state one. Runtime and memory figures must be measured, or extrapolated from a measurement (a pilot) and labelled as such, never reasoned from nothing (plan rule 1).
 - Round 2 trains on **`lc1-2`** (2026-09-27, `docs/experiments/v2-ruleset.md`): a position's third occurrence loses for the player who caused it. It started on the uncapped game; the pre-registered switch rule (more than 5 % of self-play games truncated, three iterations in a row) fired, so the owner switched (`docs/experiments/v2-az-uncapped.md`). Train with `--rules lc1-2 --features mover-relative-repetition`; the 1,000-ply safety limit stays (truncation is never a draw) and `train` stops by itself if the switch rule fires again. The round-1 variants remain in the engine: LC1 (repetition loss), LC2 (hard move cap: the player to move at the cap loses), LC3 (soft cap with draws).
 - Training artifacts go in `models/` (gitignored). 8 GB RAM M2 Mac — keep neural nets small.
 - The WASM shim at `app/src/engine/` translates between Rust serde format (snake_case, "White"/"Red") and old TS format (camelCase, "W"/"R"). Do not modify the Rust serialization to match TS — the shim handles it.

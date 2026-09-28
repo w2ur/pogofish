@@ -184,3 +184,55 @@ fn a_crash_at_either_side_of_the_commit_point_is_recovered() {
     }
     let _ = std::fs::remove_dir_all(base);
 }
+
+/// Review finding: after the first Ctrl+C a second one did nothing, so a
+/// long evaluation or game could only be killed. A second SIGINT now exits at
+/// once (status 130), and the run still resumes to the uninterrupted result.
+#[test]
+fn a_second_sigint_exits_at_once_and_the_run_still_resumes() {
+    let exe = env!("CARGO_BIN_EXE_train");
+    let base: PathBuf =
+        std::env::temp_dir().join(format!("pogofish-sigint2-{}", std::process::id()));
+    let _ = std::fs::remove_dir_all(&base);
+    let (reference, run) = (base.join("reference"), base.join("run"));
+    assert!(Command::new(exe)
+        .args(args(&reference))
+        .output()
+        .unwrap()
+        .status
+        .success());
+
+    let mut child = Command::new(exe).args(args(&run)).spawn().unwrap();
+    let start = Instant::now();
+    while iteration(&run) < 2 {
+        assert!(
+            start.elapsed() < Duration::from_secs(120),
+            "run made no progress"
+        );
+        std::thread::sleep(Duration::from_millis(5));
+    }
+    for _ in 0..2 {
+        unsafe { libc::kill(child.id() as libc::pid_t, libc::SIGINT) };
+        std::thread::sleep(Duration::from_millis(1));
+    }
+    let status = child.wait().unwrap();
+    assert!(
+        status.code() == Some(130) || status.success(),
+        "exit at once (130), or a clean stop if the first signal was handled first: {status}"
+    );
+    assert!(Command::new(exe)
+        .args(args(&run))
+        .output()
+        .unwrap()
+        .status
+        .success());
+    for f in ["weights.pt", "momentum.pt", "buffer.pt"] {
+        for ((n, a), (_, b)) in tensors(&reference.join(f))
+            .iter()
+            .zip(tensors(&run.join(f)).iter())
+        {
+            assert!(a.equal(b), "{f}: {n} differs from the uninterrupted run");
+        }
+    }
+    let _ = std::fs::remove_dir_all(base);
+}
