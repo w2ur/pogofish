@@ -23,7 +23,7 @@ Pogofish is a browser-based Pogo board game with AI opponents trained via AlphaZ
 - Rust WASM engine (via `pogofish-wasm`)
 
 ### Tools (`tools/`)
-- Python 3.11+ — ONNX export sidecar (`export_onnx.py`), Elo ladder and TD curve plots (`plot_ladder.py`, `plot_td_curve.py`, PEP 723: `uv run`)
+- Python 3.11+ — ONNX export sidecar (`export_onnx.py`), Elo ladder, TD curve and checkpoint-ladder plots (`plot_ladder.py`, `plot_td_curve.py`, `plot_az_ladder.py`, PEP 723: `uv run`)
 - Node.js — ONNX verification (`verify_onnx.js`)
 
 ## User-Facing Language

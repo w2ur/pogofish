@@ -1,0 +1,123 @@
+{
+  "anchor": "random",
+  "virtual_draws_per_pairing": 1.0,
+  "ratings": [
+    {
+      "player": "net:models/az-lc1-norep-s1/checkpoints/iter_00160.pt:50",
+      "elo": 852.1950193731979,
+      "ci95": [
+        769.0848911758113,
+        935.3051475705844
+      ],
+      "games": 1000.0
+    },
+    {
+      "player": "net:models/az-lc1-norep-s1/checkpoints/iter_00080.pt:50",
+      "elo": 849.3671291512661,
+      "ci95": [
+        766.6086846295848,
+        932.1255736729474
+      ],
+      "games": 1000.0
+    },
+    {
+      "player": "net:models/az-lc1-norep-s1/checkpoints/iter_00200.pt:50",
+      "elo": 844.1410277644505,
+      "ci95": [
+        757.9785734836721,
+        930.303482045229
+      ],
+      "games": 800.0
+    },
+    {
+      "player": "net:models/az-lc1-norep-s1/checkpoints/iter_00120.pt:50",
+      "elo": 836.7873939882209,
+      "ci95": [
+        754.0412431208051,
+        919.5335448556366
+      ],
+      "games": 1000.0
+    },
+    {
+      "player": "net:models/az-lc1-norep-s1/checkpoints/iter_00140.pt:50",
+      "elo": 824.2957401420674,
+      "ci95": [
+        741.5986497521745,
+        906.9928305319603
+      ],
+      "games": 1000.0
+    },
+    {
+      "player": "net:models/az-lc1-norep-s1/checkpoints/iter_00180.pt:50",
+      "elo": 823.2017114359935,
+      "ci95": [
+        739.9001012855098,
+        906.5033215864772
+      ],
+      "games": 1000.0
+    },
+    {
+      "player": "net:models/az-lc1-norep-s1/checkpoints/iter_00100.pt:50",
+      "elo": 819.5564650324666,
+      "ci95": [
+        737.0013430645234,
+        902.1115870004097
+      ],
+      "games": 1000.0
+    },
+    {
+      "player": "net:models/az-lc1-norep-s1/checkpoints/iter_00060.pt:50",
+      "elo": 788.6616009655595,
+      "ci95": [
+        706.820623382862,
+        870.502578548257
+      ],
+      "games": 1000.0
+    },
+    {
+      "player": "net:models/az-lc1-norep-s1/checkpoints/iter_00040.pt:50",
+      "elo": 752.403806963351,
+      "ci95": [
+        671.1747265611654,
+        833.6328873655367
+      ],
+      "games": 1000.0
+    },
+    {
+      "player": "net:models/az-lc1-norep-s1/checkpoints/iter_00020.pt:50",
+      "elo": 682.7027533510094,
+      "ci95": [
+        600.9785468197638,
+        764.426959882255
+      ],
+      "games": 800.0
+    },
+    {
+      "player": "greedy",
+      "elo": 485.4541595067713,
+      "ci95": [
+        405.7539658661676,
+        565.154353147375
+      ],
+      "games": 2000.0
+    },
+    {
+      "player": "mcts-uniform:200",
+      "elo": 411.4288122456949,
+      "ci95": [
+        330.5925418524515,
+        492.26508263893834
+      ],
+      "games": 2000.0
+    },
+    {
+      "player": "random",
+      "elo": 0.0,
+      "ci95": [
+        0.0,
+        0.0
+      ],
+      "games": 2000.0
+    }
+  ]
+}
