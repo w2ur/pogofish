@@ -33,6 +33,10 @@ const CELL_WIDTH: usize = 7;
 /// taller one shows its top `CELL_ROWS - 1` pieces and lists the rest.
 const CELL_ROWS: usize = 6;
 const NUM_CELLS: usize = 9;
+/// Columns between the board and the text panel on its right.
+const PANEL_GAP: u16 = 3;
+/// Width of the text panel; board and panel fit in 80 columns.
+const PANEL_WIDTH: usize = 47;
 const BOARD: usize = BOARD_SIZE as usize;
 
 // Helper: write at position (y, x) with optional attribute/color
@@ -109,72 +113,142 @@ pub fn draw(stdout: &mut impl Write, app: &App, flash_bright: bool) -> anyhow::R
 
     // Separator
     let grid_width = (CELL_WIDTH + 1) * BOARD + 1;
-    draw_separator(stdout, y, x_offset, grid_width)?;
+    let panel_x = x_offset + grid_width as u16 + PANEL_GAP;
+    draw_separator(
+        stdout,
+        y,
+        x_offset,
+        grid_width + PANEL_GAP as usize + PANEL_WIDTH,
+    )?;
     y += 1;
 
-    // Board
-    y = draw_board(stdout, y, x_offset, state, ui, flash_bright)?;
-    y += 1; // blank line
+    // The board on the left; everything that changes during play in a
+    // panel on its right, so the text never pushes the board around.
+    let board_top = y;
+    draw_board(stdout, y, x_offset, state, ui, flash_bright)?;
+    let mut p = Panel {
+        x: panel_x,
+        y: board_top + 1,
+    };
 
-    // Separator
-    draw_separator(stdout, y, x_offset, grid_width)?;
-    y += 1;
-
-    // Prompt
-    draw_prompt(stdout, y, x_offset, ui, session)?;
-    y += 1;
+    draw_prompt(stdout, &mut p, ui, session)?;
+    p.skip();
 
     // The AI's last move and its estimate, kept until the human moves.
     if let (Some((m, v)), false) = (session.last_ai, ui.phase == Phase::GameOver) {
-        at(
+        p.text(
             stdout,
-            y,
-            x_offset,
             &format!(
-                "AI played {}  \u{2014}  it rated its position {:+.2} (about {:.0}% to win)",
-                pogofish_engine::notation::move_to_notation(m),
+                "AI played {}",
+                pogofish_engine::notation::move_to_notation(m)
+            ),
+            Style::Plain,
+        )?;
+        p.text(
+            stdout,
+            &format!(
+                "It rated its position {:+.2} (about {:.0}% to win)",
                 v,
                 (v + 1.0) * 50.0
             ),
+            Style::Dim,
         )?;
-        y += 1;
+        p.skip();
     }
 
     // Info (hint, undo, saved game)
     if !ui.info_msg.is_empty() {
-        at(stdout, y, x_offset, &ui.info_msg)?;
-        y += 1;
+        p.text(stdout, &ui.info_msg, Style::Plain)?;
+        p.skip();
     }
 
     // Repetition warning: the rule reads how often this position occurred.
     let seen = state.occurrences_before();
     if seen > 0 && ui.phase != Phase::GameOver {
         let times = if seen == 1 { "once" } else { "twice" };
-        at_colored_bold(
+        p.text(
             stdout,
-            y,
-            x_offset,
             &format!("This position has occurred {times} before; a third occurrence loses for whoever makes it"),
-            Color::Yellow,
+            Style::Bold(Color::Yellow),
         )?;
-        y += 1;
+        p.skip();
     }
 
     // Error
     if !ui.error_msg.is_empty() {
-        at_colored_bold(stdout, y, x_offset, &ui.error_msg, Color::Red)?;
-        y += 1;
+        p.text(stdout, &ui.error_msg, Style::Bold(Color::Red))?;
+        p.skip();
     }
 
     // Score
-    draw_score(stdout, y, x_offset, state)?;
-    y += 1;
+    draw_score(stdout, p.y, p.x, state)?;
+    p.y += 1;
+    p.skip();
 
     // Key hints
-    draw_keys(stdout, y, x_offset, ui)?;
+    draw_keys(stdout, &mut p, ui)?;
 
     stdout.flush()?;
     Ok(())
+}
+
+#[derive(Clone, Copy)]
+enum Style {
+    Plain,
+    Dim,
+    Bold(Color),
+}
+
+/// The text panel to the right of the board: a column of lines, each
+/// wrapped to `PANEL_WIDTH`.
+struct Panel {
+    x: u16,
+    y: u16,
+}
+
+impl Panel {
+    fn text(&mut self, stdout: &mut impl Write, text: &str, style: Style) -> io::Result<()> {
+        for line in wrap(text, PANEL_WIDTH) {
+            match style {
+                Style::Plain => at(stdout, self.y, self.x, &line)?,
+                Style::Dim => at_dim(stdout, self.y, self.x, &line)?,
+                Style::Bold(fg) => at_colored_bold(stdout, self.y, self.x, &line, fg)?,
+            }
+            self.y += 1;
+        }
+        Ok(())
+    }
+
+    fn skip(&mut self) {
+        self.y += 1;
+    }
+}
+
+/// Split `text` into lines of at most `width` characters, at spaces where
+/// possible (a longer word, such as a file path, is cut).
+pub(crate) fn wrap(text: &str, width: usize) -> Vec<String> {
+    let mut lines = Vec::new();
+    let mut line = String::new();
+    for word in text.split(' ') {
+        let mut word: Vec<char> = word.chars().collect();
+        let len = line.chars().count();
+        if len > 0 && len + 1 + word.len() > width {
+            lines.push(std::mem::take(&mut line));
+        }
+        if !line.is_empty() {
+            line.push(' ');
+        }
+        while word.len() > width - line.chars().count() {
+            let room = width - line.chars().count();
+            line.extend(word.drain(..room));
+            lines.push(std::mem::take(&mut line));
+        }
+        line.extend(word);
+    }
+    if !line.is_empty() || lines.is_empty() {
+        lines.push(line);
+    }
+    lines
 }
 
 fn draw_players(stdout: &mut impl Write, y: u16, x: u16, session: &Session) -> io::Result<()> {
@@ -616,11 +690,12 @@ fn draw_piece_entry(
 
 fn draw_prompt(
     stdout: &mut impl Write,
-    y: u16,
-    x: u16,
+    p: &mut Panel,
     ui: &AppState,
     session: &Session,
 ) -> io::Result<()> {
+    let (x, y) = (p.x, p.y);
+    p.y += 1;
     let state = &session.state;
     let arrow = "\u{25b8} "; // ▸
     let enter_sym = "\u{23ce}"; // ⏎
@@ -642,7 +717,7 @@ fn draw_prompt(
         }
         Phase::PickCount => {
             at_dim(stdout, y, x, &format!("{arrow}How many pieces?  "))?;
-            let mut cx = x + 19;
+            let mut cx = x + 20;
             let source = ui.source.unwrap_or(0);
             let valid_counts = valid_pickup_counts(state, source);
             for (idx, n) in (1u8..=3).enumerate() {
@@ -687,7 +762,8 @@ fn draw_prompt(
                     Outcome::DrawEarned => Color::Yellow,
                 };
                 let text = format!("{star} {} {star}", session.result_text());
-                at_colored_bold(stdout, y, x, &text, fg)?;
+                p.y = y;
+                p.text(stdout, &text, Style::Bold(fg))?;
             }
         }
     }
@@ -708,17 +784,19 @@ fn draw_score(stdout: &mut impl Write, y: u16, x: u16, state: &GameState) -> io:
     Ok(())
 }
 
-fn draw_keys(stdout: &mut impl Write, y: u16, x: u16, ui: &AppState) -> io::Result<()> {
-    if ui.phase == Phase::GameOver {
-        at_dim(stdout, y, x, "r restart  q quit")
+fn draw_keys(stdout: &mut impl Write, p: &mut Panel, ui: &AppState) -> io::Result<()> {
+    let keys: &[&str] = if ui.phase == Phase::GameOver {
+        &["r restart   q quit"]
     } else {
-        at_dim(
-            stdout,
-            y,
-            x,
-            "\u{2191}\u{2193}\u{2190}\u{2192} move  \u{23ce} select  esc back  h hint  u undo  R redo  q quit",
-        )
+        &[
+            "\u{2191}\u{2193}\u{2190}\u{2192} move   \u{23ce} select   1/2/3 pieces",
+            "esc back   h hint   u undo   R redo   q quit",
+        ]
+    };
+    for k in keys {
+        p.text(stdout, k, Style::Dim)?;
     }
+    Ok(())
 }
 
 /// Count cells controlled by each player and empty cells.

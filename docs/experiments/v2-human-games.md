@@ -23,11 +23,13 @@ cargo run --release -p pogofish-cli -- --colour red   --level normal
   these agents (`v2-results.md`, colour balance).
 - Every finished game is saved as JSON in `~/.pogofish/games/` (moves, colours, level,
   result and the AI's estimate at each of its moves).
-- `h` asks the net for a hint; if you use hints in a game, note it below.
+- `h` asks the net for a hint. If you use hints, or replay a known winning line (two
+  are in `v2-results.md`, search depth), note it in the "Hints or known line" column:
+  such a game says nothing about unaided play.
 
 ## Games
 
-| # | Your colour | Level | Result | Hints used | Game file |
+| # | Your colour | Level | Result | Hints or known line | Game file |
 |---|---|---|---|---|---|
 | 1 | | | | | |
 | 2 | | | | | |

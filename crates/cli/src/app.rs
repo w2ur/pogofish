@@ -565,4 +565,49 @@ mod tests {
             "hidden pieces w w r w, bottom to top, in the bottom row of b2: {lines:#?}"
         );
     }
+
+    /// The game text sits in a panel right of the board (the owner asked
+    /// for it there), within 80 columns: the prompt, the piece-count choice
+    /// and the AI's move are on board rows, and nothing is drawn below.
+    #[test]
+    fn the_game_text_is_to_the_right_of_the_board() {
+        let mut a = app(Color::White);
+        let m = legal_moves(&a.session.state)[0];
+        play_by_keys(&mut a, m);
+        a.after_move();
+        let bottom = board_bottom(&render(&a));
+        go_to(&mut a, 0);
+        a.on_key(key(KeyCode::Enter));
+        assert_eq!(a.ui.phase, Phase::PickCount);
+        let lines = render(&a);
+        let top = lines.iter().position(|l| l.contains('\u{250c}')).unwrap();
+        let row_of = |needle: &str| {
+            lines
+                .iter()
+                .position(|l| l.contains(needle))
+                .unwrap_or_else(|| panic!("{needle} not drawn: {lines:#?}"))
+        };
+        for needle in ["How many pieces?", "[1]", "AI played", "% to win", "q quit"] {
+            let r = row_of(needle);
+            assert!(
+                top < r && r < bottom,
+                "{needle} on row {r}, board {top}..{bottom}"
+            );
+            let col = lines[r].find(needle).unwrap();
+            assert!(
+                lines[r][..col].contains('\u{2502}'),
+                "{needle} right of the board"
+            );
+        }
+        assert!(lines.iter().all(|l| l.chars().count() <= 80), "{lines:#?}");
+    }
+
+    #[test]
+    fn panel_text_wraps_at_spaces_and_cuts_long_words() {
+        let w = ui::wrap("a third occurrence loses", 10);
+        assert_eq!(w, ["a third", "occurrence", "loses"]);
+        let w = ui::wrap("saved to /a/very/long/path.json", 12);
+        assert!(w.iter().all(|l| l.chars().count() <= 12), "{w:?}");
+        assert_eq!(w.concat().replace(' ', ""), "savedto/a/very/long/path.json");
+    }
 }
