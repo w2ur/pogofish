@@ -27,7 +27,7 @@ Then open `http://localhost:5173`. The CTA in the bottom-right (`▶ Play`) or t
 - `pogofish-engine` — game rules, state, legal moves, rule variants (LC1/LC2/LC3).
 - `pogofish-search` — minimax (alpha-beta + transposition table), MCTS (PUCT), checkpointer, and two scripted baselines: `random` and `greedy` (wins when it can, else maximises own stacks on top minus the opponent's).
 - `pogofish-train` — AlphaZero training via tch-rs/libtorch (no gating: every checkpoint is kept and rated), self-play, TD(λ) value learning (`td_train`), the `arena` evaluation binary, and an `analyze` binary that produces the insights JSON the article reads.
-- `pogofish-cli` — terminal UI (crossterm, curses-style).
+- `pogofish-cli` — the terminal game: play the trained AlphaZero net (pure-Rust inference, no libtorch), choose your colour and level, ask for hints, see the AI's estimate.
 - `pogofish-wasm` — wasm-bindgen wrappers for the browser.
 
 ### `app/` — web app
@@ -63,8 +63,8 @@ cargo test --workspace
 cd app && npx vitest run
 cd app && npm run build
 
-# Terminal game
-cargo run --release -p pogofish-cli
+# Terminal game against the trained net (see --help)
+cargo run --release -p pogofish-cli -- --colour red --level normal
 
 # Measure the uncapped game with scripted players (JSON report; ~2 s)
 cargo run --release -p pogofish-search --bin measure -- --games 20000 --seed 1 --out docs/experiments/v2-measure.json

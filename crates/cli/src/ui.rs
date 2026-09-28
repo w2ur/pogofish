@@ -1,30 +1,27 @@
 use crossterm::{
     cursor::MoveTo,
     queue,
-    style::{
-        Attribute, Color, Print, ResetColor, SetAttribute, SetForegroundColor,
-    },
+    style::{Attribute, Color, Print, ResetColor, SetAttribute, SetForegroundColor},
     terminal::{Clear, ClearType},
 };
-use pogofish_engine::{
-    is_terminal, legal_moves, Color as PColor, GameState, Outcome, RuleSet, BOARD_SIZE,
-};
+use pogofish_engine::{legal_moves, Color as PColor, GameState, Outcome, BOARD_SIZE};
 use std::io::{self, Write};
 
-use crate::app::{valid_pickup_counts, AppState, Phase};
+use crate::app::{valid_pickup_counts, App, AppState, Phase};
+use crate::session::{color_name, Session};
 
 // Box-drawing characters
 const BOX_TL: &str = "\u{250c}"; // ┌
 const BOX_TR: &str = "\u{2510}"; // ┐
 const BOX_BL: &str = "\u{2514}"; // └
 const BOX_BR: &str = "\u{2518}"; // ┘
-const BOX_H: &str = "\u{2500}";  // ─
-const BOX_V: &str = "\u{2502}";  // │
+const BOX_H: &str = "\u{2500}"; // ─
+const BOX_V: &str = "\u{2502}"; // │
 const BOX_TJ: &str = "\u{252c}"; // ┬
 const BOX_BJ: &str = "\u{2534}"; // ┴
 const BOX_LJ: &str = "\u{251c}"; // ├
 const BOX_RJ: &str = "\u{2524}"; // ┤
-const BOX_X: &str = "\u{253c}";  // ┼
+const BOX_X: &str = "\u{253c}"; // ┼
 
 const PIECE_CHAR: &str = "\u{2b24}"; // ⬤
 const GHOST_CHAR: &str = "\u{25cb}"; // ○
@@ -88,12 +85,10 @@ fn at_colored_bold_underline(
 }
 
 /// Full screen redraw — mirrors Python's `_full_draw`.
-pub fn draw(
-    stdout: &mut io::Stdout,
-    state: &GameState,
-    ui: &AppState,
-    flash_bright: bool,
-) -> anyhow::Result<()> {
+pub fn draw(stdout: &mut impl Write, app: &App, flash_bright: bool) -> anyhow::Result<()> {
+    let session = &app.session;
+    let state = &session.state;
+    let ui = &app.ui;
     queue!(stdout, Clear(ClearType::All))?;
 
     let x_offset: u16 = 2;
@@ -104,7 +99,9 @@ pub fn draw(
     y += 1;
 
     // Turn info
-    draw_turn_info(stdout, y, x_offset, state, ui.turn_number)?;
+    draw_turn_info(stdout, y, x_offset, state, session.ply() as u32 + 1)?;
+    y += 1;
+    draw_players(stdout, y, x_offset, session)?;
     y += 1;
 
     // Separator
@@ -121,8 +118,44 @@ pub fn draw(
     y += 1;
 
     // Prompt
-    draw_prompt(stdout, y, x_offset, ui, state)?;
+    draw_prompt(stdout, y, x_offset, ui, session)?;
     y += 1;
+
+    // The AI's last move and its estimate, kept until the human moves.
+    if let (Some((m, v)), false) = (session.last_ai, ui.phase == Phase::GameOver) {
+        at(
+            stdout,
+            y,
+            x_offset,
+            &format!(
+                "AI played {}  \u{2014}  it rated its position {:+.2} (about {:.0}% to win)",
+                pogofish_engine::notation::move_to_notation(m),
+                v,
+                (v + 1.0) * 50.0
+            ),
+        )?;
+        y += 1;
+    }
+
+    // Info (hint, undo, saved game)
+    if !ui.info_msg.is_empty() {
+        at(stdout, y, x_offset, &ui.info_msg)?;
+        y += 1;
+    }
+
+    // Repetition warning: the rule reads how often this position occurred.
+    let seen = state.occurrences_before();
+    if seen > 0 && ui.phase != Phase::GameOver {
+        let times = if seen == 1 { "once" } else { "twice" };
+        at_colored_bold(
+            stdout,
+            y,
+            x_offset,
+            &format!("This position has occurred {times} before; a third occurrence loses for whoever makes it"),
+            Color::Yellow,
+        )?;
+        y += 1;
+    }
 
     // Error
     if !ui.error_msg.is_empty() {
@@ -139,6 +172,19 @@ pub fn draw(
 
     stdout.flush()?;
     Ok(())
+}
+
+fn draw_players(stdout: &mut impl Write, y: u16, x: u16, session: &Session) -> io::Result<()> {
+    let text = match &session.ai {
+        Some(ai) => format!(
+            "You play {}  \u{2014}  AI: {} simulations per move  \u{2014}  rules: {}",
+            color_name(session.human),
+            ai.sims,
+            crate::session::RULES
+        ),
+        None => format!("Two players  \u{2014}  rules: {}", crate::session::RULES),
+    };
+    at_dim(stdout, y, x, &text)
 }
 
 fn draw_title(stdout: &mut impl Write, y: u16, x: u16) -> io::Result<()> {
@@ -187,9 +233,9 @@ fn draw_separator(stdout: &mut impl Write, y: u16, x: u16, width: usize) -> io::
 /// Represents one rendered piece entry: the char to display and its color/style.
 #[derive(Clone)]
 enum PieceEntry {
-    Piece(PColor, bool),  // (color, flash_reverse)
+    Piece(PColor, bool), // (color, flash_reverse)
     Ghost,
-    Picked,               // picked pieces shown at destination (yellow)
+    Picked, // picked pieces shown at destination (yellow)
 }
 
 /// Draw the 3x3 board. Returns next y after the board.
@@ -230,8 +276,16 @@ fn draw_board(
     let cell_height = max_stack.max(4);
 
     // Determine ghost/picked state
-    let ghost_cell = if ui.phase == Phase::Move { ui.source } else { None };
-    let ghost_count = if ui.phase == Phase::Move { ui.num_pieces as usize } else { 0 };
+    let ghost_cell = if ui.phase == Phase::Move {
+        ui.source
+    } else {
+        None
+    };
+    let ghost_count = if ui.phase == Phase::Move {
+        ui.num_pieces as usize
+    } else {
+        0
+    };
     let picked_colors: Vec<PColor> = if let (Phase::Move, Some(src)) = (ui.phase, ghost_cell) {
         let stack = &cells[src];
         let n = ghost_count.min(stack.len());
@@ -337,18 +391,21 @@ fn draw_board(
                 };
 
                 let is_cursor = ci == ui.cursor;
-                let is_source_cell = matches!(ui.phase, Phase::PickCount | Phase::Move)
-                    && ui.source == Some(ci);
+                let is_source_cell =
+                    matches!(ui.phase, Phase::PickCount | Phase::Move) && ui.source == Some(ci);
                 let is_legal = legal_dests[ci];
                 let in_move_phase = ui.phase == Phase::Move;
-                let highlight_cursor =
-                    is_cursor && ui.phase != Phase::GameOver;
+                let highlight_cursor = is_cursor && ui.phase != Phase::GameOver;
 
                 // Determine cell background color
                 let bg_color: Option<Color> = if highlight_cursor {
                     if in_move_phase && !is_source_cell {
                         // Cursor in move phase: green if legal, red if illegal
-                        Some(if is_legal { Color::Green } else { Color::DarkRed })
+                        Some(if is_legal {
+                            Color::Green
+                        } else {
+                            Color::DarkRed
+                        })
                     } else {
                         Some(Color::Yellow) // default cursor color
                     }
@@ -393,14 +450,13 @@ fn draw_board(
                         )?;
                     } else {
                         at(stdout, y + h as u16, cx, &" ".repeat(pad_left))?;
-                        draw_piece_entry(
+                        draw_piece_entry(stdout, cx + pad_left as u16, y + h as u16, entry, false)?;
+                        at(
                             stdout,
-                            cx + pad_left as u16,
                             y + h as u16,
-                            entry,
-                            false,
+                            cx + pad_left as u16 + 1,
+                            &" ".repeat(pad_right),
                         )?;
-                        at(stdout, y + h as u16, cx + pad_left as u16 + 1, &" ".repeat(pad_right))?;
                     }
                 } else {
                     // Empty row
@@ -420,7 +476,12 @@ fn draw_board(
                         let pad_right = CELL_WIDTH - pad_left - 1;
                         at(stdout, y + h as u16, cx, &" ".repeat(pad_left))?;
                         at_dim(stdout, y + h as u16, cx + pad_left as u16, EMPTY_CHAR)?;
-                        at(stdout, y + h as u16, cx + pad_left as u16 + 1, &" ".repeat(pad_right))?;
+                        at(
+                            stdout,
+                            y + h as u16,
+                            cx + pad_left as u16 + 1,
+                            &" ".repeat(pad_right),
+                        )?;
                     } else {
                         at(stdout, y + h as u16, cx, &" ".repeat(CELL_WIDTH))?;
                     }
@@ -464,7 +525,8 @@ fn draw_board(
         let mut label = String::new();
         for col in 0..BOARD {
             let ci = row * BOARD + col;
-            let centered = format!("{:^width$}", ci, width = CELL_WIDTH);
+            let name = pogofish_engine::notation::cell_to_notation(ci as u8);
+            let centered = format!("{:^width$}", name, width = CELL_WIDTH);
             label.push_str(&centered);
             if col < BOARD - 1 {
                 label.push(' ');
@@ -542,18 +604,26 @@ fn draw_prompt(
     y: u16,
     x: u16,
     ui: &AppState,
-    state: &GameState,
+    session: &Session,
 ) -> io::Result<()> {
+    let state = &session.state;
     let arrow = "\u{25b8} "; // ▸
     let enter_sym = "\u{23ce}"; // ⏎
 
     match ui.phase {
         Phase::Browse => {
             let (name, fg) = player_name_color(state.to_move());
+            let who = if session.ai.is_some() && state.to_move() == session.human {
+                format!("Your turn ({name})")
+            } else if session.ai.is_some() {
+                format!("AI's turn ({name})")
+            } else {
+                format!("{name}'s turn")
+            };
             at_dim(stdout, y, x, arrow)?;
-            at_colored_bold(stdout, y, x + 2, &format!("{name}'s turn"), fg)?;
+            at_colored_bold(stdout, y, x + 2, &who, fg)?;
             let suffix = " \u{2014} select a piece to move";
-            at_dim(stdout, y, x + 2 + name.len() as u16 + 8, suffix)?;
+            at_dim(stdout, y, x + 2 + who.chars().count() as u16, suffix)?;
         }
         Phase::PickCount => {
             at_dim(stdout, y, x, &format!("{arrow}How many pieces?  "))?;
@@ -594,20 +664,15 @@ fn draw_prompt(
             )?;
         }
         Phase::GameOver => {
-            let rules = RuleSet::LC2 { cap: 50 };
-            if let Some(outcome) = is_terminal(state, &rules) {
+            if let Some(outcome) = session.outcome() {
                 let star = "\u{2605}"; // ★
-                match outcome {
-                    Outcome::WinWhite => {
-                        at_colored_bold(stdout, y, x, &format!("{star} White wins! {star}"), Color::White)?;
-                    }
-                    Outcome::WinRed => {
-                        at_colored_bold(stdout, y, x, &format!("{star} Red wins! {star}"), Color::Red)?;
-                    }
-                    Outcome::DrawEarned => {
-                        at_colored_bold(stdout, y, x, &format!("{star} Draw! {star}"), Color::Yellow)?;
-                    }
-                }
+                let fg = match outcome {
+                    Outcome::WinWhite => Color::White,
+                    Outcome::WinRed => Color::Red,
+                    Outcome::DrawEarned => Color::Yellow,
+                };
+                let text = format!("{star} {} {star}", session.result_text());
+                at_colored_bold(stdout, y, x, &text, fg)?;
             }
         }
     }
@@ -636,7 +701,7 @@ fn draw_keys(stdout: &mut impl Write, y: u16, x: u16, ui: &AppState) -> io::Resu
             stdout,
             y,
             x,
-            "\u{2191}\u{2193}\u{2190}\u{2192} move  \u{23ce} select  esc back  u undo  R redo  q quit",
+            "\u{2191}\u{2193}\u{2190}\u{2192} move  \u{23ce} select  esc back  h hint  u undo  R redo  q quit",
         )
     }
 }

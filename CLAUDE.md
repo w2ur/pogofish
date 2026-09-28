@@ -12,7 +12,7 @@ Pogofish is a browser-based Pogo board game with AI opponents trained via AlphaZ
 - `pogofish-infer` — Pure-Rust inference (no libtorch): input features, action indexing, MLP forward pass reading exported `.pfw` weights, and the neural MCTS shared with training (`Evaluator` trait)
 - `pogofish-search` — Minimax (alpha-beta + TT), MCTS (PUCT), checkpointer, scripted `random`/`greedy` players (seeded, no dependency)
 - `pogofish-train` — AlphaZero training (tch-rs/libtorch, no gating, exact resume), self-play, TD(λ) value learning (`td_train`), `arena` evaluation binary
-- `pogofish-cli` — Curses-style terminal UI (crossterm)
+- `pogofish-cli` — Terminal game (crossterm) against the bundled net: colour, level (simulations), hint, the AI's estimate, undo, saved game records; game logic in `session.rs`, key handling tested headless in `app.rs`
 - `pogofish-wasm` — wasm-bindgen wrappers for browser use
 
 ### Web app (`app/`)
@@ -43,9 +43,12 @@ cargo build --release -p pogofish-train --bin train     # training binary
 
 ### CLI game
 ```bash
-cargo run --release -p pogofish-cli
-# Arrow keys navigate, Enter selects, 1/2/3 piece count, Esc cancels
-# u undo, Shift+R redo, q quit
+# Play the bundled AlphaZero net (crates/cli/assets/az-lc1-s1.pfw) under lc1-2.
+# No libtorch needed: inference is pure Rust (pogofish-infer).
+cargo run --release -p pogofish-cli -- --colour red --level normal   # --help for all options
+# Arrow keys navigate, Enter selects, 1/2/3 piece count, Esc cancels,
+# h hint, u undo (your move and the AI's reply), Shift+R redo, q quit.
+# Finished games are saved as JSON in ~/.pogofish/games (--no-save to disable).
 ```
 
 ### Measuring the game

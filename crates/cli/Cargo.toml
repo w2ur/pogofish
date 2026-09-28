@@ -10,5 +10,11 @@ path = "src/main.rs"
 
 [dependencies]
 pogofish-engine = { path = "../engine" }
+pogofish-infer = { path = "../infer" }
+serde = { workspace = true }
+serde_json = { workspace = true }
 crossterm = "0.29"
 anyhow = { workspace = true }
+
+[dev-dependencies]
+pogofish-search = { path = "../search" }

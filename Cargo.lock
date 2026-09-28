@@ -785,6 +785,10 @@ dependencies = [
  "anyhow",
  "crossterm",
  "pogofish-engine",
+ "pogofish-infer",
+ "pogofish-search",
+ "serde",
+ "serde_json",
 ]
 
 [[package]]
