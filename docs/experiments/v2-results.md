@@ -132,6 +132,44 @@ ablation head-to-head 0.755; on the ladders 0.50–0.79 (mean 0.58). Every score
 report is over colour-swapped pairs, so it is not biased by this, but the advantage
 matters for anyone reading a single game, and for criterion 4.
 
+## Search depth (added 2026-09-28, after the owner lost every game at "normal")
+
+Not pre-registered; measured after the owner reported losing every game against the
+terminal game's "normal" level (the seed-1 checkpoint, iteration 200, at 100
+simulations).
+
+**The same net searching longer, from random openings.** Arena, `lc1-2`, 100
+colour-swapped pairs over random 4-ply openings, seed 13
+(`v2-phase5/depth-400-vs-100.json`, `depth-1600-vs-100.json`):
+
+| Longer search vs 100 simulations | Score [95 % CI] | W–L | Distinct games |
+|---|---|---|---|
+| 400 | 0.640 [0.596, 0.684] | 128–72 | 171 / 200 |
+| 1600 | 0.690 [0.642, 0.738] | 138–62 | 178 / 200 |
+
+Deeper search is stronger, and the gain shrinks from 4× to 16× the simulations
+(overlapping intervals: the difference between the two rows is not resolved).
+It is not dominant: at 1600 simulations the net still loses almost a third of the games.
+
+**From the start position.** The AI adds no noise and plays the most-visited move, so
+from the start position each pairing is one fixed game. The net at 400, 1600 and
+6400 simulations beat the net at 100 simulations in all six pairings (as White and as
+Red; 45, 52, 37, 28, 35 and 68 plies). Replaying only the stronger side's moves
+against a freshly searching 100-simulation AI won again each time
+(`crates/infer/examples/depth_probe.rs`). Six fixed games are not a strength
+estimate; they show that winning lines exist and that, because the AI is
+deterministic, a line that wins once wins every time. Two such lines, each replayed
+three times against the terminal game at "normal" and won each time:
+
+- As White (19 moves): c1-1-b1 a1-2-c1 b1-1-c1 c1-3-b3 c1-1-b1 b1-1-a1 a1-1-b1
+  b1-1-c1 b1-2-c2 c1-1-b1 c2-1-b2 c2-1-c1 c1-1-c2 b2-1-b1 c2-1-b2 b1-2-c2 b2-1-b3
+  c2-1-c3 c2-1-c3.
+- As Red (14 moves): c3-1-c2 a3-2-c3 c3-3-b1 b3-1-b2 c2-1-c3 c3-1-c2 c2-1-c3
+  c3-1-b3 b3-2-c2 c2-2-b3 b3-2-c2 b2-1-b1 c2-1-c1 c2-1-c1.
+
+For criterion 4 this means a game won by replaying a known line, or with hints,
+says nothing about unaided play; such games should be marked as such.
+
 ## What these results do not show
 
 - Strength against people. Criterion 4 is the only human check, and it is pending.
