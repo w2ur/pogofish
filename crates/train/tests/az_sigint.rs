@@ -111,3 +111,76 @@ fn sigint_mid_run_then_resume_matches_an_uninterrupted_run() {
     }
     let _ = std::fs::remove_dir_all(base);
 }
+
+/// Review finding: a crash between writing the iteration's files could mix
+/// two iterations. With the commit journal, a process aborted just before or
+/// just after the commit point of iteration 3 resumes to the same result as
+/// an uninterrupted run, with no metrics line lost or repeated.
+#[test]
+fn a_crash_at_either_side_of_the_commit_point_is_recovered() {
+    let exe = env!("CARGO_BIN_EXE_train");
+    let base: PathBuf = std::env::temp_dir().join(format!("pogofish-crash-{}", std::process::id()));
+    let _ = std::fs::remove_dir_all(&base);
+    let short = |dir: &Path| {
+        let mut a = args(dir);
+        let i = a.iter().position(|x| x == "--iterations").unwrap();
+        a[i + 1] = "6".into();
+        a
+    };
+    let reference = base.join("reference");
+    assert!(Command::new(exe)
+        .args(short(&reference))
+        .output()
+        .unwrap()
+        .status
+        .success());
+
+    for point in ["before-commit", "after-commit", "mid-apply"] {
+        let run = base.join(point);
+        let crashed = Command::new(exe)
+            .args(short(&run))
+            .env("POGOFISH_TEST_CRASH", format!("{point}:3"))
+            .output()
+            .unwrap();
+        assert!(
+            !crashed.status.success(),
+            "{point}: the process should have aborted"
+        );
+        let expected_after_crash = if point == "before-commit" { 2 } else { 3 };
+        assert!(Command::new(exe)
+            .args(short(&run))
+            .output()
+            .unwrap()
+            .status
+            .success());
+        assert_eq!(iteration(&run), 6, "{point}");
+        let metrics = std::fs::read_to_string(run.join("metrics.jsonl")).unwrap();
+        let iters: Vec<u64> = metrics
+            .lines()
+            .map(|l| {
+                serde_json::from_str::<serde_json::Value>(l).unwrap()["iteration"]
+                    .as_u64()
+                    .unwrap()
+            })
+            .collect();
+        assert_eq!(
+            iters,
+            (1..=6).collect::<Vec<_>>(),
+            "{point}: metrics after a crash at iteration 3 ({expected_after_crash} committed)"
+        );
+        for f in ["weights.pt", "momentum.pt", "buffer.pt"] {
+            for ((n, a), (_, b)) in tensors(&reference.join(f))
+                .iter()
+                .zip(tensors(&run.join(f)).iter())
+            {
+                assert!(
+                    a.equal(b),
+                    "{point}: {f}: {n} differs from the uninterrupted run"
+                );
+            }
+        }
+        assert!(!run.join("commit.json").exists());
+        assert!(!run.join("weights.pt.tmp").exists());
+    }
+    let _ = std::fs::remove_dir_all(base);
+}

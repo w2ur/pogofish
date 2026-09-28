@@ -409,6 +409,7 @@ pub fn train_td(cfg: &TdConfig, dir: &Path) -> anyhow::Result<TdStop> {
     let net = TdNet::new(&vs.root(), &cfg.hidden, cfg.features);
     seeded_init(&vs, cfg.seed);
 
+    crate::checkpoint::journal::recover(dir)?;
     let mut state = if run.state_path().exists() {
         let saved: TdConfig = serde_json::from_str(&std::fs::read_to_string(run.config_path())?)?;
         ensure!(
@@ -505,15 +506,21 @@ pub fn train_td(cfg: &TdConfig, dir: &Path) -> anyhow::Result<TdStop> {
             }
         }
 
-        // Save the completed iteration: weights, then state (the commit point).
-        save_var_store(&vs, &run.weights_path())?;
+        // Commit the iteration atomically (see checkpoint::journal).
+        use crate::checkpoint::journal;
+        let mut files: Vec<String> = vec!["weights.pt".into()];
+        save_var_store(&vs, &journal::staged(dir, "weights.pt"))?;
         if cfg.checkpoint_every > 0 && state.iteration % cfg.checkpoint_every == 0 {
-            save_var_store(&vs, &run.checkpoint_path(state.iteration))?;
+            let name = format!("checkpoints/iter_{:05}.pt", state.iteration);
+            save_var_store(&vs, &journal::staged(dir, &name))?;
+            files.push(name);
         }
-        crate::metrics::append_metrics(&run.metrics_path(), &entry)?;
-        let tmp = run.state_path().with_extension("json.tmp");
-        std::fs::write(&tmp, serde_json::to_string_pretty(&state)? + "\n")?;
-        std::fs::rename(&tmp, run.state_path())?;
+        std::fs::write(
+            journal::staged(dir, "state.json"),
+            serde_json::to_string_pretty(&state)? + "\n",
+        )?;
+        files.push("state.json".into());
+        journal::commit(dir, state.iteration, &files, "metrics.jsonl", &entry)?;
         eprintln!("{entry}");
     }
     eprintln!(

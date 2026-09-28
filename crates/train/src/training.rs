@@ -177,11 +177,6 @@ impl Paths {
     fn f(&self, name: &str) -> PathBuf {
         self.dir.join(name)
     }
-    fn checkpoint(&self, iteration: u32) -> PathBuf {
-        self.dir
-            .join("checkpoints")
-            .join(format!("iter_{iteration:05}.pt"))
-    }
 }
 
 /// How a call to [`train`] stopped.
@@ -355,6 +350,7 @@ pub fn train(cfg: &TrainConfig, dir: &Path) -> anyhow::Result<TrainStop> {
     let mut opt = MomentumSgd::new(&vs);
     let mut buffer: VecDeque<Example> = VecDeque::new();
 
+    crate::checkpoint::journal::recover(dir)?;
     let mut state = if paths.f("state.json").exists() {
         let saved: TrainConfig =
             serde_json::from_str(&std::fs::read_to_string(paths.f("config.json"))?)?;
@@ -506,17 +502,27 @@ pub fn train(cfg: &TrainConfig, dir: &Path) -> anyhow::Result<TrainStop> {
             }
         }
 
-        // Commit the iteration: tensors first, state last.
-        save_var_store(&vs, &paths.f("weights.pt"))?;
-        opt.save(&paths.f("momentum.pt"))?;
-        save_buffer(&buffer, &paths.f("buffer.pt"))?;
+        // Commit the iteration atomically (see checkpoint::journal).
+        use crate::checkpoint::journal;
+        let mut files: Vec<String> = vec![
+            "weights.pt".into(),
+            "momentum.pt".into(),
+            "buffer.pt".into(),
+        ];
+        save_var_store(&vs, &journal::staged(dir, "weights.pt"))?;
+        opt.save(&journal::staged(dir, "momentum.pt"))?;
+        save_buffer(&buffer, &journal::staged(dir, "buffer.pt"))?;
         if cfg.checkpoint_every > 0 && state.iteration % cfg.checkpoint_every == 0 {
-            save_var_store(&vs, &paths.checkpoint(state.iteration))?;
+            let name = format!("checkpoints/iter_{:05}.pt", state.iteration);
+            save_var_store(&vs, &journal::staged(dir, &name))?;
+            files.push(name);
         }
-        crate::metrics::append_metrics(&paths.f("metrics.jsonl"), &entry)?;
-        let tmp = paths.f("state.json.tmp");
-        std::fs::write(&tmp, serde_json::to_string_pretty(&state)? + "\n")?;
-        std::fs::rename(&tmp, paths.f("state.json"))?;
+        std::fs::write(
+            journal::staged(dir, "state.json"),
+            serde_json::to_string_pretty(&state)? + "\n",
+        )?;
+        files.push("state.json".into());
+        journal::commit(dir, state.iteration, &files, "metrics.jsonl", &entry)?;
         eprintln!("{entry}");
         if rule_fired(&state) {
             return Ok(TrainStop::TruncationRule);
