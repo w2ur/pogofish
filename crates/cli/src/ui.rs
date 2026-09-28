@@ -29,6 +29,9 @@ const EMPTY_CHAR: &str = "\u{00b7}"; // ·
 
 const TITLE: &str = "P O G O F I S H";
 const CELL_WIDTH: usize = 7;
+/// Rows per cell. Stacks of up to this many pieces are drawn in full; a
+/// taller one shows its top `CELL_ROWS - 1` pieces and lists the rest.
+const CELL_ROWS: usize = 6;
 const NUM_CELLS: usize = 9;
 const BOARD: usize = BOARD_SIZE as usize;
 
@@ -249,31 +252,9 @@ fn draw_board(
 ) -> anyhow::Result<u16> {
     let cells = state.cells();
 
-    // Adaptive cell height
-    let max_stack = cells.iter().map(|c| c.len()).max().unwrap_or(0);
-    let max_stack = if ui.phase == Phase::Move {
-        if let Some(source) = ui.source {
-            let np = ui.num_pieces as usize;
-            (0..NUM_CELLS)
-                .map(|ci| {
-                    let mut eff = cells[ci].len();
-                    if ci == source {
-                        eff = eff.saturating_sub(np);
-                    }
-                    if ci == ui.cursor {
-                        eff += np;
-                    }
-                    eff
-                })
-                .max()
-                .unwrap_or(max_stack)
-        } else {
-            max_stack
-        }
-    } else {
-        max_stack
-    };
-    let cell_height = max_stack.max(4);
+    // Fixed cell height, so the board never changes size during a game. A
+    // taller stack shows its top pieces and lists the hidden ones below.
+    let cell_height = CELL_ROWS;
 
     // Determine ghost/picked state
     let ghost_cell = if ui.phase == Phase::Move {
@@ -374,17 +355,26 @@ fn draw_board(
                 cx += 1;
 
                 let entries = &cell_contents[ci];
-                let stack_size = entries.len();
+                // A stack taller than the cell shows its top `cell_height - 1`
+                // entries; the bottom row lists the hidden ones as text.
+                let overflow = entries.len() > cell_height;
+                let shown_rows = if overflow {
+                    cell_height - 1
+                } else {
+                    cell_height
+                };
+                let first_shown = entries.len().saturating_sub(shown_rows);
+                let stack_size = entries.len() - first_shown;
 
                 // Bottom-aligned rendering:
                 // Row h=0 is the top visual row of the cell.
                 // entries[stack_size-1] is the top piece, drawn at h = cell_height - stack_size.
                 // entries[0] is the bottom piece, drawn at h = cell_height - 1.
                 let piece_row: Option<usize> = {
-                    let offset = cell_height.saturating_sub(stack_size);
+                    let offset = shown_rows.saturating_sub(stack_size);
                     if h >= offset && h < offset + stack_size {
                         // Which entry to show: h - offset = 0 means top piece, so index = stack_size-1 - (h-offset)
-                        Some(stack_size - 1 - (h - offset))
+                        Some(first_shown + stack_size - 1 - (h - offset))
                     } else {
                         None
                     }
@@ -458,6 +448,8 @@ fn draw_board(
                             &" ".repeat(pad_right),
                         )?;
                     }
+                } else if overflow && h == cell_height - 1 {
+                    draw_hidden(stdout, cx, y + h as u16, &entries[..first_shown])?;
                 } else {
                     // Empty row
                     if let Some(bg) = bg_color {
@@ -537,6 +529,29 @@ fn draw_board(
     }
 
     Ok(y)
+}
+
+/// The pieces hidden below a tall stack, bottom to top, as small coloured
+/// letters (`w` White, `r` Red) centred in the cell's bottom row.
+fn draw_hidden(stdout: &mut impl Write, x: u16, y: u16, hidden: &[PieceEntry]) -> io::Result<()> {
+    let n = hidden.len().min(CELL_WIDTH);
+    let pad_left = (CELL_WIDTH - n) / 2;
+    at(stdout, y, x, &" ".repeat(CELL_WIDTH))?;
+    for (i, entry) in hidden.iter().take(n).enumerate() {
+        let (ch, fg) = match entry {
+            PieceEntry::Piece(PColor::White, _) => ("w", Color::White),
+            PieceEntry::Piece(PColor::Red, _) => ("r", Color::Red),
+            PieceEntry::Ghost | PieceEntry::Picked => ("?", Color::Yellow),
+        };
+        queue!(
+            stdout,
+            MoveTo(x + (pad_left + i) as u16, y),
+            SetForegroundColor(fg),
+            Print(ch),
+            ResetColor
+        )?;
+    }
+    Ok(())
 }
 
 /// Draw a single piece entry character with appropriate coloring.

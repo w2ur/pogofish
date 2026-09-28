@@ -500,4 +500,69 @@ mod tests {
         assert_eq!(files.len(), 1);
         let _ = std::fs::remove_dir_all(dir);
     }
+
+    /// A minimal terminal: applies cursor moves (`ESC[row;colH`), skips other
+    /// escape sequences, and returns the screen as lines.
+    fn render(a: &App) -> Vec<String> {
+        let mut buf = Vec::new();
+        ui::draw(&mut buf, a, false).unwrap();
+        let text = String::from_utf8(buf).unwrap();
+        let mut grid = vec![vec![' '; 120]; 60];
+        let (mut r, mut c) = (0usize, 0usize);
+        let mut chars = text.chars().peekable();
+        while let Some(ch) = chars.next() {
+            if ch == '\x1b' {
+                let mut seq = String::new();
+                for n in chars.by_ref() {
+                    if n.is_ascii_alphabetic() {
+                        seq.push(n);
+                        break;
+                    }
+                    seq.push(n);
+                }
+                if let Some(body) = seq.strip_prefix('[').and_then(|b| b.strip_suffix('H')) {
+                    let mut it = body.split(';').map(|v| v.parse::<usize>().unwrap_or(1));
+                    r = it.next().unwrap_or(1) - 1;
+                    c = it.next().unwrap_or(1) - 1;
+                }
+            } else if r < 60 && c < 120 {
+                grid[r][c] = ch;
+                c += 1;
+            }
+        }
+        grid.into_iter()
+            .map(|l| l.into_iter().collect::<String>().trim_end().to_string())
+            .collect()
+    }
+
+    fn board_bottom(lines: &[String]) -> usize {
+        lines
+            .iter()
+            .position(|l| l.contains('\u{2514}'))
+            .expect("bottom border")
+    }
+
+    /// The board keeps one height whatever the stacks (the owner found the
+    /// changing height hard to play with), and a stack taller than a cell
+    /// lists its hidden lower pieces as text, bottom to top.
+    #[test]
+    fn the_board_height_is_fixed_and_hidden_pieces_are_listed() {
+        use pogofish_engine::{testing::position, Cell};
+        let mut a = app(Color::White);
+        let start = board_bottom(&render(&a));
+
+        let (w, r) = (Color::White, Color::Red);
+        let mut cells: [Cell; 9] = std::array::from_fn(|_| Vec::new());
+        cells[4] = vec![w, w, r, w, r, r, w, r, w]; // 9 pieces: 5 shown, 4 hidden
+        cells[0] = vec![r, w, r];
+        a.session.state = position(cells, w, 0);
+        let lines = render(&a);
+        assert_eq!(board_bottom(&lines), start, "same height as the start");
+        assert!(
+            lines
+                .iter()
+                .any(|l| l.contains("\u{2502}   \u{00b7}   \u{2502} wwrw  \u{2502}")),
+            "hidden pieces w w r w, bottom to top, in the bottom row of b2: {lines:#?}"
+        );
+    }
 }
