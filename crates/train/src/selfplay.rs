@@ -139,7 +139,7 @@ impl<'a> NeuralMcts<'a> {
         rules: &RuleSet,
         noise: Option<&mut SplitMix64>,
     ) -> Vec<(Move, u32)> {
-        self.expand_if_needed(root, rules);
+        let _ = self.expand_if_needed(root, rules);
         if let Some(rng) = noise {
             self.apply_dirichlet(root, rules, rng);
         }
@@ -158,16 +158,18 @@ impl<'a> NeuralMcts<'a> {
         self.net.forward_single(&self.net.encode(state))
     }
 
-    fn expand_if_needed(&mut self, state: &GameState, rules: &RuleSet) {
+    /// Expand `state` if it is new, returning the network's value for it
+    /// when the network was run (so a new leaf costs one forward pass).
+    fn expand_if_needed(&mut self, state: &GameState, rules: &RuleSet) -> Option<f32> {
         let key = search_key(state, rules);
         if self.nodes.contains_key(&key) {
-            return;
+            return None;
         }
         let moves = legal_moves(state);
         if moves.is_empty() {
-            return;
+            return None;
         }
-        let (logits, _) = self.evaluate(state);
+        let (logits, value) = self.evaluate(state);
         let masked = logits + (legal_move_mask(state) - 1.0) * 1e9;
         let priors: Vec<f32> = masked
             .softmax(-1, Kind::Float)
@@ -183,6 +185,7 @@ impl<'a> NeuralMcts<'a> {
             })
             .collect();
         self.nodes.insert(key, Node { edges });
+        Some(value)
     }
 
     fn apply_dirichlet(&mut self, state: &GameState, rules: &RuleSet, rng: &mut SplitMix64) {
@@ -213,8 +216,10 @@ impl<'a> NeuralMcts<'a> {
         let key = search_key(state, rules);
         let revisit = !path.insert(key.clone());
         if revisit || !self.nodes.contains_key(&key) {
-            self.expand_if_needed(state, rules);
-            return self.evaluate(state).1;
+            return match self.expand_if_needed(state, rules) {
+                Some(value) => value,
+                None => self.evaluate(state).1,
+            };
         }
 
         let best_idx = {
