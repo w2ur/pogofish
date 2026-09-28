@@ -69,7 +69,7 @@ impl TdNet {
         let x = Tensor::stack(
             &states
                 .iter()
-                .map(|s| self.features.encode(s))
+                .map(|s| crate::encoding::encode(self.features, s))
                 .collect::<Vec<_>>(),
             0,
         );
@@ -451,7 +451,7 @@ pub fn train_td(cfg: &TdConfig, dir: &Path) -> anyhow::Result<TdStop> {
             plies += states.len() as u64 - 1;
             let targets = game_targets(&net, &states, end, cfg.lambda);
             for (s, g) in states.iter().zip(targets) {
-                xs.push(cfg.features.encode(s));
+                xs.push(crate::encoding::encode(cfg.features, s));
                 ys.push(g);
             }
         }
@@ -665,7 +665,7 @@ mod tests {
     fn mover_relative_features_are_the_same_board_seen_from_either_side() {
         use pogofish_engine::testing::with_to_move;
         let s0 = initial_state();
-        let x = Vec::<f32>::try_from(TdFeatures::MoverRelative.encode(&s0)).unwrap();
+        let x = TdFeatures::MoverRelative.encode(&s0);
         assert_eq!(x.len(), MOVER_RELATIVE_SIZE);
         let w = MAX_STACK + 2;
         // White to move: cell 0 is White's (+1 top, height 2/12), cell 8 Red's.
@@ -674,9 +674,7 @@ mod tests {
         assert_eq!(x[8 * w + MAX_STACK], -1.0);
         assert_eq!(x[4 * w + MAX_STACK], 0.0, "empty centre");
         // Same board, Red to move: every sign flips.
-        let y =
-            Vec::<f32>::try_from(TdFeatures::MoverRelative.encode(&with_to_move(&s0, Color::Red)))
-                .unwrap();
+        let y = TdFeatures::MoverRelative.encode(&with_to_move(&s0, Color::Red));
         for i in 0..x.len() {
             if i % w == MAX_STACK + 1 {
                 assert_eq!(x[i], y[i]);

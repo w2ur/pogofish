@@ -14,7 +14,9 @@ use tch::{nn, Tensor};
 /// compatible, unlike `VarStore::save` in tch-rs 0.17).
 pub fn save_var_store(vs: &nn::VarStore, path: &Path) -> anyhow::Result<()> {
     let vars = vs.variables();
-    let named: Vec<(&str, &Tensor)> = vars.iter().map(|(k, v)| (k.as_str(), v)).collect();
+    // Sorted, so that equal weights give byte-identical files.
+    let mut named: Vec<(&str, &Tensor)> = vars.iter().map(|(k, v)| (k.as_str(), v)).collect();
+    named.sort_by(|a, b| a.0.cmp(b.0));
     Tensor::save_multi(&named, path)
         .with_context(|| format!("saving weights to {}", path.display()))
 }

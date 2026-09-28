@@ -1,0 +1,13 @@
+[package]
+name = "pogofish-infer"
+version.workspace = true
+edition.workspace = true
+rust-version.workspace = true
+description = "Dependency-light inference for Pogofish: input features, a pure-Rust MLP and neural MCTS"
+
+[dependencies]
+pogofish-engine = { path = "../engine" }
+pogofish-search = { path = "../search" }
+serde = { workspace = true }
+serde_json = { workspace = true }
+anyhow = { workspace = true }

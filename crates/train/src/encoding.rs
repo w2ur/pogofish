@@ -1,10 +1,9 @@
 use pogofish_engine::symmetry::{transform_move, CellMap};
-use pogofish_engine::{legal_moves, Color, GameState, Move};
-use serde::{Deserialize, Serialize};
+use pogofish_engine::{legal_moves, Color, GameState};
 use tch::Tensor;
 
 pub const STATE_SIZE: usize = 109; // MAX_STACK * NUM_CELLS + 1 = 12 * 9 + 1
-pub const ACTION_SIZE: usize = 243; // NUM_CELLS * 3 * NUM_CELLS = 9 * 3 * 9
+pub use pogofish_infer::actions::{index_to_move, move_to_index, ACTION_SIZE};
 pub const MAX_STACK: usize = 12;
 
 /// Encode a GameState into a flat [STATE_SIZE] float tensor.
@@ -30,24 +29,6 @@ pub fn state_to_tensor(state: &GameState) -> Tensor {
     Tensor::from_slice(&data)
 }
 
-/// Convert Move to action index: from_cell * 27 + (num_pieces - 1) * 9 + to_cell
-pub fn move_to_index(m: &Move) -> usize {
-    m.from_cell as usize * 27 + (m.num_pieces as usize - 1) * 9 + m.to_cell as usize
-}
-
-/// Convert action index back to Move.
-pub fn index_to_move(index: usize) -> Move {
-    let from_cell = (index / 27) as u8;
-    let rem = index % 27;
-    let num_pieces = (rem / 9 + 1) as u8;
-    let to_cell = (rem % 9) as u8;
-    Move {
-        from_cell,
-        num_pieces,
-        to_cell,
-    }
-}
-
 /// Create a boolean mask of legal actions for a given state.
 /// Returns a [ACTION_SIZE] tensor where 1.0 indicates a legal action.
 pub fn legal_move_mask(state: &GameState) -> Tensor {
@@ -70,79 +51,17 @@ pub fn transform_policy(policy: &[f32; ACTION_SIZE], perm: &CellMap) -> [f32; AC
     out
 }
 
-/// How a position is turned into the net's input.
-#[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize)]
-#[serde(rename_all = "kebab-case")]
-pub enum Features {
-    /// The AlphaZero encoding (`encoding::state_to_tensor`): 12 slots per
-    /// cell in absolute colours, bottom to top, plus the player to move.
-    Absolute,
-    /// Per cell, seen from the player to move: 12 slots (+1 own piece, −1
-    /// opponent's, 0 empty), the top's owner (+1, −1, 0) and the height / 12.
-    /// Only raw board facts, restated so that ownership sits in a fixed
-    /// input whatever the stack's height.
-    MoverRelative,
-    /// `MoverRelative` plus one input: how many times the current position
-    /// occurred earlier in the game (/ 2). It is what a repetition rule reads
-    /// at the current position. It is not the whole history, so under LC1 the
-    /// input is still not a complete Markov state; the search, whose key and
-    /// terminal checks read the full history, stays exact.
-    MoverRelativeRepetition,
-}
+pub use pogofish_infer::features::{Features, MOVER_RELATIVE_SIZE};
 
-pub const MOVER_RELATIVE_SIZE: usize = 9 * (MAX_STACK + 2);
-
-impl Features {
-    pub fn size(self) -> usize {
-        match self {
-            Features::Absolute => STATE_SIZE,
-            Features::MoverRelative => MOVER_RELATIVE_SIZE,
-            Features::MoverRelativeRepetition => MOVER_RELATIVE_SIZE + 1,
-        }
-    }
-
-    /// Whether these features carry everything `rules` reads at the current
-    /// position: nothing beyond the board under Uncapped, the current
-    /// position's repetition count under LC1. Never for LC2/LC3, which read
-    /// the move count.
-    pub fn suffice_for(self, rules: &pogofish_engine::RuleSet) -> bool {
-        use pogofish_engine::RuleSet;
-        match rules {
-            RuleSet::Uncapped => true,
-            RuleSet::LC1 { .. } => self == Features::MoverRelativeRepetition,
-            RuleSet::LC2 { .. } | RuleSet::LC3 { .. } => false,
-        }
-    }
-
-    pub fn encode(self, state: &GameState) -> Tensor {
-        match self {
-            Features::Absolute => state_to_tensor(state),
-            Features::MoverRelativeRepetition => {
-                let base = Features::MoverRelative.encode(state);
-                let seen = state.occurrences_before() as f32 / 2.0;
-                Tensor::cat(&[base, Tensor::from_slice(&[seen])], 0)
-            }
-            Features::MoverRelative => {
-                let me = state.to_move();
-                let side = |c: Color| if c == me { 1.0f32 } else { -1.0 };
-                let mut x = [0f32; MOVER_RELATIVE_SIZE];
-                for (i, stack) in state.cells().iter().enumerate() {
-                    let base = i * (MAX_STACK + 2);
-                    for (slot, &c) in stack.iter().enumerate().take(MAX_STACK) {
-                        x[base + slot] = side(c);
-                    }
-                    x[base + MAX_STACK] = stack.last().map_or(0.0, |&c| side(c));
-                    x[base + MAX_STACK + 1] = stack.len() as f32 / MAX_STACK as f32;
-                }
-                Tensor::from_slice(&x)
-            }
-        }
-    }
+/// Encode `state` with `features` as a tensor for the libtorch nets.
+pub fn encode(features: Features, state: &GameState) -> Tensor {
+    Tensor::from_slice(&features.encode(state))
 }
 
 #[cfg(test)]
 mod tests {
     use super::*;
+    use pogofish_engine::Move;
     use pogofish_engine::initial_state;
 
     #[test]
@@ -276,13 +195,10 @@ mod tests {
     fn the_repetition_feature_is_the_earlier_occurrence_count() {
         let s0 = initial_state();
         for (n, expected) in [(0, 0.0), (1, 0.5), (2, 1.0)] {
-            let x: Vec<f32> = Features::MoverRelativeRepetition
-                .encode(&s0.with_prior_occurrences(n))
-                .try_into()
-                .unwrap();
+            let x = Features::MoverRelativeRepetition.encode(&s0.with_prior_occurrences(n));
             assert_eq!(x.len(), MOVER_RELATIVE_SIZE + 1);
             assert_eq!(*x.last().unwrap(), expected);
-            let base: Vec<f32> = Features::MoverRelative.encode(&s0).try_into().unwrap();
+            let base = Features::MoverRelative.encode(&s0);
             assert_eq!(&x[..MOVER_RELATIVE_SIZE], &base[..]);
         }
     }

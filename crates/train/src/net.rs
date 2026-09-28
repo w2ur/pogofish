@@ -146,7 +146,7 @@ impl AzNet {
 
     /// Encode a position for this net.
     pub fn encode(&self, state: &pogofish_engine::GameState) -> Tensor {
-        self.features.encode(state)
+        crate::encoding::encode(self.features, state)
     }
 
     /// Forward pass.
