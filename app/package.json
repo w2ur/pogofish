@@ -8,7 +8,8 @@
     "build": "tsc -b && vite build && node scripts/prerender.mjs",
     "preview": "vite preview",
     "test": "vitest run",
-    "test:watch": "vitest"
+    "test:watch": "vitest",
+    "build:board": "tsc -b && vite build --config vite.board.config.ts"
   },
   "dependencies": {
     "@types/d3-force": "^3.0.10",

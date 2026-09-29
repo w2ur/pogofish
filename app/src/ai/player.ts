@@ -1,6 +1,7 @@
 import { type Features, type GameState, type Move, type RuleSet } from "../engine/types";
 import { legalMoves } from "../engine/engine";
 import { actionToIndex, maskedSoftmax } from "../engine/encoding";
+import { assetUrl } from "./assets";
 import { randomMove } from "./random";
 import { OnnxModel } from "./onnx";
 import {
@@ -35,9 +36,9 @@ function isLC2_50(rules?: RuleSet): boolean {
 
 /** Resolve ONNX model path for a given model name and rule variant. */
 function modelPath(rules: RuleSet | undefined, name: string): string {
-  if (isLC1(rules)) return `/models/lc1-2/${name}`;
-  if (rules && "LC3" in rules) return `/models/lc3-29/${name}`;
-  return `/models/${name}`;
+  if (isLC1(rules)) return assetUrl(`models/lc1-2/${name}`);
+  if (rules && "LC3" in rules) return assetUrl(`models/lc3-29/${name}`);
+  return assetUrl(`models/${name}`);
 }
 
 async function getModel(path: string, features: Features = "absolute"): Promise<OnnxModel> {
@@ -51,7 +52,7 @@ async function getModel(path: string, features: Features = "absolute"): Promise<
 }
 
 /** The round-1 DQN, offered under LC1 only; one file, at the models root. */
-export const DQN_PATH = "/models/dqn_tiny.onnx";
+export const DQN_PATH = assetUrl("models/dqn_tiny.onnx");
 
 async function getDqnModel(): Promise<OnnxModel> {
   return getModel(DQN_PATH);
@@ -80,7 +81,7 @@ export function startMinimaxLoad(
   if (minimaxTable) return Promise.resolve(minimaxTable);
   if (!minimaxLoadPromise) {
     minimaxLoadPromise = loadMinimaxTable(
-      "/models/minimax_table.json.gz",
+      assetUrl("models/minimax_table.json.gz"),
       onProgress,
     ).then((table) => {
       minimaxTable = table;

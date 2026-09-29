@@ -6,6 +6,7 @@ __pycache__/
 
 # Build output
 app/dist/
+app/dist-board/
 *.egg-info/
 
 # Environment

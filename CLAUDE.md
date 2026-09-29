@@ -139,7 +139,17 @@ npm install
 npm run dev        # dev server
 npm run build      # production build (tsc → vite → prerender; see below)
 npx vitest run     # run tests
+npm run build:board  # board-only build for the hub → app/dist-board/
 ```
+
+### Board-only build (for the hub)
+
+A second Vite entry, `app/board.html` + `app/src/board/`, built by `vite.board.config.ts` (base `/pogofish/`, no PWA, `publicDir: false`) into `app/dist-board/` (git-ignored). **`dist-board/` is what the hub copies** into its `public/pogofish/`. It is the human vs the round-2 net under `lc1-2` only; the output must contain exactly one `.onnx` (`find dist-board -name '*.onnx'`; `dist/` has five) and no minimax table.
+
+- Every asset URL goes through `assetUrl()` (`src/ai/assets.ts`, `import.meta.env.BASE_URL`): never write a literal `/ort/` or `/models/`, the main SPA (base `/`) and this build (base `/pogofish/`) share the code.
+- The config aliases `onnxruntime-web` to `onnxruntime-web/wasm`: the default entry probes for the JSEP wasm, which this build does not ship (a 404 in the console).
+- `?lang` / `?theme` and the host's theme `message` are parsed in `src/board/embed.ts`; a message counts only from `location.origin` and only as exactly `{ pogofishTheme: 'light' | 'dark' }`. Colours are CSS custom properties keyed on `<html data-theme>` in `src/board/board.css`, valued from the hub's tokens.
+- The frame is the story column wide (320–720 px) and 640 px tall; the layout must fit with no inner scroll.
 
 ### Prerendering
 
@@ -161,7 +171,7 @@ code, reference only: never import from it.
 ## Testing
 
 - Rust workspace: `cargo test --workspace` (engine, search, train)
-- Web app: `cd app && npx vitest run`
+- Web app: `cd app && npx vitest run` (the board entry's tests are `src/board/embed.test.ts` and `src/ai/assets.test.ts`)
 - Property tests: engine invariants via proptest (piece conservation, no stalemate, legal moves apply)
 
 ## Build Warning Exceptions

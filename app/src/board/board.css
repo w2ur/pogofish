@@ -1,0 +1,105 @@
+/* Board-only build. Tailwind is limited to the board components and this entry
+   (source(none) + explicit @source), so the story's utilities do not ship.
+   Tokens keep the names the shared board components already use (--color-ink,
+   --color-paper, --board-piece-*), valued from the hub's paper / bistre / ink
+   palette and switched on <html data-theme>. */
+@import "tailwindcss" source(none);
+@source "./";
+@source "../components/board";
+
+@theme {
+  --font-display: ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+  --font-mono: ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+
+  /* light (default): the host page is #F3EDE3 */
+  --color-ink: #dcd0bd; /* cell, bottom */
+  --color-ink-2: #e6dccb; /* cell, top */
+  --color-ink-3: #ded4c3;
+  --color-paper: #24190f; /* text */
+  --color-paper-2: #544636; /* secondary */
+  --color-paper-3: #726453; /* muted */
+  --color-hair: #938576; /* component border */
+  --color-vermilion: #4c1c00; /* accent */
+  --color-vermilion-soft: #7a3a14;
+  --color-line: rgba(36, 25, 15, 0.16);
+}
+
+:root {
+  --board-piece-w-from: #fffdf8;
+  --board-piece-w-to: #e9e0cf;
+  --board-piece-r-from: #b54a33;
+  --board-piece-r-to: #7f2614;
+  --board-piece-edge: #6b5a48;
+}
+
+:root[data-theme="dark"] {
+  --color-ink: #0c0e18;
+  --color-ink-2: #141724;
+  --color-ink-3: #1a1d2b;
+  --color-paper: #f3ede3;
+  --color-paper-2: #c8bcae;
+  --color-paper-3: #9a8f83;
+  --color-hair: #575e6b;
+  --color-vermilion: #bda793;
+  --color-vermilion-soft: #a08b78;
+  --color-line: rgba(243, 237, 227, 0.16);
+
+  --board-piece-w-from: #f3ede3;
+  --board-piece-w-to: #c8bcae;
+  --board-piece-r-from: #c9614a;
+  --board-piece-r-to: #8f301d;
+  --board-piece-edge: #05060f;
+}
+
+html,
+body {
+  margin: 0;
+  height: 100%;
+  overflow: hidden;
+  background: transparent;
+  color: var(--color-paper);
+  font-family: var(--font-display);
+}
+
+#root {
+  height: 100%;
+}
+
+.display,
+.mono {
+  font-family: var(--font-display);
+  letter-spacing: 0;
+}
+
+.bd-btn {
+  border: 1px solid var(--color-hair);
+  border-radius: 3px;
+  background: transparent;
+  color: var(--color-paper-2);
+  padding: 4px 10px;
+  min-height: 28px;
+  font: inherit;
+  font-size: 13px;
+  cursor: pointer;
+}
+.bd-btn:hover {
+  color: var(--color-paper);
+  border-color: var(--color-paper-2);
+}
+.bd-btn[aria-pressed="true"] {
+  color: var(--color-paper);
+  border-color: var(--color-vermilion);
+  box-shadow: inset 0 0 0 1px var(--color-vermilion);
+  font-weight: 600;
+}
+.bd-btn:focus-visible {
+  outline: 2px solid var(--color-vermilion);
+  outline-offset: 2px;
+}
+
+/* Board size: the frame is 640px tall, so the grid is capped by the height
+   left under the controls as well as by the width. */
+.bd-board > div {
+  max-width: min(100%, 380px, calc(100vh - 250px));
+  margin-inline: auto;
+}

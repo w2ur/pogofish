@@ -1,3 +1,7 @@
+/** Outline that keeps a piece readable on a cell of similar tone; the board-only
+ *  build sets it, everywhere else it is transparent. */
+const EDGE = "1px solid var(--board-piece-edge, transparent)";
+
 interface PieceProps {
   color: "W" | "R";
   size?: "sm" | "md";
@@ -19,12 +23,14 @@ export function Piece({ color, size = "md" }: PieceProps) {
       style={
         color === "W"
           ? {
+              border: EDGE,
               background:
                 "linear-gradient(180deg, var(--board-piece-w-from) 0%, var(--board-piece-w-to) 100%)",
               boxShadow:
                 "0 1px 0 rgba(255,255,255,0.55) inset, 0 -1px 0 rgba(80,70,50,0.35) inset, 0 3px 6px rgba(0,0,0,0.45)",
             }
           : {
+              border: EDGE,
               background:
                 "linear-gradient(180deg, var(--board-piece-r-from) 0%, var(--board-piece-r-to) 100%)",
               boxShadow:

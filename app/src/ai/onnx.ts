@@ -2,10 +2,11 @@ import * as ort from "onnxruntime-web";
 import { type Features, type GameState, type Move } from "../engine/types";
 import { encodeFeatures, initialState, legalMoves } from "../engine/engine";
 import { actionToIndex, indexToAction, maskedSoftmax } from "../engine/encoding";
+import { assetUrl } from "./assets";
 
-// Load WASM binaries from same-origin /ort/ (served via viteStaticCopy).
+// Load WASM binaries from same-origin ort/ under the build base (served via viteStaticCopy).
 // The PWA service worker caches these after first load for offline use.
-ort.env.wasm.wasmPaths = "/ort/";
+ort.env.wasm.wasmPaths = assetUrl("ort/");
 ort.env.wasm.numThreads = 1;
 
 export class OnnxModel {

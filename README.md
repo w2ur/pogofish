@@ -34,6 +34,12 @@ Then open `http://localhost:5173`. The CTA in the bottom-right (`▶ Play`) or t
 
 React 19 + TypeScript + Vite + Tailwind v4. The entire app is one scroll-driven story page; the playable game is a scene within it. No routing, no backend — all inference runs client-side via ONNX Runtime Web against models loaded from `app/public/models/`.
 
+#### Board build for the hub
+
+`cd app && npm run build:board` builds a second, board-only entry (`app/board.html` → `app/src/board/`) into `app/dist-board/`, with base `/pogofish/`: the hub copies that folder and embeds it in an iframe. It plays a human against the round-2 net (`az-lc1-s1`, AlphaZero + MCTS) under `lc1-2`, with a colour choice, three levels (easy 25, normal 100, hard 400 simulations, the CLI's numbers; only "normal" is the measured one) and a new-game button. Language and theme come from `?lang=fr|en` and `?theme=light|dark`; the host can switch the theme with a same-origin `postMessage({ pogofishTheme })`.
+
+It ships `index.html`, the engine wasm, `models/lc1-2/az-lc1-s1.onnx` and the non-JSEP ONNX Runtime pair (`ort/ort-wasm-simd-threaded.{wasm,mjs}`). It leaves out the LC3 variant, the DQN net, the raw-policy player, the minimax table and every other file of `app/public/`.
+
 ### `models/` — gitignored training artifacts
 
 LC1-2 (Sudden Death) and LC3-29 (Classic) AlphaZero models ship as ONNX under `app/public/models/`. The LC1-2 opponent is the round-2 net the terminal game plays (`lc1-2/az-lc1-s1.onnx`, input encoded by the WASM engine; `app/src/ai/parity.test.ts` checks it against the Rust net on 100 positions within 1e-5). The LC3-29 net is round 1.
@@ -62,6 +68,7 @@ cargo test --workspace
 # Web app
 cd app && npx vitest run
 cd app && npm run build
+cd app && npm run build:board   # board-only build for the hub → app/dist-board/
 
 # Terminal game against the trained net (see --help)
 cargo run --release -p pogofish-cli -- --colour red --level normal
