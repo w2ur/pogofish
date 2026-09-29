@@ -5,10 +5,12 @@
 //!         crates/cli/assets/az-lc1-s1.pfw app/src/ai/parity-lc1-2.json
 //!
 //! Positions come from seeded random lc1-2 playouts. A third of them are
-//! positions seen once before, so the repetition input is exercised.
+//! positions seen once before, so the repetition input is exercised. Each is
+//! stored as the moves that reach it from the start, so the app's test builds
+//! the position (and its history) through its own engine path, as in a game.
 
 use pogofish_engine::{
-    apply_move_under, initial_state, is_terminal, legal_moves, GameState, RuleSet,
+    apply_move_under, initial_state, is_terminal, legal_moves, GameState, Move, RuleSet,
 };
 use pogofish_infer::mlp::Mlp;
 use pogofish_search::rng::SplitMix64;
@@ -22,9 +24,11 @@ fn main() -> anyhow::Result<()> {
     let net = Mlp::from_bytes(&std::fs::read(&args[0])?)?;
     let rules = RuleSet::LC1 { repetitions: 2 };
     let mut rng = SplitMix64::new(64);
-    let (mut fresh, mut repeated): (Vec<GameState>, Vec<GameState>) = (Vec::new(), Vec::new());
+    type Sample = (GameState, Vec<Move>);
+    let (mut fresh, mut repeated): (Vec<Sample>, Vec<Sample>) = (Vec::new(), Vec::new());
     while fresh.len() < FRESH || repeated.len() < REPEATED {
         let mut s = initial_state();
+        let mut path = Vec::new();
         for ply in 0..200 {
             if is_terminal(&s, &rules).is_some() {
                 break;
@@ -32,23 +36,31 @@ fn main() -> anyhow::Result<()> {
             // Sample sparsely so the positions spread over many games.
             if rng.below(8) == 0 {
                 match s.occurrences_before() {
-                    0 if fresh.len() < FRESH && ply > 0 => fresh.push(s.clone()),
-                    n if n > 0 && repeated.len() < REPEATED => repeated.push(s.clone()),
+                    0 if fresh.len() < FRESH && ply > 0 => fresh.push((s.clone(), path.clone())),
+                    n if n > 0 && repeated.len() < REPEATED => {
+                        repeated.push((s.clone(), path.clone()))
+                    }
                     _ => {}
                 }
             }
             let moves = legal_moves(&s);
-            s = apply_move_under(&s, moves[rng.below(moves.len())], &rules)?;
+            let m = moves[rng.below(moves.len())];
+            path.push(m);
+            s = apply_move_under(&s, m, &rules)?;
         }
     }
     let positions: Vec<_> = fresh
         .into_iter()
         .chain(repeated)
-        .map(|state| {
-            // Only the current position's repetition count is read; keep just that.
-            let state = state.with_prior_occurrences(state.occurrences_before());
+        .map(|(state, moves)| {
             let (logits, value) = net.forward(&net.features.encode(&state));
-            serde_json::json!({ "state": state, "logits": logits, "value": value })
+            serde_json::json!({
+                "moves": moves.iter().map(|m| [m.from_cell, m.num_pieces, m.to_cell]).collect::<Vec<_>>(),
+                "cells": state.cells(),
+                "occurrences_before": state.occurrences_before(),
+                "logits": logits,
+                "value": value,
+            })
         })
         .collect();
     let out = serde_json::json!({

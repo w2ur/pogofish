@@ -1,6 +1,6 @@
 import * as ort from "onnxruntime-web";
 import { type Features, type GameState, type Move } from "../engine/types";
-import { encodeFeatures, legalMoves } from "../engine/engine";
+import { encodeFeatures, initialState, legalMoves } from "../engine/engine";
 import { actionToIndex, indexToAction, maskedSoftmax } from "../engine/encoding";
 
 // Load WASM binaries from same-origin /ort/ (served via viteStaticCopy).
@@ -17,12 +17,22 @@ export class OnnxModel {
 
   async load(source: string | Uint8Array): Promise<void> {
     const options = { executionProviders: ["wasm"] };
+    // Two identical calls: `create` has one overload per source type, and a
+    // union argument matches neither.
     this.session =
       typeof source === "string"
         ? await ort.InferenceSession.create(source, options)
         : await ort.InferenceSession.create(source, options);
     // Dual-head (AlphaZero) has 2 outputs; single-head (DQN) has 1
     this.isDualHead = this.session.outputNames.length >= 2;
+    // The features are not stored in the file: check the net accepts their
+    // size now, rather than on the first move of a game.
+    try {
+      await this.infer(initialState());
+    } catch (e) {
+      this.session = null;
+      throw new Error(`The net does not take "${this.features}" features: ${String(e)}`);
+    }
   }
 
   async infer(
