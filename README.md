@@ -1,16 +1,16 @@
 ---
 name: "Pogofish"
-tagline_fr: "Un article au long cours sur l'entraînement d'une IA à un jeu de plateau oublié"
-tagline_en: "A longform piece about training an AI to play a forgotten board game"
-facts_fr: "Moteur Rust en WASM, inférence ONNX côté client."
-facts_en: "A Rust engine in WASM, client-side ONNX inference."
+tagline_fr: "Entraîner une IA à un jeu de plateau oublié, et mesurer ce qu'elle vaut vraiment"
+tagline_en: "Training an AI to play a forgotten board game, and measuring what it is really worth"
+facts_fr: "AlphaZero en Rust : gagne 85,5 à 88,7 % de 400 parties contre un joueur glouton, sur trois entraînements (borne basse à 95 % : 82,3 %). Inférence en Rust pur, jeu en terminal."
+facts_en: "AlphaZero in Rust: wins 85.5–88.7 % of 400 games against a greedy player, over three training runs (lowest 95 % bound: 82.3 %). Pure-Rust inference, terminal game."
 ---
 
 # Pogofish
 
 A longform article about training an AI to play a forgotten 3×3 board game — with the playable game inlined at the climax. Bilingual FR/EN (English at `/`, French at `/fr`, both prerendered). Single-page web app; no server.
 
-The article tells the first round of the build: the game, a minimax solver, a DQN attempt, an AlphaZero run, a rule-variant sweep, and a section on what the trained network learned. That round's evaluation has since been found unreliable, and a second round is under way that re-measures everything before claiming it. What went wrong, and which results it invalidates: [`docs/experiments/v1-verdict.md`](docs/experiments/v1-verdict.md).
+The article tells the first round of the build: the game, a minimax solver, a DQN attempt, an AlphaZero run, a rule-variant sweep, and a section on what the trained network learned. That round's evaluation has since been found unreliable (what went wrong, and which results it invalidates: [`docs/experiments/v1-verdict.md`](docs/experiments/v1-verdict.md)). A second round re-measured everything under pre-registered criteria: [`docs/experiments/v2-results.md`](docs/experiments/v2-results.md). The article will move to a story on the portfolio hub, and this subdomain will then be retired with a redirect (owner's decision, 2026-09-29).
 
 ## Read it
 

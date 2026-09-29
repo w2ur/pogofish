@@ -176,6 +176,10 @@ Netlify — static deploy of the `app/` build output. No server-side code. Live 
 `netlify.toml` lives). See the `pogofish-prerendering` skill for build-config
 detail.
 
+**To be retired** (owner's decision 2026-09-29, plan 7.1 option a): the article moves to a
+hub story `/stories/pogofish` and this subdomain gets a 301 to it. Add the 301 only once
+the story is live on the hub, never before.
+
 ## Project-Specific Rules
 
 - The state-space size has never been measured. Do not state one. Runtime and memory figures must be measured, or extrapolated from a measurement (a pilot) and labelled as such, never reasoned from nothing (plan rule 1).
