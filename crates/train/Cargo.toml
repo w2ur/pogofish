@@ -17,12 +17,25 @@ name = "dqn_train"
 path = "src/bin/dqn_train.rs"
 
 [[bin]]
+name = "td_train"
+path = "src/bin/td_train.rs"
+
+[[bin]]
+name = "export_weights"
+path = "src/bin/export_weights.rs"
+
+[[bin]]
+name = "arena"
+path = "src/bin/arena.rs"
+
+[[bin]]
 name = "analyze"
 path = "src/bin/analyze.rs"
 
 [dependencies]
 pogofish-engine = { path = "../engine" }
 pogofish-search = { path = "../search" }
+pogofish-infer = { path = "../infer" }
 tch = { version = "0.17", features = ["download-libtorch"] }
 rand = "0.8"
 serde = { workspace = true }

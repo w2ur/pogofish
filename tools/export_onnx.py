@@ -6,7 +6,13 @@ Mirrors the Rust AzNet architecture from crates/train/src/net.rs exactly,
 loads a .pt checkpoint saved by tch-rs VarStore::save(), and exports to ONNX.
 
 Usage:
-    python tools/export_onnx.py <input.pt> <output.onnx> [--arch mlp_small]
+    python tools/export_onnx.py <input.pt> <output.onnx> [--arch mlp_small] [--features absolute]
+
+The --features flag sets the input size; it must be the run's `features` in
+config.json (crates/infer/src/features.rs):
+    absolute:                  109
+    mover-relative:            126
+    mover-relative-repetition: 127
 
 The --arch flag selects the architecture to use:
     mlp_tiny:   trunk [128, 64], heads 64
@@ -24,8 +30,14 @@ import torch
 import torch.nn as nn
 
 
-STATE_SIZE = 109
 ACTION_SIZE = 243
+
+# Input size per feature set, matching crates/infer/src/features.rs.
+FEATURE_SIZES = {
+    "absolute": 12 * 9 + 1,
+    "mover-relative": 9 * (12 + 2),
+    "mover-relative-repetition": 9 * (12 + 2) + 1,
+}
 
 
 # Architecture configs matching crates/train/src/net.rs
@@ -45,11 +57,12 @@ class AzNet(nn.Module):
         value_fc1.weight, value_fc1.bias, value_fc2.weight, value_fc2.bias
     """
 
-    def __init__(self, trunk_sizes: list[int], head_size: int) -> None:
+    def __init__(self, trunk_sizes: list[int], head_size: int, input_size: int) -> None:
         super().__init__()
+        self.input_size = input_size
 
         # Build trunk as individual named layers (matching Rust naming)
-        in_size = STATE_SIZE
+        in_size = input_size
         trunk_layers: list[nn.Module] = []
         for i, out_size in enumerate(trunk_sizes):
             linear = nn.Linear(in_size, out_size)
@@ -106,7 +119,7 @@ def load_tch_checkpoint(model: AzNet, path: str) -> None:
 def export_to_onnx(model: AzNet, output_path: str) -> None:
     """Export model to ONNX with dynamic batch axis."""
     model.eval()
-    dummy = torch.randn(1, STATE_SIZE)
+    dummy = torch.randn(1, model.input_size)
     torch.onnx.export(
         model,
         dummy,
@@ -129,6 +142,8 @@ def main() -> None:
     parser.add_argument("output", help="Output .onnx path")
     parser.add_argument("--arch", default="mlp_small", choices=ARCHITECTURES.keys(),
                         help="Architecture name (default: mlp_small)")
+    parser.add_argument("--features", default="absolute", choices=FEATURE_SIZES.keys(),
+                        help="Input features of the run (default: absolute)")
     args = parser.parse_args()
 
     if not Path(args.input).exists():
@@ -137,8 +152,10 @@ def main() -> None:
 
     cfg = ARCHITECTURES[args.arch]
     print(f"Architecture: {args.arch} (trunk={cfg['trunk']}, head={cfg['head']})")
+    print(f"Features: {args.features} ({FEATURE_SIZES[args.features]} inputs)")
 
-    model = AzNet(trunk_sizes=cfg["trunk"], head_size=cfg["head"])
+    model = AzNet(trunk_sizes=cfg["trunk"], head_size=cfg["head"],
+                  input_size=FEATURE_SIZES[args.features])
     print(f"Loading checkpoint: {args.input}")
     load_tch_checkpoint(model, args.input)
 

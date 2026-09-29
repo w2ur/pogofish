@@ -11,7 +11,7 @@ use anyhow::Context;
 use pogofish_engine::{
     apply_move, initial_state, is_terminal, legal_moves, Color, GameState, Move, Outcome, RuleSet,
 };
-use rand::{rngs::StdRng, SeedableRng};
+use pogofish_search::rng::SplitMix64;
 use serde::{Deserialize, Serialize};
 use tch::nn;
 
@@ -89,6 +89,13 @@ fn game_state_to_story_board(state: &GameState) -> StoryBoard {
 pub fn run(model_dir: &Path, output: &Path, num_games: usize) -> anyhow::Result<()> {
     let model_path = model_dir.join("model_best.pt");
     anyhow::ensure!(
+        model_path.exists() || !model_dir.join("weights.pt").exists(),
+        "{} is a round-2 run (weights.pt, no model_best.pt). This analyzer is the round-1 \
+         article tool (LC3-29, absolute encoding) and would misread it; it is reworked with \
+         the article in plan Phase 7",
+        model_dir.display()
+    );
+    anyhow::ensure!(
         model_path.exists(),
         "model checkpoint not found: {}",
         model_path.display()
@@ -113,7 +120,7 @@ pub fn run(model_dir: &Path, output: &Path, num_games: usize) -> anyhow::Result<
         num_games, cfg.num_simulations, variant_label
     );
 
-    let mut rng = StdRng::seed_from_u64(42);
+    let mut rng = SplitMix64::new(42);
     let mut games: Vec<GameRecord> = Vec::with_capacity(num_games);
     for i in 0..num_games {
         let record = play_one(&net, &rules, &cfg, &mut rng);
@@ -163,16 +170,10 @@ pub fn run(model_dir: &Path, output: &Path, num_games: usize) -> anyhow::Result<
 // ---------------------------------------------------------------------------
 
 fn load_model(path: &Path, arch: &ArchConfig) -> anyhow::Result<(AzNet, nn::VarStore)> {
-    let vs = make_var_store();
+    let mut vs = make_var_store();
     let net = AzNet::from_config(&vs.root(), arch);
-    let named = tch::Tensor::load_multi(path)
+    net.load(&mut vs, path)
         .with_context(|| format!("failed to load model weights from {}", path.display()))?;
-    let mut var_map = vs.variables();
-    for (name, tensor) in named {
-        if let Some(var) = var_map.get_mut(&name) {
-            tch::no_grad(|| var.copy_(&tensor));
-        }
-    }
     Ok((net, vs))
 }
 
@@ -188,7 +189,12 @@ struct GameRecord {
     capture_plies: Vec<usize>, // 0-indexed ply positions where a capture occurred
 }
 
-fn play_one(net: &AzNet, rules: &RuleSet, cfg: &SelfPlayConfig, rng: &mut StdRng) -> GameRecord {
+fn play_one(
+    net: &AzNet,
+    rules: &RuleSet,
+    cfg: &SelfPlayConfig,
+    rng: &mut SplitMix64,
+) -> GameRecord {
     let mut state = initial_state();
     let mut moves: Vec<Move> = Vec::new();
     let mut states: Vec<GameState> = Vec::new();

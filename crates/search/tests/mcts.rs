@@ -41,3 +41,27 @@ fn mcts_finds_winning_move_in_simple_position() {
     assert_eq!(mv.from_cell, 0);
     assert_eq!(mv.to_cell, 1, "MCTS should find the winning capture at cell 1");
 }
+
+/// Regression: under the uncapped game positions recur, so the search graph
+/// has cycles; a simulation that followed one recursed until the stack
+/// overflowed. Searching from positions deep in random games must finish.
+#[test]
+fn uncapped_search_survives_cycles() {
+    use pogofish_engine::{apply_move, initial_state, is_terminal, legal_moves};
+    let rules = RuleSet::Uncapped;
+    let mut rng = 12345u64;
+    for _ in 0..4 {
+        let mut s = initial_state();
+        for _ in 0..30 {
+            if is_terminal(&s, &rules).is_some() {
+                break;
+            }
+            let mut mcts = Mcts::new(MctsConfig { simulations: 300, c_puct: 1.5 });
+            let m = mcts.search(&s, &rules);
+            assert!(legal_moves(&s).contains(&m));
+            rng = rng.wrapping_mul(6364136223846793005).wrapping_add(1442695040888963407);
+            let moves = legal_moves(&s);
+            s = apply_move(&s, moves[(rng >> 33) as usize % moves.len()]).unwrap();
+        }
+    }
+}

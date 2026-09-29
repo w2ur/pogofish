@@ -36,6 +36,7 @@ fn lc2_hard_cap_player_to_move_loses_if_not_winning() {
     assert_eq!(is_terminal(&s, &rules), Some(Outcome::WinRed));
 }
 
+/// At the cap a base win still takes precedence (it is checked first).
 #[test]
 fn lc2_hard_cap_player_with_all_towers_wins() {
     let rules = RuleSet::LC2 { cap: 30 };
@@ -62,4 +63,39 @@ fn lc2_before_cap_not_terminal() {
     let rules = RuleSet::LC2 { cap: 30 };
     let s = pogofish_engine::testing::state_at_move_count(29, pogofish_engine::Color::White);
     assert_eq!(is_terminal(&s, &rules), None);
+}
+
+/// Regression (plan task 0.3): LC2 used to document "the player to move at
+/// the cap wins iff they control all towers", with a branch for it that could
+/// never run. The rule as played: the mover at the cap loses, even when they
+/// own every stack but one.
+#[test]
+fn lc2_hard_cap_mover_loses_even_with_a_tower_lead() {
+    let rules = RuleSet::LC2 { cap: 30 };
+    let s = pogofish_engine::testing::state_at_move_count_with_tower_lead(30, pogofish_engine::Color::Red);
+    assert_eq!(s.to_move(), pogofish_engine::Color::Red);
+    assert_eq!(is_terminal(&s, &rules), Some(Outcome::WinWhite));
+}
+
+#[test]
+fn uncapped_ends_only_on_the_base_rule() {
+    let rules = RuleSet::Uncapped;
+    // Far past every cap, with the start position repeated many times.
+    let s = pogofish_engine::testing::state_at_move_count(5000, pogofish_engine::Color::White);
+    let s = pogofish_engine::testing::state_with_repeated_key(&s, s.key(), 10);
+    assert_eq!(is_terminal(&s, &rules), None);
+    let won = pogofish_engine::testing::state_with_no_red_piles();
+    assert_eq!(is_terminal(&won, &rules), Some(Outcome::WinWhite));
+}
+
+#[test]
+fn rulesets_parse_and_print() {
+    for text in ["uncapped", "lc1-2", "lc2-30", "lc3-29"] {
+        let r: RuleSet = text.parse().unwrap();
+        assert_eq!(r.to_string(), text);
+    }
+    assert_eq!("lc1-3".parse::<RuleSet>(), Ok(RuleSet::LC1 { repetitions: 3 }));
+    for bad in ["", "lc4-3", "lc2-", "lc2-x", "uncapped-1", "lc1-300"] {
+        assert!(bad.parse::<RuleSet>().is_err(), "{bad}");
+    }
 }

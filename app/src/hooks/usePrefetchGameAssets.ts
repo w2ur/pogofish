@@ -15,7 +15,7 @@ const ASSETS_TO_PREFETCH = [
   "/ort/ort-wasm-simd-threaded.jsep.wasm",
   "/ort/ort-wasm-simd-threaded.wasm",
   // ONNX models (the two shipped variants)
-  "/models/lc1-2/alphazero.onnx",
+  "/models/lc1-2/az-lc1-s1.onnx",
   "/models/lc3-29/alphazero.onnx",
   // minimax lookup table (gzip-compressed)
   "/models/minimax_table.json.gz",

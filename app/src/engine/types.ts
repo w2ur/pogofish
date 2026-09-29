@@ -42,9 +42,15 @@ export const DISTANCES: Record<number, readonly number[]> = {
 };
 
 /**
+ * A net's input features, as its training run's config.json names them
+ * (crates/infer/src/features.rs). Round-1 nets use "absolute".
+ */
+export type Features = "absolute" | "mover-relative" | "mover-relative-repetition";
+
+/**
  * Rule variant — must match Rust serde format exactly.
  * LC1: loss on Nth repetition of the (board, to_move) tuple.
- * LC2: hard move cap — player who hasn't consolidated all towers by cap loses.
+ * LC2: hard move cap — if nobody has won by the cap, the player to move loses.
  * LC3: soft cap — player with more towers at cap wins; ties are earned draws.
  */
 export type RuleSet =

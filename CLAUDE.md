@@ -8,10 +8,11 @@ Pogofish is a browser-based Pogo board game with AI opponents trained via AlphaZ
 
 ### Rust workspace (`crates/`)
 - Rust 1.79+ (stable toolchain)
-- `pogofish-engine` — Game rules, state, legal moves, rule variants (LC1/LC2/LC3)
-- `pogofish-search` — Minimax (alpha-beta + TT), MCTS (PUCT), checkpointer
-- `pogofish-train` — AlphaZero training (tch-rs/libtorch), self-play, gatekeeper
-- `pogofish-cli` — Curses-style terminal UI (crossterm)
+- `pogofish-engine` — Game rules, state, legal moves, rulesets (`Uncapped`, LC1/LC2/LC3; `RuleSet` parses and prints `uncapped`, `lc1-N`, …)
+- `pogofish-infer` — Pure-Rust inference (no libtorch): input features, action indexing, MLP forward pass reading exported `.pfw` weights, and the neural MCTS shared with training (`Evaluator` trait)
+- `pogofish-search` — Minimax (alpha-beta + TT), MCTS (PUCT), checkpointer, scripted `random`/`greedy` players (seeded, no dependency)
+- `pogofish-train` — AlphaZero training (tch-rs/libtorch, no gating, exact resume), self-play, TD(λ) value learning (`td_train`), `arena` evaluation binary
+- `pogofish-cli` — Terminal game (crossterm) against the bundled net: colour, level (simulations), hint, the AI's estimate, undo, saved game records; game logic in `session.rs`, key handling tested headless in `app.rs`
 - `pogofish-wasm` — wasm-bindgen wrappers for browser use
 
 ### Web app (`app/`)
@@ -23,7 +24,7 @@ Pogofish is a browser-based Pogo board game with AI opponents trained via AlphaZ
 - Rust WASM engine (via `pogofish-wasm`)
 
 ### Tools (`tools/`)
-- Python 3.11+ — ONNX export sidecar (`export_onnx.py`)
+- Python 3.11+ — ONNX export sidecar (`export_onnx.py`), Elo ladder, TD curve and checkpoint-ladder plots (`plot_ladder.py`, `plot_td_curve.py`, `plot_az_ladder.py`, PEP 723: `uv run`)
 - Node.js — ONNX verification (`verify_onnx.js`)
 
 ## User-Facing Language
@@ -42,9 +43,46 @@ cargo build --release -p pogofish-train --bin train     # training binary
 
 ### CLI game
 ```bash
-cargo run --release -p pogofish-cli
-# Arrow keys navigate, Enter selects, 1/2/3 piece count, Esc cancels
-# u undo, Shift+R redo, q quit
+# Play the bundled AlphaZero net (crates/cli/assets/az-lc1-s1.pfw) under lc1-2.
+# No libtorch needed: inference is pure Rust (pogofish-infer).
+cargo run --release -p pogofish-cli -- --colour red --level normal   # --help for all options
+# Arrow keys navigate, Enter selects, 1/2/3 piece count, Esc cancels,
+# h hint, u undo (your move and the AI's reply), Shift+R redo, q quit.
+# Finished games are saved as JSON in ~/.pogofish/games (--no-save to disable).
+cargo install --path crates/cli     # self-contained binary `pogofish` (net embedded)
+```
+Release binaries (macOS arm64/x86_64): push a tag `cli-vX.Y.Z`; `.github/workflows/release-cli.yml`
+tests, builds and attaches them to a GitHub release. It runs on nothing else.
+
+### Measuring the game
+```bash
+# Uncapped games between random/greedy players; refuses to run if its own
+# falsification check fails. Unfinished games (safety limit) are never draws.
+cargo run --release -p pogofish-search --bin measure -- --games 20000 --seed 1 --out docs/experiments/v2-measure.json
+```
+
+### Evaluating players (arena)
+```bash
+# Every pair of players: colours swapped over random openings, score with a
+# 95% CI, distinct games and distinct positions after the opening.
+# Players: random, greedy, first-legal, mcts-uniform:SIMS, net:PATH[:SIMS[:ARCH]]
+./target/release/arena uncapped greedy random net:models/uncapped/model_best.pt:100 \
+  --pairs 200 --opening 4 --seed 1 --out arena.json
+```
+Rate players from arena reports (Bradley–Terry, 95% CI) and plot:
+```bash
+cargo run --release -p pogofish-search --bin ladder -- arena.json --anchor random --out ladder.json
+uv run tools/plot_ladder.py ladder.json ladder.png
+```
+Evaluate with `arena` only; the round-1 `tournament` binary has no colour-swapped
+openings, no CI and counts truncations as draws.
+
+### TD(λ) value learning
+```bash
+# Resumable (rerun after Ctrl+C, or raise --iterations to extend); see docs/experiments/v2-td.md
+./target/release/td_train models/td-mr-s1 --iterations 1000 --temp-decay 1000 --eval-every 50 \
+  --eval-pairs 200 --lambda 0.7 --lr 0.1 --seed 1
+# In the arena: td:models/td-mr-s1/weights.pt[:128x64]
 ```
 
 ### Training
@@ -52,22 +90,47 @@ cargo run --release -p pogofish-cli
 # Requires libtorch — tch-rs downloads it automatically during build.
 # At runtime, set DYLD_LIBRARY_PATH to the downloaded libtorch lib dir:
 DYLD_LIBRARY_PATH=$(find target/release/build -path "*/torch-sys-*/out/libtorch/libtorch/lib" | head -1) \
-  ./target/release/train lc2-30 models/lc2-30 mlp_small
+  ./target/release/train models/az-s1 --features mover-relative --seed 1
 
-# Training resumes automatically if interrupted (reads metrics.jsonl).
-# Ctrl+C triggers graceful shutdown saving the best model.
+# The features must carry what the ruleset reads (encoding::Features::suffice_for):
+# any for uncapped, mover-relative-repetition for lc1; lc2/lc3 are refused
+# (move count; docs/experiments/v1-verdict.md defect 3). Under lc1 the input is
+# still not a complete Markov state (it omits which other positions were seen);
+# the search is exact, and train prints a note saying so.
+# Resumable: Ctrl+C stops at the next game boundary; rerun the same command to
+# resume (or raise --iterations to extend). A resumed run is bit-identical to an
+# uninterrupted one (weights, momentum, replay buffer, counters, generator).
+# No gating: every --checkpoint-every checkpoint is kept, to be rated with arena/ladder.
+```
+
+### Exporting a net for the terminal game
+```bash
+# Checks the pure-Rust copy against the checkpoint (1e-5 on 100 positions) before writing.
+./target/release/export_weights models/az-lc1-s1/checkpoints/iter_00200.pt crates/cli/assets/az-lc1-s1.pfw
 ```
 
 ### WASM build
 ```bash
 wasm-pack build crates/wasm --target web --out-dir ../../wasm-pkg
+# Without wasm-pack (same output): cargo build --release -p pogofish-wasm
+# --target wasm32-unknown-unknown, then wasm-bindgen 0.2.118 --target web
+# --out-dir wasm-pkg, then wasm-opt -O on pogofish_wasm_bg.wasm.
 ```
 
 ### ONNX export
 ```bash
+# --features must be the run's config.json `features` (input size 109/126/127).
 uv run --with-requirements tools/requirements.txt \
-  python tools/export_onnx.py models/lc2-30/model_best.pt models/lc2-30/model_best.onnx --arch mlp_small
+  python tools/export_onnx.py models/az-lc1-s1/checkpoints/iter_00200.pt \
+  app/public/models/lc1-2/az-lc1-s1.onnx --arch mlp_small --features mover-relative-repetition
+# Parity fixture (Rust outputs on 100 lc1-2 positions) for app/src/ai/parity.test.ts:
+cargo run --release -p pogofish-infer --example parity_fixture -- \
+  crates/cli/assets/az-lc1-s1.pfw app/src/ai/parity-lc1-2.json
 ```
+The site's lc1-2 opponent is the same net as the terminal game (`az-lc1-s1`, iteration
+200); its input is encoded by the WASM engine (`encode_features`), never in TypeScript.
+ONNX files are cached CacheFirst for a year by the service worker: a new net needs a
+new file name, never an overwrite. The round-1 `lc1-2/alphazero.onnx` is kept, unused.
 
 ### Web app
 ```bash
@@ -113,11 +176,16 @@ Netlify — static deploy of the `app/` build output. No server-side code. Live 
 `netlify.toml` lives). See the `pogofish-prerendering` skill for build-config
 detail.
 
+**To be retired** (owner's decision 2026-09-29, plan 7.1 option a): the article moves to a
+hub story `/stories/pogofish` and this subdomain gets a 301 to it. Add the 301 only once
+the story is live on the hub, never before.
+
 ## Project-Specific Rules
 
-- State space is ~10M+ positions. Tabular methods hit a wall. Deep RL (AlphaZero) is required.
-- Three rule variants under experiment: LC1 (repetition loss), LC2 (hard move cap), LC3 (soft cap with draws).
+- The state-space size has never been measured. Do not state one. Runtime and memory figures must be measured, or extrapolated from a measurement (a pilot) and labelled as such, never reasoned from nothing (plan rule 1).
+- Round 2 trains on **`lc1-2`** (2026-09-27, `docs/experiments/v2-ruleset.md`): a position's third occurrence loses for the player who caused it. It started on the uncapped game; the pre-registered switch rule (more than 5 % of self-play games truncated, three iterations in a row) fired, so the owner switched (`docs/experiments/v2-az-uncapped.md`). Train with `--rules lc1-2 --features mover-relative-repetition`; the 1,000-ply safety limit stays (truncation is never a draw) and `train` stops by itself if the switch rule fires again. The round-1 variants remain in the engine: LC1 (repetition loss), LC2 (hard move cap: the player to move at the cap loses), LC3 (soft cap with draws).
 - Training artifacts go in `models/` (gitignored). 8 GB RAM M2 Mac — keep neural nets small.
 - The WASM shim at `app/src/engine/` translates between Rust serde format (snake_case, "White"/"Red") and old TS format (camelCase, "W"/"R"). Do not modify the Rust serialization to match TS — the shim handles it.
+- Checkpoint loading is strict (`crates/train/src/checkpoint.rs`): a missing, unexpected or reshaped tensor is an error. Never load weights by copying only the names that match; that is how round 1 evaluated a "DQN" with random heads.
 - tch-rs uses `|` as path separator in saved .pt files. The Python export script remaps to `.` when loading.
 - **Deliberate identity, not the portfolio default:** ink `#121010` on a warm paper ground, a vermilion accent `#d94f2c`, Instrument Serif for display, Newsreader for body and JetBrains Mono for figures (`app/src/index.css` `@theme`). It meets three items of the global avoid-list (cream ground, clay-red accent, mono labels) on purpose — the owner chose to keep it (2026-09-25). Do not "fix" it toward the defaults.

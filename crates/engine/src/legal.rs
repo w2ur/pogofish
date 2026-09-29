@@ -77,6 +77,22 @@ pub fn is_legal_move(state: &GameState, m: Move) -> Result<(), MoveError> {
     Ok(())
 }
 
+/// Apply a move for play under `rules`: like [`apply_move`], but the position
+/// history is kept only when the rule reads it (LC1). Elsewhere it is dropped,
+/// so long games and deep searches do not copy an ever-growing history on
+/// every move.
+pub fn apply_move_under(
+    state: &GameState,
+    m: Move,
+    rules: &crate::rules::RuleSet,
+) -> Result<GameState, MoveError> {
+    let mut next = apply_move(state, m)?;
+    if !rules.reads_history() {
+        next.forget_history();
+    }
+    Ok(next)
+}
+
 pub fn apply_move(state: &GameState, m: Move) -> Result<GameState, MoveError> {
     is_legal_move(state, m)?;
 

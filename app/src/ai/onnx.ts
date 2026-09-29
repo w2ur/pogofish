@@ -1,13 +1,7 @@
 import * as ort from "onnxruntime-web";
-import { type GameState, type Move } from "../engine/types";
-import { legalMoves } from "../engine/engine";
-import {
-  stateToTensor,
-  actionToIndex,
-  indexToAction,
-  maskedSoftmax,
-  STATE_SIZE,
-} from "../engine/encoding";
+import { type Features, type GameState, type Move } from "../engine/types";
+import { encodeFeatures, initialState, legalMoves } from "../engine/engine";
+import { actionToIndex, indexToAction, maskedSoftmax } from "../engine/encoding";
 
 // Load WASM binaries from same-origin /ort/ (served via viteStaticCopy).
 // The PWA service worker caches these after first load for offline use.
@@ -18,12 +12,27 @@ export class OnnxModel {
   private session: ort.InferenceSession | null = null;
   private isDualHead = false;
 
-  async load(url: string): Promise<void> {
-    this.session = await ort.InferenceSession.create(url, {
-      executionProviders: ["wasm"],
-    });
+  /** `features` must be the input features the net was trained with. */
+  constructor(private readonly features: Features = "absolute") {}
+
+  async load(source: string | Uint8Array): Promise<void> {
+    const options = { executionProviders: ["wasm"] };
+    // Two identical calls: `create` has one overload per source type, and a
+    // union argument matches neither.
+    this.session =
+      typeof source === "string"
+        ? await ort.InferenceSession.create(source, options)
+        : await ort.InferenceSession.create(source, options);
     // Dual-head (AlphaZero) has 2 outputs; single-head (DQN) has 1
     this.isDualHead = this.session.outputNames.length >= 2;
+    // The features are not stored in the file: check the net accepts their
+    // size now, rather than on the first move of a game.
+    try {
+      await this.infer(initialState());
+    } catch (e) {
+      this.session = null;
+      throw new Error(`The net does not take "${this.features}" features: ${String(e)}`);
+    }
   }
 
   async infer(
@@ -31,8 +40,8 @@ export class OnnxModel {
   ): Promise<{ policyLogits: Float32Array; value: number }> {
     if (!this.session) throw new Error("Model not loaded");
 
-    const input = stateToTensor(state);
-    const tensor = new ort.Tensor("float32", input, [1, STATE_SIZE]);
+    const input = encodeFeatures(state, this.features);
+    const tensor = new ort.Tensor("float32", input, [1, input.length]);
     const inputName = this.session.inputNames[0]!;
     const results = await this.session.run({ [inputName]: tensor });
 

@@ -1,4 +1,6 @@
-use crate::encoding::{ACTION_SIZE, STATE_SIZE};
+#[cfg(test)]
+use crate::encoding::STATE_SIZE;
+use crate::encoding::{Features, ACTION_SIZE};
 use tch::{
     nn::{self, Module},
     Device, Tensor,
@@ -53,6 +55,7 @@ pub struct AzNet {
     trunk: nn::Sequential,
     policy_head: nn::Sequential,
     value_head: nn::Sequential,
+    features: Features,
 }
 
 impl AzNet {
@@ -66,8 +69,25 @@ impl AzNet {
         policy_head_size: i64,
         value_head_size: i64,
     ) -> Self {
+        Self::with_features(
+            vs,
+            trunk_sizes,
+            policy_head_size,
+            value_head_size,
+            Features::Absolute,
+        )
+    }
+
+    /// Build a new AzNet reading `features` (see `encoding::Features`).
+    pub fn with_features(
+        vs: &nn::Path,
+        trunk_sizes: &[i64],
+        policy_head_size: i64,
+        value_head_size: i64,
+        features: Features,
+    ) -> Self {
         let mut trunk = nn::seq();
-        let mut in_size = STATE_SIZE as i64;
+        let mut in_size = features.size() as i64;
         for (i, &out_size) in trunk_sizes.iter().enumerate() {
             trunk = trunk
                 .add(nn::linear(
@@ -115,7 +135,18 @@ impl AzNet {
             trunk,
             policy_head,
             value_head,
+            features,
         }
+    }
+
+    /// The input encoding this net reads.
+    pub fn features(&self) -> Features {
+        self.features
+    }
+
+    /// Encode a position for this net.
+    pub fn encode(&self, state: &pogofish_engine::GameState) -> Tensor {
+        crate::encoding::encode(self.features, state)
     }
 
     /// Forward pass.
@@ -143,28 +174,23 @@ impl AzNet {
     /// the TorchScript format that `VarStore::save` produces, which can't
     /// be loaded back by `VarStore::load` in tch-rs 0.17).
     pub fn save(&self, vs: &nn::VarStore, path: &std::path::Path) -> anyhow::Result<()> {
-        let vars = vs.variables();
-        let named: Vec<(&str, &Tensor)> = vars.iter().map(|(k, v)| (k.as_str(), v)).collect();
-        Tensor::save_multi(&named, path)?;
-        Ok(())
+        crate::checkpoint::save_var_store(vs, path)
     }
 
-    /// Load weights from a file into the variable store.
+    /// Load weights from a file into the variable store. Fails on any
+    /// missing, unexpected or reshaped tensor.
     pub fn load(&self, vs: &mut nn::VarStore, path: &std::path::Path) -> anyhow::Result<()> {
-        let named = Tensor::load_multi(path)?;
-        let mut var_map = vs.variables();
-        for (name, tensor) in named {
-            // tch-rs uses | as separator, Tensor::save_multi uses the same
-            if let Some(var) = var_map.get_mut(&name) {
-                tch::no_grad(|| var.copy_(&tensor));
-            }
-        }
-        Ok(())
+        crate::checkpoint::load_var_store_strict(vs, path)
     }
 
     /// Build an AzNet from an ArchConfig and variable store.
     pub fn from_config(vs: &nn::Path, cfg: &ArchConfig) -> Self {
         Self::new(vs, &cfg.trunk_sizes, cfg.head_size, cfg.head_size)
+    }
+
+    /// Build an AzNet from an ArchConfig, reading `features`.
+    pub fn from_config_with(vs: &nn::Path, cfg: &ArchConfig, features: Features) -> Self {
+        Self::with_features(vs, &cfg.trunk_sizes, cfg.head_size, cfg.head_size, features)
     }
 }
 
@@ -187,7 +213,7 @@ mod tests {
     #[test]
     fn forward_output_shapes() {
         let (_vs, net) = make_net();
-        let x = Tensor::randn(&[4, STATE_SIZE as i64], (Kind::Float, Device::Cpu));
+        let x = Tensor::randn([4, STATE_SIZE as i64], (Kind::Float, Device::Cpu));
         let _guard = tch::no_grad_guard();
         let (policy, value) = net.forward(&x);
         assert_eq!(policy.size(), vec![4, ACTION_SIZE as i64]);
@@ -199,7 +225,7 @@ mod tests {
         let cfg = ArchConfig::mlp_tiny();
         let vs = make_var_store();
         let net = AzNet::from_config(&vs.root(), &cfg);
-        let x = Tensor::randn(&[4, STATE_SIZE as i64], (Kind::Float, Device::Cpu));
+        let x = Tensor::randn([4, STATE_SIZE as i64], (Kind::Float, Device::Cpu));
         let _guard = tch::no_grad_guard();
         let (policy, value) = net.forward(&x);
         assert_eq!(policy.size(), vec![4, ACTION_SIZE as i64]);
@@ -209,7 +235,7 @@ mod tests {
     #[test]
     fn forward_single_shapes() {
         let (_vs, net) = make_net();
-        let x = Tensor::randn(&[STATE_SIZE as i64], (Kind::Float, Device::Cpu));
+        let x = Tensor::randn([STATE_SIZE as i64], (Kind::Float, Device::Cpu));
         let _guard = tch::no_grad_guard();
         let (policy, value) = net.forward_single(&x);
         assert_eq!(policy.size(), vec![ACTION_SIZE as i64]);
@@ -220,7 +246,7 @@ mod tests {
     fn value_bounded() {
         // tanh output must be in [-1, 1]
         let (_vs, net) = make_net();
-        let x = Tensor::randn(&[16, STATE_SIZE as i64], (Kind::Float, Device::Cpu));
+        let x = Tensor::randn([16, STATE_SIZE as i64], (Kind::Float, Device::Cpu));
         let _guard = tch::no_grad_guard();
         let (_policy, value) = net.forward(&x);
         let max_val = f64::try_from(value.max()).unwrap();

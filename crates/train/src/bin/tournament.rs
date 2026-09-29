@@ -1,5 +1,5 @@
 use anyhow::Context;
-use pogofish_engine::{apply_move, initial_state, is_terminal, legal_moves, Color, Outcome, RuleSet};
+use pogofish_engine::{apply_move_under, initial_state, is_terminal, legal_moves, Color, Outcome, RuleSet};
 use pogofish_train::net::{make_var_store, AzNet, ArchConfig};
 use pogofish_train::selfplay::{neural_mcts_move_with_tau, SelfPlayConfig};
 use rand::Rng;
@@ -31,15 +31,8 @@ fn load_player(spec: &str, arch: &ArchConfig) -> anyhow::Result<Player> {
     anyhow::ensure!(path.exists(), "model file not found: {spec}");
     let mut vs = make_var_store();
     let net = AzNet::from_config(&vs.root(), arch);
-    // Load using Tensor::load_multi for cross-process compatibility
-    let named = tch::Tensor::load_multi(path)
+    net.load(&mut vs, path)
         .with_context(|| format!("failed to load model weights from {spec}"))?;
-    let mut var_map = vs.variables();
-    for (name, tensor) in named {
-        if let Some(var) = var_map.get_mut(&name) {
-            tch::no_grad(|| var.copy_(&tensor));
-        }
-    }
     Ok(Player::Model { net, _vs: vs })
 }
 
@@ -50,7 +43,7 @@ fn load_player(spec: &str, arch: &ArchConfig) -> anyhow::Result<Player> {
 fn print_usage(prog: &str) {
     eprintln!("Usage: {prog} <variant> <player1> <player2> <num_games> [--sims N] [--tau T] [--arch ARCH]");
     eprintln!();
-    eprintln!("  variant:    lc1-N | lc2-N | lc3-N  (e.g. lc2-15)");
+    eprintln!("  variant:    uncapped | lc1-N | lc2-N | lc3-N  (e.g. lc2-15)");
     eprintln!("  player:     path/to/model.pt | \"random\"");
     eprintln!("  num_games:  total games to play (alternates sides)");
     eprintln!("  --sims N:   MCTS simulations per move (default 100)");
@@ -63,19 +56,7 @@ fn print_usage(prog: &str) {
 }
 
 fn parse_ruleset(variant: &str) -> anyhow::Result<RuleSet> {
-    let parts: Vec<&str> = variant.splitn(2, '-').collect();
-    if parts.len() != 2 {
-        anyhow::bail!("variant must be in format lc1-N, lc2-N, or lc3-N, got: '{variant}'");
-    }
-    let n: u16 = parts[1]
-        .parse()
-        .map_err(|_| anyhow::anyhow!("invalid number in variant: '{variant}'"))?;
-    match parts[0] {
-        "lc1" => Ok(RuleSet::LC1 { repetitions: n as u8 }),
-        "lc2" => Ok(RuleSet::LC2 { cap: n }),
-        "lc3" => Ok(RuleSet::LC3 { cap: n }),
-        other => anyhow::bail!("unknown rule type: '{other}' (expected lc1, lc2, or lc3)"),
-    }
+    variant.parse().map_err(anyhow::Error::msg)
 }
 
 struct Args {
@@ -163,7 +144,10 @@ fn pick_move(
             let moves = legal_moves(state);
             moves[rng.gen_range(0..moves.len())]
         }
-        Player::Model { net, .. } => neural_mcts_move_with_tau(net, state, rules, cfg, tau, rng),
+        Player::Model { net, .. } => {
+            let mut r = pogofish_search::rng::SplitMix64::new(rng.gen());
+            neural_mcts_move_with_tau(net, state, rules, cfg, tau, &mut r)
+        }
     }
 }
 
@@ -200,7 +184,7 @@ fn play_game(
             Color::Red => red_player,
         };
         let mv = pick_move(current_player, &state, rules, cfg, tau, rng);
-        state = apply_move(&state, mv).expect("move selected by player must be legal");
+        state = apply_move_under(&state, mv, rules).expect("move selected by player must be legal");
     }
 
     // Exceeded move limit — treat as draw
@@ -215,6 +199,13 @@ fn main() -> anyhow::Result<()> {
     let args = parse_args()?;
 
     let rules = parse_ruleset(&args.variant)?;
+    // This round-1 binary scores games that hit the move limit as draws.
+    // Under the uncapped game that is the normal way a long game stops, and
+    // a truncation is not a result: use `arena` instead.
+    anyhow::ensure!(
+        rules != RuleSet::Uncapped,
+        "tournament does not support `uncapped` (it scores truncations as draws); use `arena`"
+    );
     let arch = ArchConfig::from_name(&args.arch_name)?;
 
     // Load players
@@ -226,6 +217,7 @@ fn main() -> anyhow::Result<()> {
 
     // Determine max moves from the variant cap
     let max_moves: u16 = match &rules {
+        RuleSet::Uncapped => unreachable!("refused above"),
         RuleSet::LC1 { .. } => 200,
         RuleSet::LC2 { cap } => cap.saturating_mul(2).max(200),
         RuleSet::LC3 { cap } => cap.saturating_mul(2).max(200),

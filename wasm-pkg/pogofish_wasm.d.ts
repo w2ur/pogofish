@@ -3,6 +3,13 @@
 
 export function apply_move(state_js: any, move_js: any): any;
 
+/**
+ * The network input for `state` under `features` ("absolute", "mover-relative",
+ * "mover-relative-repetition"): the same encoding training and the terminal
+ * game use, so the browser cannot drift from them.
+ */
+export function encode_features(state_js: any, features_js: any): Float32Array;
+
 export function initial_state(): any;
 
 export function is_terminal(state_js: any, rules_js: any): any;
@@ -36,6 +43,7 @@ export type InitInput = RequestInfo | URL | Response | BufferSource | WebAssembl
 export interface InitOutput {
     readonly memory: WebAssembly.Memory;
     readonly apply_move: (a: any, b: any) => [number, number, number];
+    readonly encode_features: (a: any, b: any) => [number, number, number, number];
     readonly initial_state: () => any;
     readonly is_terminal: (a: any, b: any) => any;
     readonly is_terminal_default: (a: any) => any;

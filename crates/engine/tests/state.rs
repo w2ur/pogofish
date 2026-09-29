@@ -45,3 +45,58 @@ fn initial_state_move_count_is_zero() {
 fn initial_state_history_is_empty() {
     assert_eq!(initial_state().history_len(), 0);
 }
+
+#[test]
+fn forget_history_keeps_the_position() {
+    use pogofish_engine::{apply_move, legal_moves};
+    let s0 = pogofish_engine::initial_state();
+    let mut s1 = apply_move(&s0, legal_moves(&s0)[0]).unwrap();
+    assert_eq!(s1.history_len(), 1);
+    let before = (s1.cells().clone(), s1.to_move(), s1.move_count(), s1.key());
+    s1.forget_history();
+    assert_eq!(s1.history_len(), 0);
+    assert_eq!((s1.cells().clone(), s1.to_move(), s1.move_count(), s1.key()), before);
+}
+
+#[test]
+fn apply_move_under_keeps_history_only_where_the_rule_reads_it() {
+    use pogofish_engine::{apply_move_under, legal_moves, RuleSet};
+    let s0 = pogofish_engine::initial_state();
+    let m = legal_moves(&s0)[0];
+    for rules in [RuleSet::Uncapped, RuleSet::LC2 { cap: 30 }, RuleSet::LC3 { cap: 30 }] {
+        let mut s = s0.clone();
+        for _ in 0..3 {
+            let mv = legal_moves(&s)[0];
+            s = apply_move_under(&s, mv, &rules).unwrap();
+        }
+        assert_eq!(s.history_len(), 0, "{rules}");
+        assert_eq!(s.move_count(), 3, "{rules}");
+    }
+    let lc1 = RuleSet::LC1 { repetitions: 1 };
+    let s1 = apply_move_under(&s0, m, &lc1).unwrap();
+    assert_eq!(s1.history_len(), 1);
+    assert_eq!(s1.key(), pogofish_engine::apply_move(&s0, m).unwrap().key());
+}
+
+#[test]
+fn occurrences_before_counts_the_current_position_only() {
+    use pogofish_engine::{apply_move, Move};
+    let s0 = pogofish_engine::initial_state();
+    let cycle = [
+        Move { from_cell: 0, num_pieces: 1, to_cell: 3 },
+        Move { from_cell: 6, num_pieces: 1, to_cell: 7 },
+        Move { from_cell: 3, num_pieces: 1, to_cell: 0 },
+        Move { from_cell: 7, num_pieces: 1, to_cell: 6 },
+    ];
+    let mut s = s0.clone();
+    let mut counts = vec![s.occurrences_before()];
+    for m in cycle.iter().cycle().take(8) {
+        s = apply_move(&s, *m).unwrap();
+        counts.push(s.occurrences_before());
+    }
+    assert_eq!(counts, vec![0, 0, 0, 0, 1, 1, 1, 1, 2]);
+    let rebuilt = s.with_prior_occurrences(2);
+    assert_eq!(rebuilt.occurrences_before(), 2);
+    assert_eq!(rebuilt.key(), s.key());
+    assert_eq!(s0.with_prior_occurrences(0).history_len(), 0);
+}

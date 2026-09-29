@@ -14,29 +14,17 @@ use std::time::Instant;
 fn print_usage(prog: &str) {
     eprintln!("Usage: {prog} <variant> <output_path>");
     eprintln!();
-    eprintln!("  variant:     lc1-N | lc2-N | lc3-N  (e.g. lc2-15, lc3-30)");
+    eprintln!("  variant:     uncapped | lc1-N | lc2-N | lc3-N  (e.g. lc2-15, lc3-30)");
     eprintln!("  output_path: path for gzipped JSONL output (e.g. solve.jsonl.gz)");
 }
 
 fn parse_ruleset(variant: &str) -> anyhow::Result<RuleSet> {
-    let parts: Vec<&str> = variant.splitn(2, '-').collect();
-    if parts.len() != 2 {
-        anyhow::bail!("variant must be in format lc1-N, lc2-N, or lc3-N, got: '{variant}'");
-    }
-    let n: u16 = parts[1]
-        .parse()
-        .map_err(|_| anyhow::anyhow!("invalid number in variant: '{variant}'"))?;
-    match parts[0] {
-        "lc1" => Ok(RuleSet::LC1 { repetitions: n as u8 }),
-        "lc2" => Ok(RuleSet::LC2 { cap: n }),
-        "lc3" => Ok(RuleSet::LC3 { cap: n }),
-        other => anyhow::bail!("unknown rule type: '{other}'"),
-    }
+    variant.parse().map_err(anyhow::Error::msg)
 }
 
 fn max_depth_for_rules(rules: &RuleSet) -> u16 {
     match *rules {
-        RuleSet::LC1 { .. } => 30,
+        RuleSet::LC1 { .. } | RuleSet::Uncapped => 30,
         RuleSet::LC2 { cap } => cap,
         RuleSet::LC3 { cap } => cap,
     }
@@ -155,7 +143,6 @@ fn main() -> anyhow::Result<()> {
 
     // SIGINT handler — sets flag, solver checks it every 100k nodes
     let interrupted = Arc::new(AtomicBool::new(false));
-    let flag = interrupted.clone();
     unsafe {
         libc::signal(libc::SIGINT, {
             extern "C" fn handler(_: libc::c_int) {
@@ -163,7 +150,7 @@ fn main() -> anyhow::Result<()> {
                 // so we use a global atomic.
                 SOLVE_INTERRUPTED.store(true, Ordering::SeqCst);
             }
-            handler as libc::sighandler_t
+            handler as *const () as libc::sighandler_t
         });
     }
     // Bridge: a thread that copies the global flag to our local Arc

@@ -1,0 +1,47 @@
+[
+  {
+    "player_a": "net:models/az-lc1-s3/checkpoints/iter_00060.pt:50",
+    "player_b": "mcts-uniform:200",
+    "config": {
+      "rules": {
+        "LC1": {
+          "repetitions": 2
+        }
+      },
+      "pairs": 100,
+      "opening_plies": 4,
+      "max_plies": 1000,
+      "seed": 11
+    },
+    "games": 200,
+    "a": {
+      "wins": 179,
+      "draws": 0,
+      "losses": 21,
+      "unfinished": 0
+    },
+    "a_as_white": {
+      "wins": 95,
+      "draws": 0,
+      "losses": 5,
+      "unfinished": 0
+    },
+    "a_as_red": {
+      "wins": 84,
+      "draws": 0,
+      "losses": 16,
+      "unfinished": 0
+    },
+    "scored_pairs": 100,
+    "score": 0.895,
+    "ci95": [
+      0.8548827022874474,
+      0.9351172977125526
+    ],
+    "significant": true,
+    "white_score": 0.555,
+    "distinct_openings": 100,
+    "distinct_games": 194,
+    "distinct_positions_after_opening": 2115
+  }
+]

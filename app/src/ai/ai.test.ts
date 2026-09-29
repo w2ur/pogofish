@@ -4,6 +4,10 @@ import { initialState } from "../engine/engine";
 import { legalMoves } from "../engine/engine";
 import { actionToIndex, indexToAction, ACTION_SIZE } from "../engine/encoding";
 import { stateToKey } from "./minimax";
+import { forWhite, alphazeroNet, DQN_PATH } from "./player";
+import { existsSync } from "node:fs";
+import type { RuleSet } from "../engine/types";
+import { resolve } from "node:path";
 
 describe("randomMove", () => {
   it("returns a legal move", () => {
@@ -76,5 +80,36 @@ describe("mcts module", () => {
   it("is importable", async () => {
     const mcts = await import("./mcts");
     expect(typeof mcts.mctsSearch).toBe("function");
+  });
+});
+
+// Regression: the evaluation bar showed Red's winning positions as White
+// advantage, because the table and the nets score for the player to move.
+describe("forWhite", () => {
+  it("keeps White-to-move values and negates Red-to-move values", () => {
+    const white = initialState();
+    const red = { ...white, currentPlayer: "R" as const };
+    expect(forWhite(0.8, white)).toBe(0.8);
+    expect(forWhite(0.8, red)).toBe(-0.8);
+    expect(forWhite(-1, red)).toBe(1);
+  });
+});
+
+// Regression: the DQN opponent asked for /models/lc1-2/dqn_tiny.onnx, which
+// does not exist, so it never moved. Every file the routing names must exist.
+describe("model routing", () => {
+  const exists = (p: string) => existsSync(resolve(__dirname, "../../public", `.${p}`));
+  it("points at model files that exist", () => {
+    expect(exists(DQN_PATH)).toBe(true);
+    const variants: (RuleSet | undefined)[] = [
+      undefined,
+      { LC1: { repetitions: 2 } },
+      { LC2: { cap: 50 } },
+      { LC3: { cap: 29 } },
+    ];
+    for (const rules of variants) {
+      const { path } = alphazeroNet(rules);
+      expect(exists(path), path).toBe(true);
+    }
   });
 });

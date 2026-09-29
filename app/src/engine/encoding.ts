@@ -1,27 +1,8 @@
-import { type GameState, type Move, W, R, MAX_STACK, NUM_CELLS } from "./types";
+import { type Move, NUM_CELLS } from "./types";
 
-export const STATE_SIZE = MAX_STACK * NUM_CELLS + 1; // 109
 export const ACTION_SIZE = NUM_CELLS * 3 * NUM_CELLS; // 243
 
-const PIECE_VALUE: Record<string, number> = { [W]: 1.0, [R]: -1.0 };
-const PLAYER_VALUE: Record<string, number> = { [W]: 1.0, [R]: -1.0 };
-
-export function stateToTensor(state: GameState): Float32Array {
-  const data = new Float32Array(STATE_SIZE);
-  for (let cellIdx = 0; cellIdx < NUM_CELLS; cellIdx++) {
-    const stack = state.board[cellIdx];
-    if (stack === undefined) continue;
-    const base = cellIdx * MAX_STACK;
-    for (let depth = 0; depth < stack.length; depth++) {
-      const piece = stack[depth];
-      if (piece !== undefined) {
-        data[base + depth] = PIECE_VALUE[piece] ?? 0;
-      }
-    }
-  }
-  data[STATE_SIZE - 1] = PLAYER_VALUE[state.currentPlayer] ?? 0;
-  return data;
-}
+// The input encoding lives in the Rust engine only: see encodeFeatures in ./engine.
 
 export function actionToIndex(move: Move): number {
   return move.fromCell * 27 + (move.numPieces - 1) * 9 + move.toCell;

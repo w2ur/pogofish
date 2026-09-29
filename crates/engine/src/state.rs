@@ -64,6 +64,30 @@ impl GameState {
         self.history = h;
     }
 
+    /// Drop the position history. Only the variant rules read it (LC1
+    /// repetition); a caller playing the uncapped game can call this after
+    /// each move so `apply_move` stops copying an ever-growing history.
+    pub fn forget_history(&mut self) {
+        self.history.clear();
+    }
+
+    /// How many times the current position (board and player to move)
+    /// occurred earlier in this game, according to the recorded history.
+    pub fn occurrences_before(&self) -> usize {
+        let key = self.key();
+        self.history.iter().filter(|k| **k == key).count()
+    }
+
+    /// The same position with a history that holds only `n` earlier
+    /// occurrences of itself: enough for rules and features that read the
+    /// current position's repetition count (the replay buffer stores that
+    /// count, not whole histories).
+    pub fn with_prior_occurrences(&self, n: usize) -> GameState {
+        let mut s = self.clone();
+        s.history = vec![self.key(); n];
+        s
+    }
+
     /// Returns the top piece color of a cell, or None if empty.
     pub fn cell_owner(&self, cell_idx: usize) -> Option<Color> {
         self.cells[cell_idx].last().copied()

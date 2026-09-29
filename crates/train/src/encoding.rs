@@ -1,49 +1,14 @@
-use pogofish_engine::{legal_moves, Color, GameState, Move};
+use pogofish_engine::symmetry::{transform_move, CellMap};
+use pogofish_engine::{legal_moves, GameState};
 use tch::Tensor;
 
-pub const STATE_SIZE: usize = 109; // MAX_STACK * NUM_CELLS + 1 = 12 * 9 + 1
-pub const ACTION_SIZE: usize = 243; // NUM_CELLS * 3 * NUM_CELLS = 9 * 3 * 9
-pub const MAX_STACK: usize = 12;
+pub use pogofish_infer::actions::{index_to_move, move_to_index, ACTION_SIZE};
+pub use pogofish_infer::features::{ABSOLUTE_SIZE as STATE_SIZE, MAX_STACK};
 
-/// Encode a GameState into a flat [STATE_SIZE] float tensor.
-/// For each cell (0-8), encode the stack slot-by-slot (bottom to top):
-///   White piece = +1.0, Red = -1.0, empty = 0.0.
-/// Each cell contributes MAX_STACK values.
-/// Final element: current player (+1.0 for White, -1.0 for Red).
+/// The absolute encoding (`Features::Absolute`) as a flat [STATE_SIZE] tensor:
+/// one encoding, defined once in `pogofish-infer`.
 pub fn state_to_tensor(state: &GameState) -> Tensor {
-    let mut data = [0f32; STATE_SIZE];
-    for (cell_idx, cell) in state.cells().iter().enumerate() {
-        let base = cell_idx * MAX_STACK;
-        for (slot, &color) in cell.iter().enumerate().take(MAX_STACK) {
-            data[base + slot] = match color {
-                Color::White => 1.0,
-                Color::Red => -1.0,
-            };
-        }
-    }
-    data[STATE_SIZE - 1] = match state.to_move() {
-        Color::White => 1.0,
-        Color::Red => -1.0,
-    };
-    Tensor::from_slice(&data)
-}
-
-/// Convert Move to action index: from_cell * 27 + (num_pieces - 1) * 9 + to_cell
-pub fn move_to_index(m: &Move) -> usize {
-    m.from_cell as usize * 27 + (m.num_pieces as usize - 1) * 9 + m.to_cell as usize
-}
-
-/// Convert action index back to Move.
-pub fn index_to_move(index: usize) -> Move {
-    let from_cell = (index / 27) as u8;
-    let rem = index % 27;
-    let num_pieces = (rem / 9 + 1) as u8;
-    let to_cell = (rem % 9) as u8;
-    Move {
-        from_cell,
-        num_pieces,
-        to_cell,
-    }
+    encode(Features::Absolute, state)
 }
 
 /// Create a boolean mask of legal actions for a given state.
@@ -57,10 +22,29 @@ pub fn legal_move_mask(state: &GameState) -> Tensor {
     Tensor::from_slice(&mask)
 }
 
+/// Permute a policy vector by a board symmetry: the probability of move `m`
+/// moves to the index of the transformed move. For data augmentation, pair
+/// it with `state_to_tensor(&transform_state(state, perm))`.
+pub fn transform_policy(policy: &[f32; ACTION_SIZE], perm: &CellMap) -> [f32; ACTION_SIZE] {
+    let mut out = [0f32; ACTION_SIZE];
+    for (idx, &p) in policy.iter().enumerate() {
+        out[move_to_index(&transform_move(index_to_move(idx), perm))] = p;
+    }
+    out
+}
+
+pub use pogofish_infer::features::{Features, MOVER_RELATIVE_SIZE};
+
+/// Encode `state` with `features` as a tensor for the libtorch nets.
+pub fn encode(features: Features, state: &GameState) -> Tensor {
+    Tensor::from_slice(&features.encode(state))
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
     use pogofish_engine::initial_state;
+    use pogofish_engine::Move;
 
     #[test]
     fn move_roundtrip_all_243() {
@@ -160,5 +144,63 @@ mod tests {
             assert!((m.to_cell as usize) < NUM_CELLS);
             assert!(m.num_pieces >= 1 && m.num_pieces <= 3);
         }
+    }
+
+    #[test]
+    fn transformed_policy_lands_on_the_transformed_legal_moves() {
+        use pogofish_engine::symmetry::{transform_state, verified_symmetries};
+        use pogofish_engine::{apply_move, legal_moves};
+        let s0 = initial_state();
+        let s = apply_move(&s0, legal_moves(&s0)[3]).unwrap();
+        let moves = legal_moves(&s);
+        let mut policy = [0f32; ACTION_SIZE];
+        for (i, m) in moves.iter().enumerate() {
+            policy[move_to_index(m)] = (i + 1) as f32;
+        }
+        for perm in verified_symmetries() {
+            let t = transform_policy(&policy, &perm);
+            let mask: Vec<f32> = legal_move_mask(&transform_state(&s, &perm))
+                .try_into()
+                .unwrap();
+            for idx in 0..ACTION_SIZE {
+                assert_eq!(t[idx] > 0.0, mask[idx] == 1.0, "index {idx}");
+            }
+            for (i, m) in moves.iter().enumerate() {
+                assert_eq!(t[move_to_index(&transform_move(*m, &perm))], (i + 1) as f32);
+            }
+            let total: f32 = t.iter().sum();
+            assert_eq!(total, policy.iter().sum::<f32>());
+        }
+    }
+
+    #[test]
+    fn the_repetition_feature_is_the_earlier_occurrence_count() {
+        let s0 = initial_state();
+        for (n, expected) in [(0, 0.0), (1, 0.5), (2, 1.0)] {
+            let x = Features::MoverRelativeRepetition.encode(&s0.with_prior_occurrences(n));
+            assert_eq!(x.len(), MOVER_RELATIVE_SIZE + 1);
+            assert_eq!(*x.last().unwrap(), expected);
+            let base = Features::MoverRelative.encode(&s0);
+            assert_eq!(&x[..MOVER_RELATIVE_SIZE], &base[..]);
+        }
+    }
+
+    #[test]
+    fn which_features_suffice_for_which_rules() {
+        use pogofish_engine::RuleSet;
+        let all = [
+            Features::Absolute,
+            Features::MoverRelative,
+            Features::MoverRelativeRepetition,
+        ];
+        for f in all {
+            assert!(f.suffice_for(&RuleSet::Uncapped));
+            assert!(!f.suffice_for(&RuleSet::LC2 { cap: 30 }));
+            assert!(!f.suffice_for(&RuleSet::LC3 { cap: 30 }));
+        }
+        let lc1 = RuleSet::LC1 { repetitions: 2 };
+        assert!(Features::MoverRelativeRepetition.suffice_for(&lc1));
+        assert!(!Features::MoverRelative.suffice_for(&lc1));
+        assert!(!Features::Absolute.suffice_for(&lc1));
     }
 }

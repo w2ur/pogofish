@@ -1,4 +1,4 @@
-import { type GameState, type Move, type RuleSet } from "../engine/types";
+import { type Features, type GameState, type Move, type RuleSet } from "../engine/types";
 import { legalMoves } from "../engine/engine";
 import { actionToIndex, maskedSoftmax } from "../engine/encoding";
 import { randomMove } from "./random";
@@ -40,25 +40,37 @@ function modelPath(rules: RuleSet | undefined, name: string): string {
   return `/models/${name}`;
 }
 
-async function getModel(path: string): Promise<OnnxModel> {
+async function getModel(path: string, features: Features = "absolute"): Promise<OnnxModel> {
   let model = modelCache.get(path);
   if (!model) {
-    model = new OnnxModel();
+    model = new OnnxModel(features);
     await model.load(path);
     modelCache.set(path, model);
   }
   return model;
 }
 
-async function getDqnModel(rules?: RuleSet): Promise<OnnxModel> {
-  const path = modelPath(rules, "dqn_tiny.onnx");
-  return getModel(path);
+/** The round-1 DQN, offered under LC1 only; one file, at the models root. */
+export const DQN_PATH = "/models/dqn_tiny.onnx";
+
+async function getDqnModel(): Promise<OnnxModel> {
+  return getModel(DQN_PATH);
+}
+
+/** The round-2 net (az-lc1-s1, the one the terminal game bundles) under
+ *  LC1; round-1 nets, absolute features, elsewhere. */
+export const LC1_NET = { file: "az-lc1-s1.onnx", features: "mover-relative-repetition" } as const;
+
+/** The AlphaZero net's file and input features for a ruleset. */
+export function alphazeroNet(rules?: RuleSet): { path: string; features: Features } {
+  if (isLC1(rules)) return { path: modelPath(rules, LC1_NET.file), features: LC1_NET.features };
+  const name = rules && "LC3" in rules ? "alphazero.onnx" : "alphazero_cnn.onnx";
+  return { path: modelPath(rules, name), features: "absolute" };
 }
 
 async function getAlphazeroModel(rules?: RuleSet): Promise<OnnxModel> {
-  const name = (isLC1(rules) || (rules && "LC3" in rules)) ? "alphazero.onnx" : "alphazero_cnn.onnx";
-  const path = modelPath(rules, name);
-  return getModel(path);
+  const { path, features } = alphazeroNet(rules);
+  return getModel(path, features);
 }
 
 /** Start background download of the minimax table. */
@@ -100,7 +112,7 @@ export async function getMove(
       if (config.ruleSet && !isLC1(config.ruleSet)) {
         return randomMove(state);
       }
-      const model = await getDqnModel(config.ruleSet);
+      const model = await getDqnModel();
       return model.bestMove(state);
     }
 
@@ -147,7 +159,7 @@ export async function inspectModel(
     if (ruleSet && !isLC1(ruleSet)) {
       return { legalMoves: moves, policyProbs: moves.map(() => 0), value: 0 };
     }
-    model = await getDqnModel(ruleSet);
+    model = await getDqnModel();
   } else if (level === "alphazero" || level === "alphazero-mcts") {
     model = await getAlphazeroModel(ruleSet);
   } else {
@@ -165,7 +177,14 @@ export async function inspectModel(
   return { legalMoves: moves, policyProbs, value };
 }
 
-/** Evaluate a position. Tries minimax first, falls back to AlphaZero. */
+/** The minimax table and the nets score a position for the player to move;
+ *  the evaluation bar and panel read +1 as White winning. */
+export function forWhite(value: number, state: GameState): number {
+  return state.currentPlayer === "W" ? value : -value;
+}
+
+/** Evaluate a position, from White's side (+1 White wins). Tries minimax
+ *  first, falls back to AlphaZero. */
 export async function evaluatePosition(
   state: GameState,
   ruleSet?: RuleSet,
@@ -185,11 +204,11 @@ export async function evaluatePosition(
   // Try minimax first if table is loaded and variant matches
   if (canUseMinimax && minimaxTable) {
     const result = minimaxEvaluate(minimaxTable, state);
-    if (result) return result;
+    if (result) return { ...result, value: forWhite(result.value, state) };
   }
 
   // Fall back to AlphaZero neural evaluation
   const model = await getAlphazeroModel(ruleSet);
   const { value } = await model.infer(state);
-  return { value, source: "neural", proven: false };
+  return { value: forWhite(value, state), source: "neural", proven: false };
 }

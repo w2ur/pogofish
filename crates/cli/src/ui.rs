@@ -1,30 +1,27 @@
 use crossterm::{
     cursor::MoveTo,
     queue,
-    style::{
-        Attribute, Color, Print, ResetColor, SetAttribute, SetForegroundColor,
-    },
+    style::{Attribute, Color, Print, ResetColor, SetAttribute, SetForegroundColor},
     terminal::{Clear, ClearType},
 };
-use pogofish_engine::{
-    is_terminal, legal_moves, Color as PColor, GameState, Outcome, RuleSet, BOARD_SIZE,
-};
+use pogofish_engine::{legal_moves, Color as PColor, GameState, Outcome, BOARD_SIZE};
 use std::io::{self, Write};
 
-use crate::app::{valid_pickup_counts, AppState, Phase};
+use crate::app::{valid_pickup_counts, App, AppState, Phase};
+use crate::session::{color_name, Session};
 
 // Box-drawing characters
 const BOX_TL: &str = "\u{250c}"; // ┌
 const BOX_TR: &str = "\u{2510}"; // ┐
 const BOX_BL: &str = "\u{2514}"; // └
 const BOX_BR: &str = "\u{2518}"; // ┘
-const BOX_H: &str = "\u{2500}";  // ─
-const BOX_V: &str = "\u{2502}";  // │
+const BOX_H: &str = "\u{2500}"; // ─
+const BOX_V: &str = "\u{2502}"; // │
 const BOX_TJ: &str = "\u{252c}"; // ┬
 const BOX_BJ: &str = "\u{2534}"; // ┴
 const BOX_LJ: &str = "\u{251c}"; // ├
 const BOX_RJ: &str = "\u{2524}"; // ┤
-const BOX_X: &str = "\u{253c}";  // ┼
+const BOX_X: &str = "\u{253c}"; // ┼
 
 const PIECE_CHAR: &str = "\u{2b24}"; // ⬤
 const GHOST_CHAR: &str = "\u{25cb}"; // ○
@@ -32,7 +29,14 @@ const EMPTY_CHAR: &str = "\u{00b7}"; // ·
 
 const TITLE: &str = "P O G O F I S H";
 const CELL_WIDTH: usize = 7;
+/// Rows per cell. Stacks of up to this many pieces are drawn in full; a
+/// taller one shows its top `CELL_ROWS - 1` pieces and lists the rest.
+const CELL_ROWS: usize = 6;
 const NUM_CELLS: usize = 9;
+/// Columns between the board and the text panel on its right.
+const PANEL_GAP: u16 = 3;
+/// Width of the text panel; board and panel fit in 80 columns.
+const PANEL_WIDTH: usize = 47;
 const BOARD: usize = BOARD_SIZE as usize;
 
 // Helper: write at position (y, x) with optional attribute/color
@@ -88,12 +92,10 @@ fn at_colored_bold_underline(
 }
 
 /// Full screen redraw — mirrors Python's `_full_draw`.
-pub fn draw(
-    stdout: &mut io::Stdout,
-    state: &GameState,
-    ui: &AppState,
-    flash_bright: bool,
-) -> anyhow::Result<()> {
+pub fn draw(stdout: &mut impl Write, app: &App, flash_bright: bool) -> anyhow::Result<()> {
+    let session = &app.session;
+    let state = &session.state;
+    let ui = &app.ui;
     queue!(stdout, Clear(ClearType::All))?;
 
     let x_offset: u16 = 2;
@@ -104,41 +106,162 @@ pub fn draw(
     y += 1;
 
     // Turn info
-    draw_turn_info(stdout, y, x_offset, state, ui.turn_number)?;
+    draw_turn_info(stdout, y, x_offset, state, session.ply() as u32 + 1)?;
+    y += 1;
+    draw_players(stdout, y, x_offset, session)?;
     y += 1;
 
     // Separator
     let grid_width = (CELL_WIDTH + 1) * BOARD + 1;
-    draw_separator(stdout, y, x_offset, grid_width)?;
+    let panel_x = x_offset + grid_width as u16 + PANEL_GAP;
+    draw_separator(
+        stdout,
+        y,
+        x_offset,
+        grid_width + PANEL_GAP as usize + PANEL_WIDTH,
+    )?;
     y += 1;
 
-    // Board
-    y = draw_board(stdout, y, x_offset, state, ui, flash_bright)?;
-    y += 1; // blank line
+    // The board on the left; everything that changes during play in a
+    // panel on its right, so the text never pushes the board around.
+    let board_top = y;
+    draw_board(stdout, y, x_offset, state, ui, flash_bright)?;
+    let mut p = Panel {
+        x: panel_x,
+        y: board_top + 1,
+    };
 
-    // Separator
-    draw_separator(stdout, y, x_offset, grid_width)?;
-    y += 1;
+    draw_prompt(stdout, &mut p, ui, session)?;
+    p.skip();
 
-    // Prompt
-    draw_prompt(stdout, y, x_offset, ui, state)?;
-    y += 1;
+    // The AI's last move and its estimate, kept until the human moves.
+    if let (Some((m, v)), false) = (session.last_ai, ui.phase == Phase::GameOver) {
+        p.text(
+            stdout,
+            &format!(
+                "AI played {}",
+                pogofish_engine::notation::move_to_notation(m)
+            ),
+            Style::Plain,
+        )?;
+        p.text(
+            stdout,
+            &format!(
+                "It rated its position {:+.2} (about {:.0}% to win)",
+                v,
+                (v + 1.0) * 50.0
+            ),
+            Style::Dim,
+        )?;
+        p.skip();
+    }
+
+    // Info (hint, undo, saved game)
+    if !ui.info_msg.is_empty() {
+        p.text(stdout, &ui.info_msg, Style::Plain)?;
+        p.skip();
+    }
+
+    // Repetition warning: the rule reads how often this position occurred.
+    let seen = state.occurrences_before();
+    if seen > 0 && ui.phase != Phase::GameOver {
+        let times = if seen == 1 { "once" } else { "twice" };
+        p.text(
+            stdout,
+            &format!("This position has occurred {times} before; a third occurrence loses for whoever makes it"),
+            Style::Bold(Color::Yellow),
+        )?;
+        p.skip();
+    }
 
     // Error
     if !ui.error_msg.is_empty() {
-        at_colored_bold(stdout, y, x_offset, &ui.error_msg, Color::Red)?;
-        y += 1;
+        p.text(stdout, &ui.error_msg, Style::Bold(Color::Red))?;
+        p.skip();
     }
 
     // Score
-    draw_score(stdout, y, x_offset, state)?;
-    y += 1;
+    draw_score(stdout, p.y, p.x, state)?;
+    p.y += 1;
+    p.skip();
 
     // Key hints
-    draw_keys(stdout, y, x_offset, ui)?;
+    draw_keys(stdout, &mut p, ui)?;
 
     stdout.flush()?;
     Ok(())
+}
+
+#[derive(Clone, Copy)]
+enum Style {
+    Plain,
+    Dim,
+    Bold(Color),
+}
+
+/// The text panel to the right of the board: a column of lines, each
+/// wrapped to `PANEL_WIDTH`.
+struct Panel {
+    x: u16,
+    y: u16,
+}
+
+impl Panel {
+    fn text(&mut self, stdout: &mut impl Write, text: &str, style: Style) -> io::Result<()> {
+        for line in wrap(text, PANEL_WIDTH) {
+            match style {
+                Style::Plain => at(stdout, self.y, self.x, &line)?,
+                Style::Dim => at_dim(stdout, self.y, self.x, &line)?,
+                Style::Bold(fg) => at_colored_bold(stdout, self.y, self.x, &line, fg)?,
+            }
+            self.y += 1;
+        }
+        Ok(())
+    }
+
+    fn skip(&mut self) {
+        self.y += 1;
+    }
+}
+
+/// Split `text` into lines of at most `width` characters, at spaces where
+/// possible (a longer word, such as a file path, is cut).
+pub(crate) fn wrap(text: &str, width: usize) -> Vec<String> {
+    let mut lines = Vec::new();
+    let mut line = String::new();
+    for word in text.split(' ') {
+        let mut word: Vec<char> = word.chars().collect();
+        let len = line.chars().count();
+        if len > 0 && len + 1 + word.len() > width {
+            lines.push(std::mem::take(&mut line));
+        }
+        if !line.is_empty() {
+            line.push(' ');
+        }
+        while word.len() > width - line.chars().count() {
+            let room = width - line.chars().count();
+            line.extend(word.drain(..room));
+            lines.push(std::mem::take(&mut line));
+        }
+        line.extend(word);
+    }
+    if !line.is_empty() || lines.is_empty() {
+        lines.push(line);
+    }
+    lines
+}
+
+fn draw_players(stdout: &mut impl Write, y: u16, x: u16, session: &Session) -> io::Result<()> {
+    let text = match &session.ai {
+        Some(ai) => format!(
+            "You play {}  \u{2014}  AI: {} simulations per move  \u{2014}  rules: {}",
+            color_name(session.human),
+            ai.sims,
+            crate::session::RULES
+        ),
+        None => format!("Two players  \u{2014}  rules: {}", crate::session::RULES),
+    };
+    at_dim(stdout, y, x, &text)
 }
 
 fn draw_title(stdout: &mut impl Write, y: u16, x: u16) -> io::Result<()> {
@@ -187,9 +310,9 @@ fn draw_separator(stdout: &mut impl Write, y: u16, x: u16, width: usize) -> io::
 /// Represents one rendered piece entry: the char to display and its color/style.
 #[derive(Clone)]
 enum PieceEntry {
-    Piece(PColor, bool),  // (color, flash_reverse)
+    Piece(PColor, bool), // (color, flash_reverse)
     Ghost,
-    Picked,               // picked pieces shown at destination (yellow)
+    Picked, // picked pieces shown at destination (yellow)
 }
 
 /// Draw the 3x3 board. Returns next y after the board.
@@ -203,35 +326,21 @@ fn draw_board(
 ) -> anyhow::Result<u16> {
     let cells = state.cells();
 
-    // Adaptive cell height
-    let max_stack = cells.iter().map(|c| c.len()).max().unwrap_or(0);
-    let max_stack = if ui.phase == Phase::Move {
-        if let Some(source) = ui.source {
-            let np = ui.num_pieces as usize;
-            (0..NUM_CELLS)
-                .map(|ci| {
-                    let mut eff = cells[ci].len();
-                    if ci == source {
-                        eff = eff.saturating_sub(np);
-                    }
-                    if ci == ui.cursor {
-                        eff += np;
-                    }
-                    eff
-                })
-                .max()
-                .unwrap_or(max_stack)
-        } else {
-            max_stack
-        }
-    } else {
-        max_stack
-    };
-    let cell_height = max_stack.max(4);
+    // Fixed cell height, so the board never changes size during a game. A
+    // taller stack shows its top pieces and lists the hidden ones below.
+    let cell_height = CELL_ROWS;
 
     // Determine ghost/picked state
-    let ghost_cell = if ui.phase == Phase::Move { ui.source } else { None };
-    let ghost_count = if ui.phase == Phase::Move { ui.num_pieces as usize } else { 0 };
+    let ghost_cell = if ui.phase == Phase::Move {
+        ui.source
+    } else {
+        None
+    };
+    let ghost_count = if ui.phase == Phase::Move {
+        ui.num_pieces as usize
+    } else {
+        0
+    };
     let picked_colors: Vec<PColor> = if let (Phase::Move, Some(src)) = (ui.phase, ghost_cell) {
         let stack = &cells[src];
         let n = ghost_count.min(stack.len());
@@ -320,35 +429,47 @@ fn draw_board(
                 cx += 1;
 
                 let entries = &cell_contents[ci];
-                let stack_size = entries.len();
+                // A stack taller than the cell shows its top `cell_height - 1`
+                // entries; the bottom row lists the hidden ones as text.
+                let overflow = entries.len() > cell_height;
+                let shown_rows = if overflow {
+                    cell_height - 1
+                } else {
+                    cell_height
+                };
+                let first_shown = entries.len().saturating_sub(shown_rows);
+                let stack_size = entries.len() - first_shown;
 
                 // Bottom-aligned rendering:
                 // Row h=0 is the top visual row of the cell.
                 // entries[stack_size-1] is the top piece, drawn at h = cell_height - stack_size.
                 // entries[0] is the bottom piece, drawn at h = cell_height - 1.
                 let piece_row: Option<usize> = {
-                    let offset = cell_height.saturating_sub(stack_size);
+                    let offset = shown_rows.saturating_sub(stack_size);
                     if h >= offset && h < offset + stack_size {
                         // Which entry to show: h - offset = 0 means top piece, so index = stack_size-1 - (h-offset)
-                        Some(stack_size - 1 - (h - offset))
+                        Some(first_shown + stack_size - 1 - (h - offset))
                     } else {
                         None
                     }
                 };
 
                 let is_cursor = ci == ui.cursor;
-                let is_source_cell = matches!(ui.phase, Phase::PickCount | Phase::Move)
-                    && ui.source == Some(ci);
+                let is_source_cell =
+                    matches!(ui.phase, Phase::PickCount | Phase::Move) && ui.source == Some(ci);
                 let is_legal = legal_dests[ci];
                 let in_move_phase = ui.phase == Phase::Move;
-                let highlight_cursor =
-                    is_cursor && ui.phase != Phase::GameOver;
+                let highlight_cursor = is_cursor && ui.phase != Phase::GameOver;
 
                 // Determine cell background color
                 let bg_color: Option<Color> = if highlight_cursor {
                     if in_move_phase && !is_source_cell {
                         // Cursor in move phase: green if legal, red if illegal
-                        Some(if is_legal { Color::Green } else { Color::DarkRed })
+                        Some(if is_legal {
+                            Color::Green
+                        } else {
+                            Color::DarkRed
+                        })
                     } else {
                         Some(Color::Yellow) // default cursor color
                     }
@@ -393,15 +514,16 @@ fn draw_board(
                         )?;
                     } else {
                         at(stdout, y + h as u16, cx, &" ".repeat(pad_left))?;
-                        draw_piece_entry(
+                        draw_piece_entry(stdout, cx + pad_left as u16, y + h as u16, entry, false)?;
+                        at(
                             stdout,
-                            cx + pad_left as u16,
                             y + h as u16,
-                            entry,
-                            false,
+                            cx + pad_left as u16 + 1,
+                            &" ".repeat(pad_right),
                         )?;
-                        at(stdout, y + h as u16, cx + pad_left as u16 + 1, &" ".repeat(pad_right))?;
                     }
+                } else if overflow && h == cell_height - 1 {
+                    draw_hidden(stdout, cx, y + h as u16, &entries[..first_shown])?;
                 } else {
                     // Empty row
                     if let Some(bg) = bg_color {
@@ -420,7 +542,12 @@ fn draw_board(
                         let pad_right = CELL_WIDTH - pad_left - 1;
                         at(stdout, y + h as u16, cx, &" ".repeat(pad_left))?;
                         at_dim(stdout, y + h as u16, cx + pad_left as u16, EMPTY_CHAR)?;
-                        at(stdout, y + h as u16, cx + pad_left as u16 + 1, &" ".repeat(pad_right))?;
+                        at(
+                            stdout,
+                            y + h as u16,
+                            cx + pad_left as u16 + 1,
+                            &" ".repeat(pad_right),
+                        )?;
                     } else {
                         at(stdout, y + h as u16, cx, &" ".repeat(CELL_WIDTH))?;
                     }
@@ -464,7 +591,8 @@ fn draw_board(
         let mut label = String::new();
         for col in 0..BOARD {
             let ci = row * BOARD + col;
-            let centered = format!("{:^width$}", ci, width = CELL_WIDTH);
+            let name = pogofish_engine::notation::cell_to_notation(ci as u8);
+            let centered = format!("{:^width$}", name, width = CELL_WIDTH);
             label.push_str(&centered);
             if col < BOARD - 1 {
                 label.push(' ');
@@ -475,6 +603,43 @@ fn draw_board(
     }
 
     Ok(y)
+}
+
+/// The pieces hidden below a tall stack, bottom to top, as small coloured
+/// letters (`w` White, `r` Red) centred in the cell's bottom row.
+/// How many hidden entries fit in one cell row, and the "+N" marker for the rest.
+fn hidden_layout(len: usize) -> (usize, Option<String>) {
+    if len <= CELL_WIDTH {
+        return (len, None);
+    }
+    // At most 15 entries can be hidden, so the marker is at most "+12".
+    let shown = CELL_WIDTH - 3;
+    (shown, Some(format!("+{}", len - shown)))
+}
+
+fn draw_hidden(stdout: &mut impl Write, x: u16, y: u16, hidden: &[PieceEntry]) -> io::Result<()> {
+    let (n, more) = hidden_layout(hidden.len());
+    let width = n + more.as_ref().map_or(0, |m| m.len());
+    let pad_left = (CELL_WIDTH - width) / 2;
+    at(stdout, y, x, &" ".repeat(CELL_WIDTH))?;
+    if let Some(m) = &more {
+        at(stdout, y, x + (pad_left + n) as u16, m)?;
+    }
+    for (i, entry) in hidden.iter().take(n).enumerate() {
+        let (ch, fg) = match entry {
+            PieceEntry::Piece(PColor::White, _) => ("w", Color::White),
+            PieceEntry::Piece(PColor::Red, _) => ("r", Color::Red),
+            PieceEntry::Ghost | PieceEntry::Picked => ("?", Color::Yellow),
+        };
+        queue!(
+            stdout,
+            MoveTo(x + (pad_left + i) as u16, y),
+            SetForegroundColor(fg),
+            Print(ch),
+            ResetColor
+        )?;
+    }
+    Ok(())
 }
 
 /// Draw a single piece entry character with appropriate coloring.
@@ -539,25 +704,34 @@ fn draw_piece_entry(
 
 fn draw_prompt(
     stdout: &mut impl Write,
-    y: u16,
-    x: u16,
+    p: &mut Panel,
     ui: &AppState,
-    state: &GameState,
+    session: &Session,
 ) -> io::Result<()> {
+    let (x, y) = (p.x, p.y);
+    p.y += 1;
+    let state = &session.state;
     let arrow = "\u{25b8} "; // ▸
     let enter_sym = "\u{23ce}"; // ⏎
 
     match ui.phase {
         Phase::Browse => {
             let (name, fg) = player_name_color(state.to_move());
+            let who = if session.ai.is_some() && state.to_move() == session.human {
+                format!("Your turn ({name})")
+            } else if session.ai.is_some() {
+                format!("AI's turn ({name})")
+            } else {
+                format!("{name}'s turn")
+            };
             at_dim(stdout, y, x, arrow)?;
-            at_colored_bold(stdout, y, x + 2, &format!("{name}'s turn"), fg)?;
+            at_colored_bold(stdout, y, x + 2, &who, fg)?;
             let suffix = " \u{2014} select a piece to move";
-            at_dim(stdout, y, x + 2 + name.len() as u16 + 8, suffix)?;
+            at_dim(stdout, y, x + 2 + who.chars().count() as u16, suffix)?;
         }
         Phase::PickCount => {
             at_dim(stdout, y, x, &format!("{arrow}How many pieces?  "))?;
-            let mut cx = x + 19;
+            let mut cx = x + 20;
             let source = ui.source.unwrap_or(0);
             let valid_counts = valid_pickup_counts(state, source);
             for (idx, n) in (1u8..=3).enumerate() {
@@ -594,20 +768,16 @@ fn draw_prompt(
             )?;
         }
         Phase::GameOver => {
-            let rules = RuleSet::LC2 { cap: 50 };
-            if let Some(outcome) = is_terminal(state, &rules) {
+            if let Some(outcome) = session.outcome() {
                 let star = "\u{2605}"; // ★
-                match outcome {
-                    Outcome::WinWhite => {
-                        at_colored_bold(stdout, y, x, &format!("{star} White wins! {star}"), Color::White)?;
-                    }
-                    Outcome::WinRed => {
-                        at_colored_bold(stdout, y, x, &format!("{star} Red wins! {star}"), Color::Red)?;
-                    }
-                    Outcome::DrawEarned => {
-                        at_colored_bold(stdout, y, x, &format!("{star} Draw! {star}"), Color::Yellow)?;
-                    }
-                }
+                let fg = match outcome {
+                    Outcome::WinWhite => Color::White,
+                    Outcome::WinRed => Color::Red,
+                    Outcome::DrawEarned => Color::Yellow,
+                };
+                let text = format!("{star} {} {star}", session.result_text());
+                p.y = y;
+                p.text(stdout, &text, Style::Bold(fg))?;
             }
         }
     }
@@ -628,17 +798,19 @@ fn draw_score(stdout: &mut impl Write, y: u16, x: u16, state: &GameState) -> io:
     Ok(())
 }
 
-fn draw_keys(stdout: &mut impl Write, y: u16, x: u16, ui: &AppState) -> io::Result<()> {
-    if ui.phase == Phase::GameOver {
-        at_dim(stdout, y, x, "r restart  q quit")
+fn draw_keys(stdout: &mut impl Write, p: &mut Panel, ui: &AppState) -> io::Result<()> {
+    let keys: &[&str] = if ui.phase == Phase::GameOver {
+        &["r restart   q quit"]
     } else {
-        at_dim(
-            stdout,
-            y,
-            x,
-            "\u{2191}\u{2193}\u{2190}\u{2192} move  \u{23ce} select  esc back  u undo  R redo  q quit",
-        )
+        &[
+            "\u{2191}\u{2193}\u{2190}\u{2192} move   \u{23ce} select   1/2/3 pieces",
+            "esc back   h hint   u undo   R redo   q quit",
+        ]
+    };
+    for k in keys {
+        p.text(stdout, k, Style::Dim)?;
     }
+    Ok(())
 }
 
 /// Count cells controlled by each player and empty cells.
@@ -658,5 +830,23 @@ fn player_name_color(color: PColor) -> (&'static str, Color) {
     match color {
         PColor::White => ("White", Color::White),
         PColor::Red => ("Red", Color::Red),
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    /// Regression: hidden pieces beyond the cell width vanished without a marker.
+    #[test]
+    fn every_hidden_piece_is_shown_or_counted() {
+        for len in 0..=15 {
+            let (shown, more) = hidden_layout(len);
+            let counted = more
+                .as_deref()
+                .map_or(0, |m| m[1..].parse::<usize>().unwrap());
+            assert_eq!(shown + counted, len);
+            assert!(shown + more.map_or(0, |m| m.len()) <= CELL_WIDTH);
+        }
     }
 }

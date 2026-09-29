@@ -1,7 +1,9 @@
 use pogofish_engine::{
-    apply_move, is_terminal, legal_moves, GameState, Move, Outcome, RuleSet, StateKey,
+    apply_move_under, is_terminal, legal_moves, search_key, GameState, Move, Outcome, RuleSet,
+    StateKey,
 };
-use std::collections::HashMap;
+use std::collections::hash_map::Entry;
+use std::collections::{HashMap, HashSet};
 
 #[derive(Debug, Clone, Copy)]
 pub struct MctsConfig {
@@ -50,10 +52,10 @@ impl Mcts {
 
     pub fn search(&mut self, root: &GameState, rules: &RuleSet) -> Move {
         for _ in 0..self.cfg.simulations {
-            self.simulate(root, rules);
+            self.simulate(root, rules, &mut HashSet::new());
             self.stats.total_simulations += 1;
         }
-        let root_key = root.key();
+        let root_key = search_key(root, rules);
         let root_node = self
             .nodes
             .get(&root_key)
@@ -66,35 +68,55 @@ impl Mcts {
             .expect("root must have edges")
     }
 
-    fn simulate(&mut self, state: &GameState, rules: &RuleSet) -> f32 {
+    /// One simulation. `path` holds the keys already visited by this
+    /// simulation: under rules that allow a position to recur (the uncapped
+    /// game), the search graph has cycles, and following one would recurse
+    /// forever. A position met again on the path is evaluated as a leaf
+    /// (value 0: no estimate is available) and not expanded further.
+    fn simulate(
+        &mut self,
+        state: &GameState,
+        rules: &RuleSet,
+        path: &mut HashSet<StateKey>,
+    ) -> f32 {
         if let Some(outcome) = is_terminal(state, rules) {
             return outcome_value(outcome, state);
         }
 
-        let key = state.key();
-        if !self.nodes.contains_key(&key) {
+        let key = search_key(state, rules);
+        if !path.insert(key.clone()) {
+            return 0.0;
+        }
+        if let Entry::Vacant(slot) = self.nodes.entry(key.clone()) {
             let moves = legal_moves(state);
             let n = moves.len().max(1) as f32;
             let uniform_prior = 1.0 / n;
             let edges: Vec<Edge> = moves
                 .iter()
                 .map(|m| {
-                    let next = apply_move(state, *m).expect("legal move");
+                    let next = apply_move_under(state, *m, rules).expect("legal move");
                     Edge {
                         mv: *m,
-                        child_key: next.key(),
+                        child_key: search_key(&next, rules),
                         visits: 0,
                         value_sum: 0.0,
                         prior: uniform_prior,
                     }
                 })
                 .collect();
-            self.nodes.insert(key, Node { edges });
+            slot.insert(Node { edges });
             return 0.0;
         }
 
         // Selection via PUCT — pick edge with highest score
-        let total_visits: u32 = self.nodes.get(&key).unwrap().edges.iter().map(|e| e.visits).sum();
+        let total_visits: u32 = self
+            .nodes
+            .get(&key)
+            .unwrap()
+            .edges
+            .iter()
+            .map(|e| e.visits)
+            .sum();
         let parent_sqrt = ((total_visits + 1) as f32).sqrt();
         let best_idx = {
             let node = self.nodes.get(&key).unwrap();
@@ -117,8 +139,8 @@ impl Mcts {
         };
 
         let chosen_move = self.nodes.get(&key).unwrap().edges[best_idx].mv;
-        let next = apply_move(state, chosen_move).expect("legal move");
-        let child_value = self.simulate(&next, rules);
+        let next = apply_move_under(state, chosen_move, rules).expect("legal move");
+        let child_value = self.simulate(&next, rules, path);
         let value = -child_value; // Negate: child's value is from opponent's perspective
 
         // Backpropagate on the edge

@@ -1,8 +1,12 @@
+pub mod agents;
 pub mod analyze;
+pub mod checkpoint;
 pub mod dqn;
 pub mod encoding;
-pub mod gatekeeper;
+pub mod export;
+pub mod interrupt;
 pub mod metrics;
 pub mod net;
 pub mod selfplay;
+pub mod td;
 pub mod training;
