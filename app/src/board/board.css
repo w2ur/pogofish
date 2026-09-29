@@ -25,6 +25,13 @@
 }
 
 :root {
+  /* The host page ground, painted here rather than left transparent: an iframe
+     whose color-scheme differs from its host gets an opaque canvas anyway. */
+  color-scheme: light;
+  --board-page: #f3ede3;
+}
+
+:root {
   --board-piece-w-from: #fffdf8;
   --board-piece-w-to: #e9e0cf;
   --board-piece-r-from: #b54a33;
@@ -33,6 +40,8 @@
 }
 
 :root[data-theme="dark"] {
+  color-scheme: dark;
+  --board-page: #05060f;
   --color-ink: #0c0e18;
   --color-ink-2: #141724;
   --color-ink-3: #1a1d2b;
@@ -56,7 +65,7 @@ body {
   margin: 0;
   height: 100%;
   overflow: hidden;
-  background: transparent;
+  background: var(--board-page);
   color: var(--color-paper);
   font-family: var(--font-display);
 }
