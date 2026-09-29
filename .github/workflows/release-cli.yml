@@ -17,8 +17,7 @@ jobs:
           - runner: macos-14        # Apple silicon
             target: aarch64-apple-darwin
           # GitHub retired the macos-13 Intel image (2025): cross-compile on
-          # Apple silicon. The tests run on the host (arm64); the code has no
-          # architecture-specific path.
+          # Apple silicon; the x86_64 tests and binary run under Rosetta 2.
           - runner: macos-14
             target: x86_64-apple-darwin
     runs-on: ${{ matrix.runner }}
@@ -28,10 +27,14 @@ jobs:
         with:
           targets: ${{ matrix.target }}
       # The terminal game needs no libtorch: only its own crates are built.
+      # Tests are built for the release target, so each job tests the
+      # architecture it ships (including a full game against the bundled net).
       - name: Test
-        run: cargo test --release -p pogofish-engine -p pogofish-infer -p pogofish-cli
+        run: cargo test --release --target ${{ matrix.target }} -p pogofish-engine -p pogofish-infer -p pogofish-cli
       - name: Build
         run: cargo build --release -p pogofish-cli --target ${{ matrix.target }}
+      - name: Run the shipped binary
+        run: target/${{ matrix.target }}/release/pogofish --help
       - name: Package
         run: |
           dir=pogofish-${GITHUB_REF_NAME#cli-}-${{ matrix.target }}
