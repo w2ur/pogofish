@@ -33,7 +33,7 @@ export const STRINGS: Record<Lang, BoardStrings> = {
     loading: "Chargement du réseau…",
     youWin: "Vous gagnez.",
     youLose: "Vous perdez.",
-    failed: "Le réseau n’a pas pu se charger.",
+    failed: "Le réseau n’a pas pu se charger. Cliquez sur « Nouvelle partie » pour réessayer.",
   },
   en: {
     title: "Pogo",
@@ -49,6 +49,11 @@ export const STRINGS: Record<Lang, BoardStrings> = {
     loading: "Loading the net…",
     youWin: "You win.",
     youLose: "You lose.",
-    failed: "The net could not be loaded.",
+    failed: "The net could not be loaded. Press “New game” to retry.",
   },
 };
+
+/** What the page says when the engine itself could not start. */
+export function failureText(lang: Lang): string {
+  return STRINGS[lang].failed;
+}

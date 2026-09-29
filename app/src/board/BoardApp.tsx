@@ -3,7 +3,7 @@ import { Board } from "../components/board/Board";
 import { useAI } from "../hooks/useAI";
 import { useGameMachine } from "../hooks/useGameMachine";
 import { RULES_LC1_2, type Player } from "../engine/types";
-import { DEFAULT_LEVEL, LEVEL_SIMS, type Lang, type Level } from "./embed";
+import { DEFAULT_LEVEL, LEVEL_SIMS, isChange, shouldPulse, type Lang, type Level } from "./embed";
 import { STRINGS } from "./strings";
 
 const RULES = RULES_LC1_2;
@@ -77,7 +77,7 @@ function Session({ colour, level, lang, ai, netReady, onNetReady }: SessionProps
     <>
       <p
         role="status"
-        className={`m-0 mb-3 h-5 text-center text-sm text-paper ${thinking ? "animate-pulse" : ""}`}
+        className={`m-0 mb-3 min-h-5 text-center text-sm text-paper ${shouldPulse(thinking, failed) ? "animate-pulse" : ""}`}
       >
         {status}
       </p>
@@ -124,6 +124,7 @@ export function BoardApp({ lang }: { lang: Lang }) {
             className="bd-btn"
             aria-pressed={colour === c}
             onClick={() => {
+              if (!isChange(colour, c)) return;
               setColour(c);
               restart();
             }}
@@ -142,6 +143,7 @@ export function BoardApp({ lang }: { lang: Lang }) {
             className="bd-btn"
             aria-pressed={level === l}
             onClick={() => {
+              if (!isChange(level, l)) return;
               setLevel(l);
               restart();
             }}

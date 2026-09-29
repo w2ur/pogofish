@@ -48,3 +48,13 @@ export function handleThemeMessage(
   const theme = themeFromMessage(event, ownOrigin);
   if (theme) root.dataset.theme = theme;
 }
+
+/** A setting button only restarts the game when it changes something. */
+export function isChange<T>(current: T, next: T): boolean {
+  return current !== next;
+}
+
+/** The status line pulses while the net is working, never after a failure. */
+export function shouldPulse(thinking: boolean, failed: boolean): boolean {
+  return thinking && !failed;
+}

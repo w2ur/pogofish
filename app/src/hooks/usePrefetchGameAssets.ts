@@ -1,4 +1,5 @@
 import { useEffect, useRef } from "react";
+import { assetUrl } from "../ai/assets";
 
 /**
  * Warms the Workbox runtime caches for WASM and ONNX model files when the
@@ -10,16 +11,19 @@ import { useEffect, useRef } from "react";
  * explicitly NOT in the SW precache list — this hook handles warm-up instead.
  */
 
-const ASSETS_TO_PREFETCH = [
-  // ORT wasm files
-  "/ort/ort-wasm-simd-threaded.jsep.wasm",
-  "/ort/ort-wasm-simd-threaded.wasm",
-  // ONNX models (the two shipped variants)
-  "/models/lc1-2/az-lc1-s1.onnx",
-  "/models/lc3-29/alphazero.onnx",
-  // minimax lookup table (gzip-compressed)
-  "/models/minimax_table.json.gz",
-];
+/** Every URL goes through assetUrl(): the board-only build is served under /pogofish/. */
+export function assetsToPrefetch(base?: string): string[] {
+  return [
+    // ORT wasm files
+    assetUrl("ort/ort-wasm-simd-threaded.jsep.wasm", base),
+    assetUrl("ort/ort-wasm-simd-threaded.wasm", base),
+    // ONNX models (the two shipped variants)
+    assetUrl("models/lc1-2/az-lc1-s1.onnx", base),
+    assetUrl("models/lc3-29/alphazero.onnx", base),
+    // minimax lookup table (gzip-compressed)
+    assetUrl("models/minimax_table.json.gz", base),
+  ];
+}
 
 /**
  * Returns true if the page is currently serving through a registered service
@@ -38,7 +42,7 @@ function hasActiveServiceWorker(): boolean {
  * accepted where needed; same-origin assets return full responses.
  */
 async function prefetchAll(): Promise<void> {
-  const queue = ASSETS_TO_PREFETCH.map((url) =>
+  const queue = assetsToPrefetch().map((url) =>
     fetch(url, { mode: url.startsWith("/") ? "same-origin" : "no-cors", priority: "low" } as RequestInit).catch(() => {
       // Silently swallow network errors — this is a best-effort warm-up only.
     })

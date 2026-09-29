@@ -7,6 +7,7 @@
 import { type GameState, type Move, type RuleSet } from "../engine/types";
 import { type AIConfig, type AILevel } from "./player";
 import { type PositionEval } from "./minimax";
+import { guardedHandler } from "./guardedHandler";
 
 // ---- Message types ----
 
@@ -112,79 +113,82 @@ if (typeof self !== "undefined" && typeof (self as unknown as { document?: unkno
     return player;
   })();
 
-  self.onmessage = async (e: MessageEvent<WorkerRequest>) => {
-    const msg = e.data;
-    const player = await playerPromise;
+  // A failed start must not become an unhandled rejection of its own; each
+  // request still sees it through guardedHandler and gets an error response.
+  playerPromise.catch(() => {});
 
-    try {
-      switch (msg.type) {
-        case "getMove": {
-          const move = await player.getMove(msg.state, msg.config);
-          const response: MoveResponse = {
-            type: "move",
-            id: msg.id,
-            move: { fromCell: move.fromCell, numPieces: move.numPieces, toCell: move.toCell },
-          };
-          self.postMessage(response);
-          break;
-        }
+  type Player = Awaited<typeof playerPromise>;
 
-        case "evaluate": {
-          const evaluation = await player.evaluatePosition(msg.state, msg.ruleSet);
-          console.log("[Worker] Eval result:", evaluation);
-          const response: EvalResponse = {
-            type: "eval",
-            id: msg.id,
-            evaluation,
-          };
-          self.postMessage(response);
-          break;
-        }
-
-        case "inspectModel": {
-          const result = await player.inspectModel(msg.state, msg.level, msg.ruleSet);
-          const response: InspectResponse = {
-            type: "inspect",
-            id: msg.id,
-            result,
-          };
-          self.postMessage(response);
-          break;
-        }
-
-        case "loadMinimax": {
-          console.log("[Worker] Starting minimax load...");
-          await player.startMinimaxLoad((loaded, total) => {
-            const progress: MinimaxProgressResponse = {
-              type: "minimaxProgress",
-              id: msg.id,
-              loaded,
-              total,
-            };
-            self.postMessage(progress);
-          });
-          const table = player.getMinimaxTable();
-          console.log("[Worker] Minimax loaded:", table ? table.size + " entries" : "FAILED");
-          // Verify a known key
-          if (table) {
-            const testKey = "/WW/WW////RRWW/RR/RR:R";
-            console.log("[Worker] Test lookup:", testKey, "->", table.get(testKey));
-          }
-          const response: MinimaxLoadedResponse = {
-            type: "minimaxLoaded",
-            id: msg.id,
-          };
-          self.postMessage(response);
-          break;
-        }
+  const handle = async (player: Player, msg: WorkerRequest): Promise<void> => {
+    switch (msg.type) {
+      case "getMove": {
+        const move = await player.getMove(msg.state, msg.config);
+        const response: MoveResponse = {
+          type: "move",
+          id: msg.id,
+          move: { fromCell: move.fromCell, numPieces: move.numPieces, toCell: move.toCell },
+        };
+        self.postMessage(response);
+        break;
       }
-    } catch (err) {
-      const response: ErrorResponse = {
-        type: "error",
-        id: msg.id,
-        message: err instanceof Error ? err.message : String(err),
-      };
-      self.postMessage(response);
+
+      case "evaluate": {
+        const evaluation = await player.evaluatePosition(msg.state, msg.ruleSet);
+        console.log("[Worker] Eval result:", evaluation);
+        const response: EvalResponse = {
+          type: "eval",
+          id: msg.id,
+          evaluation,
+        };
+        self.postMessage(response);
+        break;
+      }
+
+      case "inspectModel": {
+        const result = await player.inspectModel(msg.state, msg.level, msg.ruleSet);
+        const response: InspectResponse = {
+          type: "inspect",
+          id: msg.id,
+          result,
+        };
+        self.postMessage(response);
+        break;
+      }
+
+      case "loadMinimax": {
+        console.log("[Worker] Starting minimax load...");
+        await player.startMinimaxLoad((loaded, total) => {
+          const progress: MinimaxProgressResponse = {
+            type: "minimaxProgress",
+            id: msg.id,
+            loaded,
+            total,
+          };
+          self.postMessage(progress);
+        });
+        const table = player.getMinimaxTable();
+        console.log("[Worker] Minimax loaded:", table ? table.size + " entries" : "FAILED");
+        // Verify a known key
+        if (table) {
+          const testKey = "/WW/WW////RRWW/RR/RR:R";
+          console.log("[Worker] Test lookup:", testKey, "->", table.get(testKey));
+        }
+        const response: MinimaxLoadedResponse = {
+          type: "minimaxLoaded",
+          id: msg.id,
+        };
+        self.postMessage(response);
+        break;
+      }
     }
+  };
+
+  const onRequest = guardedHandler<Player, WorkerRequest>(
+    () => playerPromise,
+    handle,
+    (response) => self.postMessage(response),
+  );
+  self.onmessage = (e: MessageEvent<WorkerRequest>) => {
+    void onRequest(e.data);
   };
 }

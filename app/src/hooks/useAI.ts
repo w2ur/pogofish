@@ -1,5 +1,6 @@
 import { useCallback, useMemo, useRef, useState } from "react";
 import { type GameState, type Move, type RuleSet } from "../engine/types";
+import { rejectAllPending } from "./pendingRequests";
 import type {
   AIConfig,
   AILevel,
@@ -78,6 +79,14 @@ export function useAI(): UseAI {
           pending.reject(new Error(msg.message));
           break;
       }
+    };
+
+    // A worker that fails to start (bad wasm, missing chunk) never answers:
+    // reject what is pending and drop it, so the next request builds a fresh one.
+    worker.onerror = (e: ErrorEvent) => {
+      if (workerRef.current === worker) workerRef.current = null;
+      worker.terminate();
+      rejectAllPending(pendingRef.current, new Error(e.message || "AI worker failed"));
     };
 
     workerRef.current = worker;

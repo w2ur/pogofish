@@ -64,7 +64,7 @@ html,
 body {
   margin: 0;
   height: 100%;
-  overflow: hidden;
+  overflow: auto;
   background: var(--board-page);
   color: var(--color-paper);
   font-family: var(--font-display);
@@ -111,4 +111,12 @@ body {
 .bd-board > div {
   max-width: min(100%, 380px, calc(100vh - 250px));
   margin-inline: auto;
+}
+
+/* Piece edge, scoped to the board build so the story's pieces are untouched.
+   An outline takes no room, so the box (and the stacking) is unchanged; the
+   attribute selector finds the piece by its gradient variable. */
+.bd-board [style*="--board-piece-w-from"],
+.bd-board [style*="--board-piece-r-from"] {
+  outline: 1px solid var(--board-piece-edge);
 }

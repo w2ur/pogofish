@@ -3,8 +3,10 @@ import {
   DEFAULT_LEVEL,
   LEVEL_SIMS,
   handleThemeMessage,
+  isChange,
   parseLang,
   parseTheme,
+  shouldPulse,
 } from "./embed";
 
 const ORIGIN = "https://william.revah.paris";
@@ -75,5 +77,20 @@ describe("levels", () => {
   });
   it("default to the measured level", () => {
     expect(DEFAULT_LEVEL).toBe("normal");
+  });
+});
+
+describe("isChange", () => {
+  it("is false when the selected value is clicked again", () => {
+    expect(isChange("W", "W")).toBe(false);
+    expect(isChange("normal", "hard")).toBe(true);
+  });
+});
+
+describe("shouldPulse", () => {
+  it("pulses only while thinking and not failed", () => {
+    expect(shouldPulse(true, false)).toBe(true);
+    expect(shouldPulse(true, true)).toBe(false);
+    expect(shouldPulse(false, false)).toBe(false);
   });
 });
