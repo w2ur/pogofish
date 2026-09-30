@@ -10,7 +10,7 @@ facts_en: "AlphaZero in Rust: wins 85.5–88.7 % of 400 games against a greedy p
 
 A longform article about training an AI to play a forgotten 3×3 board game — with the playable game inlined at the climax. Bilingual FR/EN (English at `/`, French at `/fr`, both prerendered). Single-page web app; no server.
 
-The article tells the first round of the build: the game, a minimax solver, a DQN attempt, an AlphaZero run, a rule-variant sweep, and a section on what the trained network learned. That round's evaluation has since been found unreliable (what went wrong, and which results it invalidates: [`docs/experiments/v1-verdict.md`](docs/experiments/v1-verdict.md)). A second round re-measured everything under pre-registered criteria: [`docs/experiments/v2-results.md`](docs/experiments/v2-results.md). The article will move to a story on the portfolio hub, and this subdomain will then be retired with a redirect (owner's decision, 2026-09-29).
+The article tells the first round of the build: the game, a minimax solver, a DQN attempt, an AlphaZero run, a rule-variant sweep, and a section on what the trained network learned. That round's evaluation has since been found unreliable (what went wrong, and which results it invalidates: [`docs/experiments/v1-verdict.md`](docs/experiments/v1-verdict.md)). A second round re-measured everything under pre-registered criteria: [`docs/experiments/v2-results.md`](docs/experiments/v2-results.md). The round-2 story, with the results and the playable board, is on the portfolio hub: <https://william.revah.paris/en/stories/pogofish/> (French: <https://william.revah.paris/stories/pogofish/>). The round-1 article in `app/` is kept for reference; its subdomain is being retired with a redirect to the story.
 
 ## Read it
 
