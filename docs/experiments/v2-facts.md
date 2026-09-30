@@ -2,7 +2,7 @@
 
 Date: 2026-09-28. This is raw material for Phase 7 (the portfolio article, which the owner writes). It is not the article.
 
-Every figure below is copied from the source named next to it. Figures marked "derived: …" are trivial restatements computed here, and the note says how. "no CI" means the source gives no interval. Paths are relative to `docs/experiments/` unless they start with `docs/`, `crates/` or `app/`.
+Every figure below is copied from the source named next to it. Figures marked "derived: …" are trivial restatements computed here, and the note says how. "no CI" means the source gives no interval. Paths are relative to `docs/experiments/` unless they start with `docs/`, `crates/` or `app/`. The plan and its review (`docs/plans/…`) are no longer in the tree: plans are kept outside the repository, and both files can be read in its history at commit `771f77c`.
 
 **Common conventions (apply to every arena figure unless noted):**
 - Arena score = player A's mean over opening pairs (win 1, loss 0). 95 % CI is computed from the spread of pair scores (`v2-harness.md`, Setup). Colours are swapped within each pair. Unfinished games are not scored.
