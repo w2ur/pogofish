@@ -101,6 +101,10 @@ DYLD_LIBRARY_PATH=$(find target/release/build -path "*/torch-sys-*/out/libtorch/
 
 Static deploy on Netlify from `app/`. No server-side code.
 
+## License
+
+MIT, see [LICENSE](LICENSE).
+
 ---
 
 Made with care by [William](https://william.revah.paris).
