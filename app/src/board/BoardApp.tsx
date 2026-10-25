@@ -96,7 +96,7 @@ function Session({ colour, level, lang, ai, netReady, onNetReady }: SessionProps
   );
 }
 
-export function BoardApp({ lang }: { lang: Lang }) {
+export function BoardApp({ lang, recitHref = null }: { lang: Lang; recitHref?: string | null }) {
   const t = STRINGS[lang];
   const ai = useAI();
   const [colour, setColour] = useState<Player>("W");
@@ -163,6 +163,13 @@ export function BoardApp({ lang }: { lang: Lang }) {
         netReady={netReady}
         onNetReady={() => setNetReady(true)}
       />
+      {recitHref && (
+        <p className="m-0 mt-3 text-center text-sm">
+          <a href={recitHref} className="text-paper-2 underline underline-offset-2 hover:text-paper">
+            {t.recit}
+          </a>
+        </p>
+      )}
     </main>
   );
 }

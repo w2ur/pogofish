@@ -153,6 +153,7 @@ A second Vite entry, `app/board.html` + `app/src/board/`, built by `vite.board.c
 - Every asset URL goes through `assetUrl()` (`src/ai/assets.ts`, `import.meta.env.BASE_URL`): never write a literal `/ort/` or `/models/`, the main SPA (base `/`) and this build (base `/pogofish/`) share the code.
 - The config aliases `onnxruntime-web` to `onnxruntime-web/wasm`: the default entry probes for the JSEP wasm, which this build does not ship (a 404 in the console).
 - `?lang` / `?theme` and the host's theme `message` are parsed in `src/board/embed.ts`; a message counts only from `location.origin` and only as exactly `{ pogofishTheme: 'light' | 'dark' }`. Colours are CSS custom properties keyed on `<html data-theme>` in `src/board/board.css`, valued from the hub's tokens.
+- Opened directly (`window.top === window`), the board shows a link to the hub récit — `/stories/pogofish/` for `?lang=fr`, `/en/stories/pogofish/` otherwise (`recitLinkFor`, `src/board/embed.ts`); inside the récit's iframe nothing renders, so the 640 px fit is unchanged.
 - The frame is the story column wide (320–720 px) and 640 px tall; the layout must fit with no inner scroll.
 
 ### Prerendering

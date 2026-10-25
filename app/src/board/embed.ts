@@ -18,6 +18,17 @@ export function parseLang(search: string): Lang {
   return new URLSearchParams(search).get("lang") === "fr" ? "fr" : "en";
 }
 
+/** Where the hub's Pogofish récit lives, in the board's own language. */
+export function recitPath(lang: Lang): string {
+  return lang === "fr" ? "/stories/pogofish/" : "/en/stories/pogofish/";
+}
+
+/** The récit link shows only when the board is opened directly: inside the
+ *  récit's iframe `window.top` is the parent, so it stays hidden. */
+export function recitLinkFor(lang: Lang, win: { top: unknown }): string | null {
+  return win.top === win ? recitPath(lang) : null;
+}
+
 /** `?theme=light|dark`; anything else follows the system preference. */
 export function parseTheme(search: string, prefersDark: boolean): Theme {
   const value = new URLSearchParams(search).get("theme");

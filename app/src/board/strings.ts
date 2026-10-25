@@ -15,6 +15,7 @@ export interface BoardStrings {
   youWin: string;
   youLose: string;
   failed: string;
+  recit: string;
 }
 
 export const STRINGS: Record<Lang, BoardStrings> = {
@@ -34,6 +35,7 @@ export const STRINGS: Record<Lang, BoardStrings> = {
     youWin: "Vous gagnez.",
     youLose: "Vous perdez.",
     failed: "Le réseau n’a pas pu se charger. Cliquez sur « Nouvelle partie » pour réessayer.",
+    recit: "Lire le récit de Pogofish",
   },
   en: {
     title: "Pogo",
@@ -50,6 +52,7 @@ export const STRINGS: Record<Lang, BoardStrings> = {
     youWin: "You win.",
     youLose: "You lose.",
     failed: "The net could not be loaded. Press “New game” to retry.",
+    recit: "Read the Pogofish story",
   },
 };
 

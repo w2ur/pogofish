@@ -6,6 +6,8 @@ import {
   isChange,
   parseLang,
   parseTheme,
+  recitLinkFor,
+  recitPath,
   shouldPulse,
 } from "./embed";
 
@@ -92,5 +94,20 @@ describe("shouldPulse", () => {
     expect(shouldPulse(true, false)).toBe(true);
     expect(shouldPulse(true, true)).toBe(false);
     expect(shouldPulse(false, false)).toBe(false);
+  });
+});
+
+describe("récit link", () => {
+  it("points at the French récit for fr and the English one otherwise", () => {
+    expect(recitPath("fr")).toBe("/stories/pogofish/");
+    expect(recitPath("en")).toBe("/en/stories/pogofish/");
+    expect(recitPath(parseLang(""))).toBe("/en/stories/pogofish/");
+  });
+
+  it("shows only when the board is the top window", () => {
+    const direct: { top: unknown } = { top: null };
+    direct.top = direct;
+    expect(recitLinkFor("fr", direct)).toBe("/stories/pogofish/");
+    expect(recitLinkFor("en", { top: {} })).toBeNull();
   });
 });

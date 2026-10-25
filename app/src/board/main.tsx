@@ -2,7 +2,7 @@ import { createRoot } from "react-dom/client";
 import { ensureEngineReady } from "../engine/init";
 import { BoardApp } from "./BoardApp";
 import { failureText } from "./strings";
-import { handleThemeMessage, parseLang, parseTheme } from "./embed";
+import { handleThemeMessage, parseLang, parseTheme, recitLinkFor } from "./embed";
 import "./board.css";
 
 const root = document.documentElement;
@@ -18,7 +18,7 @@ window.addEventListener("message", (event) =>
 
 const mount = document.getElementById("root")!;
 ensureEngineReady().then(
-  () => createRoot(mount).render(<BoardApp lang={lang} />),
+  () => createRoot(mount).render(<BoardApp lang={lang} recitHref={recitLinkFor(lang, window)} />),
   () => {
     const message = document.createElement("p");
     message.setAttribute("role", "status");
