@@ -1,0 +1,5 @@
+# torch-sys 0.17 compiles libtorch headers that specialise std::is_arithmetic;
+# Apple clang 21 (current Xcode) rejects that as an error. Without this flag a
+# clean `cargo check --workspace` fails in torch-sys's build script.
+[env]
+CXXFLAGS = "-Wno-invalid-specialization"

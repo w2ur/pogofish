@@ -41,6 +41,10 @@ cargo build --release -p pogofish-cli --bin pogofish   # CLI game
 cargo build --release -p pogofish-train --bin train     # training binary
 ```
 
+`.cargo/config.toml` sets `CXXFLAGS=-Wno-invalid-specialization`: torch-sys 0.17's libtorch
+headers specialise `std::is_arithmetic`, which Apple clang 21 (current Xcode) rejects, so a clean
+`cargo check --workspace` fails in torch-sys's build script without it. Keep it until torch-sys moves on.
+
 ### CLI game
 ```bash
 # Play the bundled AlphaZero net (crates/cli/assets/az-lc1-s1.pfw) under lc1-2.
@@ -181,14 +185,15 @@ code, reference only: never import from it.
 
 ## Deployment
 
-Netlify — static deploy of the `app/` build output. No server-side code. Live at
-`https://pogofish.revah.paris`. Base directory must be `app` (that is where
-`netlify.toml` lives). See the `pogofish-prerendering` skill for build-config
-detail.
+Netlify — static deploy of the `app/` build output. No server-side code. Base
+directory must be `app` (that is where `netlify.toml` lives). See the
+`pogofish-prerendering` skill for build-config detail.
 
-**To be retired** (owner's decision 2026-09-29, plan 7.1 option a): the article moves to a
-hub story `/stories/pogofish` and this subdomain gets a 301 to it. Add the 301 only once
-the story is live on the hub, never before.
+`pogofish.revah.paris` is **retired** (2026-09-30): the hub redirects it to the
+Pogofish récit, `https://william.revah.paris/stories/pogofish/` (French) and
+`https://william.revah.paris/en/stories/pogofish/`. The board is embedded in that
+récit from the hub's built copy at `/pogofish/` (see "Board-only build"); this
+repo no longer has a live deployment of its own.
 
 ## Project-Specific Rules
 
