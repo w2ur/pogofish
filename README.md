@@ -58,6 +58,24 @@ The full rules, each linked to the engine line and the test that pins it, are in
 
 The web article ships **LC1-2** (fast, sudden-death) and **LC3-29** (balanced, draws possible — the default).
 
+## Terminal game: released binaries
+
+Each `cli-v*` release carries a macOS build of the terminal game per architecture (`aarch64-apple-darwin` for Apple silicon, `x86_64-apple-darwin` for Intel), each with a `.sha256` file. The binary is unsigned.
+
+```bash
+# Apple silicon; swap in x86_64-apple-darwin on Intel
+gh release download cli-v0.1.0 -R w2ur/pogofish -p '*aarch64-apple-darwin*'
+# or: curl -LO https://github.com/w2ur/pogofish/releases/download/cli-v0.1.0/pogofish-v0.1.0-aarch64-apple-darwin.tar.gz{,.sha256}
+
+shasum -a 256 -c pogofish-v0.1.0-aarch64-apple-darwin.tar.gz.sha256   # must print: OK
+tar xzf pogofish-v0.1.0-aarch64-apple-darwin.tar.gz
+cd pogofish-v0.1.0-aarch64-apple-darwin
+chmod +x pogofish
+./pogofish --help
+```
+
+If the archive came from a browser download, macOS quarantines it and Gatekeeper refuses the unsigned binary. Clear the flag once: `xattr -d com.apple.quarantine pogofish`. Downloads through `gh` or `curl` are not quarantined.
+
 ## Development
 
 ```bash
