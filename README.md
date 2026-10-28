@@ -1,123 +1,78 @@
----
+<!-- portfolio
 name: "Pogofish"
 tagline_fr: "Entraîner une IA à un jeu de plateau oublié, et mesurer ce qu'elle vaut vraiment."
 tagline_en: "Training an AI to play a forgotten board game, and measuring what it is really worth."
 facts_fr: "AlphaZero en Rust : gagne 85,5 à 88,7 % de 400 parties contre un joueur glouton, sur trois entraînements (borne basse à 95 % : 82,3 %). Inférence en Rust pur, jeu en terminal."
 facts_en: "AlphaZero in Rust: wins 85.5–88.7 % of 400 games against a greedy player, over three training runs (lowest 95 % bound: 82.3 %). Pure-Rust inference, terminal game."
----
+-->
+
+**English** · [Français](README.fr.md)
 
 # Pogofish
 
-A longform article about training an AI to play a forgotten 3×3 board game — with the playable game inlined at the climax. Bilingual FR/EN (English at `/`, French at `/fr`, both prerendered). Single-page web app; no server.
+I taught a machine a game nobody plays any more. The first time, I took its word for it. The second time, I measured.
 
-The article tells the first round of the build: the game, a minimax solver, a DQN attempt, an AlphaZero run, a rule-variant sweep, and a section on what the trained network learned. That round's evaluation has since been found unreliable (what went wrong, and which results it invalidates: [`docs/experiments/v1-verdict.md`](docs/experiments/v1-verdict.md)). A second round re-measured everything under pre-registered criteria: [`docs/experiments/v2-results.md`](docs/experiments/v2-results.md). The round-2 story, with the results and the playable board, is on the portfolio hub: <https://william.revah.paris/en/stories/pogofish/> (French: <https://william.revah.paris/stories/pogofish/>). The round-1 article in `app/` is kept for reference; its subdomain is being retired with a redirect to the story.
+**Status:** maintained · public · [play it in the browser](https://william.revah.paris/en/stories/pogofish/#your-move)
 
-## Read it
+[![Latest CLI release](https://img.shields.io/github/v/release/w2ur/pogofish?filter=cli-v*&label=terminal%20game)](https://github.com/w2ur/pogofish/releases/latest)
+[![release-cli](https://github.com/w2ur/pogofish/actions/workflows/release-cli.yml/badge.svg)](https://github.com/w2ur/pogofish/actions/workflows/release-cli.yml)
+[![Story online](https://img.shields.io/website?url=https%3A%2F%2Fwilliam.revah.paris%2Fen%2Fstories%2Fpogofish%2F&label=story)](https://william.revah.paris/en/stories/pogofish/)
+[![License](https://img.shields.io/github/license/w2ur/pogofish)](LICENSE)
 
-```bash
-cd app && npm install && npm run dev
-```
+<picture>
+  <source media="(prefers-color-scheme: dark)" srcset="docs/media/board-play-dark.gif">
+  <img src="docs/media/board-play-light.gif" width="480" alt="The Pogo board in a browser: the human plays White, moves one piece from a stack of two, the status line reads 'The net is thinking', then the AI answers by stacking its red pieces.">
+</picture>
 
-Then open `http://localhost:5173`. The CTA in the bottom-right (`▶ Play`) or the URL anchor `#play` jumps to the inline game.
+## Why
 
-## What's in the box
+The question I wanted to ask was simple, almost naive: does a machine that learns alone, by playing against itself, really learn anything, and how would I know? In the spring I had published a long article on this project; everything seemed to work, which should have set off an alarm. So for the second round I wrote down before training what would count as success, then forbade myself from touching it.
 
-### `crates/` — Rust workspace
+## What it is
 
-- `pogofish-engine` — game rules, state, legal moves, rule variants (LC1/LC2/LC3).
-- `pogofish-search` — minimax (alpha-beta + transposition table), MCTS (PUCT), checkpointer, and two scripted baselines: `random` and `greedy` (wins when it can, else maximises own stacks on top minus the opponent's).
-- `pogofish-train` — AlphaZero training via tch-rs/libtorch (no gating: every checkpoint is kept and rated), self-play, TD(λ) value learning (`td_train`), the `arena` evaluation binary, and an `analyze` binary that produces the insights JSON the article reads.
-- `pogofish-cli` — the terminal game: play the trained AlphaZero net (pure-Rust inference, no libtorch), choose your colour and level, ask for hints, see the AI's estimate.
-- `pogofish-wasm` — wasm-bindgen wrappers for the browser.
+Pogo is played on nine squares: you move one, two or three pieces from the top of a stack, and a stack belongs to whoever's piece is on top. Pogofish is an AlphaZero written in Rust that learns it alone, an arena that measures it over colour-swapped random openings with 95 % confidence intervals, and a terminal game that plays the trained net with pure-Rust inference.
 
-### `app/` — web app
+Against a greedy player, the round-2 net scores between 0.855 and 0.887 over 400 games, depending on the training seed (three seeds). Of the four criteria fixed in advance, two are met, one is not met as pre-registered, and the fourth (ten games played by hand) is pending: [`docs/experiments/v2-results.md`](docs/experiments/v2-results.md).
 
-React 19 + TypeScript + Vite + Tailwind v4. The entire app is one scroll-driven story page; the playable game is a scene within it. No routing, no backend — all inference runs client-side via ONNX Runtime Web against models loaded from `app/public/models/`.
+The first round's evaluation did not hold. What went wrong, and which results it invalidates, is in [`docs/experiments/v1-verdict.md`](docs/experiments/v1-verdict.md).
 
-#### Board build for the hub
+## Play
 
-`cd app && npm run build:board` builds a second, board-only entry (`app/board.html` → `app/src/board/`) into `app/dist-board/`, with base `/pogofish/`: the hub copies that folder and embeds it in an iframe. It plays a human against the round-2 net (`az-lc1-s1`, AlphaZero + MCTS) under `lc1-2`, with a colour choice, three levels (easy 25, normal 100, hard 400 simulations, the CLI's numbers; only "normal" is the measured one) and a new-game button. Language and theme come from `?lang=fr|en` and `?theme=light|dark`; the host can switch the theme with a same-origin `postMessage({ pogofishTheme })`.
+- **In the browser:** the board is at the end of the story, [in English](https://william.revah.paris/en/stories/pogofish/#your-move) and [in French](https://william.revah.paris/stories/pogofish/#à-vous-de-jouer).
+- **In a terminal (macOS):** download the latest `cli-v*` release for your chip. The binary is unsigned.
 
-It ships `index.html`, the engine wasm, `models/lc1-2/az-lc1-s1.onnx` and the non-JSEP ONNX Runtime pair (`ort/ort-wasm-simd-threaded.{wasm,mjs}`). It leaves out the LC3 variant, the DQN net, the raw-policy player, the minimax table and every other file of `app/public/`.
+  ```bash
+  # Apple silicon; swap in x86_64-apple-darwin on Intel
+  gh release download -R w2ur/pogofish -p '*aarch64-apple-darwin*'
+  shasum -a 256 -c pogofish-*-aarch64-apple-darwin.tar.gz.sha256   # must print: OK
+  tar xzf pogofish-*-aarch64-apple-darwin.tar.gz
+  ./pogofish-*-aarch64-apple-darwin/pogofish --help
+  ```
 
-### `models/` — gitignored training artifacts
+  A browser download is quarantined by macOS and Gatekeeper refuses the unsigned binary; clear the flag once with `xattr -d com.apple.quarantine pogofish`. Downloads through `gh` or `curl` are not quarantined.
 
-LC1-2 (Sudden Death) and LC3-29 (Classic) AlphaZero models ship as ONNX under `app/public/models/`. The LC1-2 opponent is the round-2 net the terminal game plays (`lc1-2/az-lc1-s1.onnx`, input encoded by the WASM engine; `app/src/ai/parity.test.ts` checks it against the Rust net on 100 positions within 1e-5). The LC3-29 net is round 1.
+## Run locally
 
-## The game itself
-
-Pogo is played on a 3×3 grid. Each player starts with 6 pieces in 3 stacks of 2. Pick 1–3 pieces from the top of a stack you own, jump them a Manhattan distance determined by the count (1→d1, 2→d2, 3→d1|d3), and land on any cell — stacking on top. The top piece owns the stack. Win by topping every remaining stack. Three rule variants resolve the infinite-game problem:
-
-- **LC1** — repeating a board position loses.
-- **LC2** — hard move cap; if nobody has won by the cap, the player to move at the cap loses (so the cap's parity picks the loser).
-- **LC3** — soft move cap; most stacks wins, ties are draws.
-
-`RuleSet::Uncapped` plays the published game with no extra rule; round 2 trains on it ([`docs/experiments/v2-ruleset.md`](docs/experiments/v2-ruleset.md)).
-
-The full rules, each linked to the engine line and the test that pins it, are in [`docs/rules.md`](docs/rules.md).
-
-The web article ships **LC1-2** (fast, sudden-death) and **LC3-29** (balanced, draws possible — the default).
-
-## Terminal game: released binaries
-
-Each `cli-v*` release carries a macOS build of the terminal game per architecture (`aarch64-apple-darwin` for Apple silicon, `x86_64-apple-darwin` for Intel), each with a `.sha256` file. The binary is unsigned.
+Needs a Rust toolchain (`rust-toolchain.toml`) and Node for the web app. No environment variables.
 
 ```bash
-# Apple silicon; swap in x86_64-apple-darwin on Intel
-gh release download cli-v0.1.0 -R w2ur/pogofish -p '*aarch64-apple-darwin*'
-# or: curl -LO https://github.com/w2ur/pogofish/releases/download/cli-v0.1.0/pogofish-v0.1.0-aarch64-apple-darwin.tar.gz{,.sha256}
-
-shasum -a 256 -c pogofish-v0.1.0-aarch64-apple-darwin.tar.gz.sha256   # must print: OK
-tar xzf pogofish-v0.1.0-aarch64-apple-darwin.tar.gz
-cd pogofish-v0.1.0-aarch64-apple-darwin
-chmod +x pogofish
-./pogofish --help
+cargo test --workspace                                              # engine, inference, search, training
+cargo run --release -p pogofish-cli -- --colour red --level normal  # the terminal game, from source
+cd app && npm install && npx vitest run && npm run build:board      # the board the hub embeds → app/dist-board/
 ```
 
-If the archive came from a browser download, macOS quarantines it and Gatekeeper refuses the unsigned binary. Clear the flag once: `xattr -d com.apple.quarantine pogofish`. Downloads through `gh` or `curl` are not quarantined.
+Or install the terminal game without cloning (self-contained binary, the net is embedded, no libtorch): `cargo install --git https://github.com/w2ur/pogofish pogofish-cli`.
 
-## Development
+## Deploy
 
-```bash
-# Rust
-cargo check --workspace
-cargo test --workspace
+The board is served by the hub, william.revah.paris, which copies `app/dist-board/` into its own `public/pogofish/`. The terminal game ships by pushing a `cli-vX.Y.Z` tag, which builds and attaches the binaries to a GitHub release. The round-1 article's subdomain, `pogofish.revah.paris`, is retired and redirects to the story.
 
-# Web app
-cd app && npx vitest run
-cd app && npm run build
-cd app && npm run build:board   # board-only build for the hub → app/dist-board/
+## Documentation
 
-# Terminal game against the trained net (see --help)
-cargo run --release -p pogofish-cli -- --colour red --level normal
-# or install it (self-contained binary, the net is embedded; no libtorch):
-cargo install --git https://github.com/w2ur/pogofish pogofish-cli
-
-# Measure the uncapped game with scripted players (JSON report; ~2 s)
-cargo run --release -p pogofish-search --bin measure -- --games 20000 --seed 1 --out docs/experiments/v2-measure.json
-
-# TD(λ) value learning (resumable; docs/experiments/v2-td.md)
-./target/release/td_train models/td-mr-s1 --iterations 1000 --temp-decay 1000 --lambda 0.7 --lr 0.1 --seed 1
-
-# Evaluate players against each other (colours swapped, random openings, 95% CI)
-./target/release/arena uncapped greedy random mcts-uniform:200 --pairs 200 --out arena.json
-
-# Elo ladder from arena reports, and its plot
-cargo run --release -p pogofish-search --bin ladder -- arena.json --out ladder.json
-uv run tools/plot_ladder.py ladder.json ladder.png
-
-# Train (requires libtorch; tch-rs downloads it)
-DYLD_LIBRARY_PATH=$(find target/release/build -path "*/torch-sys-*/out/libtorch/libtorch/lib" | head -1) \
-  ./target/release/train models/az-s1 --features mover-relative --seed 1   # resumable; only Markov rulesets
-
-# Regenerate the "what the AI learned" JSON
-DYLD_LIBRARY_PATH=$(find target/release/build -path "*/torch-sys-*/out/libtorch/libtorch/lib" | head -1) \
-  ./target/release/analyze models/lc3-29 app/public/data/lc3-29-insights.json 500
-```
-
-## Deployment
-
-Static deploy on Netlify from `app/`. No server-side code.
+- [Development](docs/development.md): the workspace crates, the web app and the board build, every training, measurement and export command, the round-1 article, deployment detail.
+- [Rules](docs/rules.md): each rule, the engine line that implements it, and the test that pins it.
+- [Round-2 results](docs/experiments/v2-results.md) and [round-1 verdict](docs/experiments/v1-verdict.md).
+- The story: [English](https://william.revah.paris/en/stories/pogofish/) · [French](https://william.revah.paris/stories/pogofish/).
 
 ## License
 
