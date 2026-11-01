@@ -210,7 +210,7 @@ repo no longer has a live deployment of its own.
 
 ## Project-Specific Rules
 
-- The state-space size has never been measured. Do not state one. Runtime and memory figures must be measured, or extrapolated from a measurement (a pilot) and labelled as such, never reasoned from nothing (plan rule 1).
+- State space, measured (round 3, `docs/experiments/v3-solve.md`): 232,792,560 positions (board and player to move), 230,015,628 of them reachable from the start. Runtime and memory figures must be measured, or extrapolated from a measurement (a pilot) and labelled as such, never reasoned from nothing (plan rule 1).
 - Round 2 trains on **`lc1-2`** (2026-09-27, `docs/experiments/v2-ruleset.md`): a position's third occurrence loses for the player who caused it. It started on the uncapped game; the pre-registered switch rule (more than 5 % of self-play games truncated, three iterations in a row) fired, so the owner switched (`docs/experiments/v2-az-uncapped.md`). Train with `--rules lc1-2 --features mover-relative-repetition`; the 1,000-ply safety limit stays (truncation is never a draw) and `train` stops by itself if the switch rule fires again. The round-1 variants remain in the engine: LC1 (repetition loss), LC2 (hard move cap: the player to move at the cap loses), LC3 (soft cap with draws).
 - Training artifacts go in `models/` (gitignored). 8 GB RAM M2 Mac — keep neural nets small.
 - The WASM shim at `app/src/engine/` translates between Rust serde format (snake_case, "White"/"Red") and old TS format (camelCase, "W"/"R"). Do not modify the Rust serialization to match TS — the shim handles it.

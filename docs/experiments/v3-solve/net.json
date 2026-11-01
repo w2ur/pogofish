@@ -1,0 +1,868 @@
+{
+  "clean": "no position of the game so far, the current one included, has occurred twice",
+  "clean_distinct": "clean positions counted once each (first encounter's ply sets the phase)",
+  "clean_positions": 7042,
+  "distinct_clean_positions": 2393,
+  "games": 400,
+  "greedy": "share of greedy's tied best moves (lc1-2 greedy: immediate win first, avoids an immediate loss) that keep the value",
+  "keeps_value": [
+    {
+      "keeps_value": {
+        "greedy": 0.12577571932518958,
+        "net": 0.8637661683184948,
+        "positions": 5953,
+        "random": 0.24283301657369852
+      },
+      "phase": "all plies",
+      "positions_filter": "all",
+      "value": "draw"
+    },
+    {
+      "keeps_value": {
+        "greedy": 0.11061272042943075,
+        "net": 0.8721928665785997,
+        "positions": 3028,
+        "random": 0.24805857224877803
+      },
+      "phase": "all plies",
+      "positions_filter": "clean",
+      "value": "draw"
+    },
+    {
+      "keeps_value": {
+        "greedy": 0.15755011086961304,
+        "net": 0.8091286307053942,
+        "positions": 723,
+        "random": 0.21134565089866217
+      },
+      "phase": "all plies",
+      "positions_filter": "clean, distinct",
+      "value": "draw"
+    },
+    {
+      "keeps_value": {
+        "greedy": 0.10470233864690145,
+        "net": 0.8857142857142857,
+        "positions": 2345,
+        "random": 0.25465503301319153
+      },
+      "phase": "plies 0-9",
+      "positions_filter": "all",
+      "value": "draw"
+    },
+    {
+      "keeps_value": {
+        "greedy": 0.1052662037037036,
+        "net": 0.8858506944444444,
+        "positions": 2304,
+        "random": 0.25446189152525955
+      },
+      "phase": "plies 0-9",
+      "positions_filter": "clean",
+      "value": "draw"
+    },
+    {
+      "keeps_value": {
+        "greedy": 0.18541877744005408,
+        "net": 0.8148936170212766,
+        "positions": 470,
+        "random": 0.2160464347734623
+      },
+      "phase": "plies 0-9",
+      "positions_filter": "clean, distinct",
+      "value": "draw"
+    },
+    {
+      "keeps_value": {
+        "greedy": 0.1268579976869315,
+        "net": 0.8331573389651531,
+        "positions": 947,
+        "random": 0.226413201568737
+      },
+      "phase": "plies 10-19",
+      "positions_filter": "all",
+      "value": "draw"
+    },
+    {
+      "keeps_value": {
+        "greedy": 0.11432280731222531,
+        "net": 0.8112874779541446,
+        "positions": 567,
+        "random": 0.2251465369155432
+      },
+      "phase": "plies 10-19",
+      "positions_filter": "clean",
+      "value": "draw"
+    },
+    {
+      "keeps_value": {
+        "greedy": 0.09900609935332154,
+        "net": 0.8055555555555556,
+        "positions": 216,
+        "random": 0.2061470436900434
+      },
+      "phase": "plies 10-19",
+      "positions_filter": "clean, distinct",
+      "value": "draw"
+    },
+    {
+      "keeps_value": {
+        "greedy": 0.13512533735876728,
+        "net": 0.8948126801152738,
+        "positions": 694,
+        "random": 0.24721031270636126
+      },
+      "phase": "plies 20-29",
+      "positions_filter": "all",
+      "value": "draw"
+    },
+    {
+      "keeps_value": {
+        "greedy": 0.1642800045677743,
+        "net": 0.8848920863309353,
+        "positions": 139,
+        "random": 0.23429497003900637
+      },
+      "phase": "plies 20-29",
+      "positions_filter": "clean",
+      "value": "draw"
+    },
+    {
+      "keeps_value": {
+        "greedy": 0.15361678004535148,
+        "net": 0.7714285714285715,
+        "positions": 35,
+        "random": 0.1878737635405039
+      },
+      "phase": "plies 20-29",
+      "positions_filter": "clean, distinct",
+      "value": "draw"
+    },
+    {
+      "keeps_value": {
+        "greedy": 0.14707898580547293,
+        "net": 0.8413828164717845,
+        "positions": 1967,
+        "random": 0.2350999676377911
+      },
+      "phase": "plies 30+",
+      "positions_filter": "all",
+      "value": "draw"
+    },
+    {
+      "keeps_value": {
+        "greedy": 0.263668430335097,
+        "net": 0.9444444444444444,
+        "positions": 18,
+        "random": 0.25644841269841273
+      },
+      "phase": "plies 30+",
+      "positions_filter": "clean",
+      "value": "draw"
+    },
+    {
+      "keeps_value": {
+        "greedy": 0.0,
+        "net": 0.5,
+        "positions": 2,
+        "random": 0.07886904761904762
+      },
+      "phase": "plies 30+",
+      "positions_filter": "clean, distinct",
+      "value": "draw"
+    },
+    {
+      "keeps_value": {
+        "greedy": 0.514775645555573,
+        "net": 0.728657799274486,
+        "positions": 4135,
+        "random": 0.2882080569477243
+      },
+      "phase": "all plies",
+      "positions_filter": "all",
+      "value": "win"
+    },
+    {
+      "keeps_value": {
+        "greedy": 0.5630642375144441,
+        "net": 0.7871369294605809,
+        "positions": 2410,
+        "random": 0.3125397750612662
+      },
+      "phase": "all plies",
+      "positions_filter": "clean",
+      "value": "win"
+    },
+    {
+      "keeps_value": {
+        "greedy": 0.6572682556963991,
+        "net": 0.8766467065868263,
+        "positions": 1670,
+        "random": 0.3581320994062888
+      },
+      "phase": "all plies",
+      "positions_filter": "clean, distinct",
+      "value": "win"
+    },
+    {
+      "keeps_value": {
+        "greedy": 0.42183285594939757,
+        "net": 0.6710526315789473,
+        "positions": 1064,
+        "random": 0.21711624071046867
+      },
+      "phase": "plies 0-9",
+      "positions_filter": "all",
+      "value": "win"
+    },
+    {
+      "keeps_value": {
+        "greedy": 0.4231616147886369,
+        "net": 0.6726926736441484,
+        "positions": 1051,
+        "random": 0.21818135891580764
+      },
+      "phase": "plies 0-9",
+      "positions_filter": "clean",
+      "value": "win"
+    },
+    {
+      "keeps_value": {
+        "greedy": 0.5538213693437573,
+        "net": 0.8194029850746268,
+        "positions": 670,
+        "random": 0.27792189030887066
+      },
+      "phase": "plies 0-9",
+      "positions_filter": "clean, distinct",
+      "value": "win"
+    },
+    {
+      "keeps_value": {
+        "greedy": 0.5991121532788203,
+        "net": 0.8178506375227687,
+        "positions": 1098,
+        "random": 0.3493494104242949
+      },
+      "phase": "plies 10-19",
+      "positions_filter": "all",
+      "value": "win"
+    },
+    {
+      "keeps_value": {
+        "greedy": 0.6324225750251669,
+        "net": 0.8444924406047516,
+        "positions": 926,
+        "random": 0.3626077403572415
+      },
+      "phase": "plies 10-19",
+      "positions_filter": "clean",
+      "value": "win"
+    },
+    {
+      "keeps_value": {
+        "greedy": 0.704880600197223,
+        "net": 0.9050131926121372,
+        "positions": 758,
+        "random": 0.40060776810889503
+      },
+      "phase": "plies 10-19",
+      "positions_filter": "clean, distinct",
+      "value": "win"
+    },
+    {
+      "keeps_value": {
+        "greedy": 0.59562617517163,
+        "net": 0.8277511961722488,
+        "positions": 627,
+        "random": 0.3425082546965787
+      },
+      "phase": "plies 20-29",
+      "positions_filter": "all",
+      "value": "win"
+    },
+    {
+      "keeps_value": {
+        "greedy": 0.7202522675736959,
+        "net": 0.922077922077922,
+        "positions": 308,
+        "random": 0.39485765235859616
+      },
+      "phase": "plies 20-29",
+      "positions_filter": "clean",
+      "value": "win"
+    },
+    {
+      "keeps_value": {
+        "greedy": 0.7912173511379863,
+        "net": 0.9365079365079365,
+        "positions": 189,
+        "random": 0.4440916107013822
+      },
+      "phase": "plies 20-29",
+      "positions_filter": "clean, distinct",
+      "value": "win"
+    },
+    {
+      "keeps_value": {
+        "greedy": 0.48178631464292737,
+        "net": 0.6552748885586924,
+        "positions": 1346,
+        "random": 0.2692349977877234
+      },
+      "phase": "plies 30+",
+      "positions_filter": "all",
+      "value": "win"
+    },
+    {
+      "keeps_value": {
+        "greedy": 0.838247619047619,
+        "net": 0.992,
+        "positions": 125,
+        "random": 0.5321706014390856
+      },
+      "phase": "plies 30+",
+      "positions_filter": "clean",
+      "value": "win"
+    },
+    {
+      "keeps_value": {
+        "greedy": 0.8063791554357592,
+        "net": 0.9811320754716981,
+        "positions": 53,
+        "random": 0.45809314815956165
+      },
+      "phase": "plies 30+",
+      "positions_filter": "clean, distinct",
+      "value": "win"
+    },
+    {
+      "keeps_value": {
+        "greedy": 0.28522404356811587,
+        "net": 0.8083862014274386,
+        "positions": 10088,
+        "random": 0.26143192537094456
+      },
+      "phase": "all plies",
+      "positions_filter": "all",
+      "value": "win or draw"
+    },
+    {
+      "keeps_value": {
+        "greedy": 0.3111291154597515,
+        "net": 0.8344979771974991,
+        "positions": 5438,
+        "random": 0.2766351994606357
+      },
+      "phase": "all plies",
+      "positions_filter": "clean",
+      "value": "win or draw"
+    },
+    {
+      "keeps_value": {
+        "greedy": 0.5062878049192296,
+        "net": 0.856247388215629,
+        "positions": 2393,
+        "random": 0.3137833312194876
+      },
+      "phase": "all plies",
+      "positions_filter": "clean, distinct",
+      "value": "win or draw"
+    },
+    {
+      "keeps_value": {
+        "greedy": 0.20368352679881005,
+        "net": 0.818715165737753,
+        "positions": 3409,
+        "random": 0.2429386132390346
+      },
+      "phase": "plies 0-9",
+      "positions_filter": "all",
+      "value": "win or draw"
+    },
+    {
+      "keeps_value": {
+        "greedy": 0.20485132353984828,
+        "net": 0.8190760059612519,
+        "positions": 3355,
+        "random": 0.24309651454387718
+      },
+      "phase": "plies 0-9",
+      "positions_filter": "clean",
+      "value": "win or draw"
+    },
+    {
+      "keeps_value": {
+        "greedy": 0.4019360902255637,
+        "net": 0.8175438596491228,
+        "positions": 1140,
+        "random": 0.2524118340793602
+      },
+      "phase": "plies 0-9",
+      "positions_filter": "clean, distinct",
+      "value": "win or draw"
+    },
+    {
+      "keeps_value": {
+        "greedy": 0.3804203756037491,
+        "net": 0.8249388753056235,
+        "positions": 2045,
+        "random": 0.29242002666575395
+      },
+      "phase": "plies 10-19",
+      "positions_filter": "all",
+      "value": "win or draw"
+    },
+    {
+      "keeps_value": {
+        "greedy": 0.4356626498455027,
+        "net": 0.8318821165438715,
+        "positions": 1493,
+        "random": 0.31040378700731325
+      },
+      "phase": "plies 10-19",
+      "positions_filter": "clean",
+      "value": "win or draw"
+    },
+    {
+      "keeps_value": {
+        "greedy": 0.5705182878950846,
+        "net": 0.8829568788501027,
+        "positions": 974,
+        "random": 0.35748300786816406
+      },
+      "phase": "plies 10-19",
+      "positions_filter": "clean, distinct",
+      "value": "win or draw"
+    },
+    {
+      "keeps_value": {
+        "greedy": 0.3536976502343645,
+        "net": 0.8629825889477668,
+        "positions": 1321,
+        "random": 0.29244256829142223
+      },
+      "phase": "plies 20-29",
+      "positions_filter": "all",
+      "value": "win or draw"
+    },
+    {
+      "keeps_value": {
+        "greedy": 0.5473660381378501,
+        "net": 0.9105145413870246,
+        "positions": 447,
+        "random": 0.34492876456794097
+      },
+      "phase": "plies 20-29",
+      "positions_filter": "clean",
+      "value": "win or draw"
+    },
+    {
+      "keeps_value": {
+        "greedy": 0.691592261904762,
+        "net": 0.9107142857142857,
+        "positions": 224,
+        "random": 0.404057572082495
+      },
+      "phase": "plies 20-29",
+      "positions_filter": "clean, distinct",
+      "value": "win or draw"
+    },
+    {
+      "keeps_value": {
+        "greedy": 0.2830633095649688,
+        "net": 0.7657712043465137,
+        "positions": 3313,
+        "random": 0.24896828957615458
+      },
+      "phase": "plies 30+",
+      "positions_filter": "all",
+      "value": "win or draw"
+    },
+    {
+      "keeps_value": {
+        "greedy": 0.7659229659229659,
+        "net": 0.986013986013986,
+        "positions": 143,
+        "random": 0.4974643119472527
+      },
+      "phase": "plies 30+",
+      "positions_filter": "clean",
+      "value": "win or draw"
+    },
+    {
+      "keeps_value": {
+        "greedy": 0.7770562770562771,
+        "net": 0.9636363636363636,
+        "positions": 55,
+        "random": 0.4443031808671793
+      },
+      "phase": "plies 30+",
+      "positions_filter": "clean, distinct",
+      "value": "win or draw"
+    }
+  ],
+  "net": "crates/cli/assets/az-lc1-s1.pfw",
+  "net_move_at_start": {
+    "keeps_the_draw": true,
+    "move": "c1-1-b1"
+  },
+  "net_move_evaluated": "most-visited move (played from ply 10 on; the first 10 plies play a sample)",
+  "positions": 12694,
+  "positions_by_uncapped_value": {
+    "draw": 5953,
+    "loss": 2606,
+    "win": 4135
+  },
+  "principles_on_net_game_positions": {
+    "all_moves": {
+      "positions": 1742,
+      "positions_with_winning_and_other_moves": 1713,
+      "rows": [
+        {
+          "direction": "up",
+          "equal": 8,
+          "feature": "top_diff",
+          "mean_difference_in_direction": 0.796098369960117,
+          "share_higher_among_unequal": 0.8750733137829912,
+          "winning_moves_higher": 1492,
+          "winning_moves_lower": 213
+        },
+        {
+          "direction": "up",
+          "equal": 21,
+          "feature": "own_max_height",
+          "mean_difference_in_direction": 1.4578616405285518,
+          "share_higher_among_unequal": 0.7801418439716312,
+          "winning_moves_higher": 1320,
+          "winning_moves_lower": 372
+        },
+        {
+          "direction": "down",
+          "equal": 21,
+          "feature": "opp_mobility",
+          "mean_difference_in_direction": 5.151104233156548,
+          "share_higher_among_unequal": 0.8717494089834515,
+          "winning_moves_higher": 1475,
+          "winning_moves_lower": 217
+        },
+        {
+          "direction": "down",
+          "equal": 68,
+          "feature": "own_exposed",
+          "mean_difference_in_direction": 0.24918013454134166,
+          "share_higher_among_unequal": 0.6194528875379939,
+          "winning_moves_higher": 1019,
+          "winning_moves_lower": 626
+        },
+        {
+          "direction": "down",
+          "equal": 320,
+          "feature": "opp_max_height",
+          "mean_difference_in_direction": 0.9957551034288881,
+          "share_higher_among_unequal": 0.7336683417085427,
+          "winning_moves_higher": 1022,
+          "winning_moves_lower": 371
+        },
+        {
+          "direction": "up",
+          "equal": 24,
+          "feature": "prisoners",
+          "mean_difference_in_direction": 1.564619549186565,
+          "share_higher_among_unequal": 0.8798105387803434,
+          "winning_moves_higher": 1486,
+          "winning_moves_lower": 203
+        },
+        {
+          "direction": "down",
+          "equal": 584,
+          "feature": "hostages",
+          "mean_difference_in_direction": 0.5992676503010328,
+          "share_higher_among_unequal": 0.7298494242692648,
+          "winning_moves_higher": 824,
+          "winning_moves_lower": 305
+        },
+        {
+          "direction": "up",
+          "equal": 490,
+          "feature": "opp_singletons",
+          "mean_difference_in_direction": -0.03445038043722081,
+          "share_higher_among_unequal": 0.49959116925592806,
+          "winning_moves_higher": 611,
+          "winning_moves_lower": 612
+        },
+        {
+          "direction": "up",
+          "equal": 6,
+          "feature": "own_mobility",
+          "mean_difference_in_direction": 3.339857492251818,
+          "share_higher_among_unequal": 0.8670181605155243,
+          "winning_moves_higher": 1480,
+          "winning_moves_lower": 227
+        },
+        {
+          "direction": "down",
+          "equal": 55,
+          "feature": "own_singletons",
+          "mean_difference_in_direction": 0.07283242945925579,
+          "share_higher_among_unequal": 0.6007237635705669,
+          "winning_moves_higher": 996,
+          "winning_moves_lower": 662
+        },
+        {
+          "direction": "down",
+          "equal": 57,
+          "feature": "opp_exposed",
+          "mean_difference_in_direction": 0.4318754609089918,
+          "share_higher_among_unequal": 0.8568840579710145,
+          "winning_moves_higher": 1419,
+          "winning_moves_lower": 237
+        },
+        {
+          "direction": "up",
+          "equal": 69,
+          "feature": "own_tall",
+          "mean_difference_in_direction": 0.3898282548066305,
+          "share_higher_among_unequal": 0.8619221411192214,
+          "winning_moves_higher": 1417,
+          "winning_moves_lower": 227
+        },
+        {
+          "direction": "down",
+          "equal": 1098,
+          "feature": "opp_win_now",
+          "mean_difference_in_direction": 0.10221946216677366,
+          "share_higher_among_unequal": 1.0,
+          "winning_moves_higher": 615,
+          "winning_moves_lower": 0
+        },
+        {
+          "direction": "down",
+          "equal": 133,
+          "feature": "own_tops",
+          "mean_difference_in_direction": -0.22336970402143788,
+          "share_higher_among_unequal": 0.3,
+          "winning_moves_higher": 474,
+          "winning_moves_lower": 1106
+        },
+        {
+          "direction": "down",
+          "equal": 68,
+          "feature": "corners",
+          "mean_difference_in_direction": -0.24178020962229113,
+          "share_higher_among_unequal": 0.4547112462006079,
+          "winning_moves_higher": 748,
+          "winning_moves_lower": 897
+        },
+        {
+          "direction": "up",
+          "equal": 220,
+          "feature": "own_solid",
+          "mean_difference_in_direction": -0.028730208433932692,
+          "share_higher_among_unequal": 0.5190890823844608,
+          "winning_moves_higher": 775,
+          "winning_moves_lower": 718
+        },
+        {
+          "direction": "down",
+          "equal": 17,
+          "feature": "centre",
+          "mean_difference_in_direction": -0.10415769663416094,
+          "share_higher_among_unequal": 0.5731132075471698,
+          "winning_moves_higher": 972,
+          "winning_moves_lower": 724
+        },
+        {
+          "direction": "up",
+          "equal": 864,
+          "feature": "my_win_now",
+          "mean_difference_in_direction": 0.1761766560795621,
+          "share_higher_among_unequal": 0.784452296819788,
+          "winning_moves_higher": 666,
+          "winning_moves_lower": 183
+        }
+      ]
+    },
+    "greedy_ties_only": {
+      "positions": 1742,
+      "positions_with_winning_and_other_moves": 588,
+      "rows": [
+        {
+          "direction": "up",
+          "equal": 588,
+          "feature": "top_diff",
+          "mean_difference_in_direction": 0.0,
+          "share_higher_among_unequal": 0.0,
+          "winning_moves_higher": 0,
+          "winning_moves_lower": 0
+        },
+        {
+          "direction": "up",
+          "equal": 69,
+          "feature": "own_max_height",
+          "mean_difference_in_direction": 0.6918853255587954,
+          "share_higher_among_unequal": 0.6396917148362236,
+          "winning_moves_higher": 332,
+          "winning_moves_lower": 187
+        },
+        {
+          "direction": "down",
+          "equal": 56,
+          "feature": "opp_mobility",
+          "mean_difference_in_direction": 2.310048185941042,
+          "share_higher_among_unequal": 0.6842105263157895,
+          "winning_moves_higher": 364,
+          "winning_moves_lower": 168
+        },
+        {
+          "direction": "down",
+          "equal": 136,
+          "feature": "own_exposed",
+          "mean_difference_in_direction": 0.5031975488608142,
+          "share_higher_among_unequal": 0.7013274336283186,
+          "winning_moves_higher": 317,
+          "winning_moves_lower": 135
+        },
+        {
+          "direction": "down",
+          "equal": 200,
+          "feature": "opp_max_height",
+          "mean_difference_in_direction": 0.48642290249433107,
+          "share_higher_among_unequal": 0.6623711340206185,
+          "winning_moves_higher": 257,
+          "winning_moves_lower": 131
+        },
+        {
+          "direction": "up",
+          "equal": 111,
+          "feature": "prisoners",
+          "mean_difference_in_direction": 0.7708272594752185,
+          "share_higher_among_unequal": 0.7190775681341719,
+          "winning_moves_higher": 343,
+          "winning_moves_lower": 134
+        },
+        {
+          "direction": "down",
+          "equal": 267,
+          "feature": "hostages",
+          "mean_difference_in_direction": 0.0736192095885973,
+          "share_higher_among_unequal": 0.5202492211838006,
+          "winning_moves_higher": 167,
+          "winning_moves_lower": 154
+        },
+        {
+          "direction": "up",
+          "equal": 294,
+          "feature": "opp_singletons",
+          "mean_difference_in_direction": 0.13667597991577593,
+          "share_higher_among_unequal": 0.6836734693877551,
+          "winning_moves_higher": 201,
+          "winning_moves_lower": 93
+        },
+        {
+          "direction": "up",
+          "equal": 79,
+          "feature": "own_mobility",
+          "mean_difference_in_direction": 1.4391095724003882,
+          "share_higher_among_unequal": 0.7426326129666012,
+          "winning_moves_higher": 378,
+          "winning_moves_lower": 131
+        },
+        {
+          "direction": "down",
+          "equal": 221,
+          "feature": "own_singletons",
+          "mean_difference_in_direction": 0.3027588813303096,
+          "share_higher_among_unequal": 0.7084468664850136,
+          "winning_moves_higher": 260,
+          "winning_moves_lower": 107
+        },
+        {
+          "direction": "down",
+          "equal": 365,
+          "feature": "opp_exposed",
+          "mean_difference_in_direction": 0.04674508692365835,
+          "share_higher_among_unequal": 0.6143497757847534,
+          "winning_moves_higher": 137,
+          "winning_moves_lower": 86
+        },
+        {
+          "direction": "up",
+          "equal": 250,
+          "feature": "own_tall",
+          "mean_difference_in_direction": 0.18281435590109055,
+          "share_higher_among_unequal": 0.6715976331360947,
+          "winning_moves_higher": 227,
+          "winning_moves_lower": 111
+        },
+        {
+          "direction": "down",
+          "equal": 569,
+          "feature": "opp_win_now",
+          "mean_difference_in_direction": 0.026077097505668934,
+          "share_higher_among_unequal": 1.0,
+          "winning_moves_higher": 19,
+          "winning_moves_lower": 0
+        },
+        {
+          "direction": "down",
+          "equal": 344,
+          "feature": "own_tops",
+          "mean_difference_in_direction": 0.11297781017168772,
+          "share_higher_among_unequal": 0.6926229508196722,
+          "winning_moves_higher": 169,
+          "winning_moves_lower": 75
+        },
+        {
+          "direction": "down",
+          "equal": 115,
+          "feature": "corners",
+          "mean_difference_in_direction": 0.28007234639887707,
+          "share_higher_among_unequal": 0.6617336152219874,
+          "winning_moves_higher": 313,
+          "winning_moves_lower": 160
+        },
+        {
+          "direction": "up",
+          "equal": 316,
+          "feature": "own_solid",
+          "mean_difference_in_direction": 0.04222073750134975,
+          "share_higher_among_unequal": 0.6066176470588235,
+          "winning_moves_higher": 165,
+          "winning_moves_lower": 107
+        },
+        {
+          "direction": "down",
+          "equal": 197,
+          "feature": "centre",
+          "mean_difference_in_direction": -0.15785889752726487,
+          "share_higher_among_unequal": 0.4833759590792839,
+          "winning_moves_higher": 189,
+          "winning_moves_lower": 202
+        },
+        {
+          "direction": "up",
+          "equal": 355,
+          "feature": "my_win_now",
+          "mean_difference_in_direction": 0.021438694525429212,
+          "share_higher_among_unequal": 0.5150214592274678,
+          "winning_moves_higher": 120,
+          "winning_moves_lower": 113
+        }
+      ]
+    }
+  },
+  "random": "share of all legal moves that keep the value",
+  "rules": "lc1-2",
+  "sampled_plies_at_temperature_1": 10,
+  "seconds": 57.98365075,
+  "seed": 1,
+  "simulations": 100,
+  "unfinished_games": 0,
+  "value_at_ply_10": {
+    "draw": 99,
+    "mover loses": 99,
+    "mover wins": 153
+  },
+  "white_wins": 222
+}

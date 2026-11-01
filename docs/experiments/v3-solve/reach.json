@@ -1,0 +1,33 @@
+{
+  "bfs_seconds": 56.874257334,
+  "colour_sequences": 924,
+  "compositions": 125970,
+  "peak_rss_mib": 86.015625,
+  "positions_total": 232792560,
+  "reachable": 230015628,
+  "reachable_by_status": {
+    "live": 227243016,
+    "lost": 2772612,
+    "over": 0
+  },
+  "reachable_first_seen_at_ply": [
+    1,
+    16,
+    240,
+    2579,
+    26706,
+    201608,
+    1372735,
+    6493763,
+    22725973,
+    50327416,
+    68847740,
+    53976921,
+    21775627,
+    4003051,
+    258792,
+    2460
+  ],
+  "seconds": 59.250699708,
+  "threads": 4
+}

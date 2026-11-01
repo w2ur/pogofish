@@ -1,0 +1,46 @@
+{
+  "by_value": {
+    "Draw": {
+      "agree": 20,
+      "sampled": 20
+    },
+    "Loss(0)": {
+      "agree": 20,
+      "sampled": 20
+    },
+    "Loss(2)": {
+      "agree": 0,
+      "sampled": 20
+    },
+    "Loss(4)": {
+      "agree": 0,
+      "sampled": 20
+    },
+    "Loss(6)": {
+      "agree": 0,
+      "sampled": 20
+    },
+    "Win(1)": {
+      "agree": 20,
+      "sampled": 20
+    },
+    "Win(3)": {
+      "agree": 0,
+      "sampled": 20
+    },
+    "Win(5)": {
+      "agree": 0,
+      "sampled": 20
+    },
+    "Win(7)": {
+      "agree": 0,
+      "sampled": 20
+    }
+  },
+  "claimed_distance_shortened_by": 2,
+  "method": "plain recursive negamax on the engine (legal_moves/apply_move), no table, no transposition table; win in d: forced win within d plies and not within d-2; loss in d: forced loss within d and not within d-2; draw: no forced result within 5 plies",
+  "nodes": 262747,
+  "peak_rss_mib": 202.734375,
+  "seconds": 0.474617541,
+  "threads": 4
+}
