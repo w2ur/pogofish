@@ -259,7 +259,7 @@ Sources: `v2-results.md` § Search depth (not pre-registered; added after the ow
 
 | ID | Figure | Value | Source |
 |---|---|---|---|
-| M1 | Owner games played | **pending**: none recorded, and the table is empty | `v2-human-games.md` (Status: waiting for the owner) |
+| M1 | Owner games played | **dropped** (2026-11-01): none played | `v2-human-games.md` (Status: dropped by the owner) |
 | M2 | Owner's report before criterion 4 | lost every game at "normal" (no count given) | `v2-results.md` § Search depth, heading |
 
 ## N. Round-1 figures (v1: evaluation unreliable; wall-clock figures only)
@@ -315,7 +315,7 @@ Round-2 failures, for honesty:
 - **Criterion 2 as "met".** The "rises" test failed on all seeds and stays failed. The explanation for it (anchor distance; a difference needs its own interval) was written after the result was seen (`v2-results.md` § Criterion 2).
 - **"The repetition feature has no effect."** The audit flagged this as an overstatement. Say instead: no difference detected head to head (0 ± 16 Elo), and an unresolved 30–75 Elo ladder gap in the feature's favour (`v2-results.md` § Ablation). "Third occurrences are rare, so the feature is almost always zero" is untested.
 - **"The absolute-encoding AZ run stayed short because it is weaker"**: labelled "a likely reason, not tested" (`v2-az-uncapped.md`).
-- **Strength against people.** Criterion 4 is pending (M1). Games won with hints or by replaying a known line say nothing about unaided play (`v2-results.md` § Search depth).
+- **Strength against people.** Criterion 4 was dropped (M1). Games won with hints or by replaying a known line say nothing about unaided play (`v2-results.md` § Search depth).
 - **The six start-position depth games (L4) as a strength estimate.** They are fixed deterministic games (`v2-results.md`).
 - **Anything about the owner's M2 for round 2.** Every round-2 number comes from the cloud Xeon (`v2-results.md`). The 670 MiB full-buffer RSS (F7) and the 2.7 GB four-run total (`v2-az-run.md`) are **extrapolations**. The run-time budgets (E7, F8) and the LC2-30 variant times (N10) are projections or estimates.
 - **Comparisons between uncapped runs and `lc1-2` runs** (`v2-ruleset.md` § Decision; `v2-results.md`).
@@ -355,6 +355,6 @@ Round-2 failures, for honesty:
 
 - **No CI:** every `v2-measure.json` figure except the White-win shares (Wilson intervals in the md only); the seed-spread ranges (I1–I5); the ablation ladder gaps (J6–J7); the colour-balance ranges (K3–K6); CLI think times (L7); all pilot and run-cost figures; TD diagnostics (D2, D21, D22); the uncapped AZ truncation table and its in-training checks (E8–E14).
 - **In the md only, with no raw JSON:** the TD first attempt and both sweeps (D1–D7); the TD value diagnostics (D2, D21, D22); CLI think times (L7); the start-position depth games (L4, code in `depth_probe.rs`, no output file); the uncapped AZ run figures (E8–E15).
-- **Not done or not recorded:** criterion 4 (human games); the export max-difference figure (L9); the clean-machine install (plan 6.3).
+- **Not done or not recorded:** criterion 4 (human games, dropped by the owner); the export max-difference figure (L9); the clean-machine install (plan 6.3).
 - **Web parity (plan 6.4), done 2026-09-28:** the site's lc1-2 ONNX net vs the pure-Rust net, 100 lc1-2 positions (33 repeated once), largest difference over logits and values 1.79e-7 (limit 1e-5). Printed by `app/src/ai/parity.test.ts`, not stored in a file; commit `1a7fe6c`. The site's LC3-29 net is still round 1.
 - **Unknown sample size:** D22 ("67 %"), L7.

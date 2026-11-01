@@ -3,8 +3,8 @@
 Plan Phase 5, criterion 4 (pre-registered): the owner plays at least 10 games in the
 terminal game and writes down what the agent does that surprised them.
 
-**Status: waiting for the owner.** This page is the owner's to fill in; the table and
-headings below are only a suggested shape.
+**Status: dropped by the owner (2026-11-01).** No game was played; the table below stays
+empty and nothing here is a result.
 
 ## How to play
 

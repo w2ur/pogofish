@@ -14,7 +14,7 @@ loses for the player whose move produced it. Background: `v2-ruleset.md`.
 | 1. Final net beats random, greedy, the TD agent and its own 10 % checkpoint, each with CI lower bound > 50 % over ≥ 400 games | **Met on all three seeds** |
 | 2. The Elo curve over checkpoints rises and plateaus rather than oscillating | **Not met as pre-registered.** Plateau test passed; the "rises" test failed on every seed (see below). The owner accepted this verdict as it stands (2026-09-29); it is not re-tested |
 | 3. Reproducibility: all three seeds satisfy 1 | **Met.** Score against greedy 0.855–0.887 |
-| 4. The owner plays ≥ 10 games in the CLI and writes down what surprised them | **Pending the owner** (hard stop) |
+| 4. The owner plays ≥ 10 games in the CLI and writes down what surprised them | **Dropped by the owner** (2026-11-01): not played, so no human check exists |
 
 ## Training
 
@@ -172,7 +172,7 @@ says nothing about unaided play; such games should be marked as such.
 
 ## What these results do not show
 
-- Strength against people. Criterion 4 is the only human check, and it is pending.
+- Strength against people. Criterion 4 was the only human check, and it was dropped (2026-11-01).
 - Anything about the uncapped game: those runs were stopped by the switch rule
   (`v2-az-uncapped.md`) and are not compared with these.
 - Anything about the owner's M2: every number here is from the cloud machine.

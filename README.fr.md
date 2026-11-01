@@ -19,7 +19,7 @@ La question que je voulais poser était simple, presque naïve : une machine qui
 
 Un AlphaZero écrit en Rust qui apprend seul le Pogo, un jeu de plateau à neuf cases ; une arène qui le mesure sur des ouvertures tirées au hasard, couleurs échangées, avec des intervalles de confiance à 95 % ; et un jeu en terminal qui fait jouer le réseau entraîné, avec une inférence en Rust pur.
 
-Contre un joueur glouton, le réseau du second tour obtient entre 0,855 et 0,887 sur 400 parties selon la graine d’entraînement (trois graines). Des quatre critères fixés d’avance, deux sont atteints, un ne l’est pas tel qu’il était écrit, et le quatrième (dix parties jouées à la main) est en attente : [`docs/experiments/v2-results.md`](docs/experiments/v2-results.md), en anglais. L’évaluation du premier tour ne tenait pas : [`docs/experiments/v1-verdict.md`](docs/experiments/v1-verdict.md).
+Contre un joueur glouton, le réseau du second tour obtient entre 0,855 et 0,887 sur 400 parties selon la graine d’entraînement (trois graines). Des quatre critères fixés d’avance, deux sont atteints, un ne l’est pas tel qu’il était écrit, et le quatrième (dix parties jouées à la main) a été abandonné : [`docs/experiments/v2-results.md`](docs/experiments/v2-results.md), en anglais. L’évaluation du premier tour ne tenait pas : [`docs/experiments/v1-verdict.md`](docs/experiments/v1-verdict.md).
 
 ## Liens
 
