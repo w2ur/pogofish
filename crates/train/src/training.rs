@@ -422,6 +422,7 @@ pub fn train(cfg: &TrainConfig, dir: &Path) -> anyhow::Result<TrainStop> {
 
         // --- Self-play with the latest net ---
         let (mut truncated, mut plies, mut white_wins) = (0u32, 0u64, 0u32);
+        let (mut draws, mut by_variant_rule) = (0u32, 0u32);
         for _ in 0..cfg.games_per_iteration {
             if crate::interrupt::requested() {
                 return Ok(TrainStop::Interrupted);
@@ -430,8 +431,10 @@ pub fn train(cfg: &TrainConfig, dir: &Path) -> anyhow::Result<TrainStop> {
             match game.end {
                 GameEnd::Truncated => truncated += 1,
                 GameEnd::Terminated(o) if o.winner() == Some(Color::White) => white_wins += 1,
+                GameEnd::Terminated(o) if o.winner().is_none() => draws += 1,
                 GameEnd::Terminated(_) => {}
             }
+            by_variant_rule += game.by_variant_rule as u32;
             plies += game.examples.len() as u64;
             for ex in game.examples {
                 let t = state_to_tensor(&ex.position);
@@ -504,6 +507,8 @@ pub fn train(cfg: &TrainConfig, dir: &Path) -> anyhow::Result<TrainStop> {
             "games_played": state.games_played,
             "truncated_games": truncated,
             "white_wins": white_wins,
+            "draws": draws,
+            "variant_rule_endings": by_variant_rule,
             "mean_plies": plies as f64 / n,
             "buffer_positions": buffer.len(),
             "policy_loss": if steps > 0 { p_loss / steps as f64 } else { f64::NAN },

@@ -6,7 +6,9 @@
 
 use crate::encoding::{legal_move_mask, move_to_index, ACTION_SIZE};
 use crate::net::AzNet;
-use pogofish_engine::{apply_move_under, is_terminal, Color, GameState, Move, Outcome, RuleSet};
+use pogofish_engine::{
+    apply_move_under, base_outcome, is_terminal, Color, GameState, Move, Outcome, RuleSet,
+};
 pub use pogofish_infer::mcts::visit_distribution;
 use pogofish_infer::mcts::{sample, search, Evaluator, MctsConfig};
 use pogofish_search::rng::SplitMix64;
@@ -62,6 +64,9 @@ pub enum GameEnd {
 /// A finished self-play game: how it ended and one example per position.
 pub struct SelfPlayGame {
     pub end: GameEnd,
+    /// True when the variant rule (a repetition, a cap) ended the game, not
+    /// the base rule. False for a base win and for a truncation.
+    pub by_variant_rule: bool,
     pub examples: Vec<TrainingExample>,
 }
 
@@ -194,7 +199,12 @@ pub fn play_game_from(
             },
         })
         .collect();
-    SelfPlayGame { end, examples }
+    let by_variant_rule = matches!(end, GameEnd::Terminated(_)) && base_outcome(&state).is_none();
+    SelfPlayGame {
+        end,
+        by_variant_rule,
+        examples,
+    }
 }
 
 #[cfg(test)]
