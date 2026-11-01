@@ -10,7 +10,7 @@ Pogofish is a browser-based Pogo board game with AI opponents trained via AlphaZ
 - Rust 1.79+ (stable toolchain)
 - `pogofish-engine` — Game rules, state, legal moves, rulesets (`Uncapped`, LC1/LC2/LC3; `RuleSet` parses and prints `uncapped`, `lc1-N`, …)
 - `pogofish-infer` — Pure-Rust inference (no libtorch): input features, action indexing, MLP forward pass reading exported `.pfw` weights, and the neural MCTS shared with training (`Evaluator` trait)
-- `pogofish-search` — Minimax (alpha-beta + TT), MCTS (PUCT), checkpointer, scripted `random`/`greedy` players (seeded, no dependency)
+- `pogofish-search` — Minimax (alpha-beta + TT), MCTS (PUCT), checkpointer, scripted `random`/`greedy` players (seeded, no dependency), the retrograde solver of the uncapped game (`retro.rs`, binary `retro`)
 - `pogofish-train` — AlphaZero training (tch-rs/libtorch, no gating, exact resume), self-play, TD(λ) value learning (`td_train`), `arena` evaluation binary
 - `pogofish-cli` — Terminal game (crossterm) against the bundled net: colour, level (simulations), hint, the AI's estimate, undo, saved game records; game logic in `session.rs`, key handling tested headless in `app.rs`
 - `pogofish-wasm` — wasm-bindgen wrappers for browser use
@@ -106,6 +106,18 @@ DYLD_LIBRARY_PATH=$(find target/release/build -path "*/torch-sys-*/out/libtorch/
 # uninterrupted one (weights, momentum, replay buffer, counters, generator).
 # No gating: every --checkpoint-every checkpoint is kept, to be rated with arena/ladder.
 ```
+
+### Solving the uncapped game (retrograde)
+```bash
+# Table: one u16 per position (466 MB), in models/v3-solve/ (gitignored). See docs/experiments/v3-solve.md.
+R=./target/release/retro; D=models/v3-solve; O=docs/experiments/v3-solve
+$R reach $D                  # reachable set from the start
+$R solve $D                  # resumable: Ctrl+C saves at the next level, rerun to resume
+$R check $D --out $O/check.json      # consistency, symmetry, negamax, corrupted entries
+$R answers $D --out $O/answers.json  # start value, first moves, counts, structure, principles, puzzles
+cargo run --release -p pogofish-infer --example retro_net -- $D --games 400 --seed 1 --out $O/net.json
+```
+The round-1 `solve` binary (depth-limited minimax) is invalidated (`v1-verdict.md`); use `retro`.
 
 ### Exporting a net for the terminal game
 ```bash
