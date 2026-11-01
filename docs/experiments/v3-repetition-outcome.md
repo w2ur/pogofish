@@ -189,3 +189,140 @@ the rule.
 
 Raw reports, per-run `config.json` and `metrics.jsonl`, and the computed summary go
 in `v3-repetition-outcome/`.
+
+## Deviations (added 2026-11-02, after the runs)
+
+None touches a criterion, a threshold or the decision rule.
+
+- **Another job shared the machine.** An exact solver of the uncapped game
+  (`retro`, 4 threads, `nice 10`, capped near 3 GB) started during the first batch
+  and ran through the second. The `lc1d-2` evaluation also ran during the second
+  batch. Timings below are therefore conservative, and the two batches are not
+  comparable with each other in speed.
+- **Evaluation runner.** The commands above are run by `scripts/v3-eval.sh`; the
+  analysis by `tools/repetition_outcome.py` (committed during the first batch, before
+  any arena result existed). The first two attempts of the `lc1d-2` evaluation
+  failed before playing a game (libtorch not found, then a quoting error in the
+  script); the third ran. Nothing was discarded.
+
+## Results (added 2026-11-02)
+
+Raw data in `v3-repetition-outcome/`: `runs/*/config.json` and `metrics.jsonl`,
+`arena/{G,A,D}-*.json`, and `summary.json` (written by
+`tools/repetition_outcome.py docs/experiments/v3-repetition-outcome --out …`).
+
+### Verdict
+
+**`lc1-2` stays.** Two of the four conditions fail: games under `lc1d-2` are not
+decisive from the start position (condition 2), and the repetition rule of `lc1-2`
+rarely decides a game (condition 4 fails; criterion (a) holds for `lc1-2`). By the
+wording fixed above, the draw variant is **rejected on its own merits**: condition 2
+alone would be enough.
+
+| Condition | Result |
+|---|---|
+| 1. Skill gradient holds under `lc1d-2` | **Met.** 0.787–0.820, every lower bound ≥ 0.754 |
+| 2. Games stay decisive under `lc1d-2` (D ≤ 10 % upper bound, samples A and S) | **Not met.** A: 4.8 % [3.8, 6.2] passes; S: **15.1 % [13.8, 16.4]** fails |
+| 3. Colour balance not measurably worse under `lc1d-2` | **Met.** Intervals overlap in both samples |
+| 4. `lc1-2`'s repetition rule decides measurably often (R lower bound > 5 %) | **Not met.** A: 3.6 % [2.7, 4.8]; S: 1.8 % [1.4, 2.3] |
+
+### Training
+
+Six runs of 200 iterations, none truncated a game, none stopped by the switch rule.
+
+| Run | Training time (sum of iterations) | Peak RSS | Mean plies, last iteration | vs greedy, iteration 200 (training check) | Repetition endings, all 10,000 games |
+|---|---|---|---|---|---|
+| `az-lc1d-s1` | 19.7 min | 438 MiB | 21.6 | 0.885 | 1,139 (draws) |
+| `az-lc1d-s2` | 19.3 min | 438 MiB | 23.1 | 0.865 | 643 (draws) |
+| `az-lc1d-s3` | 19.1 min | 491 MiB | 19.9 | 0.870 | 544 (draws) |
+| `az-lc1-m2-s1` | 38.2 min | 471 MiB | 26.4 | 0.840 | 89 (wins) |
+| `az-lc1-m2-s2` | 38.6 min | 501 MiB | 26.7 | 0.850 | 40 (wins) |
+| `az-lc1-m2-s3` | 38.8 min | 607 MiB | 26.0 | 0.830 | 98 (wins) |
+
+Wall time (measured): 22.7 min for the three `lc1d-2` runs in parallel, 43.6 min for
+the three `lc1-2` runs (with the solver and the `lc1d-2` evaluation on the same
+machine). The pilot's extrapolation, 11–21 minutes per run alone, held for the first
+batch and not for the second; peak RSS stayed below the projected 640 MiB.
+Evaluation: 7.2 min for `lc1d-2` (during the second batch), 2.0 min for `lc1-2`
+(alone).
+
+Repetition endings per 40 iterations (2,000 games) grow as the nets learn, much
+faster under the draw rule:
+
+| Iterations | 1–40 | 41–80 | 81–120 | 121–160 | 161–200 |
+|---|---|---|---|---|---|
+| `lc1d-2` s1 / s2 / s3 (draws) | 23 / 14 / 24 | 83 / 39 / 59 | 298 / 94 / 103 | 365 / 187 / 171 | 370 / 309 / 187 |
+| `lc1-2` s1 / s2 / s3 (wins) | 1 / 0 / 0 | 6 / 1 / 9 | 19 / 7 / 17 | 28 / 19 / 30 | 35 / 13 / 42 |
+
+### (a) How often the repetition rule decides
+
+| Rule | Sample A (between final nets, 1,200 games) | Sample S (self-play 181–200, 3,000 games) | Rarely decides? |
+|---|---|---|---|
+| `lc1-2` | 43 — 3.6 % [2.7, 4.8] | 53 — 1.8 % [1.4, 2.3] | **Yes**, in both |
+| `lc1d-2` | 58 — 4.8 % [3.8, 6.2] | 452 — 15.1 % [13.8, 16.4] | **No**, in both |
+
+Per match in sample A: `lc1-2` 16, 19 and 8 of 400; `lc1d-2` 32, 13 and 13 of 400.
+Per run in sample S: `lc1-2` 23, 8, 22 of 1,000; `lc1d-2` 205, 165, 82 of 1,000.
+
+### (b) Skill gradient (final net vs its own iteration 20, 400 games)
+
+| Seed | `lc1d-2` | W–D–L | `lc1-2` | W–D–L |
+|---|---|---|---|---|
+| 1 | 0.812 [0.779, 0.846] | 324–2–74 | 0.785 [0.751, 0.819] | 314–0–86 |
+| 2 | 0.820 [0.787, 0.853] | 328–0–72 | 0.795 [0.761, 0.829] | 318–0–82 |
+| 3 | 0.787 [0.754, 0.821] | 312–6–82 | 0.790 [0.756, 0.824] | 316–0–84 |
+
+Holds under both rules. The `lc1-2` reruns land close to the cloud runs of round 2
+(0.772–0.792, `v2-results.md`).
+
+### (c) Draw rate
+
+`lc1-2`: no draw anywhere, as it must be. `lc1d-2`: 4.8 % [3.8, 6.2] between final
+nets after random openings (passes), 15.1 % [13.8, 16.4] in late self-play from the
+start position (fails); all three seeds are above 8 % there (20.5 %, 16.5 %, 8.2 %).
+Sample D, six fixed games from the start position: 2 draws of 6 under `lc1d-2`, none
+of 6 under `lc1-2` (one of those six ended by the repetition rule).
+
+### (d) Colour balance (White's score, draws ½)
+
+| Rule | Sample S (start position) | Sample A (after 4-ply openings) | Sample D (6 games) |
+|---|---|---|---|
+| `lc1-2` | 0.541 [0.523, 0.559] | 0.748 [0.724, 0.773] | White 2, Red 4 |
+| `lc1d-2` | 0.535 [0.519, 0.552] | 0.753 [0.729, 0.776] | White 0, draws 2, Red 4 |
+
+No measurable difference between the rules. Under both, White wins about three games
+in four between final nets after a random 4-ply opening, which is a stronger
+imbalance than round 2 reported against greedy and TD (0.59–0.66) and close to its
+ablation head-to-head (0.755).
+
+### (e) Where `lc1-2`'s wins come from
+
+Repetition wins are 3.6 % [2.7, 4.8] of decisive games in sample A and 1.8 %
+[1.4, 2.3] in sample S: base wins outnumber them by more than twenty to one, far
+from the 50 % "dominate" line. The parity test says nothing: in sample G the
+repetition rule ended one game per seed under `lc1-2` (and 2, 0 and 6 draws under
+`lc1d-2`), too few to compare with the 399 base-ended games.
+
+### What this does not show
+
+- **Indirect effects.** Only the games the rule *ended* are counted. A player forced
+  by `lc1-2` to leave a cycle, who then loses on the base rule, counts as a base win;
+  how much the threat of a repetition loss shapes play is not measured.
+- **Why the draw rule produces draws in self-play and fewer after openings.**
+  Written after the results, not tested: training noise (Dirichlet noise at every
+  root, temperature for 10 moves) and the start position may make cycles easier to
+  fall into than after a random opening; and under `lc1d-2` a side that is losing has
+  a reason to seek the cycle that it does not have under `lc1-2`. The rising trend
+  over training fits the second reading; it does not separate the two.
+- **Other repetition counts.** Only 2 was tested (owner's decision).
+- **Strength against people,** and anything beyond 10,000 self-play games per run.
+- **Independence.** Arena games share openings and nets; the per-game intervals of
+  samples A and S are somewhat too narrow. The verdict does not hang on a margin:
+  15.1 % against a 10 % ceiling, and 3.6 % (upper bound 4.8 %) against a 5 % floor.
+
+### Exported nets
+
+The final checkpoints were exported for the pure-Rust inference
+(`export_weights`, each within 8e-6 of its checkpoint on 100 positions), next to
+their runs: `models/az-lc1-m2-s{1,2,3}/final.pfw` and
+`models/az-lc1d-s{1,2,3}/final.pfw` (gitignored, like all of `models/`).
