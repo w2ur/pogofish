@@ -1,0 +1,3243 @@
+{
+  "combined": [
+    {
+      "ci95": [
+        0.6348049939861553,
+        0.6711950060138447
+      ],
+      "distinct_games": 1950,
+      "feature": null,
+      "k": null,
+      "player": "greedy+survivors-sum",
+      "report": {
+        "a": {
+          "draws": 0,
+          "losses": 694,
+          "unfinished": 0,
+          "wins": 1306
+        },
+        "a_as_red": {
+          "draws": 0,
+          "losses": 421,
+          "unfinished": 0,
+          "wins": 579
+        },
+        "a_as_white": {
+          "draws": 0,
+          "losses": 273,
+          "unfinished": 0,
+          "wins": 727
+        },
+        "ci95": [
+          0.6348049939861553,
+          0.6711950060138447
+        ],
+        "config": {
+          "max_plies": 1000,
+          "opening_plies": 4,
+          "pairs": 1000,
+          "rules": {
+            "LC1": {
+              "repetitions": 2
+            }
+          },
+          "seed": 303
+        },
+        "distinct_games": 1950,
+        "distinct_openings": 995,
+        "distinct_positions_after_opening": 17467,
+        "games": 2000,
+        "player_a": "greedy+survivors-sum",
+        "player_b": "greedy",
+        "score": 0.653,
+        "scored_pairs": 1000,
+        "significant": true,
+        "white_score": 0.574
+      },
+      "role": "combined survivors (sum)",
+      "score": 0.653,
+      "scored_pairs": 1000,
+      "seconds": 1.104225125,
+      "unfinished": 0,
+      "weights": [
+        1.0,
+        -0.5914304164577536,
+        0.3648978277786009,
+        -0.16752951106359754,
+        0.1706466334318434,
+        -0.3459609678350956,
+        0.10326054655344348,
+        -0.1059191263648701,
+        0.0,
+        -0.2483323520551884,
+        -0.2964959143805563,
+        0.3250936924881725,
+        0.8054355749498765,
+        0.0,
+        -0.2849773160912967,
+        -0.3174099173238595,
+        0.0,
+        -7.884303652062157,
+        0.0
+      ]
+    },
+    {
+      "ci95": [
+        0.6575842166553005,
+        0.6924157833446996
+      ],
+      "distinct_games": 1921,
+      "feature": null,
+      "k": null,
+      "player": "greedy+survivors-mean",
+      "report": {
+        "a": {
+          "draws": 0,
+          "losses": 650,
+          "unfinished": 0,
+          "wins": 1350
+        },
+        "a_as_red": {
+          "draws": 0,
+          "losses": 414,
+          "unfinished": 0,
+          "wins": 586
+        },
+        "a_as_white": {
+          "draws": 0,
+          "losses": 236,
+          "unfinished": 0,
+          "wins": 764
+        },
+        "ci95": [
+          0.6575842166553005,
+          0.6924157833446996
+        ],
+        "config": {
+          "max_plies": 1000,
+          "opening_plies": 4,
+          "pairs": 1000,
+          "rules": {
+            "LC1": {
+              "repetitions": 2
+            }
+          },
+          "seed": 303
+        },
+        "distinct_games": 1921,
+        "distinct_openings": 995,
+        "distinct_positions_after_opening": 16610,
+        "games": 2000,
+        "player_a": "greedy+survivors-mean",
+        "player_b": "greedy",
+        "score": 0.675,
+        "scored_pairs": 1000,
+        "significant": true,
+        "white_score": 0.589
+      },
+      "role": "combined survivors (mean)",
+      "score": 0.675,
+      "scored_pairs": 1000,
+      "seconds": 1.309396292,
+      "unfinished": 0,
+      "weights": [
+        1.0,
+        -0.0422450297469824,
+        0.02606413055561435,
+        -0.011966393647399824,
+        0.01218904524513167,
+        -0.02471149770250683,
+        0.007375753325245963,
+        -0.007565651883205006,
+        0.0,
+        -0.01773802514679917,
+        -0.021178279598611162,
+        0.02322097803486946,
+        0.05753111249641975,
+        0.0,
+        -0.020355522577949762,
+        -0.022672136951704246,
+        0.0,
+        -0.5631645465758683,
+        0.0
+      ]
+    }
+  ],
+  "combined_seed": 303,
+  "explore_seed": 101,
+  "matches": [
+    {
+      "ci95": [
+        0.47776901523704146,
+        0.5152309847629586
+      ],
+      "distinct_games": 1920,
+      "feature": null,
+      "k": null,
+      "player": "greedy",
+      "report": {
+        "a": {
+          "draws": 0,
+          "losses": 1007,
+          "unfinished": 0,
+          "wins": 993
+        },
+        "a_as_red": {
+          "draws": 0,
+          "losses": 590,
+          "unfinished": 0,
+          "wins": 410
+        },
+        "a_as_white": {
+          "draws": 0,
+          "losses": 417,
+          "unfinished": 0,
+          "wins": 583
+        },
+        "ci95": [
+          0.47776901523704146,
+          0.5152309847629586
+        ],
+        "config": {
+          "max_plies": 1000,
+          "opening_plies": 4,
+          "pairs": 1000,
+          "rules": {
+            "LC1": {
+              "repetitions": 2
+            }
+          },
+          "seed": 202
+        },
+        "distinct_games": 1920,
+        "distinct_openings": 992,
+        "distinct_positions_after_opening": 18911,
+        "games": 2000,
+        "player_a": "greedy",
+        "player_b": "greedy",
+        "score": 0.4965,
+        "scored_pairs": 1000,
+        "significant": false,
+        "white_score": 0.5865
+      },
+      "role": "control: greedy vs greedy (expect 0.5)",
+      "score": 0.4965,
+      "scored_pairs": 1000,
+      "seconds": 0.45368775,
+      "unfinished": 0,
+      "weights": null
+    },
+    {
+      "ci95": [
+        0.47776901523704146,
+        0.5152309847629586
+      ],
+      "distinct_games": 1920,
+      "feature": null,
+      "k": null,
+      "player": "heuristic-greedy",
+      "report": {
+        "a": {
+          "draws": 0,
+          "losses": 1007,
+          "unfinished": 0,
+          "wins": 993
+        },
+        "a_as_red": {
+          "draws": 0,
+          "losses": 590,
+          "unfinished": 0,
+          "wins": 410
+        },
+        "a_as_white": {
+          "draws": 0,
+          "losses": 417,
+          "unfinished": 0,
+          "wins": 583
+        },
+        "ci95": [
+          0.47776901523704146,
+          0.5152309847629586
+        ],
+        "config": {
+          "max_plies": 1000,
+          "opening_plies": 4,
+          "pairs": 1000,
+          "rules": {
+            "LC1": {
+              "repetitions": 2
+            }
+          },
+          "seed": 202
+        },
+        "distinct_games": 1920,
+        "distinct_openings": 992,
+        "distinct_positions_after_opening": 18911,
+        "games": 2000,
+        "player_a": "heuristic-greedy",
+        "player_b": "greedy",
+        "score": 0.4965,
+        "scored_pairs": 1000,
+        "significant": false,
+        "white_score": 0.5865
+      },
+      "role": "control: heuristic with greedy's weights vs greedy (expect 0.5)",
+      "score": 0.4965,
+      "scored_pairs": 1000,
+      "seconds": 2.350907,
+      "unfinished": 0,
+      "weights": null
+    },
+    {
+      "ci95": [
+        0.013497428679102405,
+        0.025502571320897595
+      ],
+      "distinct_games": 1971,
+      "feature": null,
+      "k": null,
+      "player": "negated-top-diff",
+      "report": {
+        "a": {
+          "draws": 0,
+          "losses": 1961,
+          "unfinished": 0,
+          "wins": 39
+        },
+        "a_as_red": {
+          "draws": 0,
+          "losses": 997,
+          "unfinished": 0,
+          "wins": 3
+        },
+        "a_as_white": {
+          "draws": 0,
+          "losses": 964,
+          "unfinished": 0,
+          "wins": 36
+        },
+        "ci95": [
+          0.013497428679102405,
+          0.025502571320897595
+        ],
+        "config": {
+          "max_plies": 1000,
+          "opening_plies": 4,
+          "pairs": 1000,
+          "rules": {
+            "LC1": {
+              "repetitions": 2
+            }
+          },
+          "seed": 202
+        },
+        "distinct_games": 1971,
+        "distinct_openings": 992,
+        "distinct_positions_after_opening": 8130,
+        "games": 2000,
+        "player_a": "negated-top-diff",
+        "player_b": "greedy",
+        "score": 0.0195,
+        "scored_pairs": 1000,
+        "significant": true,
+        "white_score": 0.5165
+      },
+      "role": "control: negated top difference vs greedy (expect clearly < 0.5)",
+      "score": 0.0195,
+      "scored_pairs": 1000,
+      "seconds": 0.890707334,
+      "unfinished": 0,
+      "weights": null
+    },
+    {
+      "ci95": [
+        0.0026239223497821597,
+        0.009376077650217841
+      ],
+      "distinct_games": 1998,
+      "feature": null,
+      "k": null,
+      "player": "random",
+      "report": {
+        "a": {
+          "draws": 0,
+          "losses": 1988,
+          "unfinished": 0,
+          "wins": 12
+        },
+        "a_as_red": {
+          "draws": 0,
+          "losses": 998,
+          "unfinished": 0,
+          "wins": 2
+        },
+        "a_as_white": {
+          "draws": 0,
+          "losses": 990,
+          "unfinished": 0,
+          "wins": 10
+        },
+        "ci95": [
+          0.0026239223497821597,
+          0.009376077650217841
+        ],
+        "config": {
+          "max_plies": 1000,
+          "opening_plies": 4,
+          "pairs": 1000,
+          "rules": {
+            "LC1": {
+              "repetitions": 2
+            }
+          },
+          "seed": 202
+        },
+        "distinct_games": 1998,
+        "distinct_openings": 992,
+        "distinct_positions_after_opening": 14169,
+        "games": 2000,
+        "player_a": "random",
+        "player_b": "greedy",
+        "score": 0.006,
+        "scored_pairs": 1000,
+        "significant": true,
+        "white_score": 0.504
+      },
+      "role": "control: random vs greedy (expect clearly < 0.5)",
+      "score": 0.006,
+      "scored_pairs": 1000,
+      "seconds": 0.298110708,
+      "unfinished": 0,
+      "weights": null
+    },
+    {
+      "ci95": [
+        0.7233143699474593,
+        0.7566856300525406
+      ],
+      "distinct_games": 1948,
+      "feature": null,
+      "k": null,
+      "player": "greedy-2ply",
+      "report": {
+        "a": {
+          "draws": 0,
+          "losses": 520,
+          "unfinished": 0,
+          "wins": 1480
+        },
+        "a_as_red": {
+          "draws": 0,
+          "losses": 350,
+          "unfinished": 0,
+          "wins": 650
+        },
+        "a_as_white": {
+          "draws": 0,
+          "losses": 170,
+          "unfinished": 0,
+          "wins": 830
+        },
+        "ci95": [
+          0.7233143699474593,
+          0.7566856300525406
+        ],
+        "config": {
+          "max_plies": 1000,
+          "opening_plies": 4,
+          "pairs": 1000,
+          "rules": {
+            "LC1": {
+              "repetitions": 2
+            }
+          },
+          "seed": 202
+        },
+        "distinct_games": 1948,
+        "distinct_openings": 992,
+        "distinct_positions_after_opening": 17844,
+        "games": 2000,
+        "player_a": "greedy-2ply",
+        "player_b": "greedy",
+        "score": 0.74,
+        "scored_pairs": 1000,
+        "significant": true,
+        "white_score": 0.59
+      },
+      "role": "power control: two-ply greedy vs greedy (expect > 0.5)",
+      "score": 0.74,
+      "scored_pairs": 1000,
+      "seconds": 3.375198292,
+      "unfinished": 0,
+      "weights": null
+    },
+    {
+      "ci95": [
+        0.5038129211956556,
+        0.5401870788043445
+      ],
+      "distinct_games": 1919,
+      "feature": "own_tops",
+      "k": -0.5,
+      "player": "greedy+-0.5914*own_tops",
+      "report": {
+        "a": {
+          "draws": 0,
+          "losses": 956,
+          "unfinished": 0,
+          "wins": 1044
+        },
+        "a_as_red": {
+          "draws": 0,
+          "losses": 588,
+          "unfinished": 0,
+          "wins": 412
+        },
+        "a_as_white": {
+          "draws": 0,
+          "losses": 368,
+          "unfinished": 0,
+          "wins": 632
+        },
+        "ci95": [
+          0.5038129211956556,
+          0.5401870788043445
+        ],
+        "config": {
+          "max_plies": 1000,
+          "opening_plies": 4,
+          "pairs": 1000,
+          "rules": {
+            "LC1": {
+              "repetitions": 2
+            }
+          },
+          "seed": 202
+        },
+        "distinct_games": 1919,
+        "distinct_openings": 992,
+        "distinct_positions_after_opening": 17378,
+        "games": 2000,
+        "player_a": "greedy+-0.5914*own_tops",
+        "player_b": "greedy",
+        "score": 0.522,
+        "scored_pairs": 1000,
+        "significant": true,
+        "white_score": 0.61
+      },
+      "role": "candidate",
+      "score": 0.522,
+      "scored_pairs": 1000,
+      "seconds": 2.104967625,
+      "unfinished": 0,
+      "weights": null
+    },
+    {
+      "ci95": [
+        0.4561016999244444,
+        0.4938983000755556
+      ],
+      "distinct_games": 1926,
+      "feature": "own_tops",
+      "k": 0.5,
+      "player": "mirror of greedy+-0.5914*own_tops",
+      "report": {
+        "a": {
+          "draws": 0,
+          "losses": 1050,
+          "unfinished": 0,
+          "wins": 950
+        },
+        "a_as_red": {
+          "draws": 0,
+          "losses": 610,
+          "unfinished": 0,
+          "wins": 390
+        },
+        "a_as_white": {
+          "draws": 0,
+          "losses": 440,
+          "unfinished": 0,
+          "wins": 560
+        },
+        "ci95": [
+          0.4561016999244444,
+          0.4938983000755556
+        ],
+        "config": {
+          "max_plies": 1000,
+          "opening_plies": 4,
+          "pairs": 1000,
+          "rules": {
+            "LC1": {
+              "repetitions": 2
+            }
+          },
+          "seed": 202
+        },
+        "distinct_games": 1926,
+        "distinct_openings": 992,
+        "distinct_positions_after_opening": 20466,
+        "games": 2000,
+        "player_a": "mirror of greedy+-0.5914*own_tops",
+        "player_b": "greedy",
+        "score": 0.475,
+        "scored_pairs": 1000,
+        "significant": true,
+        "white_score": 0.585
+      },
+      "role": "mirror",
+      "score": 0.475,
+      "scored_pairs": 1000,
+      "seconds": 2.6147635,
+      "unfinished": 0,
+      "weights": null
+    },
+    {
+      "ci95": [
+        0.5991011758624902,
+        0.6348988241375098
+      ],
+      "distinct_games": 1910,
+      "feature": "prisoners",
+      "k": 0.5,
+      "player": "greedy+0.3649*prisoners",
+      "report": {
+        "a": {
+          "draws": 0,
+          "losses": 766,
+          "unfinished": 0,
+          "wins": 1234
+        },
+        "a_as_red": {
+          "draws": 0,
+          "losses": 498,
+          "unfinished": 0,
+          "wins": 502
+        },
+        "a_as_white": {
+          "draws": 0,
+          "losses": 268,
+          "unfinished": 0,
+          "wins": 732
+        },
+        "ci95": [
+          0.5991011758624902,
+          0.6348988241375098
+        ],
+        "config": {
+          "max_plies": 1000,
+          "opening_plies": 4,
+          "pairs": 1000,
+          "rules": {
+            "LC1": {
+              "repetitions": 2
+            }
+          },
+          "seed": 202
+        },
+        "distinct_games": 1910,
+        "distinct_openings": 992,
+        "distinct_positions_after_opening": 15570,
+        "games": 2000,
+        "player_a": "greedy+0.3649*prisoners",
+        "player_b": "greedy",
+        "score": 0.617,
+        "scored_pairs": 1000,
+        "significant": true,
+        "white_score": 0.615
+      },
+      "role": "candidate",
+      "score": 0.617,
+      "scored_pairs": 1000,
+      "seconds": 1.874566792,
+      "unfinished": 0,
+      "weights": null
+    },
+    {
+      "ci95": [
+        0.14854627734350248,
+        0.17945372265649753
+      ],
+      "distinct_games": 1956,
+      "feature": "prisoners",
+      "k": -0.5,
+      "player": "mirror of greedy+0.3649*prisoners",
+      "report": {
+        "a": {
+          "draws": 0,
+          "losses": 1672,
+          "unfinished": 0,
+          "wins": 328
+        },
+        "a_as_red": {
+          "draws": 0,
+          "losses": 890,
+          "unfinished": 0,
+          "wins": 110
+        },
+        "a_as_white": {
+          "draws": 0,
+          "losses": 782,
+          "unfinished": 0,
+          "wins": 218
+        },
+        "ci95": [
+          0.14854627734350248,
+          0.17945372265649753
+        ],
+        "config": {
+          "max_plies": 1000,
+          "opening_plies": 4,
+          "pairs": 1000,
+          "rules": {
+            "LC1": {
+              "repetitions": 2
+            }
+          },
+          "seed": 202
+        },
+        "distinct_games": 1956,
+        "distinct_openings": 992,
+        "distinct_positions_after_opening": 22777,
+        "games": 2000,
+        "player_a": "mirror of greedy+0.3649*prisoners",
+        "player_b": "greedy",
+        "score": 0.164,
+        "scored_pairs": 1000,
+        "significant": true,
+        "white_score": 0.554
+      },
+      "role": "mirror",
+      "score": 0.164,
+      "scored_pairs": 1000,
+      "seconds": 2.642171333,
+      "unfinished": 0,
+      "weights": null
+    },
+    {
+      "ci95": [
+        0.5981380827688283,
+        0.6348619172311718
+      ],
+      "distinct_games": 1913,
+      "feature": "hostages",
+      "k": -0.25,
+      "player": "greedy+-0.1675*hostages",
+      "report": {
+        "a": {
+          "draws": 0,
+          "losses": 767,
+          "unfinished": 0,
+          "wins": 1233
+        },
+        "a_as_red": {
+          "draws": 0,
+          "losses": 472,
+          "unfinished": 0,
+          "wins": 528
+        },
+        "a_as_white": {
+          "draws": 0,
+          "losses": 295,
+          "unfinished": 0,
+          "wins": 705
+        },
+        "ci95": [
+          0.5981380827688283,
+          0.6348619172311718
+        ],
+        "config": {
+          "max_plies": 1000,
+          "opening_plies": 4,
+          "pairs": 1000,
+          "rules": {
+            "LC1": {
+              "repetitions": 2
+            }
+          },
+          "seed": 202
+        },
+        "distinct_games": 1913,
+        "distinct_openings": 992,
+        "distinct_positions_after_opening": 17576,
+        "games": 2000,
+        "player_a": "greedy+-0.1675*hostages",
+        "player_b": "greedy",
+        "score": 0.6165,
+        "scored_pairs": 1000,
+        "significant": true,
+        "white_score": 0.5885
+      },
+      "role": "candidate",
+      "score": 0.6165,
+      "scored_pairs": 1000,
+      "seconds": 2.137401083,
+      "unfinished": 0,
+      "weights": null
+    },
+    {
+      "ci95": [
+        0.4078605970121426,
+        0.44513940298785737
+      ],
+      "distinct_games": 1922,
+      "feature": "hostages",
+      "k": 0.25,
+      "player": "mirror of greedy+-0.1675*hostages",
+      "report": {
+        "a": {
+          "draws": 0,
+          "losses": 1147,
+          "unfinished": 0,
+          "wins": 853
+        },
+        "a_as_red": {
+          "draws": 0,
+          "losses": 669,
+          "unfinished": 0,
+          "wins": 331
+        },
+        "a_as_white": {
+          "draws": 0,
+          "losses": 478,
+          "unfinished": 0,
+          "wins": 522
+        },
+        "ci95": [
+          0.4078605970121426,
+          0.44513940298785737
+        ],
+        "config": {
+          "max_plies": 1000,
+          "opening_plies": 4,
+          "pairs": 1000,
+          "rules": {
+            "LC1": {
+              "repetitions": 2
+            }
+          },
+          "seed": 202
+        },
+        "distinct_games": 1922,
+        "distinct_openings": 992,
+        "distinct_positions_after_opening": 18347,
+        "games": 2000,
+        "player_a": "mirror of greedy+-0.1675*hostages",
+        "player_b": "greedy",
+        "score": 0.4265,
+        "scored_pairs": 1000,
+        "significant": true,
+        "white_score": 0.5955
+      },
+      "role": "mirror",
+      "score": 0.4265,
+      "scored_pairs": 1000,
+      "seconds": 2.240057708,
+      "unfinished": 0,
+      "weights": null
+    },
+    {
+      "ci95": [
+        0.6134251447366019,
+        0.649574855263398
+      ],
+      "distinct_games": 1913,
+      "feature": "own_max_height",
+      "k": 0.25,
+      "player": "greedy+0.1706*own_max_height",
+      "report": {
+        "a": {
+          "draws": 0,
+          "losses": 737,
+          "unfinished": 0,
+          "wins": 1263
+        },
+        "a_as_red": {
+          "draws": 0,
+          "losses": 450,
+          "unfinished": 0,
+          "wins": 550
+        },
+        "a_as_white": {
+          "draws": 0,
+          "losses": 287,
+          "unfinished": 0,
+          "wins": 713
+        },
+        "ci95": [
+          0.6134251447366019,
+          0.649574855263398
+        ],
+        "config": {
+          "max_plies": 1000,
+          "opening_plies": 4,
+          "pairs": 1000,
+          "rules": {
+            "LC1": {
+              "repetitions": 2
+            }
+          },
+          "seed": 202
+        },
+        "distinct_games": 1913,
+        "distinct_openings": 992,
+        "distinct_positions_after_opening": 16315,
+        "games": 2000,
+        "player_a": "greedy+0.1706*own_max_height",
+        "player_b": "greedy",
+        "score": 0.6315,
+        "scored_pairs": 1000,
+        "significant": true,
+        "white_score": 0.5815
+      },
+      "role": "candidate",
+      "score": 0.6315,
+      "scored_pairs": 1000,
+      "seconds": 1.9166366670000001,
+      "unfinished": 0,
+      "weights": null
+    },
+    {
+      "ci95": [
+        0.3099295864616925,
+        0.34607041353830753
+      ],
+      "distinct_games": 1944,
+      "feature": "own_max_height",
+      "k": -0.25,
+      "player": "mirror of greedy+0.1706*own_max_height",
+      "report": {
+        "a": {
+          "draws": 0,
+          "losses": 1344,
+          "unfinished": 0,
+          "wins": 656
+        },
+        "a_as_red": {
+          "draws": 0,
+          "losses": 759,
+          "unfinished": 0,
+          "wins": 241
+        },
+        "a_as_white": {
+          "draws": 0,
+          "losses": 585,
+          "unfinished": 0,
+          "wins": 415
+        },
+        "ci95": [
+          0.3099295864616925,
+          0.34607041353830753
+        ],
+        "config": {
+          "max_plies": 1000,
+          "opening_plies": 4,
+          "pairs": 1000,
+          "rules": {
+            "LC1": {
+              "repetitions": 2
+            }
+          },
+          "seed": 202
+        },
+        "distinct_games": 1944,
+        "distinct_openings": 992,
+        "distinct_positions_after_opening": 20155,
+        "games": 2000,
+        "player_a": "mirror of greedy+0.1706*own_max_height",
+        "player_b": "greedy",
+        "score": 0.328,
+        "scored_pairs": 1000,
+        "significant": true,
+        "white_score": 0.587
+      },
+      "role": "mirror",
+      "score": 0.328,
+      "scored_pairs": 1000,
+      "seconds": 2.595195666,
+      "unfinished": 0,
+      "weights": null
+    },
+    {
+      "ci95": [
+        0.6033159080072278,
+        0.6396840919927723
+      ],
+      "distinct_games": 1915,
+      "feature": "opp_max_height",
+      "k": -0.5,
+      "player": "greedy+-0.3460*opp_max_height",
+      "report": {
+        "a": {
+          "draws": 0,
+          "losses": 757,
+          "unfinished": 0,
+          "wins": 1243
+        },
+        "a_as_red": {
+          "draws": 0,
+          "losses": 474,
+          "unfinished": 0,
+          "wins": 526
+        },
+        "a_as_white": {
+          "draws": 0,
+          "losses": 283,
+          "unfinished": 0,
+          "wins": 717
+        },
+        "ci95": [
+          0.6033159080072278,
+          0.6396840919927723
+        ],
+        "config": {
+          "max_plies": 1000,
+          "opening_plies": 4,
+          "pairs": 1000,
+          "rules": {
+            "LC1": {
+              "repetitions": 2
+            }
+          },
+          "seed": 202
+        },
+        "distinct_games": 1915,
+        "distinct_openings": 992,
+        "distinct_positions_after_opening": 16529,
+        "games": 2000,
+        "player_a": "greedy+-0.3460*opp_max_height",
+        "player_b": "greedy",
+        "score": 0.6215,
+        "scored_pairs": 1000,
+        "significant": true,
+        "white_score": 0.5955
+      },
+      "role": "candidate",
+      "score": 0.6215,
+      "scored_pairs": 1000,
+      "seconds": 2.1037705,
+      "unfinished": 0,
+      "weights": null
+    },
+    {
+      "ci95": [
+        0.287410564572599,
+        0.324589435427401
+      ],
+      "distinct_games": 1953,
+      "feature": "opp_max_height",
+      "k": 0.5,
+      "player": "mirror of greedy+-0.3460*opp_max_height",
+      "report": {
+        "a": {
+          "draws": 0,
+          "losses": 1388,
+          "unfinished": 0,
+          "wins": 612
+        },
+        "a_as_red": {
+          "draws": 0,
+          "losses": 776,
+          "unfinished": 0,
+          "wins": 224
+        },
+        "a_as_white": {
+          "draws": 0,
+          "losses": 612,
+          "unfinished": 0,
+          "wins": 388
+        },
+        "ci95": [
+          0.287410564572599,
+          0.324589435427401
+        ],
+        "config": {
+          "max_plies": 1000,
+          "opening_plies": 4,
+          "pairs": 1000,
+          "rules": {
+            "LC1": {
+              "repetitions": 2
+            }
+          },
+          "seed": 202
+        },
+        "distinct_games": 1953,
+        "distinct_openings": 992,
+        "distinct_positions_after_opening": 20480,
+        "games": 2000,
+        "player_a": "mirror of greedy+-0.3460*opp_max_height",
+        "player_b": "greedy",
+        "score": 0.306,
+        "scored_pairs": 1000,
+        "significant": true,
+        "white_score": 0.582
+      },
+      "role": "mirror",
+      "score": 0.306,
+      "scored_pairs": 1000,
+      "seconds": 2.37102,
+      "unfinished": 0,
+      "weights": null
+    },
+    {
+      "ci95": [
+        0.572844346937162,
+        0.6091556530628379
+      ],
+      "distinct_games": 1914,
+      "feature": "own_mobility",
+      "k": 0.5,
+      "player": "greedy+0.1033*own_mobility",
+      "report": {
+        "a": {
+          "draws": 0,
+          "losses": 818,
+          "unfinished": 0,
+          "wins": 1182
+        },
+        "a_as_red": {
+          "draws": 0,
+          "losses": 512,
+          "unfinished": 0,
+          "wins": 488
+        },
+        "a_as_white": {
+          "draws": 0,
+          "losses": 306,
+          "unfinished": 0,
+          "wins": 694
+        },
+        "ci95": [
+          0.572844346937162,
+          0.6091556530628379
+        ],
+        "config": {
+          "max_plies": 1000,
+          "opening_plies": 4,
+          "pairs": 1000,
+          "rules": {
+            "LC1": {
+              "repetitions": 2
+            }
+          },
+          "seed": 202
+        },
+        "distinct_games": 1914,
+        "distinct_openings": 992,
+        "distinct_positions_after_opening": 16740,
+        "games": 2000,
+        "player_a": "greedy+0.1033*own_mobility",
+        "player_b": "greedy",
+        "score": 0.591,
+        "scored_pairs": 1000,
+        "significant": true,
+        "white_score": 0.603
+      },
+      "role": "candidate",
+      "score": 0.591,
+      "scored_pairs": 1000,
+      "seconds": 2.123108292,
+      "unfinished": 0,
+      "weights": null
+    },
+    {
+      "ci95": [
+        0.33180374289785164,
+        0.3691962571021483
+      ],
+      "distinct_games": 1933,
+      "feature": "own_mobility",
+      "k": -0.5,
+      "player": "mirror of greedy+0.1033*own_mobility",
+      "report": {
+        "a": {
+          "draws": 0,
+          "losses": 1299,
+          "unfinished": 0,
+          "wins": 701
+        },
+        "a_as_red": {
+          "draws": 0,
+          "losses": 720,
+          "unfinished": 0,
+          "wins": 280
+        },
+        "a_as_white": {
+          "draws": 0,
+          "losses": 579,
+          "unfinished": 0,
+          "wins": 421
+        },
+        "ci95": [
+          0.33180374289785164,
+          0.3691962571021483
+        ],
+        "config": {
+          "max_plies": 1000,
+          "opening_plies": 4,
+          "pairs": 1000,
+          "rules": {
+            "LC1": {
+              "repetitions": 2
+            }
+          },
+          "seed": 202
+        },
+        "distinct_games": 1933,
+        "distinct_openings": 992,
+        "distinct_positions_after_opening": 19338,
+        "games": 2000,
+        "player_a": "mirror of greedy+0.1033*own_mobility",
+        "player_b": "greedy",
+        "score": 0.3505,
+        "scored_pairs": 1000,
+        "significant": true,
+        "white_score": 0.5705
+      },
+      "role": "mirror",
+      "score": 0.3505,
+      "scored_pairs": 1000,
+      "seconds": 2.06265775,
+      "unfinished": 0,
+      "weights": null
+    },
+    {
+      "ci95": [
+        0.6103079340968491,
+        0.6476920659031509
+      ],
+      "distinct_games": 1909,
+      "feature": "opp_mobility",
+      "k": -0.5,
+      "player": "greedy+-0.1059*opp_mobility",
+      "report": {
+        "a": {
+          "draws": 0,
+          "losses": 742,
+          "unfinished": 0,
+          "wins": 1258
+        },
+        "a_as_red": {
+          "draws": 0,
+          "losses": 457,
+          "unfinished": 0,
+          "wins": 543
+        },
+        "a_as_white": {
+          "draws": 0,
+          "losses": 285,
+          "unfinished": 0,
+          "wins": 715
+        },
+        "ci95": [
+          0.6103079340968491,
+          0.6476920659031509
+        ],
+        "config": {
+          "max_plies": 1000,
+          "opening_plies": 4,
+          "pairs": 1000,
+          "rules": {
+            "LC1": {
+              "repetitions": 2
+            }
+          },
+          "seed": 202
+        },
+        "distinct_games": 1909,
+        "distinct_openings": 992,
+        "distinct_positions_after_opening": 16189,
+        "games": 2000,
+        "player_a": "greedy+-0.1059*opp_mobility",
+        "player_b": "greedy",
+        "score": 0.629,
+        "scored_pairs": 1000,
+        "significant": true,
+        "white_score": 0.586
+      },
+      "role": "candidate",
+      "score": 0.629,
+      "scored_pairs": 1000,
+      "seconds": 1.990265375,
+      "unfinished": 0,
+      "weights": null
+    },
+    {
+      "ci95": [
+        0.13435172329554038,
+        0.1636482767044596
+      ],
+      "distinct_games": 1965,
+      "feature": "opp_mobility",
+      "k": 0.5,
+      "player": "mirror of greedy+-0.1059*opp_mobility",
+      "report": {
+        "a": {
+          "draws": 0,
+          "losses": 1702,
+          "unfinished": 0,
+          "wins": 298
+        },
+        "a_as_red": {
+          "draws": 0,
+          "losses": 900,
+          "unfinished": 0,
+          "wins": 100
+        },
+        "a_as_white": {
+          "draws": 0,
+          "losses": 802,
+          "unfinished": 0,
+          "wins": 198
+        },
+        "ci95": [
+          0.13435172329554038,
+          0.1636482767044596
+        ],
+        "config": {
+          "max_plies": 1000,
+          "opening_plies": 4,
+          "pairs": 1000,
+          "rules": {
+            "LC1": {
+              "repetitions": 2
+            }
+          },
+          "seed": 202
+        },
+        "distinct_games": 1965,
+        "distinct_openings": 992,
+        "distinct_positions_after_opening": 19218,
+        "games": 2000,
+        "player_a": "mirror of greedy+-0.1059*opp_mobility",
+        "player_b": "greedy",
+        "score": 0.149,
+        "scored_pairs": 1000,
+        "significant": true,
+        "white_score": 0.549
+      },
+      "role": "mirror",
+      "score": 0.149,
+      "scored_pairs": 1000,
+      "seconds": 2.06559,
+      "unfinished": 0,
+      "weights": null
+    },
+    {
+      "ci95": [
+        0.5318675543407521,
+        0.568132445659248
+      ],
+      "distinct_games": 1921,
+      "feature": "corners",
+      "k": -0.25,
+      "player": "greedy+-0.2483*corners",
+      "report": {
+        "a": {
+          "draws": 0,
+          "losses": 900,
+          "unfinished": 0,
+          "wins": 1100
+        },
+        "a_as_red": {
+          "draws": 0,
+          "losses": 566,
+          "unfinished": 0,
+          "wins": 434
+        },
+        "a_as_white": {
+          "draws": 0,
+          "losses": 334,
+          "unfinished": 0,
+          "wins": 666
+        },
+        "ci95": [
+          0.5318675543407521,
+          0.568132445659248
+        ],
+        "config": {
+          "max_plies": 1000,
+          "opening_plies": 4,
+          "pairs": 1000,
+          "rules": {
+            "LC1": {
+              "repetitions": 2
+            }
+          },
+          "seed": 202
+        },
+        "distinct_games": 1921,
+        "distinct_openings": 992,
+        "distinct_positions_after_opening": 17966,
+        "games": 2000,
+        "player_a": "greedy+-0.2483*corners",
+        "player_b": "greedy",
+        "score": 0.55,
+        "scored_pairs": 1000,
+        "significant": true,
+        "white_score": 0.616
+      },
+      "role": "candidate",
+      "score": 0.55,
+      "scored_pairs": 1000,
+      "seconds": 2.287409417,
+      "unfinished": 0,
+      "weights": null
+    },
+    {
+      "ci95": [
+        0.479563814123865,
+        0.5174361858761349
+      ],
+      "distinct_games": 1922,
+      "feature": "corners",
+      "k": 0.25,
+      "player": "mirror of greedy+-0.2483*corners",
+      "report": {
+        "a": {
+          "draws": 0,
+          "losses": 1003,
+          "unfinished": 0,
+          "wins": 997
+        },
+        "a_as_red": {
+          "draws": 0,
+          "losses": 596,
+          "unfinished": 0,
+          "wins": 404
+        },
+        "a_as_white": {
+          "draws": 0,
+          "losses": 407,
+          "unfinished": 0,
+          "wins": 593
+        },
+        "ci95": [
+          0.479563814123865,
+          0.5174361858761349
+        ],
+        "config": {
+          "max_plies": 1000,
+          "opening_plies": 4,
+          "pairs": 1000,
+          "rules": {
+            "LC1": {
+              "repetitions": 2
+            }
+          },
+          "seed": 202
+        },
+        "distinct_games": 1922,
+        "distinct_openings": 992,
+        "distinct_positions_after_opening": 18284,
+        "games": 2000,
+        "player_a": "mirror of greedy+-0.2483*corners",
+        "player_b": "greedy",
+        "score": 0.4985,
+        "scored_pairs": 1000,
+        "significant": false,
+        "white_score": 0.5945
+      },
+      "role": "mirror",
+      "score": 0.4985,
+      "scored_pairs": 1000,
+      "seconds": 2.170894167,
+      "unfinished": 0,
+      "weights": null
+    },
+    {
+      "ci95": [
+        0.5369233098514489,
+        0.5730766901485512
+      ],
+      "distinct_games": 1921,
+      "feature": "own_singletons",
+      "k": -0.25,
+      "player": "greedy+-0.2965*own_singletons",
+      "report": {
+        "a": {
+          "draws": 0,
+          "losses": 890,
+          "unfinished": 0,
+          "wins": 1110
+        },
+        "a_as_red": {
+          "draws": 0,
+          "losses": 550,
+          "unfinished": 0,
+          "wins": 450
+        },
+        "a_as_white": {
+          "draws": 0,
+          "losses": 340,
+          "unfinished": 0,
+          "wins": 660
+        },
+        "ci95": [
+          0.5369233098514489,
+          0.5730766901485512
+        ],
+        "config": {
+          "max_plies": 1000,
+          "opening_plies": 4,
+          "pairs": 1000,
+          "rules": {
+            "LC1": {
+              "repetitions": 2
+            }
+          },
+          "seed": 202
+        },
+        "distinct_games": 1921,
+        "distinct_openings": 992,
+        "distinct_positions_after_opening": 17341,
+        "games": 2000,
+        "player_a": "greedy+-0.2965*own_singletons",
+        "player_b": "greedy",
+        "score": 0.555,
+        "scored_pairs": 1000,
+        "significant": true,
+        "white_score": 0.605
+      },
+      "role": "candidate",
+      "score": 0.555,
+      "scored_pairs": 1000,
+      "seconds": 2.076703042,
+      "unfinished": 0,
+      "weights": null
+    },
+    {
+      "ci95": [
+        0.44732367877574813,
+        0.4856763212242519
+      ],
+      "distinct_games": 1927,
+      "feature": "own_singletons",
+      "k": 0.25,
+      "player": "mirror of greedy+-0.2965*own_singletons",
+      "report": {
+        "a": {
+          "draws": 0,
+          "losses": 1067,
+          "unfinished": 0,
+          "wins": 933
+        },
+        "a_as_red": {
+          "draws": 0,
+          "losses": 611,
+          "unfinished": 0,
+          "wins": 389
+        },
+        "a_as_white": {
+          "draws": 0,
+          "losses": 456,
+          "unfinished": 0,
+          "wins": 544
+        },
+        "ci95": [
+          0.44732367877574813,
+          0.4856763212242519
+        ],
+        "config": {
+          "max_plies": 1000,
+          "opening_plies": 4,
+          "pairs": 1000,
+          "rules": {
+            "LC1": {
+              "repetitions": 2
+            }
+          },
+          "seed": 202
+        },
+        "distinct_games": 1927,
+        "distinct_openings": 992,
+        "distinct_positions_after_opening": 19695,
+        "games": 2000,
+        "player_a": "mirror of greedy+-0.2965*own_singletons",
+        "player_b": "greedy",
+        "score": 0.4665,
+        "scored_pairs": 1000,
+        "significant": true,
+        "white_score": 0.5775
+      },
+      "role": "mirror",
+      "score": 0.4665,
+      "scored_pairs": 1000,
+      "seconds": 2.247836459,
+      "unfinished": 0,
+      "weights": null
+    },
+    {
+      "ci95": [
+        0.5826777855611844,
+        0.6193222144388155
+      ],
+      "distinct_games": 1920,
+      "feature": "opp_singletons",
+      "k": 0.25,
+      "player": "greedy+0.3251*opp_singletons",
+      "report": {
+        "a": {
+          "draws": 0,
+          "losses": 798,
+          "unfinished": 0,
+          "wins": 1202
+        },
+        "a_as_red": {
+          "draws": 0,
+          "losses": 499,
+          "unfinished": 0,
+          "wins": 501
+        },
+        "a_as_white": {
+          "draws": 0,
+          "losses": 299,
+          "unfinished": 0,
+          "wins": 701
+        },
+        "ci95": [
+          0.5826777855611844,
+          0.6193222144388155
+        ],
+        "config": {
+          "max_plies": 1000,
+          "opening_plies": 4,
+          "pairs": 1000,
+          "rules": {
+            "LC1": {
+              "repetitions": 2
+            }
+          },
+          "seed": 202
+        },
+        "distinct_games": 1920,
+        "distinct_openings": 992,
+        "distinct_positions_after_opening": 18588,
+        "games": 2000,
+        "player_a": "greedy+0.3251*opp_singletons",
+        "player_b": "greedy",
+        "score": 0.601,
+        "scored_pairs": 1000,
+        "significant": true,
+        "white_score": 0.6
+      },
+      "role": "candidate",
+      "score": 0.601,
+      "scored_pairs": 1000,
+      "seconds": 2.157160417,
+      "unfinished": 0,
+      "weights": null
+    },
+    {
+      "ci95": [
+        0.41107882215688,
+        0.44892117784311997
+      ],
+      "distinct_games": 1931,
+      "feature": "opp_singletons",
+      "k": -0.25,
+      "player": "mirror of greedy+0.3251*opp_singletons",
+      "report": {
+        "a": {
+          "draws": 0,
+          "losses": 1140,
+          "unfinished": 0,
+          "wins": 860
+        },
+        "a_as_red": {
+          "draws": 0,
+          "losses": 652,
+          "unfinished": 0,
+          "wins": 348
+        },
+        "a_as_white": {
+          "draws": 0,
+          "losses": 488,
+          "unfinished": 0,
+          "wins": 512
+        },
+        "ci95": [
+          0.41107882215688,
+          0.44892117784311997
+        ],
+        "config": {
+          "max_plies": 1000,
+          "opening_plies": 4,
+          "pairs": 1000,
+          "rules": {
+            "LC1": {
+              "repetitions": 2
+            }
+          },
+          "seed": 202
+        },
+        "distinct_games": 1931,
+        "distinct_openings": 992,
+        "distinct_positions_after_opening": 18261,
+        "games": 2000,
+        "player_a": "mirror of greedy+0.3251*opp_singletons",
+        "player_b": "greedy",
+        "score": 0.43,
+        "scored_pairs": 1000,
+        "significant": true,
+        "white_score": 0.582
+      },
+      "role": "mirror",
+      "score": 0.43,
+      "scored_pairs": 1000,
+      "seconds": 2.202460292,
+      "unfinished": 0,
+      "weights": null
+    },
+    {
+      "ci95": [
+        0.5240020850501359,
+        0.5599979149498642
+      ],
+      "distinct_games": 1924,
+      "feature": "own_tall",
+      "k": 0.5,
+      "player": "greedy+0.8054*own_tall",
+      "report": {
+        "a": {
+          "draws": 0,
+          "losses": 916,
+          "unfinished": 0,
+          "wins": 1084
+        },
+        "a_as_red": {
+          "draws": 0,
+          "losses": 564,
+          "unfinished": 0,
+          "wins": 436
+        },
+        "a_as_white": {
+          "draws": 0,
+          "losses": 352,
+          "unfinished": 0,
+          "wins": 648
+        },
+        "ci95": [
+          0.5240020850501359,
+          0.5599979149498642
+        ],
+        "config": {
+          "max_plies": 1000,
+          "opening_plies": 4,
+          "pairs": 1000,
+          "rules": {
+            "LC1": {
+              "repetitions": 2
+            }
+          },
+          "seed": 202
+        },
+        "distinct_games": 1924,
+        "distinct_openings": 992,
+        "distinct_positions_after_opening": 17363,
+        "games": 2000,
+        "player_a": "greedy+0.8054*own_tall",
+        "player_b": "greedy",
+        "score": 0.542,
+        "scored_pairs": 1000,
+        "significant": true,
+        "white_score": 0.606
+      },
+      "role": "candidate",
+      "score": 0.542,
+      "scored_pairs": 1000,
+      "seconds": 2.014815291,
+      "unfinished": 0,
+      "weights": null
+    },
+    {
+      "ci95": [
+        0.3839748286925067,
+        0.42102517130749334
+      ],
+      "distinct_games": 1929,
+      "feature": "own_tall",
+      "k": -0.5,
+      "player": "mirror of greedy+0.8054*own_tall",
+      "report": {
+        "a": {
+          "draws": 0,
+          "losses": 1195,
+          "unfinished": 0,
+          "wins": 805
+        },
+        "a_as_red": {
+          "draws": 0,
+          "losses": 673,
+          "unfinished": 0,
+          "wins": 327
+        },
+        "a_as_white": {
+          "draws": 0,
+          "losses": 522,
+          "unfinished": 0,
+          "wins": 478
+        },
+        "ci95": [
+          0.3839748286925067,
+          0.42102517130749334
+        ],
+        "config": {
+          "max_plies": 1000,
+          "opening_plies": 4,
+          "pairs": 1000,
+          "rules": {
+            "LC1": {
+              "repetitions": 2
+            }
+          },
+          "seed": 202
+        },
+        "distinct_games": 1929,
+        "distinct_openings": 992,
+        "distinct_positions_after_opening": 20265,
+        "games": 2000,
+        "player_a": "mirror of greedy+0.8054*own_tall",
+        "player_b": "greedy",
+        "score": 0.4025,
+        "scored_pairs": 1000,
+        "significant": true,
+        "white_score": 0.5755
+      },
+      "role": "mirror",
+      "score": 0.4025,
+      "scored_pairs": 1000,
+      "seconds": 2.217198542,
+      "unfinished": 0,
+      "weights": null
+    },
+    {
+      "ci95": [
+        0.48929413931275517,
+        0.5257058606872447
+      ],
+      "distinct_games": 1920,
+      "feature": "own_solid",
+      "k": 0.5,
+      "player": "greedy+0.5836*own_solid",
+      "report": {
+        "a": {
+          "draws": 0,
+          "losses": 985,
+          "unfinished": 0,
+          "wins": 1015
+        },
+        "a_as_red": {
+          "draws": 0,
+          "losses": 600,
+          "unfinished": 0,
+          "wins": 400
+        },
+        "a_as_white": {
+          "draws": 0,
+          "losses": 385,
+          "unfinished": 0,
+          "wins": 615
+        },
+        "ci95": [
+          0.48929413931275517,
+          0.5257058606872447
+        ],
+        "config": {
+          "max_plies": 1000,
+          "opening_plies": 4,
+          "pairs": 1000,
+          "rules": {
+            "LC1": {
+              "repetitions": 2
+            }
+          },
+          "seed": 202
+        },
+        "distinct_games": 1920,
+        "distinct_openings": 992,
+        "distinct_positions_after_opening": 17561,
+        "games": 2000,
+        "player_a": "greedy+0.5836*own_solid",
+        "player_b": "greedy",
+        "score": 0.5075,
+        "scored_pairs": 1000,
+        "significant": false,
+        "white_score": 0.6075
+      },
+      "role": "candidate",
+      "score": 0.5075,
+      "scored_pairs": 1000,
+      "seconds": 2.02036275,
+      "unfinished": 0,
+      "weights": null
+    },
+    {
+      "ci95": [
+        0.45532648641424245,
+        0.4936735135857575
+      ],
+      "distinct_games": 1931,
+      "feature": "own_solid",
+      "k": -0.5,
+      "player": "mirror of greedy+0.5836*own_solid",
+      "report": {
+        "a": {
+          "draws": 0,
+          "losses": 1051,
+          "unfinished": 0,
+          "wins": 949
+        },
+        "a_as_red": {
+          "draws": 0,
+          "losses": 600,
+          "unfinished": 0,
+          "wins": 400
+        },
+        "a_as_white": {
+          "draws": 0,
+          "losses": 451,
+          "unfinished": 0,
+          "wins": 549
+        },
+        "ci95": [
+          0.45532648641424245,
+          0.4936735135857575
+        ],
+        "config": {
+          "max_plies": 1000,
+          "opening_plies": 4,
+          "pairs": 1000,
+          "rules": {
+            "LC1": {
+              "repetitions": 2
+            }
+          },
+          "seed": 202
+        },
+        "distinct_games": 1931,
+        "distinct_openings": 992,
+        "distinct_positions_after_opening": 20252,
+        "games": 2000,
+        "player_a": "mirror of greedy+0.5836*own_solid",
+        "player_b": "greedy",
+        "score": 0.4745,
+        "scored_pairs": 1000,
+        "significant": true,
+        "white_score": 0.5745
+      },
+      "role": "mirror",
+      "score": 0.4745,
+      "scored_pairs": 1000,
+      "seconds": 2.369462208,
+      "unfinished": 0,
+      "weights": null
+    },
+    {
+      "ci95": [
+        0.6067155425574315,
+        0.6422844574425686
+      ],
+      "distinct_games": 1916,
+      "feature": "own_exposed",
+      "k": -0.25,
+      "player": "greedy+-0.2850*own_exposed",
+      "report": {
+        "a": {
+          "draws": 0,
+          "losses": 751,
+          "unfinished": 0,
+          "wins": 1249
+        },
+        "a_as_red": {
+          "draws": 0,
+          "losses": 462,
+          "unfinished": 0,
+          "wins": 538
+        },
+        "a_as_white": {
+          "draws": 0,
+          "losses": 289,
+          "unfinished": 0,
+          "wins": 711
+        },
+        "ci95": [
+          0.6067155425574315,
+          0.6422844574425686
+        ],
+        "config": {
+          "max_plies": 1000,
+          "opening_plies": 4,
+          "pairs": 1000,
+          "rules": {
+            "LC1": {
+              "repetitions": 2
+            }
+          },
+          "seed": 202
+        },
+        "distinct_games": 1916,
+        "distinct_openings": 992,
+        "distinct_positions_after_opening": 16137,
+        "games": 2000,
+        "player_a": "greedy+-0.2850*own_exposed",
+        "player_b": "greedy",
+        "score": 0.6245,
+        "scored_pairs": 1000,
+        "significant": true,
+        "white_score": 0.5865
+      },
+      "role": "candidate",
+      "score": 0.6245,
+      "scored_pairs": 1000,
+      "seconds": 1.998328083,
+      "unfinished": 0,
+      "weights": null
+    },
+    {
+      "ci95": [
+        0.3828971889243759,
+        0.42110281107562414
+      ],
+      "distinct_games": 1936,
+      "feature": "own_exposed",
+      "k": 0.25,
+      "player": "mirror of greedy+-0.2850*own_exposed",
+      "report": {
+        "a": {
+          "draws": 0,
+          "losses": 1196,
+          "unfinished": 0,
+          "wins": 804
+        },
+        "a_as_red": {
+          "draws": 0,
+          "losses": 670,
+          "unfinished": 0,
+          "wins": 330
+        },
+        "a_as_white": {
+          "draws": 0,
+          "losses": 526,
+          "unfinished": 0,
+          "wins": 474
+        },
+        "ci95": [
+          0.3828971889243759,
+          0.42110281107562414
+        ],
+        "config": {
+          "max_plies": 1000,
+          "opening_plies": 4,
+          "pairs": 1000,
+          "rules": {
+            "LC1": {
+              "repetitions": 2
+            }
+          },
+          "seed": 202
+        },
+        "distinct_games": 1936,
+        "distinct_openings": 992,
+        "distinct_positions_after_opening": 20789,
+        "games": 2000,
+        "player_a": "mirror of greedy+-0.2850*own_exposed",
+        "player_b": "greedy",
+        "score": 0.402,
+        "scored_pairs": 1000,
+        "significant": true,
+        "white_score": 0.572
+      },
+      "role": "mirror",
+      "score": 0.402,
+      "scored_pairs": 1000,
+      "seconds": 2.181438667,
+      "unfinished": 0,
+      "weights": null
+    },
+    {
+      "ci95": [
+        0.5243006315690295,
+        0.5626993684309705
+      ],
+      "distinct_games": 1922,
+      "feature": "opp_exposed",
+      "k": -0.25,
+      "player": "greedy+-0.3174*opp_exposed",
+      "report": {
+        "a": {
+          "draws": 0,
+          "losses": 913,
+          "unfinished": 0,
+          "wins": 1087
+        },
+        "a_as_red": {
+          "draws": 0,
+          "losses": 560,
+          "unfinished": 0,
+          "wins": 440
+        },
+        "a_as_white": {
+          "draws": 0,
+          "losses": 353,
+          "unfinished": 0,
+          "wins": 647
+        },
+        "ci95": [
+          0.5243006315690295,
+          0.5626993684309705
+        ],
+        "config": {
+          "max_plies": 1000,
+          "opening_plies": 4,
+          "pairs": 1000,
+          "rules": {
+            "LC1": {
+              "repetitions": 2
+            }
+          },
+          "seed": 202
+        },
+        "distinct_games": 1922,
+        "distinct_openings": 992,
+        "distinct_positions_after_opening": 18927,
+        "games": 2000,
+        "player_a": "greedy+-0.3174*opp_exposed",
+        "player_b": "greedy",
+        "score": 0.5435,
+        "scored_pairs": 1000,
+        "significant": true,
+        "white_score": 0.6035
+      },
+      "role": "candidate",
+      "score": 0.5435,
+      "scored_pairs": 1000,
+      "seconds": 2.033752667,
+      "unfinished": 0,
+      "weights": null
+    },
+    {
+      "ci95": [
+        0.44673285658542833,
+        0.4832671434145717
+      ],
+      "distinct_games": 1923,
+      "feature": "opp_exposed",
+      "k": 0.25,
+      "player": "mirror of greedy+-0.3174*opp_exposed",
+      "report": {
+        "a": {
+          "draws": 0,
+          "losses": 1070,
+          "unfinished": 0,
+          "wins": 930
+        },
+        "a_as_red": {
+          "draws": 0,
+          "losses": 628,
+          "unfinished": 0,
+          "wins": 372
+        },
+        "a_as_white": {
+          "draws": 0,
+          "losses": 442,
+          "unfinished": 0,
+          "wins": 558
+        },
+        "ci95": [
+          0.44673285658542833,
+          0.4832671434145717
+        ],
+        "config": {
+          "max_plies": 1000,
+          "opening_plies": 4,
+          "pairs": 1000,
+          "rules": {
+            "LC1": {
+              "repetitions": 2
+            }
+          },
+          "seed": 202
+        },
+        "distinct_games": 1923,
+        "distinct_openings": 992,
+        "distinct_positions_after_opening": 19070,
+        "games": 2000,
+        "player_a": "mirror of greedy+-0.3174*opp_exposed",
+        "player_b": "greedy",
+        "score": 0.465,
+        "scored_pairs": 1000,
+        "significant": true,
+        "white_score": 0.593
+      },
+      "role": "mirror",
+      "score": 0.465,
+      "scored_pairs": 1000,
+      "seconds": 2.112281959,
+      "unfinished": 0,
+      "weights": null
+    },
+    {
+      "ci95": [
+        0.5224342897927796,
+        0.5605657102072203
+      ],
+      "distinct_games": 1925,
+      "feature": "opp_win_now",
+      "k": -2.0,
+      "player": "greedy+-7.8843*opp_win_now",
+      "report": {
+        "a": {
+          "draws": 0,
+          "losses": 917,
+          "unfinished": 0,
+          "wins": 1083
+        },
+        "a_as_red": {
+          "draws": 0,
+          "losses": 535,
+          "unfinished": 0,
+          "wins": 465
+        },
+        "a_as_white": {
+          "draws": 0,
+          "losses": 382,
+          "unfinished": 0,
+          "wins": 618
+        },
+        "ci95": [
+          0.5224342897927796,
+          0.5605657102072203
+        ],
+        "config": {
+          "max_plies": 1000,
+          "opening_plies": 4,
+          "pairs": 1000,
+          "rules": {
+            "LC1": {
+              "repetitions": 2
+            }
+          },
+          "seed": 202
+        },
+        "distinct_games": 1925,
+        "distinct_openings": 992,
+        "distinct_positions_after_opening": 21116,
+        "games": 2000,
+        "player_a": "greedy+-7.8843*opp_win_now",
+        "player_b": "greedy",
+        "score": 0.5415,
+        "scored_pairs": 1000,
+        "significant": true,
+        "white_score": 0.5765
+      },
+      "role": "candidate",
+      "score": 0.5415,
+      "scored_pairs": 1000,
+      "seconds": 2.177373292,
+      "unfinished": 0,
+      "weights": null
+    },
+    {
+      "ci95": [
+        0.1760495436636648,
+        0.20695045633633521
+      ],
+      "distinct_games": 1949,
+      "feature": "opp_win_now",
+      "k": 2.0,
+      "player": "mirror of greedy+-7.8843*opp_win_now",
+      "report": {
+        "a": {
+          "draws": 0,
+          "losses": 1617,
+          "unfinished": 0,
+          "wins": 383
+        },
+        "a_as_red": {
+          "draws": 0,
+          "losses": 910,
+          "unfinished": 0,
+          "wins": 90
+        },
+        "a_as_white": {
+          "draws": 0,
+          "losses": 707,
+          "unfinished": 0,
+          "wins": 293
+        },
+        "ci95": [
+          0.1760495436636648,
+          0.20695045633633521
+        ],
+        "config": {
+          "max_plies": 1000,
+          "opening_plies": 4,
+          "pairs": 1000,
+          "rules": {
+            "LC1": {
+              "repetitions": 2
+            }
+          },
+          "seed": 202
+        },
+        "distinct_games": 1949,
+        "distinct_openings": 992,
+        "distinct_positions_after_opening": 10401,
+        "games": 2000,
+        "player_a": "mirror of greedy+-7.8843*opp_win_now",
+        "player_b": "greedy",
+        "score": 0.1915,
+        "scored_pairs": 1000,
+        "significant": true,
+        "white_score": 0.6015
+      },
+      "role": "mirror",
+      "score": 0.1915,
+      "scored_pairs": 1000,
+      "seconds": 1.2700347920000001,
+      "unfinished": 0,
+      "weights": null
+    }
+  ],
+  "opening_plies": 4,
+  "opponent": "greedy",
+  "pairs": 1000,
+  "retained": [
+    "own_tops",
+    "prisoners",
+    "hostages",
+    "own_max_height",
+    "opp_max_height",
+    "own_mobility",
+    "opp_mobility",
+    "corners",
+    "own_singletons",
+    "opp_singletons",
+    "own_tall",
+    "own_exposed",
+    "opp_exposed",
+    "opp_win_now"
+  ],
+  "rules": "lc1-2",
+  "seed": 202,
+  "vs_two_ply": [
+    {
+      "ci95": [
+        0.2415823213101721,
+        0.2754176786898279
+      ],
+      "distinct_games": 1965,
+      "feature": null,
+      "k": null,
+      "player": "greedy",
+      "report": {
+        "a": {
+          "draws": 0,
+          "losses": 1483,
+          "unfinished": 0,
+          "wins": 517
+        },
+        "a_as_red": {
+          "draws": 0,
+          "losses": 825,
+          "unfinished": 0,
+          "wins": 175
+        },
+        "a_as_white": {
+          "draws": 0,
+          "losses": 658,
+          "unfinished": 0,
+          "wins": 342
+        },
+        "ci95": [
+          0.2415823213101721,
+          0.2754176786898279
+        ],
+        "config": {
+          "max_plies": 1000,
+          "opening_plies": 4,
+          "pairs": 1000,
+          "rules": {
+            "LC1": {
+              "repetitions": 2
+            }
+          },
+          "seed": 303
+        },
+        "distinct_games": 1965,
+        "distinct_openings": 995,
+        "distinct_positions_after_opening": 17657,
+        "games": 2000,
+        "player_a": "greedy",
+        "player_b": "greedy-2ply",
+        "score": 0.2585,
+        "scored_pairs": 1000,
+        "significant": true,
+        "white_score": 0.5835
+      },
+      "role": "reference: greedy vs two-ply greedy",
+      "score": 0.2585,
+      "scored_pairs": 1000,
+      "seconds": 3.60711125,
+      "unfinished": 0,
+      "weights": null
+    },
+    {
+      "ci95": [
+        0.28066023849433824,
+        0.31433976150566173
+      ],
+      "distinct_games": 1963,
+      "feature": "own_tops",
+      "k": -0.5,
+      "player": "greedy+-0.5914*own_tops",
+      "report": {
+        "a": {
+          "draws": 0,
+          "losses": 1405,
+          "unfinished": 0,
+          "wins": 595
+        },
+        "a_as_red": {
+          "draws": 0,
+          "losses": 781,
+          "unfinished": 0,
+          "wins": 219
+        },
+        "a_as_white": {
+          "draws": 0,
+          "losses": 624,
+          "unfinished": 0,
+          "wins": 376
+        },
+        "ci95": [
+          0.28066023849433824,
+          0.31433976150566173
+        ],
+        "config": {
+          "max_plies": 1000,
+          "opening_plies": 4,
+          "pairs": 1000,
+          "rules": {
+            "LC1": {
+              "repetitions": 2
+            }
+          },
+          "seed": 303
+        },
+        "distinct_games": 1963,
+        "distinct_openings": 995,
+        "distinct_positions_after_opening": 16345,
+        "games": 2000,
+        "player_a": "greedy+-0.5914*own_tops",
+        "player_b": "greedy-2ply",
+        "score": 0.2975,
+        "scored_pairs": 1000,
+        "significant": true,
+        "white_score": 0.5785
+      },
+      "role": "robustness: survivor vs two-ply greedy",
+      "score": 0.2975,
+      "scored_pairs": 1000,
+      "seconds": 4.729333833,
+      "unfinished": 0,
+      "weights": null
+    },
+    {
+      "ci95": [
+        0.38267561566478153,
+        0.4153243843352185
+      ],
+      "distinct_games": 1951,
+      "feature": "prisoners",
+      "k": 0.5,
+      "player": "greedy+0.3649*prisoners",
+      "report": {
+        "a": {
+          "draws": 0,
+          "losses": 1202,
+          "unfinished": 0,
+          "wins": 798
+        },
+        "a_as_red": {
+          "draws": 0,
+          "losses": 705,
+          "unfinished": 0,
+          "wins": 295
+        },
+        "a_as_white": {
+          "draws": 0,
+          "losses": 497,
+          "unfinished": 0,
+          "wins": 503
+        },
+        "ci95": [
+          0.38267561566478153,
+          0.4153243843352185
+        ],
+        "config": {
+          "max_plies": 1000,
+          "opening_plies": 4,
+          "pairs": 1000,
+          "rules": {
+            "LC1": {
+              "repetitions": 2
+            }
+          },
+          "seed": 303
+        },
+        "distinct_games": 1951,
+        "distinct_openings": 995,
+        "distinct_positions_after_opening": 15655,
+        "games": 2000,
+        "player_a": "greedy+0.3649*prisoners",
+        "player_b": "greedy-2ply",
+        "score": 0.399,
+        "scored_pairs": 1000,
+        "significant": true,
+        "white_score": 0.604
+      },
+      "role": "robustness: survivor vs two-ply greedy",
+      "score": 0.399,
+      "scored_pairs": 1000,
+      "seconds": 4.239775667,
+      "unfinished": 0,
+      "weights": null
+    },
+    {
+      "ci95": [
+        0.3609617980132247,
+        0.3960382019867753
+      ],
+      "distinct_games": 1958,
+      "feature": "hostages",
+      "k": -0.25,
+      "player": "greedy+-0.1675*hostages",
+      "report": {
+        "a": {
+          "draws": 0,
+          "losses": 1243,
+          "unfinished": 0,
+          "wins": 757
+        },
+        "a_as_red": {
+          "draws": 0,
+          "losses": 712,
+          "unfinished": 0,
+          "wins": 288
+        },
+        "a_as_white": {
+          "draws": 0,
+          "losses": 531,
+          "unfinished": 0,
+          "wins": 469
+        },
+        "ci95": [
+          0.3609617980132247,
+          0.3960382019867753
+        ],
+        "config": {
+          "max_plies": 1000,
+          "opening_plies": 4,
+          "pairs": 1000,
+          "rules": {
+            "LC1": {
+              "repetitions": 2
+            }
+          },
+          "seed": 303
+        },
+        "distinct_games": 1958,
+        "distinct_openings": 995,
+        "distinct_positions_after_opening": 16963,
+        "games": 2000,
+        "player_a": "greedy+-0.1675*hostages",
+        "player_b": "greedy-2ply",
+        "score": 0.3785,
+        "scored_pairs": 1000,
+        "significant": true,
+        "white_score": 0.5905
+      },
+      "role": "robustness: survivor vs two-ply greedy",
+      "score": 0.3785,
+      "scored_pairs": 1000,
+      "seconds": 4.36784175,
+      "unfinished": 0,
+      "weights": null
+    },
+    {
+      "ci95": [
+        0.35825972411108953,
+        0.39174027588891047
+      ],
+      "distinct_games": 1954,
+      "feature": "own_max_height",
+      "k": 0.25,
+      "player": "greedy+0.1706*own_max_height",
+      "report": {
+        "a": {
+          "draws": 0,
+          "losses": 1250,
+          "unfinished": 0,
+          "wins": 750
+        },
+        "a_as_red": {
+          "draws": 0,
+          "losses": 713,
+          "unfinished": 0,
+          "wins": 287
+        },
+        "a_as_white": {
+          "draws": 0,
+          "losses": 537,
+          "unfinished": 0,
+          "wins": 463
+        },
+        "ci95": [
+          0.35825972411108953,
+          0.39174027588891047
+        ],
+        "config": {
+          "max_plies": 1000,
+          "opening_plies": 4,
+          "pairs": 1000,
+          "rules": {
+            "LC1": {
+              "repetitions": 2
+            }
+          },
+          "seed": 303
+        },
+        "distinct_games": 1954,
+        "distinct_openings": 995,
+        "distinct_positions_after_opening": 16473,
+        "games": 2000,
+        "player_a": "greedy+0.1706*own_max_height",
+        "player_b": "greedy-2ply",
+        "score": 0.375,
+        "scored_pairs": 1000,
+        "significant": true,
+        "white_score": 0.588
+      },
+      "role": "robustness: survivor vs two-ply greedy",
+      "score": 0.375,
+      "scored_pairs": 1000,
+      "seconds": 4.26356425,
+      "unfinished": 0,
+      "weights": null
+    },
+    {
+      "ci95": [
+        0.37256959710632553,
+        0.4064304028936745
+      ],
+      "distinct_games": 1954,
+      "feature": "opp_max_height",
+      "k": -0.5,
+      "player": "greedy+-0.3460*opp_max_height",
+      "report": {
+        "a": {
+          "draws": 0,
+          "losses": 1221,
+          "unfinished": 0,
+          "wins": 779
+        },
+        "a_as_red": {
+          "draws": 0,
+          "losses": 709,
+          "unfinished": 0,
+          "wins": 291
+        },
+        "a_as_white": {
+          "draws": 0,
+          "losses": 512,
+          "unfinished": 0,
+          "wins": 488
+        },
+        "ci95": [
+          0.37256959710632553,
+          0.4064304028936745
+        ],
+        "config": {
+          "max_plies": 1000,
+          "opening_plies": 4,
+          "pairs": 1000,
+          "rules": {
+            "LC1": {
+              "repetitions": 2
+            }
+          },
+          "seed": 303
+        },
+        "distinct_games": 1954,
+        "distinct_openings": 995,
+        "distinct_positions_after_opening": 16060,
+        "games": 2000,
+        "player_a": "greedy+-0.3460*opp_max_height",
+        "player_b": "greedy-2ply",
+        "score": 0.3895,
+        "scored_pairs": 1000,
+        "significant": true,
+        "white_score": 0.5985
+      },
+      "role": "robustness: survivor vs two-ply greedy",
+      "score": 0.3895,
+      "scored_pairs": 1000,
+      "seconds": 4.069236667,
+      "unfinished": 0,
+      "weights": null
+    },
+    {
+      "ci95": [
+        0.372636736397701,
+        0.407363263602299
+      ],
+      "distinct_games": 1948,
+      "feature": "own_mobility",
+      "k": 0.5,
+      "player": "greedy+0.1033*own_mobility",
+      "report": {
+        "a": {
+          "draws": 0,
+          "losses": 1220,
+          "unfinished": 0,
+          "wins": 780
+        },
+        "a_as_red": {
+          "draws": 0,
+          "losses": 743,
+          "unfinished": 0,
+          "wins": 257
+        },
+        "a_as_white": {
+          "draws": 0,
+          "losses": 477,
+          "unfinished": 0,
+          "wins": 523
+        },
+        "ci95": [
+          0.372636736397701,
+          0.407363263602299
+        ],
+        "config": {
+          "max_plies": 1000,
+          "opening_plies": 4,
+          "pairs": 1000,
+          "rules": {
+            "LC1": {
+              "repetitions": 2
+            }
+          },
+          "seed": 303
+        },
+        "distinct_games": 1948,
+        "distinct_openings": 995,
+        "distinct_positions_after_opening": 15741,
+        "games": 2000,
+        "player_a": "greedy+0.1033*own_mobility",
+        "player_b": "greedy-2ply",
+        "score": 0.39,
+        "scored_pairs": 1000,
+        "significant": true,
+        "white_score": 0.633
+      },
+      "role": "robustness: survivor vs two-ply greedy",
+      "score": 0.39,
+      "scored_pairs": 1000,
+      "seconds": 4.583704917,
+      "unfinished": 0,
+      "weights": null
+    },
+    {
+      "ci95": [
+        0.3733193297269569,
+        0.4076806702730431
+      ],
+      "distinct_games": 1956,
+      "feature": "opp_mobility",
+      "k": -0.5,
+      "player": "greedy+-0.1059*opp_mobility",
+      "report": {
+        "a": {
+          "draws": 0,
+          "losses": 1219,
+          "unfinished": 0,
+          "wins": 781
+        },
+        "a_as_red": {
+          "draws": 0,
+          "losses": 703,
+          "unfinished": 0,
+          "wins": 297
+        },
+        "a_as_white": {
+          "draws": 0,
+          "losses": 516,
+          "unfinished": 0,
+          "wins": 484
+        },
+        "ci95": [
+          0.3733193297269569,
+          0.4076806702730431
+        ],
+        "config": {
+          "max_plies": 1000,
+          "opening_plies": 4,
+          "pairs": 1000,
+          "rules": {
+            "LC1": {
+              "repetitions": 2
+            }
+          },
+          "seed": 303
+        },
+        "distinct_games": 1956,
+        "distinct_openings": 995,
+        "distinct_positions_after_opening": 16091,
+        "games": 2000,
+        "player_a": "greedy+-0.1059*opp_mobility",
+        "player_b": "greedy-2ply",
+        "score": 0.3905,
+        "scored_pairs": 1000,
+        "significant": true,
+        "white_score": 0.5935
+      },
+      "role": "robustness: survivor vs two-ply greedy",
+      "score": 0.3905,
+      "scored_pairs": 1000,
+      "seconds": 4.103246584,
+      "unfinished": 0,
+      "weights": null
+    },
+    {
+      "ci95": [
+        0.28779525753859825,
+        0.32220474246140174
+      ],
+      "distinct_games": 1964,
+      "feature": "corners",
+      "k": -0.25,
+      "player": "greedy+-0.2483*corners",
+      "report": {
+        "a": {
+          "draws": 0,
+          "losses": 1390,
+          "unfinished": 0,
+          "wins": 610
+        },
+        "a_as_red": {
+          "draws": 0,
+          "losses": 792,
+          "unfinished": 0,
+          "wins": 208
+        },
+        "a_as_white": {
+          "draws": 0,
+          "losses": 598,
+          "unfinished": 0,
+          "wins": 402
+        },
+        "ci95": [
+          0.28779525753859825,
+          0.32220474246140174
+        ],
+        "config": {
+          "max_plies": 1000,
+          "opening_plies": 4,
+          "pairs": 1000,
+          "rules": {
+            "LC1": {
+              "repetitions": 2
+            }
+          },
+          "seed": 303
+        },
+        "distinct_games": 1964,
+        "distinct_openings": 995,
+        "distinct_positions_after_opening": 16707,
+        "games": 2000,
+        "player_a": "greedy+-0.2483*corners",
+        "player_b": "greedy-2ply",
+        "score": 0.305,
+        "scored_pairs": 1000,
+        "significant": true,
+        "white_score": 0.597
+      },
+      "role": "robustness: survivor vs two-ply greedy",
+      "score": 0.305,
+      "scored_pairs": 1000,
+      "seconds": 4.420582416,
+      "unfinished": 0,
+      "weights": null
+    },
+    {
+      "ci95": [
+        0.3094442298416139,
+        0.3435557701583861
+      ],
+      "distinct_games": 1961,
+      "feature": "own_singletons",
+      "k": -0.25,
+      "player": "greedy+-0.2965*own_singletons",
+      "report": {
+        "a": {
+          "draws": 0,
+          "losses": 1347,
+          "unfinished": 0,
+          "wins": 653
+        },
+        "a_as_red": {
+          "draws": 0,
+          "losses": 768,
+          "unfinished": 0,
+          "wins": 232
+        },
+        "a_as_white": {
+          "draws": 0,
+          "losses": 579,
+          "unfinished": 0,
+          "wins": 421
+        },
+        "ci95": [
+          0.3094442298416139,
+          0.3435557701583861
+        ],
+        "config": {
+          "max_plies": 1000,
+          "opening_plies": 4,
+          "pairs": 1000,
+          "rules": {
+            "LC1": {
+              "repetitions": 2
+            }
+          },
+          "seed": 303
+        },
+        "distinct_games": 1961,
+        "distinct_openings": 995,
+        "distinct_positions_after_opening": 16206,
+        "games": 2000,
+        "player_a": "greedy+-0.2965*own_singletons",
+        "player_b": "greedy-2ply",
+        "score": 0.3265,
+        "scored_pairs": 1000,
+        "significant": true,
+        "white_score": 0.5945
+      },
+      "role": "robustness: survivor vs two-ply greedy",
+      "score": 0.3265,
+      "scored_pairs": 1000,
+      "seconds": 3.899171541,
+      "unfinished": 0,
+      "weights": null
+    },
+    {
+      "ci95": [
+        0.33162388310747676,
+        0.3673761168925232
+      ],
+      "distinct_games": 1959,
+      "feature": "opp_singletons",
+      "k": 0.25,
+      "player": "greedy+0.3251*opp_singletons",
+      "report": {
+        "a": {
+          "draws": 0,
+          "losses": 1301,
+          "unfinished": 0,
+          "wins": 699
+        },
+        "a_as_red": {
+          "draws": 0,
+          "losses": 741,
+          "unfinished": 0,
+          "wins": 259
+        },
+        "a_as_white": {
+          "draws": 0,
+          "losses": 560,
+          "unfinished": 0,
+          "wins": 440
+        },
+        "ci95": [
+          0.33162388310747676,
+          0.3673761168925232
+        ],
+        "config": {
+          "max_plies": 1000,
+          "opening_plies": 4,
+          "pairs": 1000,
+          "rules": {
+            "LC1": {
+              "repetitions": 2
+            }
+          },
+          "seed": 303
+        },
+        "distinct_games": 1959,
+        "distinct_openings": 995,
+        "distinct_positions_after_opening": 18294,
+        "games": 2000,
+        "player_a": "greedy+0.3251*opp_singletons",
+        "player_b": "greedy-2ply",
+        "score": 0.3495,
+        "scored_pairs": 1000,
+        "significant": true,
+        "white_score": 0.5905
+      },
+      "role": "robustness: survivor vs two-ply greedy",
+      "score": 0.3495,
+      "scored_pairs": 1000,
+      "seconds": 4.362928208,
+      "unfinished": 0,
+      "weights": null
+    },
+    {
+      "ci95": [
+        0.32790737826669886,
+        0.3620926217333011
+      ],
+      "distinct_games": 1959,
+      "feature": "own_tall",
+      "k": 0.5,
+      "player": "greedy+0.8054*own_tall",
+      "report": {
+        "a": {
+          "draws": 0,
+          "losses": 1310,
+          "unfinished": 0,
+          "wins": 690
+        },
+        "a_as_red": {
+          "draws": 0,
+          "losses": 750,
+          "unfinished": 0,
+          "wins": 250
+        },
+        "a_as_white": {
+          "draws": 0,
+          "losses": 560,
+          "unfinished": 0,
+          "wins": 440
+        },
+        "ci95": [
+          0.32790737826669886,
+          0.3620926217333011
+        ],
+        "config": {
+          "max_plies": 1000,
+          "opening_plies": 4,
+          "pairs": 1000,
+          "rules": {
+            "LC1": {
+              "repetitions": 2
+            }
+          },
+          "seed": 303
+        },
+        "distinct_games": 1959,
+        "distinct_openings": 995,
+        "distinct_positions_after_opening": 16131,
+        "games": 2000,
+        "player_a": "greedy+0.8054*own_tall",
+        "player_b": "greedy-2ply",
+        "score": 0.345,
+        "scored_pairs": 1000,
+        "significant": true,
+        "white_score": 0.595
+      },
+      "role": "robustness: survivor vs two-ply greedy",
+      "score": 0.345,
+      "scored_pairs": 1000,
+      "seconds": 3.9408211250000003,
+      "unfinished": 0,
+      "weights": null
+    },
+    {
+      "ci95": [
+        0.3787075745303679,
+        0.41229242546963213
+      ],
+      "distinct_games": 1960,
+      "feature": "own_exposed",
+      "k": -0.25,
+      "player": "greedy+-0.2850*own_exposed",
+      "report": {
+        "a": {
+          "draws": 0,
+          "losses": 1209,
+          "unfinished": 0,
+          "wins": 791
+        },
+        "a_as_red": {
+          "draws": 0,
+          "losses": 702,
+          "unfinished": 0,
+          "wins": 298
+        },
+        "a_as_white": {
+          "draws": 0,
+          "losses": 507,
+          "unfinished": 0,
+          "wins": 493
+        },
+        "ci95": [
+          0.3787075745303679,
+          0.41229242546963213
+        ],
+        "config": {
+          "max_plies": 1000,
+          "opening_plies": 4,
+          "pairs": 1000,
+          "rules": {
+            "LC1": {
+              "repetitions": 2
+            }
+          },
+          "seed": 303
+        },
+        "distinct_games": 1960,
+        "distinct_openings": 995,
+        "distinct_positions_after_opening": 15794,
+        "games": 2000,
+        "player_a": "greedy+-0.2850*own_exposed",
+        "player_b": "greedy-2ply",
+        "score": 0.3955,
+        "scored_pairs": 1000,
+        "significant": true,
+        "white_score": 0.5975
+      },
+      "role": "robustness: survivor vs two-ply greedy",
+      "score": 0.3955,
+      "scored_pairs": 1000,
+      "seconds": 3.866658417,
+      "unfinished": 0,
+      "weights": null
+    },
+    {
+      "ci95": [
+        0.27802307892189326,
+        0.3129769210781067
+      ],
+      "distinct_games": 1966,
+      "feature": "opp_exposed",
+      "k": -0.25,
+      "player": "greedy+-0.3174*opp_exposed",
+      "report": {
+        "a": {
+          "draws": 0,
+          "losses": 1409,
+          "unfinished": 0,
+          "wins": 591
+        },
+        "a_as_red": {
+          "draws": 0,
+          "losses": 788,
+          "unfinished": 0,
+          "wins": 212
+        },
+        "a_as_white": {
+          "draws": 0,
+          "losses": 621,
+          "unfinished": 0,
+          "wins": 379
+        },
+        "ci95": [
+          0.27802307892189326,
+          0.3129769210781067
+        ],
+        "config": {
+          "max_plies": 1000,
+          "opening_plies": 4,
+          "pairs": 1000,
+          "rules": {
+            "LC1": {
+              "repetitions": 2
+            }
+          },
+          "seed": 303
+        },
+        "distinct_games": 1966,
+        "distinct_openings": 995,
+        "distinct_positions_after_opening": 18339,
+        "games": 2000,
+        "player_a": "greedy+-0.3174*opp_exposed",
+        "player_b": "greedy-2ply",
+        "score": 0.2955,
+        "scored_pairs": 1000,
+        "significant": true,
+        "white_score": 0.5835
+      },
+      "role": "robustness: survivor vs two-ply greedy",
+      "score": 0.2955,
+      "scored_pairs": 1000,
+      "seconds": 4.404477958,
+      "unfinished": 0,
+      "weights": null
+    },
+    {
+      "ci95": [
+        0.2604367926661486,
+        0.29556320733385144
+      ],
+      "distinct_games": 1964,
+      "feature": "opp_win_now",
+      "k": -2.0,
+      "player": "greedy+-7.8843*opp_win_now",
+      "report": {
+        "a": {
+          "draws": 0,
+          "losses": 1444,
+          "unfinished": 0,
+          "wins": 556
+        },
+        "a_as_red": {
+          "draws": 0,
+          "losses": 808,
+          "unfinished": 0,
+          "wins": 192
+        },
+        "a_as_white": {
+          "draws": 0,
+          "losses": 636,
+          "unfinished": 0,
+          "wins": 364
+        },
+        "ci95": [
+          0.2604367926661486,
+          0.29556320733385144
+        ],
+        "config": {
+          "max_plies": 1000,
+          "opening_plies": 4,
+          "pairs": 1000,
+          "rules": {
+            "LC1": {
+              "repetitions": 2
+            }
+          },
+          "seed": 303
+        },
+        "distinct_games": 1964,
+        "distinct_openings": 995,
+        "distinct_positions_after_opening": 20504,
+        "games": 2000,
+        "player_a": "greedy+-7.8843*opp_win_now",
+        "player_b": "greedy-2ply",
+        "score": 0.278,
+        "scored_pairs": 1000,
+        "significant": true,
+        "white_score": 0.586
+      },
+      "role": "robustness: survivor vs two-ply greedy",
+      "score": 0.278,
+      "scored_pairs": 1000,
+      "seconds": 4.566911166,
+      "unfinished": 0,
+      "weights": null
+    }
+  ]
+}
