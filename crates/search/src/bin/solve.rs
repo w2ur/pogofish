@@ -24,7 +24,7 @@ fn parse_ruleset(variant: &str) -> anyhow::Result<RuleSet> {
 
 fn max_depth_for_rules(rules: &RuleSet) -> u16 {
     match *rules {
-        RuleSet::LC1 { .. } | RuleSet::Uncapped => 30,
+        RuleSet::LC1 { .. } | RuleSet::LC1Draw { .. } | RuleSet::Uncapped => 30,
         RuleSet::LC2 { cap } => cap,
         RuleSet::LC3 { cap } => cap,
     }

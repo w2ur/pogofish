@@ -44,7 +44,7 @@ pub enum MoveError {
 pub enum Outcome {
     WinWhite,
     WinRed,
-    /// Earned draw (only LC3 can produce this — tie on tower count at cap)
+    /// Draw: a tie on tower count at the LC3 cap, or a repetition under LC1Draw.
     DrawEarned,
 }
 

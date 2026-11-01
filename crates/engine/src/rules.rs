@@ -12,6 +12,10 @@ pub enum RuleSet {
     /// repetitions=1 means the first repetition triggers a loss for the
     /// player whose move produced the repeated position.
     LC1 { repetitions: u8 },
+    /// Draw on Nth repetition: the same trigger as LC1 (the position has
+    /// occurred `repetitions` times before), but the game ends drawn instead
+    /// of lost for the player whose move produced it. Printed `lc1d-N`.
+    LC1Draw { repetitions: u8 },
     /// Hard cap: if nobody has won by move `cap`, the player to move at the
     /// cap loses. No draws. The cap's parity therefore fixes which colour
     /// loses a game that reaches it (White for an even cap, Red for odd).
@@ -28,6 +32,7 @@ pub fn is_terminal(state: &GameState, rules: &RuleSet) -> Option<Outcome> {
     match *rules {
         RuleSet::Uncapped => None,
         RuleSet::LC1 { repetitions } => check_lc1(state, repetitions),
+        RuleSet::LC1Draw { repetitions } => check_lc1_draw(state, repetitions),
         RuleSet::LC2 { cap } => check_lc2(state, cap),
         RuleSet::LC3 { cap } => check_lc3(state, cap),
     }
@@ -38,6 +43,7 @@ impl std::fmt::Display for RuleSet {
         match *self {
             RuleSet::Uncapped => write!(f, "uncapped"),
             RuleSet::LC1 { repetitions } => write!(f, "lc1-{repetitions}"),
+            RuleSet::LC1Draw { repetitions } => write!(f, "lc1d-{repetitions}"),
             RuleSet::LC2 { cap } => write!(f, "lc2-{cap}"),
             RuleSet::LC3 { cap } => write!(f, "lc3-{cap}"),
         }
@@ -47,15 +53,19 @@ impl std::fmt::Display for RuleSet {
 impl std::str::FromStr for RuleSet {
     type Err = String;
 
-    /// Parses `uncapped`, `lc1-N`, `lc2-N` or `lc3-N`.
+    /// Parses `uncapped`, `lc1-N`, `lc1d-N`, `lc2-N` or `lc3-N`.
     fn from_str(s: &str) -> Result<Self, Self::Err> {
         if s == "uncapped" {
             return Ok(RuleSet::Uncapped);
         }
-        let usage = || format!("ruleset must be uncapped, lc1-N, lc2-N or lc3-N, got '{s}'");
+        let usage =
+            || format!("ruleset must be uncapped, lc1-N, lc1d-N, lc2-N or lc3-N, got '{s}'");
         let (kind, n) = s.split_once('-').ok_or_else(usage)?;
         match kind {
             "lc1" => Ok(RuleSet::LC1 {
+                repetitions: n.parse().map_err(|_| usage())?,
+            }),
+            "lc1d" => Ok(RuleSet::LC1Draw {
                 repetitions: n.parse().map_err(|_| usage())?,
             }),
             "lc2" => Ok(RuleSet::LC2 {
@@ -72,15 +82,15 @@ impl std::str::FromStr for RuleSet {
 impl RuleSet {
     /// True when the rule depends on nothing but the board and the player to
     /// move, so `GameState::key` (and the network's board encoding) is a
-    /// Markov state. Only `Uncapped` qualifies: LC1 reads the history, LC2 and
-    /// LC3 the move count.
+    /// Markov state. Only `Uncapped` qualifies: LC1 and LC1Draw read the
+    /// history, LC2 and LC3 the move count.
     pub fn board_is_markov(&self) -> bool {
         matches!(self, RuleSet::Uncapped)
     }
 
-    /// True when the rule reads the position history (only LC1).
+    /// True when the rule reads the position history (LC1 and LC1Draw).
     pub fn reads_history(&self) -> bool {
-        matches!(self, RuleSet::LC1 { .. })
+        matches!(self, RuleSet::LC1 { .. } | RuleSet::LC1Draw { .. })
     }
 }
 
@@ -96,7 +106,7 @@ pub fn search_key(state: &GameState, rules: &RuleSet) -> StateKey {
     let mut key = state.key();
     match *rules {
         RuleSet::Uncapped => {}
-        RuleSet::LC1 { .. } => {
+        RuleSet::LC1 { .. } | RuleSet::LC1Draw { .. } => {
             let mut seen: Vec<&StateKey> = state.history_iter().collect();
             seen.sort_unstable_by(|a, b| a.0.cmp(&b.0));
             key.0.push(0xF1);
@@ -159,6 +169,11 @@ fn check_lc1(state: &GameState, repetitions: u8) -> Option<Outcome> {
     } else {
         None
     }
+}
+
+fn check_lc1_draw(state: &GameState, repetitions: u8) -> Option<Outcome> {
+    // Same trigger as `check_lc1`; only the outcome differs.
+    (state.occurrences_before() >= repetitions as usize).then_some(Outcome::DrawEarned)
 }
 
 fn check_lc2(state: &GameState, cap: u16) -> Option<Outcome> {

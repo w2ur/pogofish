@@ -74,7 +74,7 @@ moving pieces always land on top, so the mover owns at least the destination aft
 every move: nobody can lose on their own move, and a player with no legal move has
 already lost. There is no stalemate.
 
-- Engine: [`rules.rs` `base_terminal`](../crates/engine/src/rules.rs#L33)
+- Engine: [`rules.rs` `base_terminal`](../crates/engine/src/rules.rs#L135)
 - Tests: `win_by_squeeze_with_buried_opponent_pieces`,
   `no_legal_move_only_when_the_game_is_already_lost`, and the property tests
   `mover_owns_destination_after_move` and `not_terminal_implies_has_legal_moves`
@@ -88,14 +88,16 @@ and White wins even though three Red pieces remain on the board.
 
 The base rules allow games that never end. `RuleSet::Uncapped` plays them as
 published (base rule only; round 2 trains on it, with a safety limit treated as
-truncation). The engine also offers three extra rules from round 1, chosen per
-game with `RuleSet`; a base win (section 4) is always checked first.
+truncation). The engine also offers three extra rules from round 1 and a draw
+form of the repetition rule (added for `docs/experiments/v3-repetition-outcome.md`),
+chosen per game with `RuleSet`; a base win (section 4) is always checked first.
 
 | Variant | Rule | Engine | Tests (`crates/engine/tests/rules.rs`) |
 |---|---|---|---|
-| LC1 `repetitions: n` | The position (board and player to move) has occurred `n` times before: the player who just moved loses. | [`check_lc1`](../crates/engine/src/rules.rs#L58) | `lc1_first_repetition_loses` |
-| LC2 `cap: c` | Nobody has won by move `c`: the player to move loses. Parity of `c` fixes the loser (White for even `c`). | [`check_lc2`](../crates/engine/src/rules.rs#L73) | `lc2_hard_cap_player_to_move_loses_if_not_winning`, `lc2_hard_cap_mover_loses_even_with_a_tower_lead`, `lc2_before_cap_not_terminal` |
-| LC3 `cap: c` | Nobody has won by move `c`: the player with more stacks on top wins; equal counts are a draw. | [`check_lc3`](../crates/engine/src/rules.rs#L85) | `lc3_soft_cap_player_with_more_towers_wins`, `lc3_soft_cap_tie_is_earned_draw` |
+| LC1 `repetitions: n` | The position (board and player to move) has occurred `n` times before: the player who just moved loses. | [`check_lc1`](../crates/engine/src/rules.rs#L160) | `lc1_first_repetition_loses`; regression `third_occurrence_draws_under_lc1d_and_loses_under_lc1` |
+| LC1Draw `repetitions: n` (printed `lc1d-n`) | The position has occurred `n` times before: the game is drawn. Same trigger as LC1, other outcome. | [`check_lc1_draw`](../crates/engine/src/rules.rs#L174) | `lc1_draw_third_occurrence_is_a_draw`, `lc1_draw_base_win_comes_first`, `lc1_draw_parses_and_prints`; regression `third_occurrence_draws_under_lc1d_and_loses_under_lc1` |
+| LC2 `cap: c` | Nobody has won by move `c`: the player to move loses. Parity of `c` fixes the loser (White for even `c`). | [`check_lc2`](../crates/engine/src/rules.rs#L179) | `lc2_hard_cap_player_to_move_loses_if_not_winning`, `lc2_hard_cap_mover_loses_even_with_a_tower_lead`, `lc2_before_cap_not_terminal` |
+| LC3 `cap: c` | Nobody has won by move `c`: the player with more stacks on top wins; equal counts are a draw. | [`check_lc3`](../crates/engine/src/rules.rs#L191) | `lc3_soft_cap_player_with_more_towers_wins`, `lc3_soft_cap_tie_is_earned_draw` |
 
 **Example (LC2, cap 30).** Move 30 arrives with Red to move and Red on top of 5
 stacks against White's 3. Red still loses: the cap ends the game against whoever is
@@ -129,3 +131,11 @@ Every mutation made at least one test fail.
 | `base_terminal` reads the bottom piece instead of the top | `win_by_squeeze_with_buried_opponent_pieces`, `no_legal_move_only_when_the_game_is_already_lost` |
 | `base_terminal` names the wrong winner | `win_by_squeeze_with_buried_opponent_pieces`, `no_legal_move_only_when_the_game_is_already_lost` |
 | White starts with stacks of 1 instead of 2 | `initial_position_has_sixteen_moves` |
+| `check_lc1_draw` returns a Red win instead of a draw | `third_occurrence_draws_under_lc1d_and_loses_under_lc1`, `lc1_draw_third_occurrence_is_a_draw` |
+| `check_lc1_draw` triggers one occurrence late (`>` for `>=`) | `third_occurrence_draws_under_lc1d_and_loses_under_lc1`, `lc1_draw_third_occurrence_is_a_draw` |
+| `reads_history` omits LC1Draw (history dropped during play) | `third_occurrence_draws_under_lc1d_and_loses_under_lc1` |
+| The repetition draw is checked before the base win | `lc1_draw_base_win_comes_first` |
+| LC1Draw prints as `lc1-n` | `lc1_draw_parses_and_prints` |
+
+The LC1Draw rows were run with `cargo test -p pogofish-engine --no-fail-fast` (the
+`rules` tests included).

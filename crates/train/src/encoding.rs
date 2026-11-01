@@ -202,5 +202,9 @@ mod tests {
         assert!(Features::MoverRelativeRepetition.suffice_for(&lc1));
         assert!(!Features::MoverRelative.suffice_for(&lc1));
         assert!(!Features::Absolute.suffice_for(&lc1));
+        let lc1d = RuleSet::LC1Draw { repetitions: 2 };
+        assert!(Features::MoverRelativeRepetition.suffice_for(&lc1d));
+        assert!(!Features::MoverRelative.suffice_for(&lc1d));
+        assert!(!Features::Absolute.suffice_for(&lc1d));
     }
 }

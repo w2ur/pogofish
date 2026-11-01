@@ -115,6 +115,7 @@ fn keys_differ_where_outcomes_differ() {
         RuleSet::Uncapped,
         RuleSet::LC1 { repetitions: 1 },
         RuleSet::LC1 { repetitions: 2 },
+        RuleSet::LC1Draw { repetitions: 2 },
         RuleSet::LC2 { cap: 29 },
         RuleSet::LC3 { cap: 29 },
     ];
@@ -140,6 +141,7 @@ fn only_uncapped_has_a_markov_board() {
     assert!(RuleSet::Uncapped.board_is_markov());
     for r in [
         RuleSet::LC1 { repetitions: 1 },
+        RuleSet::LC1Draw { repetitions: 2 },
         RuleSet::LC2 { cap: 9 },
         RuleSet::LC3 { cap: 9 },
     ] {

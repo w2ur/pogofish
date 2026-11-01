@@ -173,3 +173,35 @@ fn initial_position_has_sixteen_moves() {
     assert_eq!(s.to_move(), W);
     assert_eq!(legal_moves(&s).len(), 16);
 }
+
+/// Rule: under `lc1d-2` a position's third occurrence (same board, same
+/// player to move) is a draw; under `lc1-2` it loses for the player who
+/// produced it (`rules.rs` `check_lc1_draw`, `check_lc1`). Both sides shuffle
+/// one piece out and back from the start; the start position recurs after
+/// plies 4 and 8, and Red makes ply 8.
+#[test]
+fn third_occurrence_draws_under_lc1d_and_loses_under_lc1() {
+    use pogofish_engine::apply_move_under;
+    let cycle = [
+        Move { from_cell: 0, num_pieces: 1, to_cell: 3 },
+        Move { from_cell: 6, num_pieces: 1, to_cell: 7 },
+        Move { from_cell: 3, num_pieces: 1, to_cell: 0 },
+        Move { from_cell: 7, num_pieces: 1, to_cell: 6 },
+    ];
+    let draw = RuleSet::LC1Draw { repetitions: 2 };
+    let loss = RuleSet::LC1 { repetitions: 2 };
+    let mut ends = Vec::new();
+    for rules in [draw, loss] {
+        let mut s = initial_state();
+        let mut end = None;
+        for (ply, m) in cycle.iter().cycle().take(8).enumerate() {
+            assert_eq!(is_terminal(&s, &rules), None, "{rules}: ended before ply {}", ply + 1);
+            s = apply_move_under(&s, *m, &rules).unwrap();
+            end = is_terminal(&s, &rules);
+        }
+        assert_eq!(s.key(), initial_state().key());
+        assert_eq!(s.to_move(), W);
+        ends.push(end);
+    }
+    assert_eq!(ends, vec![Some(Outcome::DrawEarned), Some(Outcome::WinWhite)]);
+}

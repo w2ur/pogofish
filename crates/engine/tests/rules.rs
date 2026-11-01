@@ -99,3 +99,43 @@ fn rulesets_parse_and_print() {
         assert!(bad.parse::<RuleSet>().is_err(), "{bad}");
     }
 }
+
+/// LC1Draw: same trigger as LC1 (the position occurred `repetitions` times
+/// before), but the game is drawn instead of lost by the player who moved.
+#[test]
+fn lc1_draw_third_occurrence_is_a_draw() {
+    let rules = RuleSet::LC1Draw { repetitions: 2 };
+    let s0 = initial_state();
+    let key = s0.key();
+    let second = pogofish_engine::testing::state_with_repeated_key(&s0, key.clone(), 1);
+    assert_eq!(is_terminal(&second, &rules), None, "second occurrence: play on");
+    let third = pogofish_engine::testing::state_with_repeated_key(&s0, key, 2);
+    assert_eq!(is_terminal(&third, &rules), Some(Outcome::DrawEarned));
+    // The same state under lc1-2 is a loss for Red, who just moved.
+    assert_eq!(
+        is_terminal(&third, &RuleSet::LC1 { repetitions: 2 }),
+        Some(Outcome::WinWhite)
+    );
+}
+
+/// A base win is checked before the repetition draw.
+#[test]
+fn lc1_draw_base_win_comes_first() {
+    let rules = RuleSet::LC1Draw { repetitions: 2 };
+    let won = pogofish_engine::testing::state_with_no_red_piles();
+    let repeated = pogofish_engine::testing::state_with_repeated_key(&won, won.key(), 5);
+    assert_eq!(is_terminal(&repeated, &rules), Some(Outcome::WinWhite));
+}
+
+#[test]
+fn lc1_draw_parses_and_prints() {
+    for text in ["lc1d-2", "lc1d-1", "lc1d-3"] {
+        let r: RuleSet = text.parse().unwrap();
+        assert_eq!(r.to_string(), text);
+    }
+    assert_eq!("lc1d-2".parse::<RuleSet>(), Ok(RuleSet::LC1Draw { repetitions: 2 }));
+    assert_ne!("lc1d-2".parse::<RuleSet>(), "lc1-2".parse::<RuleSet>());
+    for bad in ["lc1d", "lc1d-", "lc1d-x", "lc1d-300", "lc1x-2"] {
+        assert!(bad.parse::<RuleSet>().is_err(), "{bad}");
+    }
+}

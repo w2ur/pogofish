@@ -39,12 +39,14 @@ impl Features {
 
     /// Whether these features carry everything `rules` reads at the current
     /// position: nothing beyond the board under Uncapped, the current
-    /// position's repetition count under LC1. Never for LC2/LC3, which read
+    /// position's repetition count under LC1 and LC1Draw. Never for LC2/LC3, which read
     /// the move count.
     pub fn suffice_for(self, rules: &RuleSet) -> bool {
         match rules {
             RuleSet::Uncapped => true,
-            RuleSet::LC1 { .. } => self == Features::MoverRelativeRepetition,
+            RuleSet::LC1 { .. } | RuleSet::LC1Draw { .. } => {
+                self == Features::MoverRelativeRepetition
+            }
             RuleSet::LC2 { .. } | RuleSet::LC3 { .. } => false,
         }
     }
