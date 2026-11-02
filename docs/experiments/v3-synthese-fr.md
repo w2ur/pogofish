@@ -4,7 +4,9 @@ Matière première, pas l’article. Chaque chiffre renvoie à sa source ; rien 
 
 - `docs/experiments/v2-principles.md` : les principes stratégiques ;
 - `docs/experiments/v3-repetition-outcome.md` : la répétition, nulle ou défaite ;
-- `docs/experiments/v3-solve.md` : la résolution exacte du jeu.
+- `docs/experiments/v3-solve.md` : la résolution exacte du jeu ;
+- `docs/experiments/v3-principles-perfect.md` : les principes du jeu parfait et l’ouverture ;
+- `docs/experiments/v3-lc1-solve.md` : qui gagne sous lc1-2, non résolu.
 
 ---
 
@@ -171,10 +173,58 @@ Le premier principe, empiler sur l’adversaire, se lit dans les deux premiers p
 
 ---
 
-## 5. Ce qu’on ne sait pas
+## 5. Les principes du jeu parfait, et l’ouverture
 
-- Quel camp gagne sous lc1-2, la règle qui fait perdre à la troisième répétition.
-- Si les principes valent au-delà du réseau de la graine 1.
+Source : `docs/experiments/v3-principles-perfect.md`. Cette fois, les principes ne viennent plus d’un réseau imparfait mais de la table exacte. Sur 20 000 positions gagnées ou nulles, on compare les coups qui conservent le résultat aux autres, à nombre de piles contrôlées égal.
+
+**Les quatre principes du jeu parfait.**
+
+1. **Enterrer des pièces adverses.** C’est le premier critère, avant même le nombre de piles : le bon coup en enterre davantage que les autres dans 88 % des positions gagnées et 74 % des nulles. Le réseau le plaçait seulement cinquième.
+2. **Prendre un sommet adverse en y déplaçant toute sa pile, sur une pile déjà haute.** On finit avec moins de piles, mais plus hautes. C’est l’inverse exact de l’instinct du glouton.
+3. **Laisser peu de coups à l’adversaire**, et des sommets adverses faits d’une pièce seule.
+4. **Garder ses propres sommets hors de sa portée.**
+
+Le centre, le fait d’avancer et le nombre de pièces déplacées ne comptent pas. Tous les principes tirés du réseau sont confirmés dans leur direction.
+
+**En partie,** contre le glouton, sous lc1-2, sur 2 000 parties :
+
+- chaque principe améliore le score, entre 0,590 et 0,643 ;
+- le joueur parfait de la table obtient 0,919 [0,908 ; 0,930] ;
+- le glouton qui regarde un coup plus loin reste devant toutes les règles, à 0,756.
+
+Les listes de règles apprises, meilleures sur des positions tirées au hasard, jouent moins bien en partie qu’un simple départage. Encore une fois, calculer bat le savoir formulé.
+
+**L’ouverture : les principes s’inversent. Il faut rester chez soi.**
+
+- Les six premiers coups qui gardent la nulle, et 22 des 24 réponses rouges qui la gardent, font glisser une ou deux pièces le long de sa propre rangée.
+- Au premier coup, avancer, prendre, aller au centre ou suivre le glouton perd. Tous les joueurs fondés sur des règles jouent un premier coup perdant.
+- La nulle se resserre vite. Dès le demi-coup 4, certaines positions n’ont plus qu’un seul coup qui la garde ; c’est le cas de 37 % des positions au demi-coup 12.
+- L’ouverture la plus étroite est a1-1-b1, ou son symétrique c1-1-b1, celle que joue le réseau. Les Rouges n’ont alors que 2 réponses sur 16 : a3-1-b3 ou c3-1-b3.
+
+---
+
+## 6. Qui gagne sous lc1-2 ? Pas encore de réponse
+
+Source : `docs/experiments/v3-lc1-solve.md`.
+
+**La question se réduit, et la réduction est démontrée.** Tant que la partie reste dans la zone nulle, en sortir revient à perdre, exactement. Le jeu se ramène donc à une course dans un graphe de 289 536 positions nulles, où chacune ne peut être jouée que deux fois. Le premier qui n’a plus de coup neuf perd.
+
+**Mais ce graphe résiste.**
+
+- Sa plus grande composante, celle où l’on peut tourner en rond, compte 233 472 positions. La composante du départ en compte 11 736.
+- Aucune des deux n’a été résolue en dix millions d’états de recherche, sur des lignes de plus de 4 000 coups.
+- Seul acquis : aucun camp ne peut acculer l’autre en 27 coups ou moins.
+
+Il faudrait une autre méthode de recherche (par nombres de preuve, ou exploitant le fait que chaque camp déplace son propre jeton). Ni l’une ni l’autre n’a été essayée.
+
+**L’allure de ce jeu caché.** Une petite composante de 40 positions est une poursuite entre deux pions, une pile de deux de chaque camp, autour d’une haute pile figée.
+
+---
+
+## 7. Ce qu’on ne sait pas
+
+- Quel camp gagne sous lc1-2 (section 6).
+- Si les principes tirés du réseau valent au-delà de la graine 1. Ceux tirés de la table, en revanche, ne dépendent d’aucun réseau.
 - La force de l’IA contre des humains, au-delà de ma propre expérience : les dix parties prévues au second tour ont été abandonnées.
 - Tout ce qui précède porte sur le jeu publié et sur lc1-2. Les variantes LC2 et LC3 du premier tour, qui limitaient le nombre de coups, n’ont pas été résolues.
 
