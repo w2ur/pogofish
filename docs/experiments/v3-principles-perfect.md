@@ -220,8 +220,9 @@ most often on uniform positions, score *below* the best single tie-break in play
 positions met in play (above) point the same way: the list's advantage is measured on
 positions no game visits. That is a reading, not a tested cause; the repetition rule of
 `lc1-2` may also matter, since the table says nothing about it. Perfect uncapped play
-scores 0.919, not 1: from a draw it picks a draw-keeping move at random, which under
-`lc1-2` can still lose the repetition fight.
+scores 0.919, not 1, for two possible reasons not separated here: from a draw it picks a
+draw-keeping move at random, which under `lc1-2` can still lose the repetition fight; and
+a random 4-ply opening can leave it in a lost position, which greedy may convert.
 
 ## Against the net-derived principles
 
