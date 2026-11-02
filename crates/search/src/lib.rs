@@ -2,6 +2,7 @@ pub mod arena;
 pub mod checkpoint;
 pub mod elo;
 pub mod mcts;
+pub mod perfect;
 pub mod measure;
 pub mod minimax;
 pub mod players;
