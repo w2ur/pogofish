@@ -1,6 +1,6 @@
 # Pogofish, troisième tour : synthèse pour l’article
 
-Matière première, pas l’article. Chaque chiffre renvoie à sa source ; rien n’est arrondi au-delà de ce qu’elle donne. Les trois comptes rendus détaillés, en anglais :
+Matière première, pas l’article. Chaque chiffre renvoie à sa source ; rien n’est arrondi au-delà de ce qu’elle donne. Les comptes rendus détaillés, en anglais :
 
 - `docs/experiments/v2-principles.md` : les principes stratégiques ;
 - `docs/experiments/v3-repetition-outcome.md` : la répétition, nulle ou défaite ;
