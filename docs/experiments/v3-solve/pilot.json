@@ -1,0 +1,13 @@
+{
+  "expansion_secs_per_position": 1.8015356665e-6,
+  "expansion_upper_bound_secs": 419.38409973584123,
+  "init_extrapolated_secs": 4.7956708,
+  "label": "EXTRAPOLATED from timed slices, not measured end to end",
+  "note": "expansion bound assumes every position is resolved and expanded once; add scan_secs_per_level × number of levels",
+  "parents_per_position_mean": 15.593221,
+  "peak_rss_mib": 450.796875,
+  "scan_check": 0,
+  "scan_secs_per_level": 0.052240416,
+  "seconds": 3.711144541,
+  "threads": 4
+}

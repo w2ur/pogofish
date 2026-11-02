@@ -308,7 +308,7 @@ Round-2 failures, for honesty:
 
 ## Claims NOT to make
 
-- **State-space size.** It has never been measured (`CLAUDE.md` project rules; plan § Out of scope).
+- **A state-space size other than the measured one.** Round 3 counted 232,792,560 positions, 230,015,628 reachable (`v3-solve.md`); the round-2 documents were written before it.
 - **Any round-1 claim** about playing strength, colour balance or DQN (`v1-verdict.md` bottom line). Round-1 artifacts are "v1: evaluation unreliable" (plan rule 5).
 - **"Play it on the web" as if it were the round-2 net.** The web app still ships round-1 models: `app/public/models/` was last changed 2026-05-03 (`git log`), and it holds `lc1-2`/`lc3-29` ONNX, `alphazero_cnn.onnx`, `dqn_tiny.onnx` and the LC2-50 minimax table invalidated by defect 9. Plan task 6.4 (web parity) has no record of completion in the docs.
 - **Solver results** (minimax tables): invalidated by defect 9. Round 2 also excludes solving by owner decision (plan § Out of scope).

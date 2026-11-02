@@ -1,0 +1,98 @@
+{
+  "consistency_all_positions": {
+    "seconds": 107.027214958,
+    "violations": {
+      "child": 0,
+      "draw": 0,
+      "examples": [],
+      "loss": 0,
+      "status": 0,
+      "win": 0
+    }
+  },
+  "corrupted_entries": [
+    {
+      "corruption": "win set to loss at same distance",
+      "index": 8,
+      "seconds": 45.116750208,
+      "violations": 3
+    },
+    {
+      "corruption": "win distance +2",
+      "index": 8,
+      "seconds": 38.802242208,
+      "violations": 3
+    },
+    {
+      "corruption": "loss set to draw",
+      "index": 754,
+      "seconds": 39.098881333,
+      "violations": 1
+    },
+    {
+      "corruption": "draw set to win in 1",
+      "index": 623,
+      "seconds": 37.894029667,
+      "violations": 1
+    },
+    {
+      "corruption": "start position flipped",
+      "index": 116298960,
+      "seconds": 36.494559792,
+      "violations": 17
+    }
+  ],
+  "independent_search": {
+    "by_value": {
+      "Draw": {
+        "agree": 40,
+        "sampled": 40
+      },
+      "Loss(0)": {
+        "agree": 40,
+        "sampled": 40
+      },
+      "Loss(2)": {
+        "agree": 40,
+        "sampled": 40
+      },
+      "Loss(4)": {
+        "agree": 40,
+        "sampled": 40
+      },
+      "Loss(6)": {
+        "agree": 40,
+        "sampled": 40
+      },
+      "Win(1)": {
+        "agree": 40,
+        "sampled": 40
+      },
+      "Win(3)": {
+        "agree": 40,
+        "sampled": 40
+      },
+      "Win(5)": {
+        "agree": 40,
+        "sampled": 40
+      },
+      "Win(7)": {
+        "agree": 40,
+        "sampled": 40
+      }
+    },
+    "method": "plain recursive negamax on the engine (legal_moves/apply_move), no table, no transposition table; win in d: forced win within d plies and not within d-2; loss in d: forced loss within d and not within d-2; draw: no forced result within 5 plies",
+    "nodes": 5313266,
+    "seconds": 2.393073417
+  },
+  "mutated_rule": "tested on the 3+3 variant in crates/search/tests/retro.rs (consistency_check_catches_a_table_solved_under_a_mutated_rule)",
+  "peak_rss_mib": 409.015625,
+  "seconds": 404.436764125,
+  "symmetry_all_positions": {
+    "board_symmetry_mismatches": 0,
+    "colour_swap_mismatches": 0,
+    "seconds": 97.191695958,
+    "symmetries_checked": 7
+  },
+  "threads": 4
+}

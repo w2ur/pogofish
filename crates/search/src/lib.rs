@@ -6,4 +6,5 @@ pub mod measure;
 pub mod minimax;
 pub mod players;
 pub mod principles;
+pub mod retro;
 pub mod rng;

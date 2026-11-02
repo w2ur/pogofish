@@ -1,0 +1,13 @@
+{
+  "all_positions": {
+    "draw": 4823750,
+    "loss": 62033484,
+    "over": 2774772,
+    "win": 163160554
+  },
+  "levels": 52,
+  "peak_rss_mib": 452.78125,
+  "seconds": 120.677316625,
+  "start": "Draw",
+  "threads": 4
+}

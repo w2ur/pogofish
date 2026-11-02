@@ -304,7 +304,7 @@ fn aggregate_opening_moves(games: &[GameRecord]) -> Vec<OpeningCount> {
             frequency: count as f64 / total,
         })
         .collect();
-    out.sort_by(|a, b| b.count.cmp(&a.count));
+    out.sort_by_key(|b| std::cmp::Reverse(b.count));
     out
 }
 

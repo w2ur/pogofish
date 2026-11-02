@@ -1,0 +1,1385 @@
+{
+  "first_moves": [
+    {
+      "for_white": {
+        "value": "draw"
+      },
+      "move": "a1-1-b1"
+    },
+    {
+      "for_white": {
+        "plies": 22,
+        "value": "loss"
+      },
+      "move": "a1-1-a2"
+    },
+    {
+      "for_white": {
+        "value": "draw"
+      },
+      "move": "a1-2-c1"
+    },
+    {
+      "for_white": {
+        "plies": 12,
+        "value": "loss"
+      },
+      "move": "a1-2-b2"
+    },
+    {
+      "for_white": {
+        "plies": 16,
+        "value": "loss"
+      },
+      "move": "a1-2-a3"
+    },
+    {
+      "for_white": {
+        "value": "draw"
+      },
+      "move": "b1-1-a1"
+    },
+    {
+      "for_white": {
+        "value": "draw"
+      },
+      "move": "b1-1-c1"
+    },
+    {
+      "for_white": {
+        "plies": 16,
+        "value": "loss"
+      },
+      "move": "b1-1-b2"
+    },
+    {
+      "for_white": {
+        "plies": 12,
+        "value": "loss"
+      },
+      "move": "b1-2-a2"
+    },
+    {
+      "for_white": {
+        "plies": 12,
+        "value": "loss"
+      },
+      "move": "b1-2-c2"
+    },
+    {
+      "for_white": {
+        "plies": 14,
+        "value": "loss"
+      },
+      "move": "b1-2-b3"
+    },
+    {
+      "for_white": {
+        "value": "draw"
+      },
+      "move": "c1-1-b1"
+    },
+    {
+      "for_white": {
+        "plies": 22,
+        "value": "loss"
+      },
+      "move": "c1-1-c2"
+    },
+    {
+      "for_white": {
+        "value": "draw"
+      },
+      "move": "c1-2-a1"
+    },
+    {
+      "for_white": {
+        "plies": 12,
+        "value": "loss"
+      },
+      "move": "c1-2-b2"
+    },
+    {
+      "for_white": {
+        "plies": 16,
+        "value": "loss"
+      },
+      "move": "c1-2-c3"
+    }
+  ],
+  "peak_rss_mib": 563.265625,
+  "principles_uniform": {
+    "all_moves": {
+      "positions": 20000,
+      "positions_with_winning_and_other_moves": 19847,
+      "rows": [
+        {
+          "direction": "up",
+          "equal": 95,
+          "feature": "top_diff",
+          "mean_difference_in_direction": 1.2208355427567612,
+          "share_higher_among_unequal": 0.9827359254759012,
+          "winning_moves_higher": 19411,
+          "winning_moves_lower": 341
+        },
+        {
+          "direction": "up",
+          "equal": 206,
+          "feature": "own_max_height",
+          "mean_difference_in_direction": 1.1091252435546692,
+          "share_higher_among_unequal": 0.7965480372689782,
+          "winning_moves_higher": 15645,
+          "winning_moves_lower": 3996
+        },
+        {
+          "direction": "down",
+          "equal": 15,
+          "feature": "opp_mobility",
+          "mean_difference_in_direction": 6.060143248619072,
+          "share_higher_among_unequal": 0.988654699475595,
+          "winning_moves_higher": 19607,
+          "winning_moves_lower": 225
+        },
+        {
+          "direction": "down",
+          "equal": 770,
+          "feature": "own_exposed",
+          "mean_difference_in_direction": 0.11235288956587744,
+          "share_higher_among_unequal": 0.5289091576243644,
+          "winning_moves_higher": 10090,
+          "winning_moves_lower": 8987
+        },
+        {
+          "direction": "down",
+          "equal": 2715,
+          "feature": "opp_max_height",
+          "mean_difference_in_direction": 0.8907787250703021,
+          "share_higher_among_unequal": 0.8655148260565024,
+          "winning_moves_higher": 14828,
+          "winning_moves_lower": 2304
+        },
+        {
+          "direction": "up",
+          "equal": 44,
+          "feature": "prisoners",
+          "mean_difference_in_direction": 1.6291644658382298,
+          "share_higher_among_unequal": 0.9903044993182851,
+          "winning_moves_higher": 19611,
+          "winning_moves_lower": 192
+        },
+        {
+          "direction": "down",
+          "equal": 2243,
+          "feature": "hostages",
+          "mean_difference_in_direction": 0.6357081194332768,
+          "share_higher_among_unequal": 0.8645762326743922,
+          "winning_moves_higher": 15220,
+          "winning_moves_lower": 2384
+        },
+        {
+          "direction": "up",
+          "equal": 2324,
+          "feature": "opp_singletons",
+          "mean_difference_in_direction": -0.16123561441549494,
+          "share_higher_among_unequal": 0.30879415625178336,
+          "winning_moves_higher": 5411,
+          "winning_moves_lower": 12112
+        },
+        {
+          "direction": "up",
+          "equal": 21,
+          "feature": "own_mobility",
+          "mean_difference_in_direction": 4.73311790252499,
+          "share_higher_among_unequal": 0.9686270553818218,
+          "winning_moves_higher": 19204,
+          "winning_moves_lower": 622
+        },
+        {
+          "direction": "down",
+          "equal": 829,
+          "feature": "own_singletons",
+          "mean_difference_in_direction": 0.037085113844632075,
+          "share_higher_among_unequal": 0.5523188558208013,
+          "winning_moves_higher": 10504,
+          "winning_moves_lower": 8514
+        },
+        {
+          "direction": "down",
+          "equal": 169,
+          "feature": "opp_exposed",
+          "mean_difference_in_direction": 0.732043288941349,
+          "share_higher_among_unequal": 0.9719483687366602,
+          "winning_moves_higher": 19126,
+          "winning_moves_lower": 552
+        },
+        {
+          "direction": "up",
+          "equal": 475,
+          "feature": "own_tall",
+          "mean_difference_in_direction": 0.4710565368809379,
+          "share_higher_among_unequal": 0.936919264918439,
+          "winning_moves_higher": 18150,
+          "winning_moves_lower": 1222
+        },
+        {
+          "direction": "down",
+          "equal": 15398,
+          "feature": "opp_win_now",
+          "mean_difference_in_direction": 0.044745369238634744,
+          "share_higher_among_unequal": 1.0,
+          "winning_moves_higher": 4449,
+          "winning_moves_lower": 0
+        },
+        {
+          "direction": "down",
+          "equal": 878,
+          "feature": "own_tops",
+          "mean_difference_in_direction": -0.41890577822081365,
+          "share_higher_among_unequal": 0.11170857715219569,
+          "winning_moves_higher": 2119,
+          "winning_moves_lower": 16850
+        },
+        {
+          "direction": "down",
+          "equal": 410,
+          "feature": "corners",
+          "mean_difference_in_direction": -0.4308709683318186,
+          "share_higher_among_unequal": 0.32757112723156867,
+          "winning_moves_higher": 6367,
+          "winning_moves_lower": 13070
+        },
+        {
+          "direction": "up",
+          "equal": 2803,
+          "feature": "own_solid",
+          "mean_difference_in_direction": -0.06397174464935929,
+          "share_higher_among_unequal": 0.3876437455996245,
+          "winning_moves_higher": 6607,
+          "winning_moves_lower": 10437
+        },
+        {
+          "direction": "down",
+          "equal": 379,
+          "feature": "centre",
+          "mean_difference_in_direction": -0.19493821880895462,
+          "share_higher_among_unequal": 0.48279227450174644,
+          "winning_moves_higher": 9399,
+          "winning_moves_lower": 10069
+        },
+        {
+          "direction": "up",
+          "equal": 11593,
+          "feature": "my_win_now",
+          "mean_difference_in_direction": 0.17165420538945517,
+          "share_higher_among_unequal": 0.9606251514417252,
+          "winning_moves_higher": 7929,
+          "winning_moves_lower": 325
+        }
+      ]
+    },
+    "greedy_ties_only": {
+      "positions": 20000,
+      "positions_with_winning_and_other_moves": 6805,
+      "rows": [
+        {
+          "direction": "up",
+          "equal": 6805,
+          "feature": "top_diff",
+          "mean_difference_in_direction": 0.0,
+          "share_higher_among_unequal": 0.0,
+          "winning_moves_higher": 0,
+          "winning_moves_lower": 0
+        },
+        {
+          "direction": "up",
+          "equal": 945,
+          "feature": "own_max_height",
+          "mean_difference_in_direction": 0.9801026322848505,
+          "share_higher_among_unequal": 0.7325938566552901,
+          "winning_moves_higher": 4293,
+          "winning_moves_lower": 1567
+        },
+        {
+          "direction": "down",
+          "equal": 702,
+          "feature": "opp_mobility",
+          "mean_difference_in_direction": 3.168013938058021,
+          "share_higher_among_unequal": 0.8228739963952154,
+          "winning_moves_higher": 5022,
+          "winning_moves_lower": 1081
+        },
+        {
+          "direction": "down",
+          "equal": 2578,
+          "feature": "own_exposed",
+          "mean_difference_in_direction": 0.547945058859827,
+          "share_higher_among_unequal": 0.8426780222379938,
+          "winning_moves_higher": 3562,
+          "winning_moves_lower": 665
+        },
+        {
+          "direction": "down",
+          "equal": 2210,
+          "feature": "opp_max_height",
+          "mean_difference_in_direction": 0.8460822828897804,
+          "share_higher_among_unequal": 0.7936887921653971,
+          "winning_moves_higher": 3647,
+          "winning_moves_lower": 948
+        },
+        {
+          "direction": "up",
+          "equal": 1530,
+          "feature": "prisoners",
+          "mean_difference_in_direction": 0.8725623560046787,
+          "share_higher_among_unequal": 0.8794312796208531,
+          "winning_moves_higher": 4639,
+          "winning_moves_lower": 636
+        },
+        {
+          "direction": "down",
+          "equal": 2061,
+          "feature": "hostages",
+          "mean_difference_in_direction": 0.3766064709231487,
+          "share_higher_among_unequal": 0.7010961214165261,
+          "winning_moves_higher": 3326,
+          "winning_moves_lower": 1418
+        },
+        {
+          "direction": "up",
+          "equal": 2326,
+          "feature": "opp_singletons",
+          "mean_difference_in_direction": 0.32215339073531635,
+          "share_higher_among_unequal": 0.8198258539852645,
+          "winning_moves_higher": 3672,
+          "winning_moves_lower": 807
+        },
+        {
+          "direction": "up",
+          "equal": 772,
+          "feature": "own_mobility",
+          "mean_difference_in_direction": 1.9057470050563363,
+          "share_higher_among_unequal": 0.7677772252610642,
+          "winning_moves_higher": 4632,
+          "winning_moves_lower": 1401
+        },
+        {
+          "direction": "down",
+          "equal": 2969,
+          "feature": "own_singletons",
+          "mean_difference_in_direction": 0.27663579216114104,
+          "share_higher_among_unequal": 0.7249739311783108,
+          "winning_moves_higher": 2781,
+          "winning_moves_lower": 1055
+        },
+        {
+          "direction": "down",
+          "equal": 5141,
+          "feature": "opp_exposed",
+          "mean_difference_in_direction": 0.08435150815385946,
+          "share_higher_among_unequal": 0.7493990384615384,
+          "winning_moves_higher": 1247,
+          "winning_moves_lower": 417
+        },
+        {
+          "direction": "up",
+          "equal": 2574,
+          "feature": "own_tall",
+          "mean_difference_in_direction": 0.3387066264619536,
+          "share_higher_among_unequal": 0.8333727251240841,
+          "winning_moves_higher": 3526,
+          "winning_moves_lower": 705
+        },
+        {
+          "direction": "down",
+          "equal": 6782,
+          "feature": "opp_win_now",
+          "mean_difference_in_direction": 0.002407543472936566,
+          "share_higher_among_unequal": 1.0,
+          "winning_moves_higher": 23,
+          "winning_moves_lower": 0
+        },
+        {
+          "direction": "down",
+          "equal": 5555,
+          "feature": "own_tops",
+          "mean_difference_in_direction": 0.09618903424928395,
+          "share_higher_among_unequal": 0.8952,
+          "winning_moves_higher": 1119,
+          "winning_moves_lower": 131
+        },
+        {
+          "direction": "down",
+          "equal": 2167,
+          "feature": "corners",
+          "mean_difference_in_direction": 0.07895829821252305,
+          "share_higher_among_unequal": 0.5543337645536869,
+          "winning_moves_higher": 2571,
+          "winning_moves_lower": 2067
+        },
+        {
+          "direction": "up",
+          "equal": 4169,
+          "feature": "own_solid",
+          "mean_difference_in_direction": 0.10311865903710121,
+          "share_higher_among_unequal": 0.659711684370258,
+          "winning_moves_higher": 1739,
+          "winning_moves_lower": 897
+        },
+        {
+          "direction": "down",
+          "equal": 3536,
+          "feature": "centre",
+          "mean_difference_in_direction": -0.05945045606691459,
+          "share_higher_among_unequal": 0.5133068216579993,
+          "winning_moves_higher": 1678,
+          "winning_moves_lower": 1591
+        },
+        {
+          "direction": "up",
+          "equal": 5930,
+          "feature": "my_win_now",
+          "mean_difference_in_direction": 0.04427056330068821,
+          "share_higher_among_unequal": 0.7462857142857143,
+          "winning_moves_higher": 653,
+          "winning_moves_lower": 222
+        }
+      ]
+    }
+  },
+  "puzzles": [
+    {
+      "diagram": "1       W      .      .\n2  WWRRRR      R     WW\n3       .     RW      .\n        a      b      c   White to move\n",
+      "greedy_would_play_one_of": [
+        "c2-1-b2"
+      ],
+      "key_move": "a1-1-a2",
+      "moves_available": 14,
+      "solution": [
+        {
+          "defence": "b2-1-b1",
+          "fastest_replies": [
+            "c2-2-b1",
+            "b3-2-b1"
+          ],
+          "lost_in_plies": 2
+        },
+        {
+          "defence": "b2-1-a2",
+          "fastest_replies": [
+            "c2-2-a2",
+            "b3-2-a2"
+          ],
+          "lost_in_plies": 2
+        },
+        {
+          "defence": "b2-1-c2",
+          "fastest_replies": [
+            "b3-2-c2"
+          ],
+          "lost_in_plies": 2
+        },
+        {
+          "defence": "b2-1-b3",
+          "fastest_replies": [
+            "c2-2-b3"
+          ],
+          "lost_in_plies": 2
+        }
+      ],
+      "win_in_plies": 3
+    },
+    {
+      "diagram": "1       R      .      W\n2  WRRRWW      .    RWR\n3       .      W      .\n        a      b      c   White to move\n",
+      "greedy_would_play_one_of": [
+        "a2-1-a1"
+      ],
+      "key_move": "c1-1-c2",
+      "moves_available": 16,
+      "solution": [
+        {
+          "defence": "a1-1-b1",
+          "fastest_replies": [
+            "c2-2-b1"
+          ],
+          "lost_in_plies": 2
+        },
+        {
+          "defence": "a1-1-a2",
+          "fastest_replies": [
+            "c2-2-a2"
+          ],
+          "lost_in_plies": 2
+        }
+      ],
+      "win_in_plies": 3
+    },
+    {
+      "diagram": "1       W RWWWWR      .\n2      RR      W      R\n3       R      .      .\n        a      b      c   Red to move\n",
+      "greedy_would_play_one_of": [
+        "a2-1-a1",
+        "a2-1-b2"
+      ],
+      "key_move": "c2-1-b2",
+      "moves_available": 22,
+      "solution": [
+        {
+          "defence": "a1-1-b1",
+          "fastest_replies": [
+            "a2-2-b1"
+          ],
+          "lost_in_plies": 2
+        },
+        {
+          "defence": "a1-1-a2",
+          "fastest_replies": [
+            "a3-1-a2"
+          ],
+          "lost_in_plies": 2
+        }
+      ],
+      "win_in_plies": 3
+    },
+    {
+      "diagram": "1   WRRRR      .      R\n2       W      R     WW\n3       .      .     WW\n        a      b      c   White to move\n",
+      "greedy_would_play_one_of": [
+        "c2-1-c1",
+        "c2-1-b2"
+      ],
+      "key_move": "a2-1-a1",
+      "moves_available": 14,
+      "solution": [
+        {
+          "after_first_reply": [
+            {
+              "defence": "b1-1-a1",
+              "fastest_replies": [
+                "b2-2-a1"
+              ],
+              "lost_in_plies": 2
+            },
+            {
+              "defence": "b1-1-c1",
+              "fastest_replies": [
+                "b2-2-c1",
+                "c2-1-c1",
+                "c3-2-c1"
+              ],
+              "lost_in_plies": 2
+            },
+            {
+              "defence": "b1-1-b2",
+              "fastest_replies": [
+                "c2-1-b2",
+                "c3-2-b2"
+              ],
+              "lost_in_plies": 2
+            }
+          ],
+          "defence": "c1-1-b1",
+          "fastest_replies": [
+            "c2-1-b2"
+          ],
+          "lost_in_plies": 4
+        },
+        {
+          "defence": "c1-1-c2",
+          "fastest_replies": [
+            "c3-1-c2"
+          ],
+          "lost_in_plies": 4
+        },
+        {
+          "defence": "b2-1-b1",
+          "fastest_replies": [
+            "c2-1-c1"
+          ],
+          "lost_in_plies": 4
+        },
+        {
+          "defence": "b2-1-a2",
+          "fastest_replies": [
+            "c2-1-c1"
+          ],
+          "lost_in_plies": 4
+        },
+        {
+          "defence": "b2-1-c2",
+          "fastest_replies": [
+            "c3-1-c2"
+          ],
+          "lost_in_plies": 4
+        },
+        {
+          "defence": "b2-1-b3",
+          "fastest_replies": [
+            "c2-1-c1",
+            "c3-1-b3"
+          ],
+          "lost_in_plies": 4
+        }
+      ],
+      "win_in_plies": 5
+    },
+    {
+      "diagram": "1       .  RRWWW      .\n2       .    RWR      W\n3      RW      R      .\n        a      b      c   Red to move\n",
+      "greedy_would_play_one_of": [
+        "b2-2-a3"
+      ],
+      "key_move": "b2-3-b1",
+      "moves_available": 15,
+      "solution": [
+        {
+          "after_first_reply": [
+            {
+              "defence": "c1-1-b1",
+              "fastest_replies": [
+                "a3-3-b1"
+              ],
+              "lost_in_plies": 2
+            },
+            {
+              "defence": "c1-1-c2",
+              "fastest_replies": [
+                "b1-2-c2",
+                "a3-3-c2"
+              ],
+              "lost_in_plies": 2
+            }
+          ],
+          "defence": "c2-1-c1",
+          "fastest_replies": [
+            "b3-1-a3"
+          ],
+          "lost_in_plies": 4
+        },
+        {
+          "defence": "c2-1-b2",
+          "fastest_replies": [
+            "b3-1-a3"
+          ],
+          "lost_in_plies": 4
+        },
+        {
+          "defence": "c2-1-c3",
+          "fastest_replies": [
+            "b3-1-a3"
+          ],
+          "lost_in_plies": 4
+        },
+        {
+          "defence": "a3-1-a2",
+          "fastest_replies": [
+            "b1-2-a2",
+            "b1-2-c2"
+          ],
+          "lost_in_plies": 4
+        },
+        {
+          "defence": "a3-1-b3",
+          "fastest_replies": [
+            "b1-2-b3",
+            "a3-1-b3"
+          ],
+          "lost_in_plies": 4
+        },
+        {
+          "defence": "a3-2-a1",
+          "fastest_replies": [
+            "b1-2-c2"
+          ],
+          "lost_in_plies": 4
+        },
+        {
+          "defence": "a3-2-b2",
+          "fastest_replies": [
+            "b1-2-c2"
+          ],
+          "lost_in_plies": 4
+        },
+        {
+          "defence": "a3-2-c3",
+          "fastest_replies": [
+            "b1-2-c2"
+          ],
+          "lost_in_plies": 4
+        }
+      ],
+      "win_in_plies": 5
+    },
+    {
+      "diagram": "1      RR      .      W\n2       .      W      .\n3       .    RRR  WRWWW\n        a      b      c   Red to move\n",
+      "greedy_would_play_one_of": [
+        "b3-1-b2",
+        "b3-1-c3"
+      ],
+      "key_move": "b3-3-c3",
+      "moves_available": 16,
+      "solution": [
+        {
+          "after_first_reply": [
+            {
+              "defence": "b2-1-b1",
+              "fastest_replies": [
+                "a1-1-b1"
+              ],
+              "lost_in_plies": 2
+            },
+            {
+              "defence": "b2-1-a2",
+              "fastest_replies": [
+                "a1-1-a2",
+                "b1-2-a2"
+              ],
+              "lost_in_plies": 2
+            },
+            {
+              "defence": "b2-1-c2",
+              "fastest_replies": [
+                "b1-2-c2",
+                "c3-1-c2"
+              ],
+              "lost_in_plies": 2
+            },
+            {
+              "defence": "b2-1-b3",
+              "fastest_replies": [
+                "b1-2-b3",
+                "c3-1-b3"
+              ],
+              "lost_in_plies": 2
+            }
+          ],
+          "defence": "c1-1-b1",
+          "fastest_replies": [
+            "a1-1-b1"
+          ],
+          "lost_in_plies": 4
+        },
+        {
+          "defence": "c1-1-c2",
+          "fastest_replies": [
+            "c3-1-c2"
+          ],
+          "lost_in_plies": 4
+        },
+        {
+          "defence": "b2-1-b1",
+          "fastest_replies": [
+            "a1-1-b1"
+          ],
+          "lost_in_plies": 4
+        },
+        {
+          "defence": "b2-1-a2",
+          "fastest_replies": [
+            "a1-1-a2"
+          ],
+          "lost_in_plies": 4
+        },
+        {
+          "defence": "b2-1-c2",
+          "fastest_replies": [
+            "c3-1-c2"
+          ],
+          "lost_in_plies": 4
+        },
+        {
+          "defence": "b2-1-b3",
+          "fastest_replies": [
+            "c3-1-b3"
+          ],
+          "lost_in_plies": 4
+        }
+      ],
+      "win_in_plies": 5
+    },
+    {
+      "diagram": "1       .     RW   WRWW\n2     RRR     WR      .\n3       .      W      .\n        a      b      c   Red to move\n",
+      "greedy_would_play_one_of": [
+        "a2-2-b1",
+        "a2-2-b3"
+      ],
+      "key_move": "a2-3-c1",
+      "moves_available": 19,
+      "solution": [
+        {
+          "defence": "b1-1-a1",
+          "fastest_replies": [
+            "b1-1-a1",
+            "c1-2-a1"
+          ],
+          "lost_in_plies": 4
+        },
+        {
+          "defence": "b1-1-c1",
+          "fastest_replies": [
+            "b1-1-c1"
+          ],
+          "lost_in_plies": 4
+        },
+        {
+          "defence": "b1-1-b2",
+          "fastest_replies": [
+            "b1-1-b2"
+          ],
+          "lost_in_plies": 4
+        },
+        {
+          "after_first_reply": [
+            {
+              "after_first_reply": [
+                {
+                  "defence": "b3-1-b2",
+                  "fastest_replies": [
+                    "a1-2-b2"
+                  ],
+                  "lost_in_plies": 2
+                },
+                {
+                  "defence": "b3-1-a3",
+                  "fastest_replies": [
+                    "a1-2-a3",
+                    "b2-2-a3"
+                  ],
+                  "lost_in_plies": 2
+                },
+                {
+                  "defence": "b3-1-c3",
+                  "fastest_replies": [
+                    "b2-2-c3"
+                  ],
+                  "lost_in_plies": 2
+                }
+              ],
+              "defence": "a2-1-a1",
+              "fastest_replies": [
+                "a2-1-a1"
+              ],
+              "lost_in_plies": 4
+            },
+            {
+              "defence": "a2-1-b2",
+              "fastest_replies": [
+                "a2-1-b2"
+              ],
+              "lost_in_plies": 4
+            },
+            {
+              "defence": "a2-1-a3",
+              "fastest_replies": [
+                "a1-2-a3",
+                "a2-1-a3"
+              ],
+              "lost_in_plies": 4
+            },
+            {
+              "defence": "a2-2-b1",
+              "fastest_replies": [
+                "a1-1-b1",
+                "c1-3-b1"
+              ],
+              "lost_in_plies": 4
+            },
+            {
+              "defence": "a2-2-c2",
+              "fastest_replies": [
+                "c1-3-c2"
+              ],
+              "lost_in_plies": 4
+            },
+            {
+              "defence": "a2-2-b3",
+              "fastest_replies": [
+                "c1-3-b3"
+              ],
+              "lost_in_plies": 2
+            },
+            {
+              "defence": "b3-1-b2",
+              "fastest_replies": [
+                "a1-2-b2"
+              ],
+              "lost_in_plies": 4
+            },
+            {
+              "defence": "b3-1-a3",
+              "fastest_replies": [
+                "a1-1-a2",
+                "a1-2-a3",
+                "b2-2-a3"
+              ],
+              "lost_in_plies": 4
+            },
+            {
+              "defence": "b3-1-c3",
+              "fastest_replies": [
+                "a1-1-a2",
+                "b2-2-c3"
+              ],
+              "lost_in_plies": 4
+            }
+          ],
+          "defence": "b1-2-a2",
+          "fastest_replies": [
+            "c1-2-a1",
+            "c1-2-c3"
+          ],
+          "lost_in_plies": 6
+        },
+        {
+          "defence": "b1-2-c2",
+          "fastest_replies": [
+            "c1-1-c2"
+          ],
+          "lost_in_plies": 4
+        },
+        {
+          "defence": "b1-2-b3",
+          "fastest_replies": [
+            "c1-2-a1",
+            "c1-2-c3"
+          ],
+          "lost_in_plies": 6
+        },
+        {
+          "defence": "b3-1-b2",
+          "fastest_replies": [
+            "c1-2-b2"
+          ],
+          "lost_in_plies": 4
+        },
+        {
+          "defence": "b3-1-a3",
+          "fastest_replies": [
+            "c1-1-b1",
+            "b2-2-a3"
+          ],
+          "lost_in_plies": 4
+        },
+        {
+          "defence": "b3-1-c3",
+          "fastest_replies": [
+            "c1-1-b1",
+            "c1-2-c3",
+            "b2-2-c3"
+          ],
+          "lost_in_plies": 4
+        }
+      ],
+      "win_in_plies": 7
+    },
+    {
+      "diagram": "1       .   WRRW   WWRR\n2     RWR      .      W\n3       .      .      .\n        a      b      c   White to move\n",
+      "greedy_would_play_one_of": [
+        "b1-3-c1"
+      ],
+      "key_move": "c2-1-c1",
+      "moves_available": 14,
+      "solution": [
+        {
+          "defence": "a2-1-a1",
+          "fastest_replies": [
+            "b1-3-a1"
+          ],
+          "lost_in_plies": 2
+        },
+        {
+          "defence": "a2-1-b2",
+          "fastest_replies": [
+            "b1-3-b2"
+          ],
+          "lost_in_plies": 2
+        },
+        {
+          "defence": "a2-1-a3",
+          "fastest_replies": [
+            "b1-3-a3"
+          ],
+          "lost_in_plies": 2
+        },
+        {
+          "after_first_reply": [
+            {
+              "defence": "a2-1-a1",
+              "fastest_replies": [
+                "c1-2-a1"
+              ],
+              "lost_in_plies": 2
+            },
+            {
+              "defence": "a2-1-b2",
+              "fastest_replies": [
+                "c1-2-b2"
+              ],
+              "lost_in_plies": 2
+            },
+            {
+              "after_first_reply": [
+                {
+                  "defence": "a3-1-a2",
+                  "fastest_replies": [
+                    "b2-1-a2"
+                  ],
+                  "lost_in_plies": 2
+                },
+                {
+                  "defence": "a3-1-b3",
+                  "fastest_replies": [
+                    "b2-1-b3"
+                  ],
+                  "lost_in_plies": 2
+                }
+              ],
+              "defence": "a2-1-a3",
+              "fastest_replies": [
+                "c1-2-b2"
+              ],
+              "lost_in_plies": 4
+            }
+          ],
+          "defence": "a2-2-b1",
+          "fastest_replies": [
+            "c1-3-b1"
+          ],
+          "lost_in_plies": 6
+        },
+        {
+          "defence": "a2-2-c2",
+          "fastest_replies": [
+            "c1-3-c2"
+          ],
+          "lost_in_plies": 4
+        },
+        {
+          "defence": "a2-2-b3",
+          "fastest_replies": [
+            "c1-3-b3"
+          ],
+          "lost_in_plies": 4
+        },
+        {
+          "defence": "a2-3-a1",
+          "fastest_replies": [
+            "b1-3-a1"
+          ],
+          "lost_in_plies": 2
+        },
+        {
+          "defence": "a2-3-c1",
+          "fastest_replies": [
+            "b1-3-c1"
+          ],
+          "lost_in_plies": 2
+        },
+        {
+          "defence": "a2-3-b2",
+          "fastest_replies": [
+            "b1-3-b2"
+          ],
+          "lost_in_plies": 2
+        },
+        {
+          "defence": "a2-3-a3",
+          "fastest_replies": [
+            "b1-3-a3"
+          ],
+          "lost_in_plies": 2
+        },
+        {
+          "defence": "a2-3-c3",
+          "fastest_replies": [
+            "b1-3-c3"
+          ],
+          "lost_in_plies": 2
+        }
+      ],
+      "win_in_plies": 7
+    },
+    {
+      "diagram": "1       .  RWWRW     WR\n2      RW    WRR      .\n3       .      .      .\n        a      b      c   Red to move\n",
+      "greedy_would_play_one_of": [
+        "b2-1-b1",
+        "b2-1-a2"
+      ],
+      "key_move": "b2-3-b1",
+      "moves_available": 17,
+      "solution": [
+        {
+          "defence": "a2-1-a1",
+          "fastest_replies": [
+            "b1-1-a1",
+            "c1-2-a1",
+            "a2-1-a1"
+          ],
+          "lost_in_plies": 2
+        },
+        {
+          "defence": "a2-1-b2",
+          "fastest_replies": [
+            "b1-1-b2",
+            "c1-2-b2",
+            "a2-1-b2"
+          ],
+          "lost_in_plies": 2
+        },
+        {
+          "defence": "a2-1-a3",
+          "fastest_replies": [
+            "a2-1-a3"
+          ],
+          "lost_in_plies": 2
+        },
+        {
+          "after_first_reply": [
+            {
+              "defence": "b1-1-a1",
+              "fastest_replies": [
+                "b1-1-a1"
+              ],
+              "lost_in_plies": 2
+            },
+            {
+              "defence": "b1-1-c1",
+              "fastest_replies": [
+                "a1-2-c1",
+                "b1-1-c1"
+              ],
+              "lost_in_plies": 2
+            },
+            {
+              "defence": "b1-1-b2",
+              "fastest_replies": [
+                "a1-2-b2",
+                "b1-1-b2"
+              ],
+              "lost_in_plies": 2
+            },
+            {
+              "after_first_reply": [
+                {
+                  "defence": "a2-1-a1",
+                  "fastest_replies": [
+                    "b1-3-a1",
+                    "a2-1-a1"
+                  ],
+                  "lost_in_plies": 2
+                },
+                {
+                  "defence": "a2-1-b2",
+                  "fastest_replies": [
+                    "b1-3-b2",
+                    "a2-1-b2"
+                  ],
+                  "lost_in_plies": 2
+                },
+                {
+                  "defence": "a2-1-a3",
+                  "fastest_replies": [
+                    "b1-3-a3",
+                    "a2-1-a3"
+                  ],
+                  "lost_in_plies": 2
+                },
+                {
+                  "defence": "a2-2-b1",
+                  "fastest_replies": [
+                    "a1-1-b1",
+                    "a1-3-b1"
+                  ],
+                  "lost_in_plies": 2
+                },
+                {
+                  "defence": "a2-2-c2",
+                  "fastest_replies": [
+                    "a1-3-c2"
+                  ],
+                  "lost_in_plies": 2
+                },
+                {
+                  "defence": "a2-2-b3",
+                  "fastest_replies": [
+                    "a1-3-b3"
+                  ],
+                  "lost_in_plies": 2
+                }
+              ],
+              "defence": "b1-2-a2",
+              "fastest_replies": [
+                "b1-1-a1",
+                "b1-1-b2"
+              ],
+              "lost_in_plies": 4
+            },
+            {
+              "defence": "b1-2-c2",
+              "fastest_replies": [
+                "b1-1-a1",
+                "b1-1-b2"
+              ],
+              "lost_in_plies": 4
+            },
+            {
+              "defence": "b1-2-b3",
+              "fastest_replies": [
+                "b1-1-a1",
+                "b1-1-b2"
+              ],
+              "lost_in_plies": 4
+            },
+            {
+              "defence": "b1-3-a1",
+              "fastest_replies": [
+                "b1-3-a1"
+              ],
+              "lost_in_plies": 2
+            },
+            {
+              "defence": "b1-3-c1",
+              "fastest_replies": [
+                "a1-2-c1",
+                "b1-3-c1"
+              ],
+              "lost_in_plies": 2
+            },
+            {
+              "defence": "b1-3-b2",
+              "fastest_replies": [
+                "a1-2-b2",
+                "b1-3-b2"
+              ],
+              "lost_in_plies": 2
+            },
+            {
+              "defence": "b1-3-a3",
+              "fastest_replies": [
+                "a1-2-a3",
+                "b1-3-a3"
+              ],
+              "lost_in_plies": 2
+            },
+            {
+              "defence": "b1-3-c3",
+              "fastest_replies": [
+                "b1-3-c3"
+              ],
+              "lost_in_plies": 2
+            }
+          ],
+          "defence": "a2-2-b1",
+          "fastest_replies": [
+            "c1-2-a1",
+            "c1-2-b2",
+            "c1-2-c3"
+          ],
+          "lost_in_plies": 6
+        },
+        {
+          "defence": "a2-2-c2",
+          "fastest_replies": [
+            "b1-1-c1",
+            "b1-1-b2"
+          ],
+          "lost_in_plies": 4
+        },
+        {
+          "defence": "a2-2-b3",
+          "fastest_replies": [
+            "b1-1-c1",
+            "b1-1-b2"
+          ],
+          "lost_in_plies": 4
+        }
+      ],
+      "win_in_plies": 7
+    }
+  ],
+  "reachable_distance_histogram": {
+    "longest_loss": 50,
+    "longest_win": 51,
+    "loss_by_plies": {
+      "10": 7564378,
+      "12": 5882934,
+      "14": 4251124,
+      "16": 2807252,
+      "18": 1726768,
+      "2": 6388384,
+      "20": 1046624,
+      "22": 665764,
+      "24": 435764,
+      "26": 300736,
+      "28": 217328,
+      "30": 145176,
+      "32": 102964,
+      "34": 68220,
+      "36": 49472,
+      "38": 29424,
+      "4": 9016528,
+      "40": 15264,
+      "42": 10400,
+      "44": 6424,
+      "46": 2472,
+      "48": 688,
+      "50": 272,
+      "6": 9527936,
+      "8": 8996416
+    },
+    "win_by_plies": {
+      "1": 21793224,
+      "11": 10862184,
+      "13": 6892198,
+      "15": 4233614,
+      "17": 2558612,
+      "19": 1506180,
+      "21": 924196,
+      "23": 601958,
+      "25": 379996,
+      "27": 280032,
+      "29": 201624,
+      "3": 36758956,
+      "31": 138784,
+      "33": 103152,
+      "35": 66024,
+      "37": 40256,
+      "39": 20256,
+      "41": 12096,
+      "43": 9072,
+      "45": 4428,
+      "47": 2424,
+      "49": 752,
+      "5": 35058212,
+      "51": 48,
+      "7": 24147868,
+      "9": 16564408
+    }
+  },
+  "reachable_values": {
+    "draw": 4823750,
+    "loss": 59258712,
+    "lost_terminal": 2772612,
+    "win": 163160554
+  },
+  "seconds": 65.841763417,
+  "start": {
+    "value": "draw"
+  },
+  "structure": {
+    "examples_live_that_cannot": [],
+    "reachable_that_can_return_to_start": 227243016,
+    "reachable_that_cannot": {
+      "terminal": 2772612
+    },
+    "seconds": 50.518170166
+  },
+  "threads": 4,
+  "unreachable": {
+    "by_status_and_value": {
+      "Lost Loss(0)": 2160,
+      "Over Over": 2774772
+    },
+    "examples_not_over": [
+      "1       .      .      .\n2       .      .      .\n3       .      . RRWWWWWWRRRR\n        a      b      c   White to move\n",
+      "1       .      .      .\n2       .      .      .\n3       .      R RWWWWWWRRRR\n        a      b      c   White to move\n",
+      "1       .      .      .\n2       .      .      .\n3       R      . RWWWWWWRRRR\n        a      b      c   White to move\n"
+    ]
+  }
+}
