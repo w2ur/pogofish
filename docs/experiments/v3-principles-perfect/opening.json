@@ -1,0 +1,2397 @@
+{
+  "guide": [
+    "White: 6 of 16 moves keep the draw (fastest loss among the others: 12 plies)",
+    "- a1-1-b1 (or its mirror c1-1-b1)",
+    "  Red: 2 of 16 moves keep the draw (fastest loss among the others: 8 plies)",
+    "  - a3-1-b3",
+    "    White: 4 of 18 moves keep the draw (fastest loss among the others: 4 plies)",
+    "    - a1-1-b1",
+    "      Red: 2 of 18 moves keep the draw (fastest loss among the others: 4 plies)",
+    "      - c3-1-b3",
+    "      - c3-2-a3",
+    "    - b1-1-a1",
+    "      Red: 5 of 18 moves keep the draw (fastest loss among the others: 4 plies)",
+    "      - a3-1-b3",
+    "      - b3-1-a3",
+    "      - b3-1-c3",
+    "      - c3-1-b3",
+    "      - c3-2-a3",
+    "    - c1-1-b1",
+    "      Red: 3 of 18 moves keep the draw (fastest loss among the others: 4 plies)",
+    "      - a3-1-b3",
+    "      - c3-1-b3",
+    "      - c3-2-a3",
+    "    - c1-2-a1",
+    "      Red: 4 of 18 moves keep the draw (fastest loss among the others: 4 plies)",
+    "      - b3-1-c3",
+    "      - b3-2-c2",
+    "      - b3-3-a1",
+    "      - c3-1-c2",
+    "  - c3-1-b3",
+    "    White: 5 of 18 moves keep the draw (fastest loss among the others: 4 plies)",
+    "    - a1-1-b1",
+    "      Red: 2 of 18 moves keep the draw (fastest loss among the others: 4 plies)",
+    "      - a3-1-b3: transposes to a position above",
+    "      - c3-1-b3",
+    "    - b1-1-a1",
+    "      Red: 5 of 18 moves keep the draw (fastest loss among the others: 4 plies)",
+    "      - a3-1-b3: transposes to a position above",
+    "      - a3-2-c3",
+    "      - b3-1-a3",
+    "      - b3-1-c3: transposes to a position above",
+    "      - c3-1-b3",
+    "    - b1-1-c1",
+    "      Red: 4 of 18 moves keep the draw (fastest loss among the others: 10 plies)",
+    "      - a3-2-c3",
+    "      - b3-1-b2",
+    "      - b3-1-a3",
+    "      - b3-3-c1",
+    "    - c1-1-b1",
+    "      Red: 3 of 18 moves keep the draw (fastest loss among the others: 4 plies)",
+    "      - a3-1-b3: transposes to a position above",
+    "      - a3-2-c3",
+    "      - c3-1-b3",
+    "    - c1-1-c2",
+    "      Red: 6 of 18 moves keep the draw (fastest loss among the others: 4 plies)",
+    "      - a3-1-a2",
+    "      - a3-1-b3",
+    "      - b3-1-a3",
+    "      - b3-1-c3",
+    "      - b3-2-a2",
+    "      - c3-1-b3",
+    "- a1-2-c1 (or its mirror c1-2-a1)",
+    "  Red: 5 of 16 moves keep the draw (fastest loss among the others: 10 plies)",
+    "  - a3-1-a2",
+    "    White: 6 of 15 moves keep the draw (fastest loss among the others: 10 plies)",
+    "    - b1-1-c1",
+    "      Red: 3 of 16 moves keep the draw (fastest loss among the others: 10 plies)",
+    "      - a2-1-a3",
+    "      - c3-1-b3",
+    "      - c3-2-a3",
+    "    - b1-2-c2",
+    "      Red: 1 of 16 moves keep the draw (fastest loss among the others: 10 plies)",
+    "      - c3-2-a3",
+    "    - c1-1-b1",
+    "      Red: 2 of 16 moves keep the draw (fastest loss among the others: 10 plies)",
+    "      - c3-1-b3",
+    "      - c3-2-a3",
+    "    - c1-1-c2",
+    "      Red: 2 of 16 moves keep the draw (fastest loss among the others: 8 plies)",
+    "      - c3-1-b3",
+    "      - c3-2-a3",
+    "    - c1-2-a1",
+    "      Red: 2 of 16 moves keep the draw (fastest loss among the others: 10 plies)",
+    "      - a2-1-a3: transposes to a position above",
+    "      - c3-2-a3",
+    "    - c1-3-b3",
+    "      Red: 1 of 10 moves keep the draw (fastest loss among the others: 4 plies)",
+    "      - c3-1-b3",
+    "  - a3-1-b3",
+    "    White: 2 of 15 moves keep the draw (fastest loss among the others: 4 plies)",
+    "    - c1-2-a1: transposes to a position above",
+    "    - c1-3-b3",
+    "      Red: 2 of 7 moves keep the draw (fastest loss among the others: 2 plies)",
+    "      - a3-1-b3",
+    "      - c3-1-b3",
+    "  - b3-1-a3",
+    "    White: 4 of 15 moves keep the draw (fastest loss among the others: 6 plies)",
+    "    - b1-1-b2",
+    "      Red: 5 of 17 moves keep the draw (fastest loss among the others: 8 plies)",
+    "      - a3-1-a2",
+    "      - a3-1-b3",
+    "      - b3-1-a3",
+    "      - c3-1-b3",
+    "      - c3-2-a3",
+    "    - c1-1-b1",
+    "      Red: 2 of 17 moves keep the draw (fastest loss among the others: 8 plies)",
+    "      - a3-3-b1",
+    "      - c3-1-b3",
+    "    - c1-1-c2",
+    "      Red: 3 of 17 moves keep the draw (fastest loss among the others: 8 plies)",
+    "      - a3-3-b1",
+    "      - c3-1-b3",
+    "      - c3-2-a3",
+    "    - c1-2-a1",
+    "      Red: 3 of 17 moves keep the draw (fastest loss among the others: 10 plies)",
+    "      - a3-1-b3: transposes to a position above",
+    "      - a3-3-b3: transposes to a position above",
+    "      - c3-1-b3: transposes to a position above",
+    "  - c3-1-b3",
+    "    White: 5 of 15 moves keep the draw (fastest loss among the others: 8 plies)",
+    "    - c1-1-b1",
+    "      Red: 4 of 18 moves keep the draw (fastest loss among the others: 4 plies)",
+    "      - a3-1-a2: transposes to a position above",
+    "      - b3-1-a3: transposes to a position above",
+    "      - b3-2-a2",
+    "      - b3-3-c1",
+    "    - c1-1-c2",
+    "      Red: 5 of 18 moves keep the draw (fastest loss among the others: 6 plies)",
+    "      - a3-1-a2: transposes to a position above",
+    "      - b3-1-a3: transposes to a position above",
+    "      - b3-2-a2",
+    "      - b3-3-c1",
+    "      - b3-3-a3",
+    "    - c1-2-a1: transposes to a position above",
+    "    - c1-3-c2",
+    "      Red: 5 of 18 moves keep the draw (fastest loss among the others: 4 plies)",
+    "      - a3-1-b3",
+    "      - b3-1-a3",
+    "      - b3-1-c3",
+    "      - c3-1-c2",
+    "      - c3-1-b3",
+    "    - c1-3-b3",
+    "      Red: 2 of 7 moves keep the draw (fastest loss among the others: 2 plies)",
+    "      - a3-1-b3: transposes to a position above",
+    "      - c3-1-b3",
+    "  - c3-2-a3",
+    "    White: 5 of 15 moves keep the draw (fastest loss among the others: 4 plies)",
+    "    - b1-1-a1",
+    "      Red: 8 of 15 moves keep the draw (fastest loss among the others: 10 plies)",
+    "      - a3-1-a2",
+    "      - a3-1-b3",
+    "      - a3-2-b2",
+    "      - a3-2-c3",
+    "      - b3-1-b2",
+    "      - b3-1-a3",
+    "      - b3-1-c3",
+    "      - b3-2-a2",
+    "    - b1-1-c1",
+    "      Red: 8 of 15 moves keep the draw (fastest loss among the others: 6 plies)",
+    "      - a3-1-a2: transposes to a position above",
+    "      - a3-1-b3",
+    "      - a3-2-c3: transposes to a position above",
+    "      - a3-3-a2",
+    "      - b3-1-b2",
+    "      - b3-1-a3",
+    "      - b3-1-c3",
+    "      - b3-2-a2",
+    "    - b1-2-c2",
+    "      Red: 4 of 15 moves keep the draw (fastest loss among the others: 4 plies)",
+    "      - a3-1-a2: transposes to a position above",
+    "      - a3-1-b3",
+    "      - b3-1-a3",
+    "      - b3-2-a2",
+    "    - c1-1-b1",
+    "      Red: 2 of 15 moves keep the draw (fastest loss among the others: 4 plies)",
+    "      - a3-1-a2: transposes to a position above",
+    "      - a3-3-b1",
+    "    - c1-1-c2",
+    "      Red: 4 of 15 moves keep the draw (fastest loss among the others: 4 plies)",
+    "      - a3-1-a2: transposes to a position above",
+    "      - b3-1-a3: transposes to a position above",
+    "      - b3-1-c3",
+    "      - b3-2-a2",
+    "- b1-1-a1 (or its mirror b1-1-c1)",
+    "  Red: 5 of 16 moves keep the draw (fastest loss among the others: 10 plies)",
+    "  - a3-2-c3",
+    "    White: 3 of 17 moves keep the draw (fastest loss among the others: 8 plies)",
+    "    - b1-1-a1",
+    "      Red: 5 of 15 moves keep the draw (fastest loss among the others: 8 plies)",
+    "      - b3-1-b2",
+    "      - b3-1-a3",
+    "      - c3-1-c2",
+    "      - c3-1-b3",
+    "      - c3-2-a3",
+    "    - c1-1-b1",
+    "      Red: 6 of 15 moves keep the draw (fastest loss among the others: 4 plies)",
+    "      - b3-1-b2",
+    "      - b3-1-a3",
+    "      - b3-1-c3",
+    "      - b3-2-c2",
+    "      - c3-1-c2",
+    "      - c3-1-b3",
+    "    - c1-2-a1",
+    "      Red: 8 of 15 moves keep the draw (fastest loss among the others: 6 plies)",
+    "      - b3-1-b2",
+    "      - b3-1-a3",
+    "      - b3-1-c3",
+    "      - b3-2-c2",
+    "      - c3-1-c2",
+    "      - c3-1-b3",
+    "      - c3-2-a3",
+    "      - c3-3-c2",
+    "  - b3-1-a3",
+    "    White: 3 of 17 moves keep the draw (fastest loss among the others: 8 plies)",
+    "    - a1-1-b1: transposes to a position above",
+    "    - b1-1-a1",
+    "      Red: 4 of 17 moves keep the draw (fastest loss among the others: 4 plies)",
+    "      - a3-1-b3: transposes to a position above",
+    "      - a3-2-c3: transposes to a position above",
+    "      - c3-1-b3",
+    "      - c3-2-c1",
+    "    - c1-1-b1",
+    "      Red: 3 of 17 moves keep the draw (fastest loss among the others: 10 plies)",
+    "      - a3-2-c3: transposes to a position above",
+    "      - b3-1-c3",
+    "      - c3-1-b3",
+    "  - b3-1-c3",
+    "    White: 2 of 17 moves keep the draw (fastest loss among the others: 8 plies)",
+    "    - a1-1-b1",
+    "      Red: 3 of 17 moves keep the draw (fastest loss among the others: 10 plies)",
+    "      - a3-1-b3: transposes to a position above",
+    "      - c3-1-b3: transposes to a position above",
+    "      - c3-3-b3: transposes to a position above",
+    "    - c1-1-b1",
+    "      Red: 5 of 17 moves keep the draw (fastest loss among the others: 10 plies)",
+    "      - a3-1-b3",
+    "      - a3-2-c3: transposes to a position above",
+    "      - b3-1-a3: transposes to a position above",
+    "      - b3-1-c3",
+    "      - c3-2-a3",
+    "  - c3-1-b3",
+    "    White: 3 of 17 moves keep the draw (fastest loss among the others: 4 plies)",
+    "    - a1-1-b1: transposes to a position above",
+    "    - a1-3-b1: transposes to a position above",
+    "    - a1-3-b3",
+    "      Red: 1 of 7 moves keep the draw (fastest loss among the others: 2 plies)",
+    "      - c3-1-b3",
+    "  - c3-2-a3",
+    "    White: 2 of 17 moves keep the draw (fastest loss among the others: 6 plies)",
+    "    - a1-2-c1: transposes to a position above",
+    "    - c1-1-b1",
+    "      Red: 3 of 15 moves keep the draw (fastest loss among the others: 4 plies)",
+    "      - a3-1-a2",
+    "      - a3-1-b3",
+    "      - b3-1-c3: transposes to a position above"
+  ],
+  "guide_depth": 4,
+  "narrowest_points": [
+    {
+      "diagram": "1       .      W     WW\n2       .      .      .\n3      RR RRRWWW      R\n        a      b      c   Red to move\n",
+      "fastest_losing_alternatives": [
+        {
+          "loses_in_plies": 2,
+          "move": "a3-2-c3"
+        },
+        {
+          "loses_in_plies": 4,
+          "move": "a3-2-a1"
+        },
+        {
+          "loses_in_plies": 4,
+          "move": "a3-2-b2"
+        }
+      ],
+      "legal_moves": 7,
+      "line": [
+        "b1-1-a1",
+        "c3-1-b3",
+        "a1-3-b3"
+      ],
+      "only_move": "c3-1-b3",
+      "only_move_is_greedy_choice": false,
+      "ply": 4,
+      "slowest_losing_alternative": {
+        "loses_in_plies": 8,
+        "move": "a3-1-b3"
+      }
+    },
+    {
+      "diagram": "1       W     WW      .\n2       .      .      R\n3      RR  RRWWW      R\n        a      b      c   Red to move\n",
+      "fastest_losing_alternatives": [
+        {
+          "loses_in_plies": 4,
+          "move": "a3-2-c3"
+        },
+        {
+          "loses_in_plies": 6,
+          "move": "a3-2-b2"
+        },
+        {
+          "loses_in_plies": 6,
+          "move": "c2-1-b2"
+        }
+      ],
+      "legal_moves": 10,
+      "line": [
+        "c1-2-a1",
+        "c3-1-c2",
+        "a1-3-b3"
+      ],
+      "only_move": "a3-1-b3",
+      "only_move_is_greedy_choice": true,
+      "ply": 4,
+      "slowest_losing_alternative": {
+        "loses_in_plies": 14,
+        "move": "c3-1-b3"
+      }
+    },
+    {
+      "diagram": "1       .      .   WWWW\n2       R      .     WW\n3       R     RR     RR\n        a      b      c   Red to move\n",
+      "fastest_losing_alternatives": [
+        {
+          "loses_in_plies": 10,
+          "move": "b3-1-c3"
+        },
+        {
+          "loses_in_plies": 10,
+          "move": "b3-2-a2"
+        },
+        {
+          "loses_in_plies": 12,
+          "move": "a2-1-a1"
+        }
+      ],
+      "legal_moves": 16,
+      "line": [
+        "a1-2-c1",
+        "a3-1-a2",
+        "b1-2-c2"
+      ],
+      "only_move": "c3-2-a3",
+      "only_move_is_greedy_choice": false,
+      "ply": 4,
+      "slowest_losing_alternative": {
+        "loses_in_plies": 28,
+        "move": "b3-2-c2"
+      }
+    },
+    {
+      "diagram": "1       W     WW      .\n2       .      .      .\n3      RR RRRWWWR      .\n        a      b      c   White to move\n",
+      "fastest_losing_alternatives": [
+        {
+          "loses_in_plies": 6,
+          "move": "b1-2-a2"
+        },
+        {
+          "loses_in_plies": 6,
+          "move": "b1-2-b3"
+        },
+        {
+          "loses_in_plies": 10,
+          "move": "a1-1-a2"
+        }
+      ],
+      "legal_moves": 8,
+      "line": [
+        "c1-2-a1",
+        "c3-1-b3",
+        "a1-3-b3",
+        "c3-1-b3"
+      ],
+      "only_move": "a1-1-b1",
+      "only_move_is_greedy_choice": false,
+      "ply": 5,
+      "slowest_losing_alternative": {
+        "loses_in_plies": 14,
+        "move": "b1-1-c1"
+      }
+    },
+    {
+      "diagram": "1       W     WW      .\n2       .      .      R\n3       R RRWWWR      R\n        a      b      c   White to move\n",
+      "fastest_losing_alternatives": [
+        {
+          "loses_in_plies": 6,
+          "move": "b1-2-b3"
+        },
+        {
+          "loses_in_plies": 6,
+          "move": "b1-2-c2"
+        },
+        {
+          "loses_in_plies": 8,
+          "move": "a1-1-b1"
+        }
+      ],
+      "legal_moves": 8,
+      "line": [
+        "c1-2-a1",
+        "c3-1-c2",
+        "a1-3-b3",
+        "a3-1-b3"
+      ],
+      "only_move": "b1-1-b2",
+      "only_move_is_greedy_choice": true,
+      "ply": 5,
+      "slowest_losing_alternative": {
+        "loses_in_plies": 30,
+        "move": "b1-1-c1"
+      }
+    },
+    {
+      "diagram": "1       .  WWRRR    WWW\n2       .      .      W\n3       .      R     RR\n        a      b      c   White to move\n",
+      "fastest_losing_alternatives": [
+        {
+          "loses_in_plies": 2,
+          "move": "c1-3-c2"
+        },
+        {
+          "loses_in_plies": 2,
+          "move": "c2-1-c1"
+        },
+        {
+          "loses_in_plies": 4,
+          "move": "c1-3-a2"
+        }
+      ],
+      "legal_moves": 12,
+      "line": [
+        "a1-2-c1",
+        "b3-1-a3",
+        "c1-1-c2",
+        "a3-3-b1"
+      ],
+      "only_move": "c1-1-b1",
+      "only_move_is_greedy_choice": true,
+      "ply": 5,
+      "slowest_losing_alternative": {
+        "loses_in_plies": 18,
+        "move": "c1-3-b1"
+      }
+    },
+    {
+      "diagram": "1       . WWWRRR    WWW\n2       .      .      .\n3       .      R     RR\n        a      b      c   White to move\n",
+      "fastest_losing_alternatives": [
+        {
+          "loses_in_plies": 2,
+          "move": "c1-3-a2"
+        },
+        {
+          "loses_in_plies": 2,
+          "move": "c1-3-b3"
+        },
+        {
+          "loses_in_plies": 2,
+          "move": "c1-3-c2"
+        }
+      ],
+      "legal_moves": 9,
+      "line": [
+        "a1-2-c1",
+        "b3-1-a3",
+        "c1-1-b1",
+        "a3-3-b1"
+      ],
+      "only_move": "c1-3-b1",
+      "only_move_is_greedy_choice": false,
+      "ply": 5,
+      "slowest_losing_alternative": {
+        "loses_in_plies": 10,
+        "move": "c1-1-b1"
+      }
+    },
+    {
+      "diagram": "1  WWWRRR     WW      .\n2       W      .      .\n3       R      .     RR\n        a      b      c   White to move\n",
+      "fastest_losing_alternatives": [
+        {
+          "loses_in_plies": 2,
+          "move": "b1-2-a2"
+        },
+        {
+          "loses_in_plies": 4,
+          "move": "a2-1-a3"
+        },
+        {
+          "loses_in_plies": 4,
+          "move": "a2-1-b2"
+        }
+      ],
+      "legal_moves": 9,
+      "line": [
+        "c1-2-a1",
+        "a3-1-b3",
+        "a1-1-a2",
+        "b3-3-a1"
+      ],
+      "only_move": "a2-1-a1",
+      "only_move_is_greedy_choice": false,
+      "ply": 5,
+      "slowest_losing_alternative": {
+        "loses_in_plies": 16,
+        "move": "b1-1-b2"
+      }
+    },
+    {
+      "diagram": "1  WWWRRR     WW      W\n2       .      .      .\n3       R      .     RR\n        a      b      c   White to move\n",
+      "fastest_losing_alternatives": [
+        {
+          "loses_in_plies": 2,
+          "move": "c1-1-b1"
+        },
+        {
+          "loses_in_plies": 4,
+          "move": "b1-2-a2"
+        },
+        {
+          "loses_in_plies": 4,
+          "move": "b1-2-b3"
+        }
+      ],
+      "legal_moves": 8,
+      "line": [
+        "c1-1-b1",
+        "a3-1-b3",
+        "b1-1-a1",
+        "b3-3-a1"
+      ],
+      "only_move": "b1-1-a1",
+      "only_move_is_greedy_choice": true,
+      "ply": 5,
+      "slowest_losing_alternative": {
+        "loses_in_plies": 10,
+        "move": "b1-1-b2"
+      }
+    },
+    {
+      "diagram": "1  WWWRRR    WWW      .\n2       .      .      .\n3       R      .     RR\n        a      b      c   White to move\n",
+      "fastest_losing_alternatives": [
+        {
+          "loses_in_plies": 2,
+          "move": "b1-3-a3"
+        },
+        {
+          "loses_in_plies": 2,
+          "move": "b1-3-b2"
+        },
+        {
+          "loses_in_plies": 2,
+          "move": "b1-3-c1"
+        }
+      ],
+      "legal_moves": 11,
+      "line": [
+        "a1-1-b1",
+        "a3-1-b3",
+        "c1-2-a1",
+        "b3-3-a1"
+      ],
+      "only_move": "b1-1-a1",
+      "only_move_is_greedy_choice": true,
+      "ply": 5,
+      "slowest_losing_alternative": {
+        "loses_in_plies": 14,
+        "move": "b1-3-c3"
+      }
+    },
+    {
+      "diagram": "1       . WWWRRR    WWW\n2       .      .      .\n3       R     RR      .\n        a      b      c   White to move\n",
+      "fastest_losing_alternatives": [
+        {
+          "loses_in_plies": 2,
+          "move": "c1-3-a2"
+        },
+        {
+          "loses_in_plies": 2,
+          "move": "c1-3-b1"
+        },
+        {
+          "loses_in_plies": 2,
+          "move": "c1-3-b3"
+        }
+      ],
+      "legal_moves": 9,
+      "line": [
+        "a1-2-c1",
+        "c3-2-a3",
+        "c1-1-b1",
+        "a3-3-b1"
+      ],
+      "only_move": "c1-1-b1",
+      "only_move_is_greedy_choice": true,
+      "ply": 5,
+      "slowest_losing_alternative": {
+        "loses_in_plies": 4,
+        "move": "c1-2-c3"
+      }
+    },
+    {
+      "diagram": "1    WWWW      W      W\n2       .      .     RR\n3       .      .   RRRR\n        a      b      c   White to move\n",
+      "fastest_losing_alternatives": [
+        {
+          "loses_in_plies": 8,
+          "move": "a1-3-b3"
+        },
+        {
+          "loses_in_plies": 10,
+          "move": "a1-2-b2"
+        },
+        {
+          "loses_in_plies": 10,
+          "move": "a1-2-c1"
+        }
+      ],
+      "legal_moves": 14,
+      "line": [
+        "b1-1-c1",
+        "a3-2-c3",
+        "c1-2-a1",
+        "b3-2-c2"
+      ],
+      "only_move": "c1-1-b1",
+      "only_move_is_greedy_choice": false,
+      "ply": 5,
+      "slowest_losing_alternative": {
+        "loses_in_plies": 24,
+        "move": "c1-1-c2"
+      }
+    },
+    {
+      "diagram": "1       W   WWWW      W\n2       .      .      .\n3       .    RRR    RRR\n        a      b      c   White to move\n",
+      "fastest_losing_alternatives": [
+        {
+          "loses_in_plies": 4,
+          "move": "a1-1-b1"
+        },
+        {
+          "loses_in_plies": 4,
+          "move": "c1-1-b1"
+        },
+        {
+          "loses_in_plies": 6,
+          "move": "a1-1-a2"
+        }
+      ],
+      "legal_moves": 15,
+      "line": [
+        "a1-1-b1",
+        "c3-1-b3",
+        "c1-1-b1",
+        "a3-2-c3"
+      ],
+      "only_move": "b1-3-c3",
+      "only_move_is_greedy_choice": true,
+      "ply": 5,
+      "slowest_losing_alternative": {
+        "loses_in_plies": 22,
+        "move": "b1-2-a2"
+      }
+    },
+    {
+      "diagram": "1      WW   WWWW      .\n2       .      .      .\n3       .    RRR    RRR\n        a      b      c   White to move\n",
+      "fastest_losing_alternatives": [
+        {
+          "loses_in_plies": 4,
+          "move": "a1-1-b1"
+        },
+        {
+          "loses_in_plies": 6,
+          "move": "a1-1-a2"
+        },
+        {
+          "loses_in_plies": 6,
+          "move": "a1-2-a3"
+        }
+      ],
+      "legal_moves": 16,
+      "line": [
+        "c1-1-b1",
+        "c3-1-b3",
+        "c1-1-b1",
+        "a3-2-c3"
+      ],
+      "only_move": "b1-3-c3",
+      "only_move_is_greedy_choice": true,
+      "ply": 5,
+      "slowest_losing_alternative": {
+        "loses_in_plies": 14,
+        "move": "b1-2-b3"
+      }
+    },
+    {
+      "diagram": "1       W     WW    WWW\n2       .      .      R\n3       .     RR    RRR\n        a      b      c   White to move\n",
+      "fastest_losing_alternatives": [
+        {
+          "loses_in_plies": 4,
+          "move": "c1-3-b1"
+        },
+        {
+          "loses_in_plies": 8,
+          "move": "a1-1-a2"
+        },
+        {
+          "loses_in_plies": 8,
+          "move": "b1-1-c1"
+        }
+      ],
+      "legal_moves": 17,
+      "line": [
+        "b1-1-c1",
+        "a3-2-c3",
+        "a1-1-b1",
+        "c3-1-c2"
+      ],
+      "only_move": "c1-2-a1",
+      "only_move_is_greedy_choice": false,
+      "ply": 5,
+      "slowest_losing_alternative": {
+        "loses_in_plies": 36,
+        "move": "b1-1-a1"
+      }
+    },
+    {
+      "diagram": "1       W    WWW      W\n2       W      .      .\n3       .   RRRR     RR\n        a      b      c   White to move\n",
+      "fastest_losing_alternatives": [
+        {
+          "loses_in_plies": 6,
+          "move": "a1-1-b1"
+        },
+        {
+          "loses_in_plies": 6,
+          "move": "b1-3-c1"
+        },
+        {
+          "loses_in_plies": 6,
+          "move": "c1-1-b1"
+        }
+      ],
+      "legal_moves": 18,
+      "line": [
+        "c1-1-b1",
+        "a3-1-b3",
+        "a1-1-a2",
+        "a3-1-b3"
+      ],
+      "only_move": "a2-1-a1",
+      "only_move_is_greedy_choice": false,
+      "ply": 5,
+      "slowest_losing_alternative": {
+        "loses_in_plies": 34,
+        "move": "b1-1-a1"
+      }
+    },
+    {
+      "diagram": "1      WW     WW     WW\n2       .      .      .\n3       .   RRRR     RR\n        a      b      c   White to move\n",
+      "fastest_losing_alternatives": [
+        {
+          "loses_in_plies": 8,
+          "move": "a1-2-a3"
+        },
+        {
+          "loses_in_plies": 10,
+          "move": "a1-2-b2"
+        },
+        {
+          "loses_in_plies": 10,
+          "move": "b1-2-b3"
+        }
+      ],
+      "legal_moves": 16,
+      "line": [
+        "a1-2-c1",
+        "a3-1-b3",
+        "c1-2-a1",
+        "a3-1-b3"
+      ],
+      "only_move": "c1-1-b1",
+      "only_move_is_greedy_choice": false,
+      "ply": 5,
+      "slowest_losing_alternative": {
+        "loses_in_plies": 24,
+        "move": "a1-1-b1"
+      }
+    },
+    {
+      "diagram": "1       W   WWWW      W\n2       .      .      .\n3       .   RRRR     RR\n        a      b      c   White to move\n",
+      "fastest_losing_alternatives": [
+        {
+          "loses_in_plies": 4,
+          "move": "a1-1-b1"
+        },
+        {
+          "loses_in_plies": 4,
+          "move": "c1-1-b1"
+        },
+        {
+          "loses_in_plies": 6,
+          "move": "a1-1-a2"
+        }
+      ],
+      "legal_moves": 15,
+      "line": [
+        "a1-1-b1",
+        "a3-1-b3",
+        "c1-1-b1",
+        "a3-1-b3"
+      ],
+      "only_move": "b1-1-a1",
+      "only_move_is_greedy_choice": false,
+      "ply": 5,
+      "slowest_losing_alternative": {
+        "loses_in_plies": 38,
+        "move": "b1-2-a2"
+      }
+    },
+    {
+      "diagram": "1       W     WW      .\n2    WWWR      .      .\n3       .    RRR     RR\n        a      b      c   White to move\n",
+      "fastest_losing_alternatives": [
+        {
+          "loses_in_plies": 2,
+          "move": "a1-1-b1"
+        },
+        {
+          "loses_in_plies": 4,
+          "move": "b1-2-c2"
+        },
+        {
+          "loses_in_plies": 6,
+          "move": "b1-1-b2"
+        }
+      ],
+      "legal_moves": 8,
+      "line": [
+        "c1-2-a1",
+        "a3-1-b3",
+        "a1-3-a2",
+        "a3-1-a2"
+      ],
+      "only_move": "a1-1-a2",
+      "only_move_is_greedy_choice": true,
+      "ply": 5,
+      "slowest_losing_alternative": {
+        "loses_in_plies": 10,
+        "move": "b1-2-a2"
+      }
+    },
+    {
+      "diagram": "1       .     WW      .\n2       R      .      W\n3     RRR  RRWWW      .\n        a      b      c   Red to move\n",
+      "fastest_losing_alternatives": [
+        {
+          "loses_in_plies": 2,
+          "move": "a2-1-a3"
+        },
+        {
+          "loses_in_plies": 2,
+          "move": "a3-3-a2"
+        },
+        {
+          "loses_in_plies": 4,
+          "move": "a3-3-b1"
+        }
+      ],
+      "legal_moves": 12,
+      "line": [
+        "a1-2-c1",
+        "a3-1-a2",
+        "c1-1-c2",
+        "c3-2-a3",
+        "c1-3-b3"
+      ],
+      "only_move": "a3-1-b3",
+      "only_move_is_greedy_choice": true,
+      "ply": 6,
+      "slowest_losing_alternative": {
+        "loses_in_plies": 8,
+        "move": "a3-2-a1"
+      }
+    },
+    {
+      "diagram": "1       W      W      W\n2       .      .      .\n3       .    RRR RRRWWW\n        a      b      c   Red to move\n",
+      "fastest_losing_alternatives": [
+        {
+          "loses_in_plies": 2,
+          "move": "b3-3-a1"
+        },
+        {
+          "loses_in_plies": 2,
+          "move": "b3-3-a3"
+        },
+        {
+          "loses_in_plies": 2,
+          "move": "b3-3-b2"
+        }
+      ],
+      "legal_moves": 11,
+      "line": [
+        "a1-1-b1",
+        "c3-1-b3",
+        "c1-1-b1",
+        "a3-2-c3",
+        "b1-3-c3"
+      ],
+      "only_move": "b3-1-c3",
+      "only_move_is_greedy_choice": true,
+      "ply": 6,
+      "slowest_losing_alternative": {
+        "loses_in_plies": 22,
+        "move": "b3-3-c3"
+      }
+    },
+    {
+      "diagram": "1      WW      W      .\n2       .      .      .\n3       .    RRR RRRWWW\n        a      b      c   Red to move\n",
+      "fastest_losing_alternatives": [
+        {
+          "loses_in_plies": 2,
+          "move": "b3-3-a1"
+        },
+        {
+          "loses_in_plies": 2,
+          "move": "b3-3-a3"
+        },
+        {
+          "loses_in_plies": 2,
+          "move": "b3-3-b2"
+        }
+      ],
+      "legal_moves": 11,
+      "line": [
+        "c1-1-b1",
+        "c3-1-b3",
+        "c1-1-b1",
+        "a3-2-c3",
+        "b1-3-c3"
+      ],
+      "only_move": "b3-1-c3",
+      "only_move_is_greedy_choice": true,
+      "ply": 6,
+      "slowest_losing_alternative": {
+        "loses_in_plies": 12,
+        "move": "b3-3-c3"
+      }
+    },
+    {
+      "diagram": "1       W      .      W\n2       W      .      .\n3       R     RR RRRWWW\n        a      b      c   Red to move\n",
+      "fastest_losing_alternatives": [
+        {
+          "loses_in_plies": 2,
+          "move": "a3-1-b3"
+        },
+        {
+          "loses_in_plies": 4,
+          "move": "a3-1-a2"
+        },
+        {
+          "loses_in_plies": 4,
+          "move": "b3-2-b1"
+        }
+      ],
+      "legal_moves": 8,
+      "line": [
+        "c1-1-b1",
+        "a3-1-b3",
+        "a1-1-a2",
+        "b3-1-c3",
+        "b1-3-c3"
+      ],
+      "only_move": "b3-1-c3",
+      "only_move_is_greedy_choice": true,
+      "ply": 6,
+      "slowest_losing_alternative": {
+        "loses_in_plies": 12,
+        "move": "b3-2-a2"
+      }
+    },
+    {
+      "diagram": "1       W     WW      .\n2       .      .      .\n3       R     RR RRRWWW\n        a      b      c   Red to move\n",
+      "fastest_losing_alternatives": [
+        {
+          "loses_in_plies": 2,
+          "move": "a3-1-b3"
+        },
+        {
+          "loses_in_plies": 4,
+          "move": "a3-1-a2"
+        },
+        {
+          "loses_in_plies": 4,
+          "move": "b3-2-a2"
+        }
+      ],
+      "legal_moves": 8,
+      "line": [
+        "c1-2-a1",
+        "a3-1-b3",
+        "a1-3-a2",
+        "b3-1-c3",
+        "a2-3-c3"
+      ],
+      "only_move": "b3-1-c3",
+      "only_move_is_greedy_choice": true,
+      "ply": 6,
+      "slowest_losing_alternative": {
+        "loses_in_plies": 6,
+        "move": "b3-2-b1"
+      }
+    }
+  ],
+  "peak_rss_mib": 239.234375,
+  "per_ply": [
+    {
+      "categories": {
+        "advances": {
+          "loses_in_plies_min_median_max": [
+            12,
+            16,
+            22
+          ],
+          "losing": 10,
+          "losing_share": 1.0,
+          "moves": 10
+        },
+        "all moves": {
+          "loses_in_plies_min_median_max": [
+            12,
+            16,
+            22
+          ],
+          "losing": 10,
+          "losing_share": 0.625,
+          "moves": 16
+        },
+        "captures a top": {
+          "loses_in_plies_min_median_max": [
+            14,
+            16,
+            16
+          ],
+          "losing": 3,
+          "losing_share": 1.0,
+          "moves": 3
+        },
+        "greedy's choice (most tops)": {
+          "loses_in_plies_min_median_max": [
+            14,
+            16,
+            22
+          ],
+          "losing": 6,
+          "losing_share": 1.0,
+          "moves": 6
+        },
+        "sideways": {
+          "loses_in_plies_min_median_max": [
+            null,
+            null,
+            null
+          ],
+          "losing": 0,
+          "losing_share": 0.0,
+          "moves": 6
+        },
+        "to the centre": {
+          "loses_in_plies_min_median_max": [
+            12,
+            12,
+            16
+          ],
+          "losing": 3,
+          "losing_share": 1.0,
+          "moves": 3
+        }
+      },
+      "draw_keeping_moves": 6,
+      "draw_keeping_moves_that": {
+        "advance": 0,
+        "capture_a_top": 0,
+        "go_to_the_centre": 0,
+        "move_1_2_3_pieces": [
+          4,
+          2,
+          0
+        ],
+        "stay_on_their_row": 6
+      },
+      "legal_moves": 16,
+      "lines_reaching_them": 1.0,
+      "ply": 1,
+      "positions": 1,
+      "positions_by_number_of_draw_keeping_moves": {
+        "6": 1
+      },
+      "positions_up_to_mirror": 1,
+      "to_move": "White"
+    },
+    {
+      "categories": {
+        "advances": {
+          "loses_in_plies_min_median_max": [
+            8,
+            14,
+            32
+          ],
+          "losing": 58,
+          "losing_share": 0.9666666666666667,
+          "moves": 60
+        },
+        "all moves": {
+          "loses_in_plies_min_median_max": [
+            8,
+            12,
+            32
+          ],
+          "losing": 72,
+          "losing_share": 0.75,
+          "moves": 96
+        },
+        "captures a top": {
+          "loses_in_plies_min_median_max": [
+            8,
+            14,
+            18
+          ],
+          "losing": 16,
+          "losing_share": 1.0,
+          "moves": 16
+        },
+        "greedy's choice (most tops)": {
+          "loses_in_plies_min_median_max": [
+            8,
+            18,
+            32
+          ],
+          "losing": 32,
+          "losing_share": 0.9411764705882353,
+          "moves": 34
+        },
+        "sideways": {
+          "loses_in_plies_min_median_max": [
+            10,
+            12,
+            28
+          ],
+          "losing": 14,
+          "losing_share": 0.3888888888888889,
+          "moves": 36
+        },
+        "to the centre": {
+          "loses_in_plies_min_median_max": [
+            10,
+            12,
+            32
+          ],
+          "losing": 18,
+          "losing_share": 1.0,
+          "moves": 18
+        }
+      },
+      "draw_keeping_moves": 24,
+      "draw_keeping_moves_that": {
+        "advance": 2,
+        "capture_a_top": 0,
+        "go_to_the_centre": 0,
+        "move_1_2_3_pieces": [
+          18,
+          6,
+          0
+        ],
+        "stay_on_their_row": 22
+      },
+      "legal_moves": 96,
+      "lines_reaching_them": 6.0,
+      "ply": 2,
+      "positions": 6,
+      "positions_by_number_of_draw_keeping_moves": {
+        "2": 2,
+        "5": 4
+      },
+      "positions_up_to_mirror": 3,
+      "to_move": "Red"
+    },
+    {
+      "categories": {
+        "advances": {
+          "loses_in_plies_min_median_max": [
+            6,
+            12,
+            34
+          ],
+          "losing": 218,
+          "losing_share": 0.8934426229508197,
+          "moves": 244
+        },
+        "all moves": {
+          "loses_in_plies_min_median_max": [
+            4,
+            12,
+            34
+          ],
+          "losing": 304,
+          "losing_share": 0.7755102040816326,
+          "moves": 392
+        },
+        "captures a top": {
+          "loses_in_plies_min_median_max": [
+            10,
+            14,
+            26
+          ],
+          "losing": 66,
+          "losing_share": 0.8918918918918919,
+          "moves": 74
+        },
+        "greedy's choice (most tops)": {
+          "loses_in_plies_min_median_max": [
+            10,
+            14,
+            34
+          ],
+          "losing": 38,
+          "losing_share": 0.8636363636363636,
+          "moves": 44
+        },
+        "sideways": {
+          "loses_in_plies_min_median_max": [
+            4,
+            12,
+            34
+          ],
+          "losing": 86,
+          "losing_share": 0.581081081081081,
+          "moves": 148
+        },
+        "to the centre": {
+          "loses_in_plies_min_median_max": [
+            6,
+            12,
+            20
+          ],
+          "losing": 60,
+          "losing_share": 0.967741935483871,
+          "moves": 62
+        }
+      },
+      "draw_keeping_moves": 88,
+      "draw_keeping_moves_that": {
+        "advance": 26,
+        "capture_a_top": 8,
+        "go_to_the_centre": 2,
+        "move_1_2_3_pieces": [
+          58,
+          18,
+          12
+        ],
+        "stay_on_their_row": 62
+      },
+      "legal_moves": 392,
+      "lines_reaching_them": 24.0,
+      "ply": 3,
+      "positions": 24,
+      "positions_by_number_of_draw_keeping_moves": {
+        "2": 6,
+        "3": 6,
+        "4": 4,
+        "5": 6,
+        "6": 2
+      },
+      "positions_up_to_mirror": 12,
+      "to_move": "White"
+    },
+    {
+      "categories": {
+        "advances": {
+          "loses_in_plies_min_median_max": [
+            4,
+            12,
+            30
+          ],
+          "losing": 552,
+          "losing_share": 0.887459807073955,
+          "moves": 622
+        },
+        "all moves": {
+          "loses_in_plies_min_median_max": [
+            2,
+            12,
+            36
+          ],
+          "losing": 790,
+          "losing_share": 0.771484375,
+          "moves": 1024
+        },
+        "backwards": {
+          "loses_in_plies_min_median_max": [
+            6,
+            12,
+            20
+          ],
+          "losing": 8,
+          "losing_share": 0.6666666666666666,
+          "moves": 12
+        },
+        "captures a top": {
+          "loses_in_plies_min_median_max": [
+            4,
+            14,
+            30
+          ],
+          "losing": 170,
+          "losing_share": 0.8585858585858586,
+          "moves": 198
+        },
+        "greedy's choice (most tops)": {
+          "loses_in_plies_min_median_max": [
+            8,
+            14,
+            28
+          ],
+          "losing": 100,
+          "losing_share": 0.9090909090909091,
+          "moves": 110
+        },
+        "sideways": {
+          "loses_in_plies_min_median_max": [
+            2,
+            10,
+            36
+          ],
+          "losing": 230,
+          "losing_share": 0.5897435897435898,
+          "moves": 390
+        },
+        "to the centre": {
+          "loses_in_plies_min_median_max": [
+            4,
+            12,
+            20
+          ],
+          "losing": 156,
+          "losing_share": 0.9285714285714286,
+          "moves": 168
+        }
+      },
+      "draw_keeping_moves": 234,
+      "draw_keeping_moves_that": {
+        "advance": 70,
+        "capture_a_top": 28,
+        "go_to_the_centre": 12,
+        "move_1_2_3_pieces": [
+          160,
+          56,
+          18
+        ],
+        "stay_on_their_row": 160
+      },
+      "legal_moves": 1024,
+      "lines_reaching_them": 88.0,
+      "ply": 4,
+      "positions": 66,
+      "positions_by_number_of_draw_keeping_moves": {
+        "1": 6,
+        "2": 18,
+        "3": 12,
+        "4": 10,
+        "5": 12,
+        "6": 4,
+        "8": 4
+      },
+      "positions_up_to_mirror": 33,
+      "to_move": "Red"
+    },
+    {
+      "categories": {
+        "advances": {
+          "loses_in_plies_min_median_max": [
+            2,
+            12,
+            38
+          ],
+          "losing": 1457,
+          "losing_share": 0.8922229026331905,
+          "moves": 1633
+        },
+        "all moves": {
+          "loses_in_plies_min_median_max": [
+            2,
+            12,
+            38
+          ],
+          "losing": 2083,
+          "losing_share": 0.7599416271433783,
+          "moves": 2741
+        },
+        "backwards": {
+          "loses_in_plies_min_median_max": [
+            2,
+            14,
+            32
+          ],
+          "losing": 24,
+          "losing_share": 0.26666666666666666,
+          "moves": 90
+        },
+        "captures a top": {
+          "loses_in_plies_min_median_max": [
+            2,
+            14,
+            36
+          ],
+          "losing": 491,
+          "losing_share": 0.8846846846846846,
+          "moves": 555
+        },
+        "greedy's choice (most tops)": {
+          "loses_in_plies_min_median_max": [
+            4,
+            14,
+            32
+          ],
+          "losing": 369,
+          "losing_share": 0.8561484918793504,
+          "moves": 431
+        },
+        "sideways": {
+          "loses_in_plies_min_median_max": [
+            2,
+            10,
+            38
+          ],
+          "losing": 602,
+          "losing_share": 0.5913555992141454,
+          "moves": 1018
+        },
+        "to the centre": {
+          "loses_in_plies_min_median_max": [
+            2,
+            12,
+            28
+          ],
+          "losing": 358,
+          "losing_share": 0.8774509803921569,
+          "moves": 408
+        }
+      },
+      "draw_keeping_moves": 658,
+      "draw_keeping_moves_that": {
+        "advance": 176,
+        "capture_a_top": 64,
+        "go_to_the_centre": 50,
+        "move_1_2_3_pieces": [
+          462,
+          106,
+          90
+        ],
+        "stay_on_their_row": 416
+      },
+      "legal_moves": 2741,
+      "lines_reaching_them": 336.0,
+      "ply": 5,
+      "positions": 183,
+      "positions_by_number_of_draw_keeping_moves": {
+        "1": 32,
+        "2": 41,
+        "3": 18,
+        "4": 37,
+        "5": 20,
+        "6": 19,
+        "7": 6,
+        "8": 4,
+        "9": 6
+      },
+      "positions_up_to_mirror": 93,
+      "to_move": "White"
+    },
+    {
+      "categories": {
+        "advances": {
+          "loses_in_plies_min_median_max": [
+            2,
+            12,
+            38
+          ],
+          "losing": 3471,
+          "losing_share": 0.898989898989899,
+          "moves": 3861
+        },
+        "all moves": {
+          "loses_in_plies_min_median_max": [
+            2,
+            12,
+            38
+          ],
+          "losing": 5191,
+          "losing_share": 0.7852064740583875,
+          "moves": 6611
+        },
+        "backwards": {
+          "loses_in_plies_min_median_max": [
+            2,
+            14,
+            34
+          ],
+          "losing": 96,
+          "losing_share": 0.4444444444444444,
+          "moves": 216
+        },
+        "captures a top": {
+          "loses_in_plies_min_median_max": [
+            2,
+            14,
+            34
+          ],
+          "losing": 1260,
+          "losing_share": 0.8936170212765957,
+          "moves": 1410
+        },
+        "greedy's choice (most tops)": {
+          "loses_in_plies_min_median_max": [
+            4,
+            14,
+            36
+          ],
+          "losing": 1017,
+          "losing_share": 0.8835794960903562,
+          "moves": 1151
+        },
+        "sideways": {
+          "loses_in_plies_min_median_max": [
+            2,
+            12,
+            38
+          ],
+          "losing": 1624,
+          "losing_share": 0.6408839779005525,
+          "moves": 2534
+        },
+        "to the centre": {
+          "loses_in_plies_min_median_max": [
+            2,
+            12,
+            34
+          ],
+          "losing": 917,
+          "losing_share": 0.9253279515640767,
+          "moves": 991
+        }
+      },
+      "draw_keeping_moves": 1420,
+      "draw_keeping_moves_that": {
+        "advance": 390,
+        "capture_a_top": 150,
+        "go_to_the_centre": 74,
+        "move_1_2_3_pieces": [
+          994,
+          232,
+          194
+        ],
+        "stay_on_their_row": 910
+      },
+      "legal_moves": 6611,
+      "lines_reaching_them": 1304.0,
+      "ply": 6,
+      "positions": 451,
+      "positions_by_number_of_draw_keeping_moves": {
+        "1": 110,
+        "2": 84,
+        "3": 68,
+        "4": 101,
+        "5": 38,
+        "6": 24,
+        "7": 12,
+        "8": 10,
+        "9": 4
+      },
+      "positions_up_to_mirror": 227,
+      "to_move": "Red"
+    },
+    {
+      "categories": {
+        "advances": {
+          "loses_in_plies_min_median_max": [
+            2,
+            12,
+            44
+          ],
+          "losing": 6315,
+          "losing_share": 0.8816138489459724,
+          "moves": 7163
+        },
+        "all moves": {
+          "loses_in_plies_min_median_max": [
+            2,
+            12,
+            44
+          ],
+          "losing": 9897,
+          "losing_share": 0.7764179807013415,
+          "moves": 12747
+        },
+        "backwards": {
+          "loses_in_plies_min_median_max": [
+            2,
+            10,
+            34
+          ],
+          "losing": 366,
+          "losing_share": 0.5,
+          "moves": 732
+        },
+        "captures a top": {
+          "loses_in_plies_min_median_max": [
+            2,
+            14,
+            38
+          ],
+          "losing": 2322,
+          "losing_share": 0.8869365928189458,
+          "moves": 2618
+        },
+        "greedy's choice (most tops)": {
+          "loses_in_plies_min_median_max": [
+            4,
+            14,
+            44
+          ],
+          "losing": 1807,
+          "losing_share": 0.8455779129620964,
+          "moves": 2137
+        },
+        "sideways": {
+          "loses_in_plies_min_median_max": [
+            2,
+            12,
+            44
+          ],
+          "losing": 3216,
+          "losing_share": 0.6628194558944766,
+          "moves": 4852
+        },
+        "to the centre": {
+          "loses_in_plies_min_median_max": [
+            2,
+            12,
+            44
+          ],
+          "losing": 1737,
+          "losing_share": 0.8750629722921914,
+          "moves": 1985
+        }
+      },
+      "draw_keeping_moves": 2850,
+      "draw_keeping_moves_that": {
+        "advance": 848,
+        "capture_a_top": 296,
+        "go_to_the_centre": 248,
+        "move_1_2_3_pieces": [
+          2082,
+          412,
+          356
+        ],
+        "stay_on_their_row": 1636
+      },
+      "legal_moves": 12747,
+      "lines_reaching_them": 4704.0,
+      "ply": 7,
+      "positions": 876,
+      "positions_by_number_of_draw_keeping_moves": {
+        "1": 192,
+        "2": 175,
+        "3": 140,
+        "4": 167,
+        "5": 94,
+        "6": 46,
+        "7": 30,
+        "8": 24,
+        "9": 8
+      },
+      "positions_up_to_mirror": 439,
+      "to_move": "White"
+    },
+    {
+      "categories": {
+        "advances": {
+          "loses_in_plies_min_median_max": [
+            2,
+            12,
+            44
+          ],
+          "losing": 11586,
+          "losing_share": 0.8806628154454241,
+          "moves": 13156
+        },
+        "all moves": {
+          "loses_in_plies_min_median_max": [
+            2,
+            12,
+            44
+          ],
+          "losing": 18547,
+          "losing_share": 0.7894020004256225,
+          "moves": 23495
+        },
+        "backwards": {
+          "loses_in_plies_min_median_max": [
+            2,
+            12,
+            38
+          ],
+          "losing": 791,
+          "losing_share": 0.5340985820391627,
+          "moves": 1481
+        },
+        "captures a top": {
+          "loses_in_plies_min_median_max": [
+            2,
+            14,
+            38
+          ],
+          "losing": 4640,
+          "losing_share": 0.8892295898811805,
+          "moves": 5218
+        },
+        "greedy's choice (most tops)": {
+          "loses_in_plies_min_median_max": [
+            2,
+            14,
+            44
+          ],
+          "losing": 3429,
+          "losing_share": 0.8596139383304087,
+          "moves": 3989
+        },
+        "sideways": {
+          "loses_in_plies_min_median_max": [
+            2,
+            12,
+            44
+          ],
+          "losing": 6170,
+          "losing_share": 0.6965454955972002,
+          "moves": 8858
+        },
+        "to the centre": {
+          "loses_in_plies_min_median_max": [
+            2,
+            12,
+            44
+          ],
+          "losing": 3358,
+          "losing_share": 0.9159847244953628,
+          "moves": 3666
+        }
+      },
+      "draw_keeping_moves": 4948,
+      "draw_keeping_moves_that": {
+        "advance": 1570,
+        "capture_a_top": 578,
+        "go_to_the_centre": 308,
+        "move_1_2_3_pieces": [
+          3554,
+          684,
+          710
+        ],
+        "stay_on_their_row": 2688
+      },
+      "legal_moves": 23495,
+      "lines_reaching_them": 16994.0,
+      "ply": 8,
+      "positions": 1623,
+      "positions_by_number_of_draw_keeping_moves": {
+        "1": 390,
+        "2": 366,
+        "3": 246,
+        "4": 311,
+        "5": 142,
+        "6": 88,
+        "7": 40,
+        "8": 34,
+        "9": 6
+      },
+      "positions_up_to_mirror": 814,
+      "to_move": "Red"
+    },
+    {
+      "categories": {
+        "advances": {
+          "loses_in_plies_min_median_max": [
+            2,
+            12,
+            44
+          ],
+          "losing": 18706,
+          "losing_share": 0.8864142538975501,
+          "moves": 21103
+        },
+        "all moves": {
+          "loses_in_plies_min_median_max": [
+            2,
+            12,
+            46
+          ],
+          "losing": 32490,
+          "losing_share": 0.8009367681498829,
+          "moves": 40565
+        },
+        "backwards": {
+          "loses_in_plies_min_median_max": [
+            2,
+            10,
+            38
+          ],
+          "losing": 2330,
+          "losing_share": 0.5857214680744093,
+          "moves": 3978
+        },
+        "captures a top": {
+          "loses_in_plies_min_median_max": [
+            2,
+            14,
+            38
+          ],
+          "losing": 8028,
+          "losing_share": 0.8941857874805079,
+          "moves": 8978
+        },
+        "greedy's choice (most tops)": {
+          "loses_in_plies_min_median_max": [
+            2,
+            14,
+            44
+          ],
+          "losing": 6081,
+          "losing_share": 0.86194188518781,
+          "moves": 7055
+        },
+        "sideways": {
+          "loses_in_plies_min_median_max": [
+            2,
+            12,
+            46
+          ],
+          "losing": 11454,
+          "losing_share": 0.7397313355722036,
+          "moves": 15484
+        },
+        "to the centre": {
+          "loses_in_plies_min_median_max": [
+            2,
+            12,
+            44
+          ],
+          "losing": 5786,
+          "losing_share": 0.913627033001737,
+          "moves": 6333
+        }
+      },
+      "draw_keeping_moves": 8075,
+      "draw_keeping_moves_that": {
+        "advance": 2397,
+        "capture_a_top": 950,
+        "go_to_the_centre": 547,
+        "move_1_2_3_pieces": [
+          5899,
+          1120,
+          1056
+        ],
+        "stay_on_their_row": 4030
+      },
+      "legal_moves": 40565,
+      "lines_reaching_them": 65868.0,
+      "ply": 9,
+      "positions": 2784,
+      "positions_by_number_of_draw_keeping_moves": {
+        "1": 763,
+        "2": 605,
+        "3": 460,
+        "4": 481,
+        "5": 230,
+        "6": 133,
+        "7": 58,
+        "8": 42,
+        "9": 12
+      },
+      "positions_up_to_mirror": 1397,
+      "to_move": "White"
+    },
+    {
+      "categories": {
+        "advances": {
+          "loses_in_plies_min_median_max": [
+            2,
+            12,
+            44
+          ],
+          "losing": 25324,
+          "losing_share": 0.8834775327937483,
+          "moves": 28664
+        },
+        "all moves": {
+          "loses_in_plies_min_median_max": [
+            2,
+            12,
+            44
+          ],
+          "losing": 45960,
+          "losing_share": 0.8114979871459849,
+          "moves": 56636
+        },
+        "backwards": {
+          "loses_in_plies_min_median_max": [
+            2,
+            10,
+            38
+          ],
+          "losing": 4150,
+          "losing_share": 0.6402344955260721,
+          "moves": 6482
+        },
+        "captures a top": {
+          "loses_in_plies_min_median_max": [
+            2,
+            12,
+            38
+          ],
+          "losing": 11697,
+          "losing_share": 0.8920155570807595,
+          "moves": 13113
+        },
+        "greedy's choice (most tops)": {
+          "loses_in_plies_min_median_max": [
+            2,
+            14,
+            44
+          ],
+          "losing": 8362,
+          "losing_share": 0.8569378971100635,
+          "moves": 9758
+        },
+        "sideways": {
+          "loses_in_plies_min_median_max": [
+            2,
+            12,
+            44
+          ],
+          "losing": 16486,
+          "losing_share": 0.7671475104699861,
+          "moves": 21490
+        },
+        "to the centre": {
+          "loses_in_plies_min_median_max": [
+            2,
+            12,
+            44
+          ],
+          "losing": 8203,
+          "losing_share": 0.9186919027886662,
+          "moves": 8929
+        }
+      },
+      "draw_keeping_moves": 10676,
+      "draw_keeping_moves_that": {
+        "advance": 3340,
+        "capture_a_top": 1416,
+        "go_to_the_centre": 726,
+        "move_1_2_3_pieces": [
+          7650,
+          1444,
+          1582
+        ],
+        "stay_on_their_row": 5004
+      },
+      "legal_moves": 56636,
+      "lines_reaching_them": 247122.0,
+      "ply": 10,
+      "positions": 3910,
+      "positions_by_number_of_draw_keeping_moves": {
+        "1": 1222,
+        "2": 916,
+        "3": 590,
+        "4": 586,
+        "5": 292,
+        "6": 160,
+        "7": 80,
+        "8": 48,
+        "9": 16
+      },
+      "positions_up_to_mirror": 1960,
+      "to_move": "Red"
+    },
+    {
+      "categories": {
+        "advances": {
+          "loses_in_plies_min_median_max": [
+            2,
+            10,
+            44
+          ],
+          "losing": 32674,
+          "losing_share": 0.8809145075624815,
+          "moves": 37091
+        },
+        "all moves": {
+          "loses_in_plies_min_median_max": [
+            2,
+            10,
+            44
+          ],
+          "losing": 63310,
+          "losing_share": 0.8193454037194735,
+          "moves": 77269
+        },
+        "backwards": {
+          "loses_in_plies_min_median_max": [
+            2,
+            10,
+            44
+          ],
+          "losing": 7492,
+          "losing_share": 0.6882234062098108,
+          "moves": 10886
+        },
+        "captures a top": {
+          "loses_in_plies_min_median_max": [
+            2,
+            12,
+            44
+          ],
+          "losing": 15982,
+          "losing_share": 0.8951495463201523,
+          "moves": 17854
+        },
+        "greedy's choice (most tops)": {
+          "loses_in_plies_min_median_max": [
+            2,
+            14,
+            44
+          ],
+          "losing": 11405,
+          "losing_share": 0.8530929762884285,
+          "moves": 13369
+        },
+        "sideways": {
+          "loses_in_plies_min_median_max": [
+            2,
+            12,
+            44
+          ],
+          "losing": 23144,
+          "losing_share": 0.7901133415266967,
+          "moves": 29292
+        },
+        "to the centre": {
+          "loses_in_plies_min_median_max": [
+            2,
+            12,
+            44
+          ],
+          "losing": 11050,
+          "losing_share": 0.9193776520509194,
+          "moves": 12019
+        }
+      },
+      "draw_keeping_moves": 13959,
+      "draw_keeping_moves_that": {
+        "advance": 4417,
+        "capture_a_top": 1872,
+        "go_to_the_centre": 969,
+        "move_1_2_3_pieces": [
+          9945,
+          1914,
+          2100
+        ],
+        "stay_on_their_row": 6148
+      },
+      "legal_moves": 77269,
+      "lines_reaching_them": 893748.0,
+      "ply": 11,
+      "positions": 5343,
+      "positions_by_number_of_draw_keeping_moves": {
+        "1": 1807,
+        "2": 1255,
+        "3": 816,
+        "4": 737,
+        "5": 352,
+        "6": 226,
+        "7": 86,
+        "8": 48,
+        "9": 16
+      },
+      "positions_up_to_mirror": 2676,
+      "to_move": "White"
+    },
+    {
+      "categories": {
+        "advances": {
+          "loses_in_plies_min_median_max": [
+            2,
+            10,
+            44
+          ],
+          "losing": 40339,
+          "losing_share": 0.8795735031180498,
+          "moves": 45862
+        },
+        "all moves": {
+          "loses_in_plies_min_median_max": [
+            2,
+            10,
+            46
+          ],
+          "losing": 82781,
+          "losing_share": 0.8267352441825627,
+          "moves": 100130
+        },
+        "backwards": {
+          "loses_in_plies_min_median_max": [
+            2,
+            10,
+            44
+          ],
+          "losing": 12014,
+          "losing_share": 0.7276801938219261,
+          "moves": 16510
+        },
+        "captures a top": {
+          "loses_in_plies_min_median_max": [
+            2,
+            12,
+            44
+          ],
+          "losing": 21089,
+          "losing_share": 0.8970607001573865,
+          "moves": 23509
+        },
+        "greedy's choice (most tops)": {
+          "loses_in_plies_min_median_max": [
+            2,
+            12,
+            44
+          ],
+          "losing": 14830,
+          "losing_share": 0.8560378665435234,
+          "moves": 17324
+        },
+        "sideways": {
+          "loses_in_plies_min_median_max": [
+            2,
+            10,
+            46
+          ],
+          "losing": 30428,
+          "losing_share": 0.8058689549234599,
+          "moves": 37758
+        },
+        "to the centre": {
+          "loses_in_plies_min_median_max": [
+            2,
+            10,
+            44
+          ],
+          "losing": 14330,
+          "losing_share": 0.9226707874573434,
+          "moves": 15531
+        }
+      },
+      "draw_keeping_moves": 17349,
+      "draw_keeping_moves_that": {
+        "advance": 5523,
+        "capture_a_top": 2420,
+        "go_to_the_centre": 1201,
+        "move_1_2_3_pieces": [
+          12125,
+          2466,
+          2758
+        ],
+        "stay_on_their_row": 7330
+      },
+      "legal_moves": 100130,
+      "lines_reaching_them": 3263524.0,
+      "ply": 12,
+      "positions": 6958,
+      "positions_by_number_of_draw_keeping_moves": {
+        "1": 2595,
+        "2": 1610,
+        "3": 1026,
+        "4": 891,
+        "5": 404,
+        "6": 252,
+        "7": 100,
+        "8": 60,
+        "9": 20
+      },
+      "positions_up_to_mirror": 3485,
+      "to_move": "Red"
+    }
+  ],
+  "players_draw_keeping_rate_by_ply": [
+    {
+      "player": "share of draw-keeping moves (uniform pick)",
+      "rate_by_ply": [
+        0.375,
+        0.25,
+        0.22761437908496732,
+        0.2295921398862575,
+        0.23587395661064647,
+        0.21199781213510593,
+        0.22658350255762258,
+        0.2125538023765719,
+        0.2024772741878003,
+        0.19181172580124317,
+        0.18509257255891706,
+        0.17714910862161382
+      ]
+    },
+    {
+      "player": "greedy",
+      "rate_by_ply": [
+        0.0,
+        0.06666666666666667,
+        0.1111111111111111,
+        0.12626262626262627,
+        0.15542544886807177,
+        0.16478372575933561,
+        0.18098227875625136,
+        0.1643585756339916,
+        0.16259749589490916,
+        0.16189661148740492,
+        0.16345864192579618,
+        0.1616665982288287
+      ]
+    },
+    {
+      "player": "greedy, then most prisoners",
+      "rate_by_ply": [
+        0.0,
+        0.0,
+        0.20833333333333334,
+        0.13636363636363635,
+        0.1621129326047359,
+        0.20001055854714392,
+        0.20223780531999716,
+        0.19757259239699154,
+        0.18983419996351028,
+        0.18958186173019947,
+        0.18701163664667336,
+        0.17833782741802282
+      ]
+    },
+    {
+      "player": "greedy, then fewest opp_mobility",
+      "rate_by_ply": [
+        0.0,
+        0.0,
+        0.25,
+        0.15151515151515152,
+        0.16029143897996356,
+        0.20296695174743956,
+        0.21060919040371098,
+        0.20332325988518216,
+        0.19192950647692025,
+        0.19679413794503312,
+        0.19351770154689885,
+        0.1871902617519173
+      ]
+    },
+    {
+      "player": "greedy, then most dest_height",
+      "rate_by_ply": [
+        0.0,
+        0.0,
+        0.20833333333333334,
+        0.13636363636363635,
+        0.16757741347905283,
+        0.20001055854714392,
+        0.20528194535043856,
+        0.20332325988518213,
+        0.1941445447910965,
+        0.19777453010189597,
+        0.1939980808593949,
+        0.18652915223768898
+      ]
+    },
+    {
+      "player": "greedy, then most own_mobility",
+      "rate_by_ply": [
+        0.0,
+        0.0,
+        0.0,
+        0.12121212121212122,
+        0.12568306010928962,
+        0.15447154471544716,
+        0.16286149162861494,
+        0.13883754364345863,
+        0.14361829501915704,
+        0.14556692242114244,
+        0.14765113232266522,
+        0.14584650761713142
+      ]
+    },
+    {
+      "player": "greedy, then most own_max_height",
+      "rate_by_ply": [
+        0.0,
+        0.0,
+        0.25,
+        0.15151515151515152,
+        0.19672131147540983,
+        0.22099039172209903,
+        0.21746575342465757,
+        0.21215855411788867,
+        0.20125718390804595,
+        0.2059164535379369,
+        0.19859005552436204,
+        0.19201877934272302
+      ]
+    },
+    {
+      "player": "greedy, then most opp_singletons",
+      "rate_by_ply": [
+        0.0,
+        0.06666666666666667,
+        0.16666666666666666,
+        0.12626262626262627,
+        0.17135050741608118,
+        0.19275683665927573,
+        0.21237587881423498,
+        0.2035638490351983,
+        0.1930874840357599,
+        0.19238176429992324,
+        0.19366386519671255,
+        0.18930704407853025
+      ]
+    },
+    {
+      "player": "list (pooled): most prisoners, then most own_mobility, then most top_diff",
+      "rate_by_ply": [
+        0.0,
+        0.0,
+        0.08333333333333333,
+        0.18181818181818182,
+        0.15300546448087432,
+        0.18994826311899485,
+        0.1784627092846271,
+        0.188539741219963,
+        0.1776819923371647,
+        0.17996589940323962,
+        0.17540083598477765,
+        0.16913385072338788
+      ]
+    },
+    {
+      "player": "list (drawn): most prisoners, then most top_diff, then fewest distance",
+      "rate_by_ply": [
+        0.0,
+        0.0,
+        0.25,
+        0.18181818181818182,
+        0.17486338797814208,
+        0.22172949002217296,
+        0.20490867579908678,
+        0.2146231258985418,
+        0.20161637931034485,
+        0.2031798806479113,
+        0.20187160771102372,
+        0.19254575069464408
+      ]
+    },
+    {
+      "player": "tree (pooled, depth 3)",
+      "rate_by_ply": [
+        0.0,
+        0.0,
+        0.25,
+        0.18181818181818182,
+        0.16757741347905283,
+        0.21117094287826,
+        0.20728238022758574,
+        0.20658881749454766,
+        0.20640508118956397,
+        0.21801567003613073,
+        0.2140946914669543,
+        0.2113471075888432
+      ]
+    }
+  ],
+  "plies": 12,
+  "seconds": 52.519801125,
+  "single_draw_keeping_move_positions_per_ply": {
+    "10": 1222,
+    "11": 1807,
+    "12": 2595,
+    "4": 6,
+    "5": 32,
+    "6": 110,
+    "7": 192,
+    "8": 390,
+    "9": 763
+  },
+  "threads": 4
+}

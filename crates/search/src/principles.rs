@@ -222,6 +222,15 @@ impl Agent for GreedyTwoPly {
     }
 
     fn choose(&mut self, state: &GameState, rules: &RuleSet, rng: &mut SplitMix64) -> Move {
+        let tied = self.best_moves(state, rules);
+        tied[rng.below(tied.len())]
+    }
+}
+
+impl GreedyTwoPly {
+    /// The tied best moves, in legal-move order; [`Agent::choose`] picks one
+    /// uniformly at random.
+    pub fn best_moves(&self, state: &GameState, rules: &RuleSet) -> Vec<Move> {
         let moves = legal_moves(state);
         assert!(!moves.is_empty(), "choose() called with no legal move");
         let mover = state.to_move();
@@ -254,7 +263,7 @@ impl Agent for GreedyTwoPly {
                 tied.push(m);
             }
         }
-        tied[rng.below(tied.len())]
+        tied
     }
 }
 
