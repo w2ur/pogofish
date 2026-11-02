@@ -79,6 +79,46 @@ fn terminated_game_has_value_targets() {
     assert_eq!(game.examples[0].value, Some(1.0));
 }
 
+/// Under `lc1d-2` a third occurrence is a draw: the game is `Terminated`
+/// (not truncated), every position gets value target 0, and the game counts
+/// as ended by the variant rule. From a start whose history holds every
+/// position White can reach twice, White's first move ends the game; under
+/// `lc1-2` the same move loses for White.
+#[test]
+fn a_repetition_draw_has_value_target_zero() {
+    use pogofish_engine::{
+        apply_move, initial_state, legal_moves, testing::state_with_repeated_key,
+    };
+    let (_vs, net) = make_net();
+    let s0 = initial_state();
+    let mut start = s0.clone();
+    for m in legal_moves(&s0) {
+        start = state_with_repeated_key(&start, apply_move(&s0, m).unwrap().key(), 2);
+    }
+    let draw = play_game_from(
+        &net,
+        &start,
+        &RuleSet::LC1Draw { repetitions: 2 },
+        &fast_cfg(),
+        &mut SplitMix64::new(1),
+    );
+    assert_eq!(draw.end, GameEnd::Terminated(Outcome::DrawEarned));
+    assert!(draw.by_variant_rule);
+    assert_eq!(draw.examples.len(), 1);
+    assert_eq!(draw.examples[0].value, Some(0.0));
+
+    let loss = play_game_from(
+        &net,
+        &start,
+        &RuleSet::LC1 { repetitions: 2 },
+        &fast_cfg(),
+        &mut SplitMix64::new(1),
+    );
+    assert_eq!(loss.end, GameEnd::Terminated(Outcome::WinRed));
+    assert!(loss.by_variant_rule);
+    assert_eq!(loss.examples[0].value, Some(-1.0));
+}
+
 /// Plan task 2.1: a game stopped by the safety limit is `Truncated`; its
 /// positions keep their policy targets and have no value target. No uncapped
 /// game can end within two moves (White keeps at least 3 tops), so a limit
@@ -92,6 +132,7 @@ fn truncated_game_keeps_policies_and_drops_values() {
     };
     let game = play_one_game(&net, &RuleSet::Uncapped, &cfg, &mut SplitMix64::new(1));
     assert_eq!(game.end, GameEnd::Truncated);
+    assert!(!game.by_variant_rule, "a truncation is not a rule ending");
     assert_eq!(game.examples.len(), 2);
     for ex in &game.examples {
         assert_eq!(ex.value, None);

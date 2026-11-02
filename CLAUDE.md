@@ -8,7 +8,7 @@ Pogofish is a browser-based Pogo board game with AI opponents trained via AlphaZ
 
 ### Rust workspace (`crates/`)
 - Rust 1.79+ (stable toolchain)
-- `pogofish-engine` — Game rules, state, legal moves, rulesets (`Uncapped`, LC1/LC2/LC3; `RuleSet` parses and prints `uncapped`, `lc1-N`, …)
+- `pogofish-engine` — Game rules, state, legal moves, rulesets (`Uncapped`, LC1/LC2/LC3, LC1Draw; `RuleSet` parses and prints `uncapped`, `lc1-N`, `lc1d-N`, …)
 - `pogofish-infer` — Pure-Rust inference (no libtorch): input features, action indexing, MLP forward pass reading exported `.pfw` weights, and the neural MCTS shared with training (`Evaluator` trait)
 - `pogofish-search` — Minimax (alpha-beta + TT), MCTS (PUCT), checkpointer, scripted `random`/`greedy` players (seeded, no dependency)
 - `pogofish-train` — AlphaZero training (tch-rs/libtorch, no gating, exact resume), self-play, TD(λ) value learning (`td_train`), `arena` evaluation binary
@@ -24,7 +24,7 @@ Pogofish is a browser-based Pogo board game with AI opponents trained via AlphaZ
 - Rust WASM engine (via `pogofish-wasm`)
 
 ### Tools (`tools/`)
-- Python 3.11+ — ONNX export sidecar (`export_onnx.py`), Elo ladder, TD curve and checkpoint-ladder plots (`plot_ladder.py`, `plot_td_curve.py`, `plot_az_ladder.py`, PEP 723: `uv run`)
+- Python 3.11+ — ONNX export sidecar (`export_onnx.py`), Elo ladder, TD curve and checkpoint-ladder plots (`plot_ladder.py`, `plot_td_curve.py`, `plot_az_ladder.py`), the repetition-outcome criteria (`repetition_outcome.py`, over the arena reports `scripts/v3-eval.sh` writes); PEP 723: `uv run`
 - Node.js — ONNX verification (`verify_onnx.js`)
 
 ## User-Facing Language

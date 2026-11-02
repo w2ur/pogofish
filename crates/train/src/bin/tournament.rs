@@ -218,7 +218,7 @@ fn main() -> anyhow::Result<()> {
     // Determine max moves from the variant cap
     let max_moves: u16 = match &rules {
         RuleSet::Uncapped => unreachable!("refused above"),
-        RuleSet::LC1 { .. } => 200,
+        RuleSet::LC1 { .. } | RuleSet::LC1Draw { .. } => 200,
         RuleSet::LC2 { cap } => cap.saturating_mul(2).max(200),
         RuleSet::LC3 { cap } => cap.saturating_mul(2).max(200),
     };

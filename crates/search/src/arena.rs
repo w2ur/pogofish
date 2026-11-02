@@ -12,8 +12,8 @@ use crate::mcts::{Mcts, MctsConfig};
 use crate::players::Scripted;
 use crate::rng::SplitMix64;
 use pogofish_engine::{
-    apply_move, apply_move_under, initial_state, is_terminal, legal_moves, Color, GameState, Move,
-    Outcome, RuleSet, StateKey,
+    apply_move, apply_move_under, base_outcome, initial_state, is_terminal, legal_moves, Color,
+    GameState, Move, Outcome, RuleSet, StateKey,
 };
 use serde::Serialize;
 use std::collections::HashSet;
@@ -112,6 +112,9 @@ pub struct ArenaReport {
     pub a: Record,
     pub a_as_white: Record,
     pub a_as_red: Record,
+    /// A's results in the games the variant rule (a repetition, a cap)
+    /// ended rather than the base rule.
+    pub a_by_variant_rule: Record,
     /// Pairs whose two games both finished; the score uses only these.
     pub scored_pairs: u32,
     /// A's mean score per scored pair (win 1, draw ½, loss 0).
@@ -136,6 +139,8 @@ struct GameLog {
     moves: Vec<Move>,
     /// White's result: 1, ½ or 0; `None` if unfinished.
     white_result: Option<f64>,
+    /// The variant rule ended the game, not the base rule.
+    by_variant_rule: bool,
 }
 
 /// Give up drawing an opening after this many tries (each try ended the game).
@@ -190,12 +195,14 @@ fn play(
             return GameLog {
                 moves,
                 white_result: Some(white_result),
+                by_variant_rule: base_outcome(&s).is_none(),
             };
         }
         if already_played + moves.len() as u32 >= cfg.max_plies {
             return GameLog {
                 moves,
                 white_result: None,
+                by_variant_rule: false,
             };
         }
         let agent: &mut dyn Agent = match s.to_move() {
@@ -219,6 +226,7 @@ pub fn run_match(
     let mut rec = Record::default();
     let mut as_white = Record::default();
     let mut as_red = Record::default();
+    let mut by_variant_rule = Record::default();
     let mut pair_scores = Vec::new();
     let mut white_points = 0.0;
     let mut finished = 0u32;
@@ -261,6 +269,9 @@ pub fn run_match(
             } else {
                 as_red.add(a_result)
             }
+            if log.by_variant_rule {
+                by_variant_rule.add(a_result);
+            }
             if let Some(w) = log.white_result {
                 white_points += w;
                 finished += 1;
@@ -296,6 +307,7 @@ pub fn run_match(
         a: rec,
         a_as_white: as_white,
         a_as_red: as_red,
+        a_by_variant_rule: by_variant_rule,
         scored_pairs: n as u32,
         score,
         ci95,
@@ -413,6 +425,57 @@ mod tests {
         assert_eq!(r.a.unfinished, 20);
         assert_eq!(r.scored_pairs, 0);
         assert!(r.score.is_nan());
+    }
+
+    /// Both sides shuffle one piece out and back from the start
+    /// (`regression_positions.rs`); the start position's third occurrence
+    /// comes on ply 8, a move of Red's.
+    struct Shuffler;
+
+    impl Agent for Shuffler {
+        fn name(&self) -> String {
+            "shuffler".into()
+        }
+
+        fn choose(&mut self, s: &GameState, _rules: &RuleSet, _rng: &mut SplitMix64) -> Move {
+            let (home, out): (u8, u8) = match s.to_move() {
+                Color::White => (0, 3),
+                Color::Red => (6, 7),
+            };
+            let (from_cell, to_cell) = if s.cells()[home as usize].len() == 2 {
+                (home, out)
+            } else {
+                (out, home)
+            };
+            Move {
+                from_cell,
+                num_pieces: 1,
+                to_cell,
+            }
+        }
+    }
+
+    /// A repetition draw scores ½ and is counted as a draw and as a
+    /// variant-rule ending; under lc1-2 the same games are decisive.
+    #[test]
+    fn repetition_draws_score_one_half_and_are_counted() {
+        let draw = ArenaConfig::new(RuleSet::LC1Draw { repetitions: 2 }, 5, 0, 1000, 1);
+        let r = run_match(&mut Shuffler, &mut Shuffler, &draw).unwrap();
+        assert_eq!(r.a.draws, 10, "{r:?}");
+        assert_eq!(r.a_by_variant_rule.draws, 10);
+        assert_eq!((r.score, r.white_score, r.scored_pairs), (0.5, 0.5, 5));
+
+        let loss = ArenaConfig::new(RuleSet::LC1 { repetitions: 2 }, 5, 0, 1000, 1);
+        let r = run_match(&mut Shuffler, &mut Shuffler, &loss).unwrap();
+        // Red produces the third occurrence: White wins every game.
+        assert_eq!((r.a.wins, r.a.draws, r.a.losses), (5, 0, 5), "{r:?}");
+        assert_eq!(r.a_by_variant_rule.wins + r.a_by_variant_rule.losses, 10);
+        assert_eq!(r.white_score, 1.0);
+
+        // A base win is not a variant-rule ending.
+        let base = run_match(&mut Scripted::Greedy, &mut Scripted::Random, &cfg(20)).unwrap();
+        let v = base.a_by_variant_rule;
+        assert_eq!(v.wins + v.draws + v.losses, 0, "{base:?}");
     }
 
     /// Review finding: an impossible opening used to hang the arena forever.

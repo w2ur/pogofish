@@ -55,7 +55,7 @@ fn main() -> anyhow::Result<()> {
             let mut b = agent_from_spec(&specs[y])?;
             let r = run_match(a.as_mut(), b.as_mut(), &cfg).map_err(anyhow::Error::msg)?;
             eprintln!(
-                "{} vs {}: score {:.3} [{:.3}, {:.3}] | W{} D{} L{} U{} | distinct games {} / {}",
+                "{} vs {}: score {:.3} [{:.3}, {:.3}] | W{} D{} L{} U{} | by the variant rule {} | distinct games {} / {}",
                 r.player_a,
                 r.player_b,
                 r.score,
@@ -65,6 +65,7 @@ fn main() -> anyhow::Result<()> {
                 r.a.draws,
                 r.a.losses,
                 r.a.unfinished,
+                r.a_by_variant_rule.wins + r.a_by_variant_rule.draws + r.a_by_variant_rule.losses,
                 r.distinct_games,
                 r.games
             );

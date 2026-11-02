@@ -1,0 +1,155 @@
+[
+  {
+    "player_a": "net:models/az-lc1d-s1/checkpoints/iter_00200.pt:100",
+    "player_b": "net:models/az-lc1d-s2/checkpoints/iter_00200.pt:100",
+    "config": {
+      "rules": {
+        "LC1Draw": {
+          "repetitions": 2
+        }
+      },
+      "pairs": 200,
+      "opening_plies": 4,
+      "max_plies": 1000,
+      "seed": 7
+    },
+    "games": 400,
+    "a": {
+      "wins": 184,
+      "draws": 32,
+      "losses": 184,
+      "unfinished": 0
+    },
+    "a_as_white": {
+      "wins": 140,
+      "draws": 14,
+      "losses": 46,
+      "unfinished": 0
+    },
+    "a_as_red": {
+      "wins": 44,
+      "draws": 18,
+      "losses": 138,
+      "unfinished": 0
+    },
+    "a_by_variant_rule": {
+      "wins": 0,
+      "draws": 32,
+      "losses": 0,
+      "unfinished": 0
+    },
+    "scored_pairs": 200,
+    "score": 0.5,
+    "ci95": [
+      0.4772226198779111,
+      0.5227773801220889
+    ],
+    "significant": false,
+    "white_score": 0.735,
+    "distinct_openings": 197,
+    "distinct_games": 368,
+    "distinct_positions_after_opening": 4662
+  },
+  {
+    "player_a": "net:models/az-lc1d-s1/checkpoints/iter_00200.pt:100",
+    "player_b": "net:models/az-lc1d-s3/checkpoints/iter_00200.pt:100",
+    "config": {
+      "rules": {
+        "LC1Draw": {
+          "repetitions": 2
+        }
+      },
+      "pairs": 200,
+      "opening_plies": 4,
+      "max_plies": 1000,
+      "seed": 7
+    },
+    "games": 400,
+    "a": {
+      "wins": 200,
+      "draws": 13,
+      "losses": 187,
+      "unfinished": 0
+    },
+    "a_as_white": {
+      "wins": 151,
+      "draws": 5,
+      "losses": 44,
+      "unfinished": 0
+    },
+    "a_as_red": {
+      "wins": 49,
+      "draws": 8,
+      "losses": 143,
+      "unfinished": 0
+    },
+    "a_by_variant_rule": {
+      "wins": 0,
+      "draws": 13,
+      "losses": 0,
+      "unfinished": 0
+    },
+    "scored_pairs": 200,
+    "score": 0.51625,
+    "ci95": [
+      0.4895518851944401,
+      0.5429481148055599
+    ],
+    "significant": false,
+    "white_score": 0.75125,
+    "distinct_openings": 197,
+    "distinct_games": 368,
+    "distinct_positions_after_opening": 4872
+  },
+  {
+    "player_a": "net:models/az-lc1d-s2/checkpoints/iter_00200.pt:100",
+    "player_b": "net:models/az-lc1d-s3/checkpoints/iter_00200.pt:100",
+    "config": {
+      "rules": {
+        "LC1Draw": {
+          "repetitions": 2
+        }
+      },
+      "pairs": 200,
+      "opening_plies": 4,
+      "max_plies": 1000,
+      "seed": 7
+    },
+    "games": 400,
+    "a": {
+      "wins": 190,
+      "draws": 13,
+      "losses": 197,
+      "unfinished": 0
+    },
+    "a_as_white": {
+      "wins": 148,
+      "draws": 9,
+      "losses": 43,
+      "unfinished": 0
+    },
+    "a_as_red": {
+      "wins": 42,
+      "draws": 4,
+      "losses": 154,
+      "unfinished": 0
+    },
+    "a_by_variant_rule": {
+      "wins": 0,
+      "draws": 13,
+      "losses": 0,
+      "unfinished": 0
+    },
+    "scored_pairs": 200,
+    "score": 0.49125,
+    "ci95": [
+      0.46659597411248394,
+      0.5159040258875162
+    ],
+    "significant": false,
+    "white_score": 0.77125,
+    "distinct_openings": 197,
+    "distinct_games": 368,
+    "distinct_positions_after_opening": 4786
+  }
+]
