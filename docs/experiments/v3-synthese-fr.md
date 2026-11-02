@@ -235,3 +235,87 @@ Il faudrait une autre méthode de recherche (par nombres de preuve, ou exploitan
 *Proposition à reprendre ou à jeter. Elle n’invente rien : chaque fait vient d’un compte rendu.*
 
 > Le Pogo est un jeu nul. Je ne dis pas qu’il est mauvais, quoique, mais qu’à le jouer parfaitement des deux côtés, personne ne gagne jamais. J’aurais pu le deviner, puisque les machines que j’entraînais depuis des mois apprenaient surtout à tourner en rond. Il m’a fallu trois tours pour le savoir, et ce n’est pas l’intelligence artificielle qui me l’a appris : c’est une méthode qui ne fait que compter, à rebours, deux cent trente-deux millions de positions, en trois minutes sur mon Mac. Le premier tour, j’avais cru la machine sur parole. Le second, je l’avais mesurée, et elle m’avait battu à chaque partie. Le troisième, j’ai découvert que la règle que j’avais ajoutée pour que les parties finissent était celle-là même qui désigne le vainqueur. Dit autrement, j’ai inventé le gagnant d’un jeu qui n’en avait pas.
+
+
+---
+
+## Premier jet de l’article, dans ma voix
+
+*Premier jet complet, à reprendre ou à jeter. Les sections qui précèdent restent la référence pour les faits. Ce qui n’en vient pas est listé à la fin, sous « Éléments à valider ».*
+
+# J’ai inventé le gagnant d’un jeu qui n’en avait pas
+
+Le Pogo est un jeu nul. Je ne dis pas qu’il est mauvais, quoique, mais qu’à le jouer parfaitement des deux côtés, personne ne gagne jamais (pardonnez-moi la facilité, le français me l’offrait sur un plateau, de neuf cases qui plus est). Ce n’est plus une intuition. Il s’agit d’un calcul exact, mené sur les 232 792 560 positions que le jeu peut prendre, et il a tourné en deux à trois minutes sur mon Mac de 8 Go.
+
+Pour qui arrive en cours de route, un résumé des épisodes précédents. Le premier tour, j’avais cru la machine sur parole. Le second, je l’avais mesurée, ce qui est moins glorieux mais plus honnête, et elle m’avait battu à chaque partie au niveau « normal ». Le troisième, celui-ci, répond à une question que les deux premiers ne pouvaient pas poser : que vaut le jeu lui-même, indépendamment de ceux qui le jouent ?
+
+Et la réponse a quelque chose de vexant, pour la machine comme pour moi.
+
+* * *
+
+Commençons par l’outil, parce qu’il n’a rien d’intelligent, et c’est ce qui me plaît. On l’appelle l’analyse rétrograde, c’est la méthode des tables de finales aux échecs, et elle est bête comme chou. On part de toutes les positions perdues, celles où le joueur au trait n’a plus aucune pile à lui. Une position d’où un coup mène à l’une d’elles est gagnée. Une position dont tous les coups mènent à des positions gagnées pour l’adversaire est perdue. On recommence, encore et encore, jusqu’à ce que plus rien ne bouge. Ce qui reste, ce que personne n’a pu étiqueter, ce sont les positions où nul ne peut forcer le gain : les nulles.
+
+Il n’y a là ni réseau de neurones ni apprentissage, seulement de la comptabilité, patiente, à rebours. Au premier tour, j’avais tenté la même chose par l’autre bout, avec un Minimax qui cherchait en avant, limité en profondeur, et qui confondait « nulle » et « pas encore calculé ». Il avait épuisé la mémoire au bout de six jours. La bonne méthode a tout résolu en trois minutes, avec moins de 600 Mo. J’en déduis, avec l’aplomb de celui qui a mis trois tours à s’en apercevoir, que l’échec du premier tour venait de l’outil et non de la taille du jeu. Je réalise en l’écrivant que c’est à peu près ce que l’on m’aurait répondu si j’avais posé la question à quelqu’un, au lieu de la poser à mon ordinateur.
+
+* * *
+
+Le départ est donc nul. Mais cette nulle est un fil, et un fil étroit.
+
+Les Blancs ont seize premiers coups possibles. Six seulement gardent la nulle, et tous restent sur la rangée de départ : une pièce, ou deux, qui glissent le long de sa propre ligne, sans avancer d’une case. Les dix autres perdent, de force, en 12 à 22 demi-coups. Avancer au centre dès le premier coup, ce que tout joueur d’échecs ferait par réflexe, et je suis de ceux-là, perd en 12. Côté rouge, sur les 24 réponses qui gardent la nulle, 22 font la même chose : on reste chez soi.
+
+Aux échecs, que je connais un peu mieux, le centre est la première chose qu’on apprend. Au Pogo, il ne vaut rien. Je l’ai mesuré de deux manières, et les deux disent la même chose : un joueur qui préfère le centre gagne une partie sur deux contre un joueur qui l’ignore, 0,498 pour être exact, c’est-à-dire le hasard. Mon intuition de joueur d’échecs, transplantée ici, était au mieux inutile, au pire suicidaire.
+
+Le fil se resserre vite. Dès le quatrième demi-coup, certaines positions n’ont plus qu’un seul coup qui garde la nulle ; au douzième, c’est le cas de 37 % d’entre elles. Si les deux camps ne jouent que des coups qui la gardent, on ne visite plus que 289 536 positions sur 230 millions, et dans 45 % de celles-là, un seul coup est juste. Partout ailleurs, l’un des deux gagne : parmi les positions qu’on peut atteindre depuis le départ, 70,9 % sont gagnées pour le joueur au trait, et 2,1 % seulement sont nulles. Le gain médian prend cinq demi-coups. Dit autrement, le Pogo est un jeu nul entouré d’un océan de positions décisives, et l’on y tombe au premier pas de travers.
+
+* * *
+
+Venons-en à la machine, puisque c’était tout de même le sujet de départ.
+
+Avec la table exacte, on peut enfin noter chacun de ses coups. Sur 400 parties de mon réseau contre lui-même, j’ai compté la part de ses coups qui conservent le résultat théorique de la position : 86 %. Le joueur glouton, celui qui prend à chaque coup le plus de piles possible, en conserve 51 %, et le hasard 31 %. L’IA vaut donc mieux qu’on ne pouvait le mesurer jusqu’ici, puisqu’on n’avait que des adversaires imparfaits pour l’étalonner, et moins qu’elle n’en avait l’air, puisqu’elle se trompe encore un coup sur sept.
+
+Deux détails m’ont arrêté. Le premier : dans les positions nulles, le glouton fait pire que le hasard, 16 % contre 21 %. Prendre des piles, ce qui ressemble pourtant à la définition même de bien jouer, est exactement ce qu’il ne faut pas faire quand le jeu est équilibré. Le second : les erreurs du réseau se concentrent dans l’ouverture, 82 % de bons coups avant le dixième demi-coup, plus de 90 % ensuite. Et pourtant son premier coup, une pièce de c1 vers b1, est juste. C’est même l’ouverture la plus étroite des six, celle après laquelle les Rouges n’ont plus que deux réponses sur seize. Elle a choisi, sans le savoir, l’ouverture la plus exigeante pour l’adversaire, ce qui ressemble à du génie, et je pense que c’est surtout de la chance.
+
+* * *
+
+Je ne suis pas un grand joueur de Pogo. Personne ne l’est, à vrai dire, il n’existe ni théorie ni manuel, seulement des règles d’une demi-page. J’avais donc demandé à la machine ce qu’elle avait compris, à la manière des grands principes que les programmes d’échecs ont, paraît-il, fait émerger.
+
+Le problème, c’est qu’une machine sait jouer et ne sait pas expliquer. Il a fallu la traiter comme un sujet d’expérience : observer ses choix sur 21 637 positions, formuler des hypothèses, puis les mettre à l’épreuve chez un joueur plus bête qu’elle, le glouton, en vérifiant que chaque hypothèse le rend plus fort, et que son contraire le rend plus faible. Une règle qui gagne dans les deux sens n’est pas un principe, seulement un départage qui vaut mieux qu’une pièce de monnaie.
+
+Il en est sorti cinq principes, que l’on peut appliquer sans machine. Empiler sur l’adversaire, et garder une haute pile qui retient ses pièces prisonnières. Garder ses piles à lui basses. Ne pas laisser ses sommets là où il peut se poser. Préférer les positions où ses sommets sont des pièces seules, qui n’avancent que d’une case. Et ne jamais lui laisser un coup qui prend son dernier sommet, ce qui, j’en conviens, relève moins du principe que du bon sens, mais le bon sens se mesure aussi : celui qui fait l’inverse tombe à 19 %.
+
+Puis la table exacte est arrivée, et elle a remis de l’ordre. Le premier critère du jeu parfait, avant même le nombre de piles, est d’enterrer des pièces adverses : le bon coup en enterre davantage que les autres dans 88 % des positions gagnées. Mon réseau le plaçait cinquième. Le deuxième critère est plus étrange : prendre un sommet adverse en y déplaçant toute sa pile, sur une pile déjà haute. On finit avec moins de piles, mais plus hautes, soit l’inverse exact de l’instinct du glouton, qui porte bien son nom et se goinfre de piles comme d’autres de petits fours.
+
+Et puis il y a le résultat qui m’a le plus contrarié, et que je donne pour ce qu’il est. Les principes s’additionnent ; tous réunis, ils donnent au glouton 67,5 % des points contre sa version simple. Mais un glouton qui regarde un seul coup plus loin, sans aucun principe, en fait 74 %. Calculer un coup de plus vaut davantage que tout ce que j’ai su formuler. Pour quelqu’un qui écrit des articles précisément pour formuler des choses, la nouvelle est vexante, et je n’ai pas trouvé comment la retourner à mon avantage.
+
+* * *
+
+Reste la question qui m’occupait au départ, et qui, je m’en aperçois, était la mauvaise.
+
+Sans règle d’arrêt, on peut tourner en rond au Pogo dès le premier coup : je pose une pièce sur une case vide, l’adversaire fait de même, je la remets sur sa pile, il fait pareil, et ainsi de suite, comme deux joueurs d’échecs qui feraient faire des allers-retours à leur cavalier. Au second tour, plus mes réseaux progressaient, plus leurs parties s’allongeaient, jusqu’à ce que 7 % d’entre elles atteignent la limite de mille demi-coups. J’avais donc ajouté une règle : la troisième occurrence d’une même position fait perdre celui qui l’a produite. Répéter est un choix délibéré, il m’avait semblé juste de le faire payer.
+
+Aux échecs pourtant, la répétition fait nulle, pour au moins trois raisons. La répétition se fait à deux, et désigner un coupable revient à trancher sur une question de parité, à savoir qui ferme la boucle le premier. L’échec perpétuel est une ressource de défense, il serait cruel de la punir. Et les échecs connaissent déjà la nulle, ils n’ont pas besoin d’en inventer une. Je me suis donc demandé si je n’avais pas choisi la mauvaise sanction.
+
+Je l’ai testé, avec trois réseaux par règle et des critères écrits avant les parties, pour ne pas être tenté de les ajuster après. Avec la nulle, les réseaux apprennent à la chercher : pour l’un d’eux, on passe de 23 nulles sur ses 2 000 premières parties à 370 sur les 2 000 dernières, et en fin d’entraînement, 15 % des parties se terminent ainsi, au-delà du seuil de 10 % que je m’étais fixé. Je lis cela comme un apprentissage de la nulle, lecture faite après coup et que je n’ai pas testée. Avec la défaite, la règle reste un garde-fou, elle ne tranche que 1,8 % des parties, et le reste se joue sur le plateau. J’ai gardé la défaite.
+
+C’est ici que la table exacte me renvoie mon choix à la figure. Le départ est nul. Ma règle rend le jeu fini et sans nulle possible. Or un théorème de Zermelo, de 1913, dit d’un tel jeu que l’un des deux camps a forcément une stratégie gagnante[^1]. J’ai donc, en démiurge de sous-préfecture, fabriqué un vainqueur pour un jeu qui n’en avait pas, et ce vainqueur, quel qu’il soit, gagnera par la gestion des répétitions, c’est-à-dire par ma règle, pas par celles du jeu.
+
+Lequel ? Je ne sais pas. J’ai essayé. La question se réduit, et la réduction est démontrée : tant que la partie reste dans la zone nulle, en sortir revient à perdre, si bien que le jeu devient une course dans un graphe de 289 536 positions nulles, où chacune ne peut être jouée que deux fois, et où le premier qui n’a plus de coup neuf perd. Ça a l’air simple. Ça ne l’est pas. Le cœur de ce graphe compte 233 472 positions qui communiquent toutes entre elles, et aucune recherche n’en est venue à bout en dix millions d’états, sur des lignes de plus de 4 000 coups. Seul acquis : aucun camp ne peut acculer l’autre en 27 coups ou moins.
+
+Il y a, dans un recoin de ce graphe, une petite composante de quarante positions que je trouve assez jolie : une pile de deux de chaque camp qui se poursuivent autour d’une haute pile figée, chacune cherchant à ne pas être la première à repasser par le même chemin. C’est, je crois, le meilleur résumé de ce que j’ai fait du Pogo. Un jeu calme et nul, où j’ai ajouté une règle pour que ça finisse, et qui, depuis, est devenu une course-poursuite dont je ne connais pas le vainqueur.
+
+Je ne sais pas si c’est un défaut de ma règle ou ce qui rend le jeu intéressant. Vous avez un avis ?
+
+P.S. Pour ceux qui voudraient se mesurer au glouton, qui échoue sur ce problème. Les Blancs ont le trait ; chaque case se lit de bas en haut, la rangée 1 est en haut. a1 : W · a2 : WWRRRR · b2 : R · c2 : WW · b3 : RW. Les Blancs gagnent en trois demi-coups[^2].
+
+[^1]: Pour être précis, le théorème dit qu’un des deux camps peut forcer le gain ou, à défaut, la nulle. Ma règle supprimant la nulle, il ne reste que le gain. Je simplifie, mais pas au point de mentir.
+
+[^2]: a1-1-a2 : la pièce blanche couvre la pile de six. Il ne reste aux Rouges qu’une pièce, en b2, et où qu’elle aille, deux pièces blanches sautent dessus. Le glouton, lui, prend la pièce isolée de b2 et laisse aux Rouges leur haute pile.
+
+### Éléments à valider ou à remplacer
+
+- « je suis de ceux-là » (avancer au centre par réflexe aux échecs) et « que je connais un peu mieux » : tirés de ce que tu m’as dit de ton rapport aux échecs, pas d’un texte. À confirmer.
+- « elle m’avait battu à chaque partie au niveau "normal" » : vient de `v2-results.md`, section *Search depth*. Vérifie que la formule correspond à ce que tu as vécu.
+- « les grands principes que les programmes d’échecs ont, paraît-il, fait émerger » : formulation prudente de ton parallèle, sans exemple. Ajoute-en un précis ou coupe.
+- La note 1 sur Zermelo : l’énoncé est celui du théorème pour les jeux finis à information parfaite. Relis-la si tu veux une formulation plus exacte.
+- Les 86 % et autres taux viennent de positions où aucune répétition n’est encore en jeu (section 3) ; l’article ne le précise pas.
+- La pointe sur les petits fours, le démiurge de sous-préfecture, le jeu de mots sur « nul » : trois traits d’esprit. Probablement un de trop.
