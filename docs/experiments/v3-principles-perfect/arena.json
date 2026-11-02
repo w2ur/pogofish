@@ -1,0 +1,373 @@
+{
+  "matches": [
+    {
+      "ci95": [
+        0.4742471380469158,
+        0.5117528619530841
+      ],
+      "distinct_games": 1935,
+      "distinct_openings": 993,
+      "player": "greedy",
+      "role": "control: greedy vs greedy (expect 0.5)",
+      "score": 0.493,
+      "scored_pairs": 1000,
+      "seconds": 0.302735084,
+      "unfinished": 0,
+      "white_score": 0.595
+    },
+    {
+      "ci95": [
+        0.4742471380469158,
+        0.5117528619530841
+      ],
+      "distinct_games": 1935,
+      "distinct_openings": 993,
+      "player": "list [top_diff up] (greedy)",
+      "role": "control: list [top_diff up] vs greedy (expect 0.5, identical)",
+      "score": 0.493,
+      "scored_pairs": 1000,
+      "seconds": 1.596578708,
+      "unfinished": 0,
+      "white_score": 0.595
+    },
+    {
+      "ci95": [
+        0.012647285530058155,
+        0.024352714469941843
+      ],
+      "distinct_games": 1975,
+      "distinct_openings": 993,
+      "player": "list [top_diff down] (negated greedy)",
+      "role": "control: negated greedy vs greedy (expect clearly < 0.5)",
+      "score": 0.0185,
+      "scored_pairs": 1000,
+      "seconds": 0.532946917,
+      "unfinished": 0,
+      "white_score": 0.5175
+    },
+    {
+      "ci95": [
+        0.0,
+        0.0023852354591466416
+      ],
+      "distinct_games": 2000,
+      "distinct_openings": 993,
+      "player": "random",
+      "role": "control: random vs greedy (expect clearly < 0.5)",
+      "score": 0.001,
+      "scored_pairs": 1000,
+      "seconds": 0.215359,
+      "unfinished": 0,
+      "white_score": 0.501
+    },
+    {
+      "ci95": [
+        0.7385775486125394,
+        0.7724224513874605
+      ],
+      "distinct_games": 1961,
+      "distinct_openings": 993,
+      "player": "greedy-2ply",
+      "role": "power reference: two-ply greedy vs greedy",
+      "score": 0.7555,
+      "scored_pairs": 1000,
+      "seconds": 2.268366834,
+      "unfinished": 0,
+      "white_score": 0.5795
+    },
+    {
+      "ci95": [
+        0.9075758775841217,
+        0.9304241224158784
+      ],
+      "distinct_games": 1968,
+      "distinct_openings": 993,
+      "player": "perfect (uncapped table)",
+      "role": "reference: perfect uncapped play vs greedy",
+      "score": 0.919,
+      "scored_pairs": 1000,
+      "seconds": 1.831860125,
+      "unfinished": 0,
+      "white_score": 0.562
+    },
+    {
+      "ci95": [
+        0.5926303377640084,
+        0.6283696622359917
+      ],
+      "distinct_games": 1914,
+      "distinct_openings": 993,
+      "player": "greedy, then most prisoners",
+      "role": "rule",
+      "score": 0.6105,
+      "scored_pairs": 1000,
+      "seconds": 1.479621959,
+      "unfinished": 0,
+      "white_score": 0.5975
+    },
+    {
+      "ci95": [
+        0.34156260925788645,
+        0.3784373907421135
+      ],
+      "distinct_games": 1951,
+      "distinct_openings": 993,
+      "player": "greedy, then fewest prisoners",
+      "role": "mirror",
+      "score": 0.36,
+      "scored_pairs": 1000,
+      "seconds": 2.418357,
+      "unfinished": 0,
+      "white_score": 0.584
+    },
+    {
+      "ci95": [
+        0.6249152279367259,
+        0.6610847720632741
+      ],
+      "distinct_games": 1919,
+      "distinct_openings": 993,
+      "player": "greedy, then fewest opp_mobility",
+      "role": "rule",
+      "score": 0.643,
+      "scored_pairs": 1000,
+      "seconds": 1.924462375,
+      "unfinished": 0,
+      "white_score": 0.58
+    },
+    {
+      "ci95": [
+        0.3480076553349445,
+        0.3849923446650555
+      ],
+      "distinct_games": 1946,
+      "distinct_openings": 993,
+      "player": "greedy, then most opp_mobility",
+      "role": "mirror",
+      "score": 0.3665,
+      "scored_pairs": 1000,
+      "seconds": 2.05606125,
+      "unfinished": 0,
+      "white_score": 0.5955
+    },
+    {
+      "ci95": [
+        0.6123442675107219,
+        0.648655732489278
+      ],
+      "distinct_games": 1924,
+      "distinct_openings": 993,
+      "player": "greedy, then most dest_height",
+      "role": "rule",
+      "score": 0.6305,
+      "scored_pairs": 1000,
+      "seconds": 1.75647775,
+      "unfinished": 0,
+      "white_score": 0.5815
+    },
+    {
+      "ci95": [
+        0.3469835490831922,
+        0.3840164509168078
+      ],
+      "distinct_games": 1948,
+      "distinct_openings": 993,
+      "player": "greedy, then fewest dest_height",
+      "role": "mirror",
+      "score": 0.3655,
+      "scored_pairs": 1000,
+      "seconds": 2.4511909579999998,
+      "unfinished": 0,
+      "white_score": 0.6005
+    },
+    {
+      "ci95": [
+        0.5899914051884361,
+        0.6260085948115639
+      ],
+      "distinct_games": 1923,
+      "distinct_openings": 993,
+      "player": "greedy, then most own_mobility",
+      "role": "rule",
+      "score": 0.608,
+      "scored_pairs": 1000,
+      "seconds": 2.296182583,
+      "unfinished": 0,
+      "white_score": 0.596
+    },
+    {
+      "ci95": [
+        0.39745951827436216,
+        0.4355404817256378
+      ],
+      "distinct_games": 1937,
+      "distinct_openings": 993,
+      "player": "greedy, then fewest own_mobility",
+      "role": "mirror",
+      "score": 0.4165,
+      "scored_pairs": 1000,
+      "seconds": 2.154468292,
+      "unfinished": 0,
+      "white_score": 0.5655
+    },
+    {
+      "ci95": [
+        0.599965799324783,
+        0.636034200675217
+      ],
+      "distinct_games": 1917,
+      "distinct_openings": 993,
+      "player": "greedy, then most own_max_height",
+      "role": "rule",
+      "score": 0.618,
+      "scored_pairs": 1000,
+      "seconds": 2.079767834,
+      "unfinished": 0,
+      "white_score": 0.572
+    },
+    {
+      "ci95": [
+        0.3658027145263254,
+        0.4031972854736746
+      ],
+      "distinct_games": 1943,
+      "distinct_openings": 993,
+      "player": "greedy, then fewest own_max_height",
+      "role": "mirror",
+      "score": 0.3845,
+      "scored_pairs": 1000,
+      "seconds": 2.692751709,
+      "unfinished": 0,
+      "white_score": 0.5855
+    },
+    {
+      "ci95": [
+        0.5706467990661394,
+        0.6093532009338606
+      ],
+      "distinct_games": 1931,
+      "distinct_openings": 993,
+      "player": "greedy, then most opp_singletons",
+      "role": "rule",
+      "score": 0.59,
+      "scored_pairs": 1000,
+      "seconds": 2.396110541,
+      "unfinished": 0,
+      "white_score": 0.59
+    },
+    {
+      "ci95": [
+        0.4081202902599053,
+        0.44487970974009466
+      ],
+      "distinct_games": 1934,
+      "distinct_openings": 993,
+      "player": "greedy, then fewest opp_singletons",
+      "role": "mirror",
+      "score": 0.4265,
+      "scored_pairs": 1000,
+      "seconds": 2.638930959,
+      "unfinished": 0,
+      "white_score": 0.6015
+    },
+    {
+      "ci95": [
+        0.5672155239160191,
+        0.6037844760839809
+      ],
+      "distinct_games": 1943,
+      "distinct_openings": 993,
+      "player": "list (pooled): most prisoners, then most own_mobility, then most top_diff",
+      "role": "list",
+      "score": 0.5855,
+      "scored_pairs": 1000,
+      "seconds": 1.738893416,
+      "unfinished": 0,
+      "white_score": 0.5995
+    },
+    {
+      "ci95": [
+        0.013071802472426761,
+        0.024928197527573238
+      ],
+      "distinct_games": 1973,
+      "distinct_openings": 993,
+      "player": "negated list (pooled)",
+      "role": "mirror",
+      "score": 0.019,
+      "scored_pairs": 1000,
+      "seconds": 1.237192458,
+      "unfinished": 0,
+      "white_score": 0.517
+    },
+    {
+      "ci95": [
+        0.5792888595734469,
+        0.6157111404265532
+      ],
+      "distinct_games": 1931,
+      "distinct_openings": 993,
+      "player": "list (drawn): most prisoners, then most top_diff, then fewest distance",
+      "role": "list",
+      "score": 0.5975,
+      "scored_pairs": 1000,
+      "seconds": 1.742020334,
+      "unfinished": 0,
+      "white_score": 0.6045
+    },
+    {
+      "ci95": [
+        0.012647285530058155,
+        0.024352714469941843
+      ],
+      "distinct_games": 1974,
+      "distinct_openings": 993,
+      "player": "negated list (drawn)",
+      "role": "mirror",
+      "score": 0.0185,
+      "scored_pairs": 1000,
+      "seconds": 0.811429875,
+      "unfinished": 0,
+      "white_score": 0.5175
+    },
+    {
+      "ci95": [
+        0.5627587914697203,
+        0.6012412085302796
+      ],
+      "distinct_games": 1941,
+      "distinct_openings": 993,
+      "player": "tree (pooled, depth 3)",
+      "role": "tree",
+      "score": 0.582,
+      "scored_pairs": 1000,
+      "seconds": 1.557638125,
+      "unfinished": 0,
+      "white_score": 0.592
+    },
+    {
+      "ci95": [
+        0.013071802472426761,
+        0.024928197527573238
+      ],
+      "distinct_games": 1976,
+      "distinct_openings": 993,
+      "player": "negated tree (pooled)",
+      "role": "mirror",
+      "score": 0.019,
+      "scored_pairs": 1000,
+      "seconds": 1.265633,
+      "unfinished": 0,
+      "white_score": 0.517
+    }
+  ],
+  "max_plies": 1000,
+  "opening_plies": 4,
+  "opponent": "greedy",
+  "pairs": 1000,
+  "peak_rss_mib": 201.6875,
+  "rules": "lc1-2",
+  "seconds": 11.132551542,
+  "seed": 404,
+  "threads": 4
+}

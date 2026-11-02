@@ -1,0 +1,572 @@
+[
+  {
+    "player": {
+      "name": "greedy, then most prisoners",
+      "policy": {
+        "List": [
+          {
+            "feature": 0,
+            "sign": 1.0
+          },
+          {
+            "feature": 2,
+            "sign": 1.0
+          }
+        ]
+      }
+    },
+    "role": "rule"
+  },
+  {
+    "player": {
+      "name": "greedy, then fewest prisoners",
+      "policy": {
+        "List": [
+          {
+            "feature": 0,
+            "sign": 1.0
+          },
+          {
+            "feature": 2,
+            "sign": -1.0
+          }
+        ]
+      }
+    },
+    "role": "mirror"
+  },
+  {
+    "player": {
+      "name": "greedy, then fewest opp_mobility",
+      "policy": {
+        "List": [
+          {
+            "feature": 0,
+            "sign": 1.0
+          },
+          {
+            "feature": 7,
+            "sign": -1.0
+          }
+        ]
+      }
+    },
+    "role": "rule"
+  },
+  {
+    "player": {
+      "name": "greedy, then most opp_mobility",
+      "policy": {
+        "List": [
+          {
+            "feature": 0,
+            "sign": 1.0
+          },
+          {
+            "feature": 7,
+            "sign": 1.0
+          }
+        ]
+      }
+    },
+    "role": "mirror"
+  },
+  {
+    "player": {
+      "name": "greedy, then most dest_height",
+      "policy": {
+        "List": [
+          {
+            "feature": 0,
+            "sign": 1.0
+          },
+          {
+            "feature": 28,
+            "sign": 1.0
+          }
+        ]
+      }
+    },
+    "role": "rule"
+  },
+  {
+    "player": {
+      "name": "greedy, then fewest dest_height",
+      "policy": {
+        "List": [
+          {
+            "feature": 0,
+            "sign": 1.0
+          },
+          {
+            "feature": 28,
+            "sign": -1.0
+          }
+        ]
+      }
+    },
+    "role": "mirror"
+  },
+  {
+    "player": {
+      "name": "greedy, then most own_mobility",
+      "policy": {
+        "List": [
+          {
+            "feature": 0,
+            "sign": 1.0
+          },
+          {
+            "feature": 6,
+            "sign": 1.0
+          }
+        ]
+      }
+    },
+    "role": "rule"
+  },
+  {
+    "player": {
+      "name": "greedy, then fewest own_mobility",
+      "policy": {
+        "List": [
+          {
+            "feature": 0,
+            "sign": 1.0
+          },
+          {
+            "feature": 6,
+            "sign": -1.0
+          }
+        ]
+      }
+    },
+    "role": "mirror"
+  },
+  {
+    "player": {
+      "name": "greedy, then most own_max_height",
+      "policy": {
+        "List": [
+          {
+            "feature": 0,
+            "sign": 1.0
+          },
+          {
+            "feature": 4,
+            "sign": 1.0
+          }
+        ]
+      }
+    },
+    "role": "rule"
+  },
+  {
+    "player": {
+      "name": "greedy, then fewest own_max_height",
+      "policy": {
+        "List": [
+          {
+            "feature": 0,
+            "sign": 1.0
+          },
+          {
+            "feature": 4,
+            "sign": -1.0
+          }
+        ]
+      }
+    },
+    "role": "mirror"
+  },
+  {
+    "player": {
+      "name": "greedy, then most opp_singletons",
+      "policy": {
+        "List": [
+          {
+            "feature": 0,
+            "sign": 1.0
+          },
+          {
+            "feature": 11,
+            "sign": 1.0
+          }
+        ]
+      }
+    },
+    "role": "rule"
+  },
+  {
+    "player": {
+      "name": "greedy, then fewest opp_singletons",
+      "policy": {
+        "List": [
+          {
+            "feature": 0,
+            "sign": 1.0
+          },
+          {
+            "feature": 11,
+            "sign": -1.0
+          }
+        ]
+      }
+    },
+    "role": "mirror"
+  },
+  {
+    "player": {
+      "name": "list (pooled): most prisoners, then most own_mobility, then most top_diff",
+      "policy": {
+        "List": [
+          {
+            "feature": 2,
+            "sign": 1.0
+          },
+          {
+            "feature": 6,
+            "sign": 1.0
+          },
+          {
+            "feature": 0,
+            "sign": 1.0
+          }
+        ]
+      }
+    },
+    "role": "list"
+  },
+  {
+    "player": {
+      "name": "negated list (pooled)",
+      "policy": {
+        "List": [
+          {
+            "feature": 2,
+            "sign": -1.0
+          },
+          {
+            "feature": 6,
+            "sign": -1.0
+          },
+          {
+            "feature": 0,
+            "sign": -1.0
+          }
+        ]
+      }
+    },
+    "role": "mirror"
+  },
+  {
+    "player": {
+      "name": "list (drawn): most prisoners, then most top_diff, then fewest distance",
+      "policy": {
+        "List": [
+          {
+            "feature": 2,
+            "sign": 1.0
+          },
+          {
+            "feature": 0,
+            "sign": 1.0
+          },
+          {
+            "feature": 19,
+            "sign": -1.0
+          }
+        ]
+      }
+    },
+    "role": "list"
+  },
+  {
+    "player": {
+      "name": "negated list (drawn)",
+      "policy": {
+        "List": [
+          {
+            "feature": 2,
+            "sign": -1.0
+          },
+          {
+            "feature": 0,
+            "sign": -1.0
+          },
+          {
+            "feature": 19,
+            "sign": 1.0
+          }
+        ]
+      }
+    },
+    "role": "mirror"
+  },
+  {
+    "player": {
+      "name": "tree (pooled, depth 3)",
+      "policy": {
+        "Tree": {
+          "negated": false,
+          "tree": {
+            "nodes": [
+              {
+                "Split": {
+                  "feature": 2,
+                  "left": 1,
+                  "rate": 0.2343040720147091,
+                  "right": 8,
+                  "threshold": 0.5,
+                  "weight": 0.999999999998278
+                }
+              },
+              {
+                "Split": {
+                  "feature": 6,
+                  "left": 2,
+                  "rate": 0.1482108268785151,
+                  "right": 5,
+                  "threshold": 2.5,
+                  "weight": 0.6974316138098788
+                }
+              },
+              {
+                "Split": {
+                  "feature": 4,
+                  "left": 3,
+                  "rate": 0.1307166292387771,
+                  "right": 4,
+                  "threshold": -0.5,
+                  "weight": 0.6108519249376512
+                }
+              },
+              {
+                "Leaf": {
+                  "rate": 0.06324893305208387,
+                  "weight": 0.1832971781287169
+                }
+              },
+              {
+                "Leaf": {
+                  "rate": 0.1596407340886919,
+                  "weight": 0.4275547468094517
+                }
+              },
+              {
+                "Split": {
+                  "feature": 27,
+                  "left": 6,
+                  "rate": 0.2716389015520886,
+                  "right": 7,
+                  "threshold": 5.5,
+                  "weight": 0.08657968887271582
+                }
+              },
+              {
+                "Leaf": {
+                  "rate": 0.21852480671506805,
+                  "weight": 0.06725700746352563
+                }
+              },
+              {
+                "Leaf": {
+                  "rate": 0.45651464406566444,
+                  "weight": 0.019322681409180583
+                }
+              },
+              {
+                "Split": {
+                  "feature": 14,
+                  "left": 9,
+                  "rate": 0.4327522696234967,
+                  "right": 12,
+                  "threshold": -0.5,
+                  "weight": 0.3025683861902836
+                }
+              },
+              {
+                "Split": {
+                  "feature": 14,
+                  "left": 10,
+                  "rate": 0.7486423252575427,
+                  "right": 11,
+                  "threshold": -1.5,
+                  "weight": 0.049432327878375
+                }
+              },
+              {
+                "Leaf": {
+                  "rate": 0.9080875292383193,
+                  "weight": 0.01376636003693499
+                }
+              },
+              {
+                "Leaf": {
+                  "rate": 0.6870996217504481,
+                  "weight": 0.03566596784143775
+                }
+              },
+              {
+                "Split": {
+                  "feature": 2,
+                  "left": 13,
+                  "rate": 0.3710653613745416,
+                  "right": 14,
+                  "threshold": 1.5,
+                  "weight": 0.2531360583117902
+                }
+              },
+              {
+                "Leaf": {
+                  "rate": 0.29412334848280985,
+                  "weight": 0.16350907312502722
+                }
+              },
+              {
+                "Leaf": {
+                  "rate": 0.5114328766503541,
+                  "weight": 0.08962698518667166
+                }
+              }
+            ]
+          }
+        }
+      }
+    },
+    "role": "tree"
+  },
+  {
+    "player": {
+      "name": "negated tree (pooled)",
+      "policy": {
+        "Tree": {
+          "negated": true,
+          "tree": {
+            "nodes": [
+              {
+                "Split": {
+                  "feature": 2,
+                  "left": 1,
+                  "rate": 0.2343040720147091,
+                  "right": 8,
+                  "threshold": 0.5,
+                  "weight": 0.999999999998278
+                }
+              },
+              {
+                "Split": {
+                  "feature": 6,
+                  "left": 2,
+                  "rate": 0.1482108268785151,
+                  "right": 5,
+                  "threshold": 2.5,
+                  "weight": 0.6974316138098788
+                }
+              },
+              {
+                "Split": {
+                  "feature": 4,
+                  "left": 3,
+                  "rate": 0.1307166292387771,
+                  "right": 4,
+                  "threshold": -0.5,
+                  "weight": 0.6108519249376512
+                }
+              },
+              {
+                "Leaf": {
+                  "rate": 0.06324893305208387,
+                  "weight": 0.1832971781287169
+                }
+              },
+              {
+                "Leaf": {
+                  "rate": 0.1596407340886919,
+                  "weight": 0.4275547468094517
+                }
+              },
+              {
+                "Split": {
+                  "feature": 27,
+                  "left": 6,
+                  "rate": 0.2716389015520886,
+                  "right": 7,
+                  "threshold": 5.5,
+                  "weight": 0.08657968887271582
+                }
+              },
+              {
+                "Leaf": {
+                  "rate": 0.21852480671506805,
+                  "weight": 0.06725700746352563
+                }
+              },
+              {
+                "Leaf": {
+                  "rate": 0.45651464406566444,
+                  "weight": 0.019322681409180583
+                }
+              },
+              {
+                "Split": {
+                  "feature": 14,
+                  "left": 9,
+                  "rate": 0.4327522696234967,
+                  "right": 12,
+                  "threshold": -0.5,
+                  "weight": 0.3025683861902836
+                }
+              },
+              {
+                "Split": {
+                  "feature": 14,
+                  "left": 10,
+                  "rate": 0.7486423252575427,
+                  "right": 11,
+                  "threshold": -1.5,
+                  "weight": 0.049432327878375
+                }
+              },
+              {
+                "Leaf": {
+                  "rate": 0.9080875292383193,
+                  "weight": 0.01376636003693499
+                }
+              },
+              {
+                "Leaf": {
+                  "rate": 0.6870996217504481,
+                  "weight": 0.03566596784143775
+                }
+              },
+              {
+                "Split": {
+                  "feature": 2,
+                  "left": 13,
+                  "rate": 0.3710653613745416,
+                  "right": 14,
+                  "threshold": 1.5,
+                  "weight": 0.2531360583117902
+                }
+              },
+              {
+                "Leaf": {
+                  "rate": 0.29412334848280985,
+                  "weight": 0.16350907312502722
+                }
+              },
+              {
+                "Leaf": {
+                  "rate": 0.5114328766503541,
+                  "weight": 0.08962698518667166
+                }
+              }
+            ]
+          }
+        }
+      }
+    },
+    "role": "mirror"
+  }
+]

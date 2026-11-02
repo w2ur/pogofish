@@ -1,0 +1,7152 @@
+{
+  "a_feature_shares": {
+    "drawn_all_moves": {
+      "positions_used": 19997,
+      "rows": [
+        {
+          "ci95": [
+            0.9241651031793979,
+            0.9314011888411483
+          ],
+          "equal": 334,
+          "feature": "top_diff",
+          "keeping_higher": 18243,
+          "keeping_lower": 1420,
+          "share_higher": 0.9277831460102731
+        },
+        {
+          "ci95": [
+            0.7152840163403764,
+            0.728604393208085
+          ],
+          "equal": 2612,
+          "feature": "own_tops",
+          "keeping_higher": 12551,
+          "keeping_lower": 4834,
+          "share_higher": 0.7219442047742307
+        },
+        {
+          "ci95": [
+            0.9377692105731296,
+            0.9443339239061425
+          ],
+          "equal": 217,
+          "feature": "prisoners",
+          "keeping_higher": 18614,
+          "keeping_lower": 1166,
+          "share_higher": 0.941051567239636
+        },
+        {
+          "ci95": [
+            0.335689956324524,
+            0.3492884009671983
+          ],
+          "equal": 1284,
+          "feature": "hostages",
+          "keeping_higher": 6409,
+          "keeping_lower": 12304,
+          "share_higher": 0.34248917864586115
+        },
+        {
+          "ci95": [
+            0.7986709119180678,
+            0.8097490728650921
+          ],
+          "equal": 282,
+          "feature": "own_max_height",
+          "keeping_higher": 15855,
+          "keeping_lower": 3860,
+          "share_higher": 0.80420999239158
+        },
+        {
+          "ci95": [
+            0.5290401987804945,
+            0.5448379121346534
+          ],
+          "equal": 4688,
+          "feature": "opp_max_height",
+          "keeping_higher": 8220,
+          "keeping_lower": 7089,
+          "share_higher": 0.5369390554575739
+        },
+        {
+          "ci95": [
+            0.8852929368864882,
+            0.8940056088791234
+          ],
+          "equal": 124,
+          "feature": "own_mobility",
+          "keeping_higher": 17680,
+          "keeping_lower": 2193,
+          "share_higher": 0.8896492728828058
+        },
+        {
+          "ci95": [
+            0.06872960746614173,
+            0.07593112388539994
+          ],
+          "equal": 116,
+          "feature": "opp_mobility",
+          "keeping_higher": 1438,
+          "keeping_lower": 18443,
+          "share_higher": 0.07233036567577084
+        },
+        {
+          "ci95": [
+            0.3005090159530496,
+            0.31339157804603657
+          ],
+          "equal": 300,
+          "feature": "centre",
+          "keeping_higher": 6046,
+          "keeping_lower": 13651,
+          "share_higher": 0.30695029699954307
+        },
+        {
+          "ci95": [
+            0.5527314032627195,
+            0.5667963367853424
+          ],
+          "equal": 855,
+          "feature": "corners",
+          "keeping_higher": 10715,
+          "keeping_lower": 8427,
+          "share_higher": 0.5597638700240309
+        },
+        {
+          "ci95": [
+            0.3829455318742059,
+            0.3968554420830247
+          ],
+          "equal": 1105,
+          "feature": "own_singletons",
+          "keeping_higher": 7366,
+          "keeping_lower": 11526,
+          "share_higher": 0.3899004869786153
+        },
+        {
+          "ci95": [
+            0.425852463715343,
+            0.44117940879461714
+          ],
+          "equal": 3933,
+          "feature": "opp_singletons",
+          "keeping_higher": 6964,
+          "keeping_lower": 9100,
+          "share_higher": 0.4335159362549801
+        },
+        {
+          "ci95": [
+            0.895329112097181,
+            0.9039072862483487
+          ],
+          "equal": 1139,
+          "feature": "own_tall",
+          "keeping_higher": 16965,
+          "keeping_lower": 1893,
+          "share_higher": 0.8996181991727649
+        },
+        {
+          "ci95": [
+            0.3918570024947084,
+            0.40783824615468905
+          ],
+          "equal": 5559,
+          "feature": "own_solid",
+          "keeping_higher": 5773,
+          "keeping_lower": 8665,
+          "share_higher": 0.3998476243246987
+        },
+        {
+          "ci95": [
+            0.5961950371030543,
+            0.6105792834956066
+          ],
+          "equal": 2224,
+          "feature": "own_exposed",
+          "keeping_higher": 10724,
+          "keeping_lower": 7049,
+          "share_higher": 0.6033871602993305
+        },
+        {
+          "ci95": [
+            0.11058823608308593,
+            0.11961261728354952
+          ],
+          "equal": 779,
+          "feature": "opp_exposed",
+          "keeping_higher": 2212,
+          "keeping_lower": 17006,
+          "share_higher": 0.11510042668331773
+        },
+        {
+          "ci95": [
+            0.6205454624362773,
+            0.6547595161327963
+          ],
+          "equal": 16964,
+          "feature": "my_win_now",
+          "keeping_higher": 1934,
+          "keeping_lower": 1099,
+          "share_higher": 0.6376524892845368
+        },
+        {
+          "ci95": [
+            0.0,
+            0.0
+          ],
+          "equal": 11971,
+          "feature": "opp_win_now",
+          "keeping_higher": 0,
+          "keeping_lower": 8026,
+          "share_higher": 0.0
+        },
+        {
+          "ci95": [
+            0.4804759720318808,
+            0.49514471955585665
+          ],
+          "equal": 2154,
+          "feature": "pieces_moved",
+          "keeping_higher": 8704,
+          "keeping_lower": 9139,
+          "share_higher": 0.4878103457938687
+        },
+        {
+          "ci95": [
+            0.37720913181732085,
+            0.39123870533280636
+          ],
+          "equal": 1526,
+          "feature": "distance",
+          "keeping_higher": 7097,
+          "keeping_lower": 11374,
+          "share_higher": 0.3842239185750636
+        },
+        {
+          "ci95": [
+            0.873353852410654,
+            0.8824565912959562
+          ],
+          "equal": 119,
+          "feature": "lands_on_opp",
+          "keeping_higher": 17451,
+          "keeping_lower": 2427,
+          "share_higher": 0.8779052218533051
+        },
+        {
+          "ci95": [
+            0.06790092655691372,
+            0.07602094442740907
+          ],
+          "equal": 4433,
+          "feature": "lands_on_own",
+          "keeping_higher": 1120,
+          "keeping_lower": 14444,
+          "share_higher": 0.0719609354921614
+        },
+        {
+          "ci95": [
+            0.08849354890588555,
+            0.09656630260176634
+          ],
+          "equal": 198,
+          "feature": "lands_on_empty",
+          "keeping_higher": 1832,
+          "keeping_lower": 17967,
+          "share_higher": 0.09252992575382595
+        },
+        {
+          "ci95": [
+            0.06948258193226324,
+            0.07821418992120067
+          ],
+          "equal": 6212,
+          "feature": "uncovers_opp",
+          "keeping_higher": 1018,
+          "keeping_lower": 12767,
+          "share_higher": 0.07384838592673196
+        },
+        {
+          "ci95": [
+            0.5252550703359118,
+            0.541485063282106
+          ],
+          "equal": 5478,
+          "feature": "uncovers_own",
+          "keeping_higher": 7744,
+          "keeping_lower": 6775,
+          "share_higher": 0.5333700668090089
+        },
+        {
+          "ci95": [
+            0.575348855692832,
+            0.5901627148463434
+          ],
+          "equal": 2971,
+          "feature": "empties_source",
+          "keeping_higher": 9922,
+          "keeping_lower": 7104,
+          "share_higher": 0.5827557852695877
+        },
+        {
+          "ci95": [
+            0.48935882388124535,
+            0.5036097196027621
+          ],
+          "equal": 1082,
+          "feature": "advance",
+          "keeping_higher": 9391,
+          "keeping_lower": 9524,
+          "share_higher": 0.4964842717420037
+        },
+        {
+          "ci95": [
+            0.5828191840576685,
+            0.5986318860729009
+          ],
+          "equal": 5139,
+          "feature": "source_height",
+          "keeping_higher": 8777,
+          "keeping_lower": 6081,
+          "share_higher": 0.5907255350652847
+        },
+        {
+          "ci95": [
+            0.7867038743199011,
+            0.7980857531079675
+          ],
+          "equal": 484,
+          "feature": "dest_height",
+          "keeping_higher": 15462,
+          "keeping_lower": 4051,
+          "share_higher": 0.7923948137139343
+        }
+      ]
+    },
+    "drawn_greedy_ties": {
+      "positions_used": 10365,
+      "rows": [
+        {
+          "ci95": [
+            null,
+            null
+          ],
+          "equal": 10365,
+          "feature": "top_diff",
+          "keeping_higher": 0,
+          "keeping_lower": 0,
+          "share_higher": null
+        },
+        {
+          "ci95": [
+            0.07783034365573664,
+            0.11027255023493861
+          ],
+          "equal": 9121,
+          "feature": "own_tops",
+          "keeping_higher": 117,
+          "keeping_lower": 1127,
+          "share_higher": 0.09405144694533762
+        },
+        {
+          "ci95": [
+            0.7328009868283608,
+            0.7528662741783597
+          ],
+          "equal": 3074,
+          "feature": "prisoners",
+          "keeping_higher": 5416,
+          "keeping_lower": 1875,
+          "share_higher": 0.7428336305033603
+        },
+        {
+          "ci95": [
+            0.44770163595971857,
+            0.47027859380250425
+          ],
+          "equal": 2879,
+          "feature": "hostages",
+          "keeping_higher": 3436,
+          "keeping_lower": 4050,
+          "share_higher": 0.4589901148811114
+        },
+        {
+          "ci95": [
+            0.6237375456741655,
+            0.6437855555203352
+          ],
+          "equal": 1491,
+          "feature": "own_max_height",
+          "keeping_higher": 5624,
+          "keeping_lower": 3250,
+          "share_higher": 0.6337615505972504
+        },
+        {
+          "ci95": [
+            0.46641497837614904,
+            0.4920252473806493
+          ],
+          "equal": 4518,
+          "feature": "opp_max_height",
+          "keeping_higher": 2802,
+          "keeping_lower": 3045,
+          "share_higher": 0.47922011287839916
+        },
+        {
+          "ci95": [
+            0.6442190629007459,
+            0.6641218669078229
+          ],
+          "equal": 1589,
+          "feature": "own_mobility",
+          "keeping_higher": 5741,
+          "keeping_lower": 3035,
+          "share_higher": 0.6541704649042844
+        },
+        {
+          "ci95": [
+            0.30065482146460887,
+            0.32011423218494217
+          ],
+          "equal": 1679,
+          "feature": "opp_mobility",
+          "keeping_higher": 2696,
+          "keeping_lower": 5990,
+          "share_higher": 0.3103845268247755
+        },
+        {
+          "ci95": [
+            0.41486833033764486,
+            0.44221773605074716
+          ],
+          "equal": 5334,
+          "feature": "centre",
+          "keeping_higher": 2156,
+          "keeping_lower": 2875,
+          "share_higher": 0.428543033194196
+        },
+        {
+          "ci95": [
+            0.44446809377461205,
+            0.4678226488208952
+          ],
+          "equal": 3376,
+          "feature": "corners",
+          "keeping_higher": 3188,
+          "keeping_lower": 3801,
+          "share_higher": 0.4561453712977536
+        },
+        {
+          "ci95": [
+            0.3263337250660709,
+            0.3527965330115556
+          ],
+          "equal": 5444,
+          "feature": "own_singletons",
+          "keeping_higher": 1671,
+          "keeping_lower": 3250,
+          "share_higher": 0.33956512903881325
+        },
+        {
+          "ci95": [
+            0.7442004988216635,
+            0.7660172566222225
+          ],
+          "equal": 4395,
+          "feature": "opp_singletons",
+          "keeping_higher": 4508,
+          "keeping_lower": 1462,
+          "share_higher": 0.755108877721943
+        },
+        {
+          "ci95": [
+            0.7395719835404436,
+            0.7626535357473901
+          ],
+          "equal": 4973,
+          "feature": "own_tall",
+          "keeping_higher": 4050,
+          "keeping_lower": 1342,
+          "share_higher": 0.7511127596439169
+        },
+        {
+          "ci95": [
+            0.6235301392043741,
+            0.6593789517047169
+          ],
+          "equal": 7615,
+          "feature": "own_solid",
+          "keeping_higher": 1764,
+          "keeping_lower": 986,
+          "share_higher": 0.6414545454545455
+        },
+        {
+          "ci95": [
+            0.2781257484130562,
+            0.3071496753157574
+          ],
+          "equal": 6589,
+          "feature": "own_exposed",
+          "keeping_higher": 1105,
+          "keeping_lower": 2671,
+          "share_higher": 0.2926377118644068
+        },
+        {
+          "ci95": [
+            0.4138693699040006,
+            0.4527972967626661
+          ],
+          "equal": 7875,
+          "feature": "opp_exposed",
+          "keeping_higher": 1079,
+          "keeping_lower": 1411,
+          "share_higher": 0.43333333333333335
+        },
+        {
+          "ci95": [
+            0.5486781742043745,
+            0.6195587033191787
+          ],
+          "equal": 9622,
+          "feature": "my_win_now",
+          "keeping_higher": 434,
+          "keeping_lower": 309,
+          "share_higher": 0.5841184387617766
+        },
+        {
+          "ci95": [
+            0.0,
+            0.0
+          ],
+          "equal": 10178,
+          "feature": "opp_win_now",
+          "keeping_higher": 0,
+          "keeping_lower": 187,
+          "share_higher": 0.0
+        },
+        {
+          "ci95": [
+            0.47374561706406876,
+            0.49874339481937585
+          ],
+          "equal": 4222,
+          "feature": "pieces_moved",
+          "keeping_higher": 2987,
+          "keeping_lower": 3156,
+          "share_higher": 0.4862445059417223
+        },
+        {
+          "ci95": [
+            0.37280260373159413,
+            0.3974002562617547
+          ],
+          "equal": 4351,
+          "feature": "distance",
+          "keeping_higher": 2316,
+          "keeping_lower": 3698,
+          "share_higher": 0.3851014299966744
+        },
+        {
+          "ci95": [
+            0.7648642999239282,
+            0.8063740489442476
+          ],
+          "equal": 8863,
+          "feature": "lands_on_opp",
+          "keeping_higher": 1180,
+          "keeping_lower": 322,
+          "share_higher": 0.7856191744340879
+        },
+        {
+          "ci95": [
+            1.0,
+            1.0
+          ],
+          "equal": 10363,
+          "feature": "lands_on_own",
+          "keeping_higher": 2,
+          "keeping_lower": 0,
+          "share_higher": 1.0
+        },
+        {
+          "ci95": [
+            0.19234142291986867,
+            0.23375711236641628
+          ],
+          "equal": 8863,
+          "feature": "lands_on_empty",
+          "keeping_higher": 320,
+          "keeping_lower": 1182,
+          "share_higher": 0.21304926764314247
+        },
+        {
+          "ci95": [
+            0.1561269856462932,
+            0.2547257275320014
+          ],
+          "equal": 10107,
+          "feature": "uncovers_opp",
+          "keeping_higher": 53,
+          "keeping_lower": 205,
+          "share_higher": 0.2054263565891473
+        },
+        {
+          "ci95": [
+            0.07918583246591028,
+            0.1118254034891459
+          ],
+          "equal": 9119,
+          "feature": "uncovers_own",
+          "keeping_higher": 119,
+          "keeping_lower": 1127,
+          "share_higher": 0.09550561797752809
+        },
+        {
+          "ci95": [
+            0.8693817422236901,
+            0.9015902950599316
+          ],
+          "equal": 8863,
+          "feature": "empties_source",
+          "keeping_higher": 1330,
+          "keeping_lower": 172,
+          "share_higher": 0.8854860186418109
+        },
+        {
+          "ci95": [
+            0.4845207313637738,
+            0.5056844925168232
+          ],
+          "equal": 1789,
+          "feature": "advance",
+          "keeping_higher": 4246,
+          "keeping_lower": 4330,
+          "share_higher": 0.49510261194029853
+        },
+        {
+          "ci95": [
+            0.35970673433173633,
+            0.391636971467415
+          ],
+          "equal": 6830,
+          "feature": "source_height",
+          "keeping_higher": 1328,
+          "keeping_lower": 2207,
+          "share_higher": 0.37567185289957566
+        },
+        {
+          "ci95": [
+            0.6666066603778655,
+            0.6867387284105613
+          ],
+          "equal": 2070,
+          "feature": "dest_height",
+          "keeping_higher": 5613,
+          "keeping_lower": 2682,
+          "share_higher": 0.6766726943942134
+        }
+      ]
+    },
+    "drawn_greedy_ties, max height 2-3": {
+      "positions_used": 2184,
+      "rows": [
+        {
+          "ci95": [
+            null,
+            null
+          ],
+          "equal": 2184,
+          "feature": "top_diff",
+          "keeping_higher": 0,
+          "keeping_lower": 0,
+          "share_higher": null
+        },
+        {
+          "ci95": [
+            0.06278155739027191,
+            0.13099006890730594
+          ],
+          "equal": 1895,
+          "feature": "own_tops",
+          "keeping_higher": 28,
+          "keeping_lower": 261,
+          "share_higher": 0.09688581314878893
+        },
+        {
+          "ci95": [
+            0.7454121682242721,
+            0.7881426490514755
+          ],
+          "equal": 679,
+          "feature": "prisoners",
+          "keeping_higher": 1154,
+          "keeping_lower": 351,
+          "share_higher": 0.7667774086378738
+        },
+        {
+          "ci95": [
+            0.4032589244514605,
+            0.4517410755485395
+          ],
+          "equal": 584,
+          "feature": "hostages",
+          "keeping_higher": 684,
+          "keeping_lower": 916,
+          "share_higher": 0.4275
+        },
+        {
+          "ci95": [
+            0.6305871395042726,
+            0.6738072870766492
+          ],
+          "equal": 318,
+          "feature": "own_max_height",
+          "keeping_higher": 1217,
+          "keeping_lower": 649,
+          "share_higher": 0.6521972132904609
+        },
+        {
+          "ci95": [
+            0.41571744678288947,
+            0.4833210147555721
+          ],
+          "equal": 1352,
+          "feature": "opp_max_height",
+          "keeping_higher": 374,
+          "keeping_lower": 458,
+          "share_higher": 0.4495192307692308
+        },
+        {
+          "ci95": [
+            0.6841849467411877,
+            0.7255633124982338
+          ],
+          "equal": 317,
+          "feature": "own_mobility",
+          "keeping_higher": 1316,
+          "keeping_lower": 551,
+          "share_higher": 0.7048741296197107
+        },
+        {
+          "ci95": [
+            0.25065852093425506,
+            0.29083084076787263
+          ],
+          "equal": 304,
+          "feature": "opp_mobility",
+          "keeping_higher": 509,
+          "keeping_lower": 1371,
+          "share_higher": 0.27074468085106385
+        },
+        {
+          "ci95": [
+            0.40568277826187377,
+            0.4628293324647698
+          ],
+          "equal": 1028,
+          "feature": "centre",
+          "keeping_higher": 502,
+          "keeping_lower": 654,
+          "share_higher": 0.4342560553633218
+        },
+        {
+          "ci95": [
+            0.44682779784726584,
+            0.4968894796396452
+          ],
+          "equal": 656,
+          "feature": "corners",
+          "keeping_higher": 721,
+          "keeping_lower": 807,
+          "share_higher": 0.4718586387434555
+        },
+        {
+          "ci95": [
+            0.2508498210243538,
+            0.3004322302576975
+          ],
+          "equal": 936,
+          "feature": "own_singletons",
+          "keeping_higher": 344,
+          "keeping_lower": 904,
+          "share_higher": 0.27564102564102566
+        },
+        {
+          "ci95": [
+            0.8082211259142011,
+            0.8499258389420288
+          ],
+          "equal": 932,
+          "feature": "opp_singletons",
+          "keeping_higher": 1038,
+          "keeping_lower": 214,
+          "share_higher": 0.829073482428115
+        },
+        {
+          "ci95": [
+            0.7759414754475124,
+            0.8199864806997076
+          ],
+          "equal": 907,
+          "feature": "own_tall",
+          "keeping_higher": 1019,
+          "keeping_lower": 258,
+          "share_higher": 0.79796397807361
+        },
+        {
+          "ci95": [
+            0.7816353764673514,
+            0.862042784452189
+          ],
+          "equal": 1836,
+          "feature": "own_solid",
+          "keeping_higher": 286,
+          "keeping_lower": 62,
+          "share_higher": 0.8218390804597702
+        },
+        {
+          "ci95": [
+            0.24994692380962108,
+            0.3169595510105228
+          ],
+          "equal": 1489,
+          "feature": "own_exposed",
+          "keeping_higher": 197,
+          "keeping_lower": 498,
+          "share_higher": 0.28345323741007195
+        },
+        {
+          "ci95": [
+            0.3462929062509711,
+            0.4258810067925072
+          ],
+          "equal": 1609,
+          "feature": "opp_exposed",
+          "keeping_higher": 222,
+          "keeping_lower": 353,
+          "share_higher": 0.38608695652173913
+        },
+        {
+          "ci95": [
+            0.47223459536639945,
+            0.8004926773608733
+          ],
+          "equal": 2151,
+          "feature": "my_win_now",
+          "keeping_higher": 21,
+          "keeping_lower": 12,
+          "share_higher": 0.6363636363636364
+        },
+        {
+          "ci95": [
+            null,
+            null
+          ],
+          "equal": 2184,
+          "feature": "opp_win_now",
+          "keeping_higher": 0,
+          "keeping_lower": 0,
+          "share_higher": null
+        },
+        {
+          "ci95": [
+            0.3382089752123252,
+            0.3901673525570223
+          ],
+          "equal": 866,
+          "feature": "pieces_moved",
+          "keeping_higher": 480,
+          "keeping_lower": 838,
+          "share_higher": 0.36418816388467373
+        },
+        {
+          "ci95": [
+            0.3282883556870674,
+            0.380931502468961
+          ],
+          "equal": 915,
+          "feature": "distance",
+          "keeping_higher": 450,
+          "keeping_lower": 819,
+          "share_higher": 0.3546099290780142
+        },
+        {
+          "ci95": [
+            0.8072420911064183,
+            0.8875631036987764
+          ],
+          "equal": 1876,
+          "feature": "lands_on_opp",
+          "keeping_higher": 261,
+          "keeping_lower": 47,
+          "share_higher": 0.8474025974025974
+        },
+        {
+          "ci95": [
+            null,
+            null
+          ],
+          "equal": 2184,
+          "feature": "lands_on_own",
+          "keeping_higher": 0,
+          "keeping_lower": 0,
+          "share_higher": null
+        },
+        {
+          "ci95": [
+            0.11243689630122351,
+            0.1927579088935817
+          ],
+          "equal": 1876,
+          "feature": "lands_on_empty",
+          "keeping_higher": 47,
+          "keeping_lower": 261,
+          "share_higher": 0.1525974025974026
+        },
+        {
+          "ci95": [
+            0.0,
+            0.0
+          ],
+          "equal": 2165,
+          "feature": "uncovers_opp",
+          "keeping_higher": 0,
+          "keeping_lower": 19,
+          "share_higher": 0.0
+        },
+        {
+          "ci95": [
+            0.06278155739027191,
+            0.13099006890730594
+          ],
+          "equal": 1895,
+          "feature": "uncovers_own",
+          "keeping_higher": 28,
+          "keeping_lower": 261,
+          "share_higher": 0.09688581314878893
+        },
+        {
+          "ci95": [
+            0.8769847740566673,
+            0.9411970441251508
+          ],
+          "equal": 1876,
+          "feature": "empties_source",
+          "keeping_higher": 280,
+          "keeping_lower": 28,
+          "share_higher": 0.9090909090909091
+        },
+        {
+          "ci95": [
+            0.45600816789553106,
+            0.501450098124932
+          ],
+          "equal": 327,
+          "feature": "advance",
+          "keeping_higher": 889,
+          "keeping_lower": 968,
+          "share_higher": 0.47872913301023157
+        },
+        {
+          "ci95": [
+            0.30309365709377534,
+            0.3609534941832384
+          ],
+          "equal": 1166,
+          "feature": "source_height",
+          "keeping_higher": 338,
+          "keeping_lower": 680,
+          "share_higher": 0.3320235756385069
+        },
+        {
+          "ci95": [
+            0.7505085393034756,
+            0.7905914015599189
+          ],
+          "equal": 493,
+          "feature": "dest_height",
+          "keeping_higher": 1303,
+          "keeping_lower": 388,
+          "share_higher": 0.7705499704316973
+        }
+      ]
+    },
+    "drawn_greedy_ties, max height 4-5": {
+      "positions_used": 6385,
+      "rows": [
+        {
+          "ci95": [
+            null,
+            null
+          ],
+          "equal": 6385,
+          "feature": "top_diff",
+          "keeping_higher": 0,
+          "keeping_lower": 0,
+          "share_higher": null
+        },
+        {
+          "ci95": [
+            0.06675297619282104,
+            0.10637363879425905
+          ],
+          "equal": 5611,
+          "feature": "own_tops",
+          "keeping_higher": 67,
+          "keeping_lower": 707,
+          "share_higher": 0.08656330749354005
+        },
+        {
+          "ci95": [
+            0.7481892557678895,
+            0.772797330125663
+          ],
+          "equal": 1763,
+          "feature": "prisoners",
+          "keeping_higher": 3515,
+          "keeping_lower": 1107,
+          "share_higher": 0.7604932929467763
+        },
+        {
+          "ci95": [
+            0.43860664755342055,
+            0.46707783190155067
+          ],
+          "equal": 1688,
+          "feature": "hostages",
+          "keeping_higher": 2127,
+          "keeping_lower": 2570,
+          "share_higher": 0.4528422397274856
+        },
+        {
+          "ci95": [
+            0.6378950277084259,
+            0.6631253804548394
+          ],
+          "equal": 897,
+          "feature": "own_max_height",
+          "keeping_higher": 3570,
+          "keeping_lower": 1918,
+          "share_higher": 0.6505102040816326
+        },
+        {
+          "ci95": [
+            0.45595668372799014,
+            0.48719906442393446
+          ],
+          "equal": 2462,
+          "feature": "opp_max_height",
+          "keeping_higher": 1850,
+          "keeping_lower": 2073,
+          "share_higher": 0.4715778740759623
+        },
+        {
+          "ci95": [
+            0.6309547435502229,
+            0.6563847059910616
+          ],
+          "equal": 935,
+          "feature": "own_mobility",
+          "keeping_higher": 3508,
+          "keeping_lower": 1942,
+          "share_higher": 0.6436697247706422
+        },
+        {
+          "ci95": [
+            0.29011601941311216,
+            0.3146299946766171
+          ],
+          "equal": 991,
+          "feature": "opp_mobility",
+          "keeping_higher": 1631,
+          "keeping_lower": 3763,
+          "share_higher": 0.30237300704486464
+        },
+        {
+          "ci95": [
+            0.4089427679910376,
+            0.4443816556641578
+          ],
+          "equal": 3392,
+          "feature": "centre",
+          "keeping_higher": 1277,
+          "keeping_lower": 1716,
+          "share_higher": 0.4266622118275977
+        },
+        {
+          "ci95": [
+            0.430044047602393,
+            0.4600008802765382
+          ],
+          "equal": 2156,
+          "feature": "corners",
+          "keeping_higher": 1882,
+          "keeping_lower": 2347,
+          "share_higher": 0.4450224639394656
+        },
+        {
+          "ci95": [
+            0.35051483133985994,
+            0.38421799308762095
+          ],
+          "equal": 3241,
+          "feature": "own_singletons",
+          "keeping_higher": 1155,
+          "keeping_lower": 1989,
+          "share_higher": 0.36736641221374045
+        },
+        {
+          "ci95": [
+            0.7475961579898761,
+            0.7750087935709419
+          ],
+          "equal": 2669,
+          "feature": "opp_singletons",
+          "keeping_higher": 2829,
+          "keeping_lower": 887,
+          "share_higher": 0.761302475780409
+        },
+        {
+          "ci95": [
+            0.7228120430406288,
+            0.7529279630625143
+          ],
+          "equal": 3108,
+          "feature": "own_tall",
+          "keeping_higher": 2418,
+          "keeping_lower": 859,
+          "share_higher": 0.7378700030515716
+        },
+        {
+          "ci95": [
+            0.5978362434367919,
+            0.6394843307258875
+          ],
+          "equal": 4295,
+          "feature": "own_solid",
+          "keeping_higher": 1293,
+          "keeping_lower": 797,
+          "share_higher": 0.6186602870813397
+        },
+        {
+          "ci95": [
+            0.2632340090245586,
+            0.3001709931693861
+          ],
+          "equal": 4106,
+          "feature": "own_exposed",
+          "keeping_higher": 642,
+          "keeping_lower": 1637,
+          "share_higher": 0.28170250109697237
+        },
+        {
+          "ci95": [
+            0.4275032402806421,
+            0.47773201485520944
+          ],
+          "equal": 4876,
+          "feature": "opp_exposed",
+          "keeping_higher": 683,
+          "keeping_lower": 826,
+          "share_higher": 0.4526176275679258
+        },
+        {
+          "ci95": [
+            0.5841394599622667,
+            0.6782367776614957
+          ],
+          "equal": 5981,
+          "feature": "my_win_now",
+          "keeping_higher": 255,
+          "keeping_lower": 149,
+          "share_higher": 0.6311881188118812
+        },
+        {
+          "ci95": [
+            0.0,
+            0.0
+          ],
+          "equal": 6341,
+          "feature": "opp_win_now",
+          "keeping_higher": 0,
+          "keeping_lower": 44,
+          "share_higher": 0.0
+        },
+        {
+          "ci95": [
+            0.49663371337882456,
+            0.5280576446458669
+          ],
+          "equal": 2497,
+          "feature": "pieces_moved",
+          "keeping_higher": 1992,
+          "keeping_lower": 1896,
+          "share_higher": 0.5123456790123457
+        },
+        {
+          "ci95": [
+            0.3709891005404522,
+            0.4019171740723071
+          ],
+          "equal": 2576,
+          "feature": "distance",
+          "keeping_higher": 1472,
+          "keeping_lower": 2337,
+          "share_higher": 0.38645313730637965
+        },
+        {
+          "ci95": [
+            0.8098504445014396,
+            0.8595325589909935
+          ],
+          "equal": 5526,
+          "feature": "lands_on_opp",
+          "keeping_higher": 717,
+          "keeping_lower": 142,
+          "share_higher": 0.8346915017462165
+        },
+        {
+          "ci95": [
+            1.0,
+            1.0
+          ],
+          "equal": 6383,
+          "feature": "lands_on_own",
+          "keeping_higher": 2,
+          "keeping_lower": 0,
+          "share_higher": 1.0
+        },
+        {
+          "ci95": [
+            0.13828033265592513,
+            0.18768008643604225
+          ],
+          "equal": 5526,
+          "feature": "lands_on_empty",
+          "keeping_higher": 140,
+          "keeping_lower": 719,
+          "share_higher": 0.1629802095459837
+        },
+        {
+          "ci95": [
+            0.04915214643879007,
+            0.18614197120826875
+          ],
+          "equal": 6300,
+          "feature": "uncovers_opp",
+          "keeping_higher": 10,
+          "keeping_lower": 75,
+          "share_higher": 0.11764705882352941
+        },
+        {
+          "ci95": [
+            0.0688913630029879,
+            0.10894368854340386
+          ],
+          "equal": 5609,
+          "feature": "uncovers_own",
+          "keeping_higher": 69,
+          "keeping_lower": 707,
+          "share_higher": 0.08891752577319588
+        },
+        {
+          "ci95": [
+            0.8887072547429687,
+            0.9273579373408497
+          ],
+          "equal": 5526,
+          "feature": "empties_source",
+          "keeping_higher": 780,
+          "keeping_lower": 79,
+          "share_higher": 0.9080325960419092
+        },
+        {
+          "ci95": [
+            0.48838512253501765,
+            0.515420052503034
+          ],
+          "equal": 1129,
+          "feature": "advance",
+          "keeping_higher": 2638,
+          "keeping_lower": 2618,
+          "share_higher": 0.5019025875190258
+        },
+        {
+          "ci95": [
+            0.36523505026436903,
+            0.40830184540993125
+          ],
+          "equal": 4420,
+          "feature": "source_height",
+          "keeping_higher": 760,
+          "keeping_lower": 1205,
+          "share_higher": 0.38676844783715014
+        },
+        {
+          "ci95": [
+            0.668458390839984,
+            0.6937493515900658
+          ],
+          "equal": 1167,
+          "feature": "dest_height",
+          "keeping_higher": 3554,
+          "keeping_lower": 1664,
+          "share_higher": 0.6811038712150249
+        }
+      ]
+    },
+    "drawn_greedy_ties, max height 6+": {
+      "positions_used": 1796,
+      "rows": [
+        {
+          "ci95": [
+            null,
+            null
+          ],
+          "equal": 1796,
+          "feature": "top_diff",
+          "keeping_higher": 0,
+          "keeping_lower": 0,
+          "share_higher": null
+        },
+        {
+          "ci95": [
+            0.07394244997081578,
+            0.1691514726811179
+          ],
+          "equal": 1615,
+          "feature": "own_tops",
+          "keeping_higher": 22,
+          "keeping_lower": 159,
+          "share_higher": 0.12154696132596685
+        },
+        {
+          "ci95": [
+            0.6142068065355618,
+            0.6692983481036135
+          ],
+          "equal": 632,
+          "feature": "prisoners",
+          "keeping_higher": 747,
+          "keeping_lower": 417,
+          "share_higher": 0.6417525773195877
+        },
+        {
+          "ci95": [
+            0.497268510689887,
+            0.5540351057945537
+          ],
+          "equal": 607,
+          "feature": "hostages",
+          "keeping_higher": 625,
+          "keeping_lower": 564,
+          "share_higher": 0.5256518082422204
+        },
+        {
+          "ci95": [
+            0.5256507694309851,
+            0.5756650200426991
+          ],
+          "equal": 276,
+          "feature": "own_max_height",
+          "keeping_higher": 837,
+          "keeping_lower": 683,
+          "share_higher": 0.5506578947368421
+        },
+        {
+          "ci95": [
+            0.4996988570365532,
+            0.5589092015715054
+          ],
+          "equal": 704,
+          "feature": "opp_max_height",
+          "keeping_higher": 578,
+          "keeping_lower": 514,
+          "share_higher": 0.5293040293040293
+        },
+        {
+          "ci95": [
+            0.603718060608647,
+            0.6533072992268567
+          ],
+          "equal": 337,
+          "feature": "own_mobility",
+          "keeping_higher": 917,
+          "keeping_lower": 542,
+          "share_higher": 0.6285126799177518
+        },
+        {
+          "ci95": [
+            0.36828307703897656,
+            0.419252333725896
+          ],
+          "equal": 384,
+          "feature": "opp_mobility",
+          "keeping_higher": 556,
+          "keeping_lower": 856,
+          "share_higher": 0.3937677053824363
+        },
+        {
+          "ci95": [
+            0.39478866623641107,
+            0.460086617210301
+          ],
+          "equal": 914,
+          "feature": "centre",
+          "keeping_higher": 377,
+          "keeping_lower": 505,
+          "share_higher": 0.427437641723356
+        },
+        {
+          "ci95": [
+            0.44695269866874787,
+            0.5027226260065768
+          ],
+          "equal": 564,
+          "feature": "corners",
+          "keeping_higher": 585,
+          "keeping_lower": 647,
+          "share_higher": 0.47483766233766234
+        },
+        {
+          "ci95": [
+            0.2852235819877751,
+            0.3650599718874612
+          ],
+          "equal": 1267,
+          "feature": "own_singletons",
+          "keeping_higher": 172,
+          "keeping_lower": 357,
+          "share_higher": 0.32514177693761814
+        },
+        {
+          "ci95": [
+            0.6099945156707837,
+            0.6694466020936874
+          ],
+          "equal": 794,
+          "feature": "opp_singletons",
+          "keeping_higher": 641,
+          "keeping_lower": 361,
+          "share_higher": 0.6397205588822356
+        },
+        {
+          "ci95": [
+            0.7014973426366675,
+            0.7615098172678672
+          ],
+          "equal": 958,
+          "feature": "own_tall",
+          "keeping_higher": 613,
+          "keeping_lower": 225,
+          "share_higher": 0.7315035799522673
+        },
+        {
+          "ci95": [
+            0.5384342340332137,
+            0.6474632018642222
+          ],
+          "equal": 1484,
+          "feature": "own_solid",
+          "keeping_higher": 185,
+          "keeping_lower": 127,
+          "share_higher": 0.592948717948718
+        },
+        {
+          "ci95": [
+            0.29908582243540255,
+            0.3642558234498842
+          ],
+          "equal": 994,
+          "feature": "own_exposed",
+          "keeping_higher": 266,
+          "keeping_lower": 536,
+          "share_higher": 0.3316708229426434
+        },
+        {
+          "ci95": [
+            0.38043369514628333,
+            0.47670916199657376
+          ],
+          "equal": 1390,
+          "feature": "opp_exposed",
+          "keeping_higher": 174,
+          "keeping_lower": 232,
+          "share_higher": 0.42857142857142855
+        },
+        {
+          "ci95": [
+            0.46034692136741606,
+            0.5723328171946755
+          ],
+          "equal": 1490,
+          "feature": "my_win_now",
+          "keeping_higher": 158,
+          "keeping_lower": 148,
+          "share_higher": 0.5163398692810458
+        },
+        {
+          "ci95": [
+            0.0,
+            0.0
+          ],
+          "equal": 1653,
+          "feature": "opp_win_now",
+          "keeping_higher": 0,
+          "keeping_lower": 143,
+          "share_higher": 0.0
+        },
+        {
+          "ci95": [
+            0.5177693464521451,
+            0.5814835884464675
+          ],
+          "equal": 859,
+          "feature": "pieces_moved",
+          "keeping_higher": 515,
+          "keeping_lower": 422,
+          "share_higher": 0.5496264674493063
+        },
+        {
+          "ci95": [
+            0.389310836568823,
+            0.4525695053115189
+          ],
+          "equal": 860,
+          "feature": "distance",
+          "keeping_higher": 394,
+          "keeping_lower": 542,
+          "share_higher": 0.42094017094017094
+        },
+        {
+          "ci95": [
+            0.5505900117333612,
+            0.6553801375203702
+          ],
+          "equal": 1461,
+          "feature": "lands_on_opp",
+          "keeping_higher": 202,
+          "keeping_lower": 133,
+          "share_higher": 0.6029850746268657
+        },
+        {
+          "ci95": [
+            null,
+            null
+          ],
+          "equal": 1796,
+          "feature": "lands_on_own",
+          "keeping_higher": 0,
+          "keeping_lower": 0,
+          "share_higher": null
+        },
+        {
+          "ci95": [
+            0.34461986247962983,
+            0.4494099882666388
+          ],
+          "equal": 1461,
+          "feature": "lands_on_empty",
+          "keeping_higher": 133,
+          "keeping_lower": 202,
+          "share_higher": 0.3970149253731343
+        },
+        {
+          "ci95": [
+            0.2083657457892401,
+            0.3500758126523183
+          ],
+          "equal": 1642,
+          "feature": "uncovers_opp",
+          "keeping_higher": 43,
+          "keeping_lower": 111,
+          "share_higher": 0.2792207792207792
+        },
+        {
+          "ci95": [
+            0.07394244997081578,
+            0.1691514726811179
+          ],
+          "equal": 1615,
+          "feature": "uncovers_own",
+          "keeping_higher": 22,
+          "keeping_lower": 159,
+          "share_higher": 0.12154696132596685
+        },
+        {
+          "ci95": [
+            0.7636226839170275,
+            0.8483176145904352
+          ],
+          "equal": 1461,
+          "feature": "empties_source",
+          "keeping_higher": 270,
+          "keeping_lower": 65,
+          "share_higher": 0.8059701492537313
+        },
+        {
+          "ci95": [
+            0.465838191293311,
+            0.5170736337237771
+          ],
+          "equal": 333,
+          "feature": "advance",
+          "keeping_higher": 719,
+          "keeping_lower": 744,
+          "share_higher": 0.4914559125085441
+        },
+        {
+          "ci95": [
+            0.37553850399319766,
+            0.4577948293401357
+          ],
+          "equal": 1244,
+          "feature": "source_height",
+          "keeping_higher": 230,
+          "keeping_lower": 322,
+          "share_higher": 0.4166666666666667
+        },
+        {
+          "ci95": [
+            0.5192399959722832,
+            0.5716690949368076
+          ],
+          "equal": 410,
+          "feature": "dest_height",
+          "keeping_higher": 756,
+          "keeping_lower": 630,
+          "share_higher": 0.5454545454545454
+        }
+      ]
+    },
+    "won_all_moves": {
+      "positions_used": 19859,
+      "rows": [
+        {
+          "ci95": [
+            0.9800168391054203,
+            0.9837373372639227
+          ],
+          "equal": 105,
+          "feature": "top_diff",
+          "keeping_higher": 19396,
+          "keeping_lower": 358,
+          "share_higher": 0.9818770881846715
+        },
+        {
+          "ci95": [
+            0.8837888705940167,
+            0.8927580513873095
+          ],
+          "equal": 902,
+          "feature": "own_tops",
+          "keeping_higher": 16839,
+          "keeping_lower": 2118,
+          "share_higher": 0.8882734609906631
+        },
+        {
+          "ci95": [
+            0.9898665981297631,
+            0.9924717981966235
+          ],
+          "equal": 42,
+          "feature": "prisoners",
+          "keeping_higher": 19642,
+          "keeping_lower": 175,
+          "share_higher": 0.9911691981631933
+        },
+        {
+          "ci95": [
+            0.12791417010483547,
+            0.1379358922746587
+          ],
+          "equal": 2225,
+          "feature": "hostages",
+          "keeping_higher": 2344,
+          "keeping_lower": 15290,
+          "share_higher": 0.13292503118974708
+        },
+        {
+          "ci95": [
+            0.7883824409501902,
+            0.7996970292484854
+          ],
+          "equal": 229,
+          "feature": "own_max_height",
+          "keeping_higher": 15587,
+          "keeping_lower": 4043,
+          "share_higher": 0.7940397350993378
+        },
+        {
+          "ci95": [
+            0.11934969418300206,
+            0.12919985327580508
+          ],
+          "equal": 2623,
+          "feature": "opp_max_height",
+          "keeping_higher": 2142,
+          "keeping_lower": 15094,
+          "share_higher": 0.12427477372940357
+        },
+        {
+          "ci95": [
+            0.9664790165584839,
+            0.971310860432845
+          ],
+          "equal": 23,
+          "feature": "own_mobility",
+          "keeping_higher": 19219,
+          "keeping_lower": 617,
+          "share_higher": 0.9688949384956644
+        },
+        {
+          "ci95": [
+            0.010806057806428414,
+            0.013877837211454816
+          ],
+          "equal": 8,
+          "feature": "opp_mobility",
+          "keeping_higher": 245,
+          "keeping_lower": 19606,
+          "share_higher": 0.012341947508941615
+        },
+        {
+          "ci95": [
+            0.5229811237298393,
+            0.5369881228103964
+          ],
+          "equal": 349,
+          "feature": "centre",
+          "keeping_higher": 10340,
+          "keeping_lower": 9170,
+          "share_higher": 0.5299846232701179
+        },
+        {
+          "ci95": [
+            0.6627447345956528,
+            0.6759790641374162
+          ],
+          "equal": 442,
+          "feature": "corners",
+          "keeping_higher": 12997,
+          "keeping_lower": 6420,
+          "share_higher": 0.6693618993665345
+        },
+        {
+          "ci95": [
+            0.4356665051565376,
+            0.44980231896194656
+          ],
+          "equal": 886,
+          "feature": "own_singletons",
+          "keeping_higher": 8400,
+          "keeping_lower": 10573,
+          "share_higher": 0.4427344120592421
+        },
+        {
+          "ci95": [
+            0.3079738962813128,
+            0.321725459072672
+          ],
+          "equal": 2330,
+          "feature": "opp_singletons",
+          "keeping_higher": 5519,
+          "keeping_lower": 12010,
+          "share_higher": 0.3148496776769924
+        },
+        {
+          "ci95": [
+            0.9321553188393091,
+            0.9390689285918882
+          ],
+          "equal": 492,
+          "feature": "own_tall",
+          "keeping_higher": 18120,
+          "keeping_lower": 1247,
+          "share_higher": 0.9356121237155987
+        },
+        {
+          "ci95": [
+            0.3868232136836277,
+            0.40146639071069234
+          ],
+          "equal": 2746,
+          "feature": "own_solid",
+          "keeping_higher": 6745,
+          "keeping_lower": 10368,
+          "share_higher": 0.39414480219716
+        },
+        {
+          "ci95": [
+            0.44918812645582146,
+            0.46332432309075294
+          ],
+          "equal": 782,
+          "feature": "own_exposed",
+          "keeping_higher": 8704,
+          "keeping_lower": 10373,
+          "share_higher": 0.4562562247732872
+        },
+        {
+          "ci95": [
+            0.02522980280006138,
+            0.029803003262702465
+          ],
+          "equal": 198,
+          "feature": "opp_exposed",
+          "keeping_higher": 541,
+          "keeping_lower": 19120,
+          "share_higher": 0.027516403031381923
+        },
+        {
+          "ci95": [
+            0.9561376040335361,
+            0.9645608317612984
+          ],
+          "equal": 11612,
+          "feature": "my_win_now",
+          "keeping_higher": 7920,
+          "keeping_lower": 327,
+          "share_higher": 0.9603492178974172
+        },
+        {
+          "ci95": [
+            0.0,
+            0.0
+          ],
+          "equal": 15404,
+          "feature": "opp_win_now",
+          "keeping_higher": 0,
+          "keeping_lower": 4455,
+          "share_higher": 0.0
+        },
+        {
+          "ci95": [
+            0.5024886979625686,
+            0.5167891804057348
+          ],
+          "equal": 1081,
+          "feature": "pieces_moved",
+          "keeping_higher": 9570,
+          "keeping_lower": 9208,
+          "share_higher": 0.5096389391841517
+        },
+        {
+          "ci95": [
+            0.4683408052517657,
+            0.4825046116984516
+          ],
+          "equal": 756,
+          "feature": "distance",
+          "keeping_higher": 9082,
+          "keeping_lower": 10021,
+          "share_higher": 0.47542270847510865
+        },
+        {
+          "ci95": [
+            0.937452151674057,
+            0.9440466298044157
+          ],
+          "equal": 163,
+          "feature": "lands_on_opp",
+          "keeping_higher": 18529,
+          "keeping_lower": 1167,
+          "share_higher": 0.9407493907392364
+        },
+        {
+          "ci95": [
+            0.0904626709994433,
+            0.0989889454630967
+          ],
+          "equal": 1733,
+          "feature": "lands_on_own",
+          "keeping_higher": 1717,
+          "keeping_lower": 16409,
+          "share_higher": 0.09472580823127
+        },
+        {
+          "ci95": [
+            0.17767210869235317,
+            0.18852796309147496
+          ],
+          "equal": 356,
+          "feature": "lands_on_empty",
+          "keeping_higher": 3571,
+          "keeping_lower": 15932,
+          "share_higher": 0.18310003589191406
+        },
+        {
+          "ci95": [
+            0.08183503082227772,
+            0.09024194174600911
+          ],
+          "equal": 2762,
+          "feature": "uncovers_opp",
+          "keeping_higher": 1471,
+          "keeping_lower": 15626,
+          "share_higher": 0.08603848628414341
+        },
+        {
+          "ci95": [
+            0.7538950211236035,
+            0.7666031625816379
+          ],
+          "equal": 2516,
+          "feature": "uncovers_own",
+          "keeping_higher": 13185,
+          "keeping_lower": 4158,
+          "share_higher": 0.7602490918526207
+        },
+        {
+          "ci95": [
+            0.6431201993288972,
+            0.6569620149763918
+          ],
+          "equal": 1614,
+          "feature": "empties_source",
+          "keeping_higher": 11860,
+          "keeping_lower": 6385,
+          "share_higher": 0.6500411071526445
+        },
+        {
+          "ci95": [
+            0.4901222773708375,
+            0.504317504416825
+          ],
+          "equal": 795,
+          "feature": "advance",
+          "keeping_higher": 9479,
+          "keeping_lower": 9585,
+          "share_higher": 0.4972198908938313
+        },
+        {
+          "ci95": [
+            0.38257220330489017,
+            0.397046069177485
+          ],
+          "equal": 2412,
+          "feature": "source_height",
+          "keeping_higher": 6801,
+          "keeping_lower": 10646,
+          "share_higher": 0.38980913624118757
+        },
+        {
+          "ci95": [
+            0.7591200219902425,
+            0.7709808234818976
+          ],
+          "equal": 225,
+          "feature": "dest_height",
+          "keeping_higher": 15021,
+          "keeping_lower": 4613,
+          "share_higher": 0.76505042273607
+        }
+      ]
+    },
+    "won_greedy_ties": {
+      "positions_used": 6870,
+      "rows": [
+        {
+          "ci95": [
+            null,
+            null
+          ],
+          "equal": 6870,
+          "feature": "top_diff",
+          "keeping_higher": 0,
+          "keeping_lower": 0,
+          "share_higher": null
+        },
+        {
+          "ci95": [
+            0.07852183960977888,
+            0.11027324864808757
+          ],
+          "equal": 5567,
+          "feature": "own_tops",
+          "keeping_higher": 123,
+          "keeping_lower": 1180,
+          "share_higher": 0.09439754412893323
+        },
+        {
+          "ci95": [
+            0.8750557735670629,
+            0.892377249423627
+          ],
+          "equal": 1607,
+          "feature": "prisoners",
+          "keeping_higher": 4651,
+          "keeping_lower": 612,
+          "share_higher": 0.8837165114953449
+        },
+        {
+          "ci95": [
+            0.2728858914001747,
+            0.2986029318811412
+          ],
+          "equal": 2128,
+          "feature": "hostages",
+          "keeping_higher": 1355,
+          "keeping_lower": 3387,
+          "share_higher": 0.28574441164065795
+        },
+        {
+          "ci95": [
+            0.7207500895058039,
+            0.7433242976455063
+          ],
+          "equal": 955,
+          "feature": "own_max_height",
+          "keeping_higher": 4330,
+          "keeping_lower": 1585,
+          "share_higher": 0.7320371935756551
+        },
+        {
+          "ci95": [
+            0.18632062212537753,
+            0.20939896730462904
+          ],
+          "equal": 2291,
+          "feature": "opp_max_height",
+          "keeping_higher": 906,
+          "keeping_lower": 3673,
+          "share_higher": 0.19785979471500328
+        },
+        {
+          "ci95": [
+            0.7658750899566686,
+            0.7867996721043751
+          ],
+          "equal": 776,
+          "feature": "own_mobility",
+          "keeping_higher": 4731,
+          "keeping_lower": 1363,
+          "share_higher": 0.7763373810305219
+        },
+        {
+          "ci95": [
+            0.15977626236167417,
+            0.17857452297864
+          ],
+          "equal": 758,
+          "feature": "opp_mobility",
+          "keeping_higher": 1034,
+          "keeping_lower": 5078,
+          "share_higher": 0.16917539267015708
+        },
+        {
+          "ci95": [
+            0.46822967547939653,
+            0.5023496390489626
+          ],
+          "equal": 3573,
+          "feature": "centre",
+          "keeping_higher": 1600,
+          "keeping_lower": 1697,
+          "share_higher": 0.48528965726417955
+        },
+        {
+          "ci95": [
+            0.4297572152509648,
+            0.45818483843459124
+          ],
+          "equal": 2176,
+          "feature": "corners",
+          "keeping_higher": 2084,
+          "keeping_lower": 2610,
+          "share_higher": 0.443971026842778
+        },
+        {
+          "ci95": [
+            0.24243242727210218,
+            0.27022580057599904
+          ],
+          "equal": 3078,
+          "feature": "own_singletons",
+          "keeping_higher": 972,
+          "keeping_lower": 2820,
+          "share_higher": 0.2563291139240506
+        },
+        {
+          "ci95": [
+            0.7966012973357514,
+            0.8194936894716366
+          ],
+          "equal": 2322,
+          "feature": "opp_singletons",
+          "keeping_higher": 3675,
+          "keeping_lower": 873,
+          "share_higher": 0.808047493403694
+        },
+        {
+          "ci95": [
+            0.8312665702533257,
+            0.8530416934421245
+          ],
+          "equal": 2562,
+          "feature": "own_tall",
+          "keeping_higher": 3628,
+          "keeping_lower": 680,
+          "share_higher": 0.8421541318477251
+        },
+        {
+          "ci95": [
+            0.661990510462535,
+            0.6970403265418703
+          ],
+          "equal": 4146,
+          "feature": "own_solid",
+          "keeping_higher": 1851,
+          "keeping_lower": 873,
+          "share_higher": 0.6795154185022027
+        },
+        {
+          "ci95": [
+            0.14004860697786006,
+            0.16149417002073743
+          ],
+          "equal": 2592,
+          "feature": "own_exposed",
+          "keeping_higher": 645,
+          "keeping_lower": 3633,
+          "share_higher": 0.15077138849929875
+        },
+        {
+          "ci95": [
+            0.22009796908397514,
+            0.26060378530198974
+          ],
+          "equal": 5160,
+          "feature": "opp_exposed",
+          "keeping_higher": 411,
+          "keeping_lower": 1299,
+          "share_higher": 0.24035087719298245
+        },
+        {
+          "ci95": [
+            0.7350132879513622,
+            0.7896119797145906
+          ],
+          "equal": 5936,
+          "feature": "my_win_now",
+          "keeping_higher": 712,
+          "keeping_lower": 222,
+          "share_higher": 0.7623126338329764
+        },
+        {
+          "ci95": [
+            0.0,
+            0.0
+          ],
+          "equal": 6843,
+          "feature": "opp_win_now",
+          "keeping_higher": 0,
+          "keeping_lower": 27,
+          "share_higher": 0.0
+        },
+        {
+          "ci95": [
+            0.45504642671466966,
+            0.48396996672795334
+          ],
+          "equal": 2295,
+          "feature": "pieces_moved",
+          "keeping_higher": 2148,
+          "keeping_lower": 2427,
+          "share_higher": 0.4695081967213115
+        },
+        {
+          "ci95": [
+            0.4002064637081873,
+            0.42930545456650054
+          ],
+          "equal": 2465,
+          "feature": "distance",
+          "keeping_higher": 1827,
+          "keeping_lower": 2578,
+          "share_higher": 0.4147559591373439
+        },
+        {
+          "ci95": [
+            0.8647508883994575,
+            0.8989252603970415
+          ],
+          "equal": 5499,
+          "feature": "lands_on_opp",
+          "keeping_higher": 1209,
+          "keeping_lower": 162,
+          "share_higher": 0.8818380743982495
+        },
+        {
+          "ci95": [
+            0.17058551491594975,
+            1.0294144850840503
+          ],
+          "equal": 6865,
+          "feature": "lands_on_own",
+          "keeping_higher": 3,
+          "keeping_lower": 2,
+          "share_higher": 0.6
+        },
+        {
+          "ci95": [
+            0.10175856701734934,
+            0.13602407339111164
+          ],
+          "equal": 5499,
+          "feature": "lands_on_empty",
+          "keeping_higher": 163,
+          "keeping_lower": 1208,
+          "share_higher": 0.11889132020423049
+        },
+        {
+          "ci95": [
+            0.3089202170667763,
+            0.5440209594038119
+          ],
+          "equal": 6802,
+          "feature": "uncovers_opp",
+          "keeping_higher": 29,
+          "keeping_lower": 39,
+          "share_higher": 0.4264705882352941
+        },
+        {
+          "ci95": [
+            0.08034064331793125,
+            0.11231990714078435
+          ],
+          "equal": 5562,
+          "feature": "uncovers_own",
+          "keeping_higher": 126,
+          "keeping_lower": 1182,
+          "share_higher": 0.0963302752293578
+        },
+        {
+          "ci95": [
+            0.8732896686425193,
+            0.9064331614085384
+          ],
+          "equal": 5499,
+          "feature": "empties_source",
+          "keeping_higher": 1220,
+          "keeping_lower": 151,
+          "share_higher": 0.8898614150255288
+        },
+        {
+          "ci95": [
+            0.4881458633221551,
+            0.5141408561149602
+          ],
+          "equal": 1185,
+          "feature": "advance",
+          "keeping_higher": 2849,
+          "keeping_lower": 2836,
+          "share_higher": 0.5011433597185576
+        },
+        {
+          "ci95": [
+            0.3393688188321292,
+            0.37399398293597685
+          ],
+          "equal": 3929,
+          "feature": "source_height",
+          "keeping_higher": 1049,
+          "keeping_lower": 1892,
+          "share_higher": 0.35668140088405303
+        },
+        {
+          "ci95": [
+            0.829357745404097,
+            0.8482727006093351
+          ],
+          "equal": 1063,
+          "feature": "dest_height",
+          "keeping_higher": 4871,
+          "keeping_lower": 936,
+          "share_higher": 0.8388152230067161
+        }
+      ]
+    },
+    "won_greedy_ties, max height 2-3": {
+      "positions_used": 1687,
+      "rows": [
+        {
+          "ci95": [
+            null,
+            null
+          ],
+          "equal": 1687,
+          "feature": "top_diff",
+          "keeping_higher": 0,
+          "keeping_lower": 0,
+          "share_higher": null
+        },
+        {
+          "ci95": [
+            0.05524669913999088,
+            0.11141996752667577
+          ],
+          "equal": 1315,
+          "feature": "own_tops",
+          "keeping_higher": 31,
+          "keeping_lower": 341,
+          "share_higher": 0.08333333333333333
+        },
+        {
+          "ci95": [
+            0.8628370423687858,
+            0.8987629576312143
+          ],
+          "equal": 437,
+          "feature": "prisoners",
+          "keeping_higher": 1101,
+          "keeping_lower": 149,
+          "share_higher": 0.8808
+        },
+        {
+          "ci95": [
+            0.2982046870543409,
+            0.35380996496031114
+          ],
+          "equal": 595,
+          "feature": "hostages",
+          "keeping_higher": 356,
+          "keeping_lower": 736,
+          "share_higher": 0.326007326007326
+        },
+        {
+          "ci95": [
+            0.7135669706336831,
+            0.7595208480632007
+          ],
+          "equal": 275,
+          "feature": "own_max_height",
+          "keeping_higher": 1040,
+          "keeping_lower": 372,
+          "share_higher": 0.7365439093484419
+        },
+        {
+          "ci95": [
+            0.1757321343818507,
+            0.22881332016360384
+          ],
+          "equal": 807,
+          "feature": "opp_max_height",
+          "keeping_higher": 178,
+          "keeping_lower": 702,
+          "share_higher": 0.20227272727272727
+        },
+        {
+          "ci95": [
+            0.8011353714325933,
+            0.8397887209766477
+          ],
+          "equal": 172,
+          "feature": "own_mobility",
+          "keeping_higher": 1243,
+          "keeping_lower": 272,
+          "share_higher": 0.8204620462046205
+        },
+        {
+          "ci95": [
+            0.14914247215552254,
+            0.18658581001299476
+          ],
+          "equal": 156,
+          "feature": "opp_mobility",
+          "keeping_higher": 257,
+          "keeping_lower": 1274,
+          "share_higher": 0.16786414108425865
+        },
+        {
+          "ci95": [
+            0.44951563744839884,
+            0.5143397842383481
+          ],
+          "equal": 774,
+          "feature": "centre",
+          "keeping_higher": 440,
+          "keeping_lower": 473,
+          "share_higher": 0.4819277108433735
+        },
+        {
+          "ci95": [
+            0.39530636488047743,
+            0.4499886909408942
+          ],
+          "equal": 433,
+          "feature": "corners",
+          "keeping_higher": 530,
+          "keeping_lower": 724,
+          "share_higher": 0.4226475279106858
+        },
+        {
+          "ci95": [
+            0.2026438768194569,
+            0.2531000026532361
+          ],
+          "equal": 625,
+          "feature": "own_singletons",
+          "keeping_higher": 242,
+          "keeping_lower": 820,
+          "share_higher": 0.2278719397363465
+        },
+        {
+          "ci95": [
+            0.7624274308300493,
+            0.8102676046309437
+          ],
+          "equal": 559,
+          "feature": "opp_singletons",
+          "keeping_higher": 887,
+          "keeping_lower": 241,
+          "share_higher": 0.7863475177304965
+        },
+        {
+          "ci95": [
+            0.8226269087228937,
+            0.8643894283364357
+          ],
+          "equal": 524,
+          "feature": "own_tall",
+          "keeping_higher": 981,
+          "keeping_lower": 182,
+          "share_higher": 0.8435081685296647
+        },
+        {
+          "ci95": [
+            0.6902607239430426,
+            0.7674995903988041
+          ],
+          "equal": 1178,
+          "feature": "own_solid",
+          "keeping_higher": 371,
+          "keeping_lower": 138,
+          "share_higher": 0.7288801571709234
+        },
+        {
+          "ci95": [
+            0.1419586658341415,
+            0.1889466411377628
+          ],
+          "equal": 726,
+          "feature": "own_exposed",
+          "keeping_higher": 159,
+          "keeping_lower": 802,
+          "share_higher": 0.16545265348595214
+        },
+        {
+          "ci95": [
+            0.16097455038903224,
+            0.2345810051665233
+          ],
+          "equal": 1237,
+          "feature": "opp_exposed",
+          "keeping_higher": 89,
+          "keeping_lower": 361,
+          "share_higher": 0.19777777777777777
+        },
+        {
+          "ci95": [
+            0.8334332925884514,
+            0.9343086428954196
+          ],
+          "equal": 1532,
+          "feature": "my_win_now",
+          "keeping_higher": 137,
+          "keeping_lower": 18,
+          "share_higher": 0.8838709677419355
+        },
+        {
+          "ci95": [
+            null,
+            null
+          ],
+          "equal": 1687,
+          "feature": "opp_win_now",
+          "keeping_higher": 0,
+          "keeping_lower": 0,
+          "share_higher": null
+        },
+        {
+          "ci95": [
+            0.39977717847496835,
+            0.4581413735612307
+          ],
+          "equal": 582,
+          "feature": "pieces_moved",
+          "keeping_higher": 474,
+          "keeping_lower": 631,
+          "share_higher": 0.4289592760180995
+        },
+        {
+          "ci95": [
+            0.4058047588298819,
+            0.4652232785532957
+          ],
+          "equal": 617,
+          "feature": "distance",
+          "keeping_higher": 466,
+          "keeping_lower": 604,
+          "share_higher": 0.4355140186915888
+        },
+        {
+          "ci95": [
+            0.8860895701485634,
+            0.9427874351990302
+          ],
+          "equal": 1313,
+          "feature": "lands_on_opp",
+          "keeping_higher": 342,
+          "keeping_lower": 32,
+          "share_higher": 0.9144385026737968
+        },
+        {
+          "ci95": [
+            null,
+            null
+          ],
+          "equal": 1687,
+          "feature": "lands_on_own",
+          "keeping_higher": 0,
+          "keeping_lower": 0,
+          "share_higher": null
+        },
+        {
+          "ci95": [
+            0.057212564800969846,
+            0.11391042985143657
+          ],
+          "equal": 1313,
+          "feature": "lands_on_empty",
+          "keeping_higher": 32,
+          "keeping_lower": 342,
+          "share_higher": 0.0855614973262032
+        },
+        {
+          "ci95": [
+            -0.19296464556281656,
+            1.1929646455628165
+          ],
+          "equal": 1685,
+          "feature": "uncovers_opp",
+          "keeping_higher": 1,
+          "keeping_lower": 1,
+          "share_higher": 0.5
+        },
+        {
+          "ci95": [
+            0.05524669913999088,
+            0.11141996752667577
+          ],
+          "equal": 1315,
+          "feature": "uncovers_own",
+          "keeping_higher": 31,
+          "keeping_lower": 341,
+          "share_higher": 0.08333333333333333
+        },
+        {
+          "ci95": [
+            0.8860895701485634,
+            0.9427874351990302
+          ],
+          "equal": 1313,
+          "feature": "empties_source",
+          "keeping_higher": 342,
+          "keeping_lower": 32,
+          "share_higher": 0.9144385026737968
+        },
+        {
+          "ci95": [
+            0.4662793221143815,
+            0.518249510515717
+          ],
+          "equal": 265,
+          "feature": "advance",
+          "keeping_higher": 700,
+          "keeping_lower": 722,
+          "share_higher": 0.49226441631504925
+        },
+        {
+          "ci95": [
+            0.2806724909672439,
+            0.3425833229862445
+          ],
+          "equal": 827,
+          "feature": "source_height",
+          "keeping_higher": 268,
+          "keeping_lower": 592,
+          "share_higher": 0.3116279069767442
+        },
+        {
+          "ci95": [
+            0.8400915254911011,
+            0.8766466719337916
+          ],
+          "equal": 289,
+          "feature": "dest_height",
+          "keeping_higher": 1200,
+          "keeping_lower": 198,
+          "share_higher": 0.8583690987124464
+        }
+      ]
+    },
+    "won_greedy_ties, max height 4-5": {
+      "positions_used": 4066,
+      "rows": [
+        {
+          "ci95": [
+            null,
+            null
+          ],
+          "equal": 4066,
+          "feature": "top_diff",
+          "keeping_higher": 0,
+          "keeping_lower": 0,
+          "share_higher": null
+        },
+        {
+          "ci95": [
+            0.06571258141751324,
+            0.10674917101642278
+          ],
+          "equal": 3347,
+          "feature": "own_tops",
+          "keeping_higher": 62,
+          "keeping_lower": 657,
+          "share_higher": 0.08623087621696801
+        },
+        {
+          "ci95": [
+            0.8822310244651226,
+            0.9037305745276378
+          ],
+          "equal": 889,
+          "feature": "prisoners",
+          "keeping_higher": 2837,
+          "keeping_lower": 340,
+          "share_higher": 0.8929807994963802
+        },
+        {
+          "ci95": [
+            0.26761695890482606,
+            0.30054120966957565
+          ],
+          "equal": 1183,
+          "feature": "hostages",
+          "keeping_higher": 819,
+          "keeping_lower": 2064,
+          "share_higher": 0.28407908428720086
+        },
+        {
+          "ci95": [
+            0.7244170529183096,
+            0.7533764407167682
+          ],
+          "equal": 531,
+          "feature": "own_max_height",
+          "keeping_higher": 2612,
+          "keeping_lower": 923,
+          "share_higher": 0.7388967468175389
+        },
+        {
+          "ci95": [
+            0.18449313653668437,
+            0.21369690871218439
+          ],
+          "equal": 1193,
+          "feature": "opp_max_height",
+          "keeping_higher": 572,
+          "keeping_lower": 2301,
+          "share_higher": 0.19909502262443438
+        },
+        {
+          "ci95": [
+            0.7451209624245051,
+            0.7730180572376383
+          ],
+          "equal": 455,
+          "feature": "own_mobility",
+          "keeping_higher": 2741,
+          "keeping_lower": 870,
+          "share_higher": 0.7590695098310717
+        },
+        {
+          "ci95": [
+            0.1526154331911856,
+            0.176763877153642
+          ],
+          "equal": 441,
+          "feature": "opp_mobility",
+          "keeping_higher": 597,
+          "keeping_lower": 3028,
+          "share_higher": 0.1646896551724138
+        },
+        {
+          "ci95": [
+            0.4565313695489511,
+            0.5023727400400899
+          ],
+          "equal": 2241,
+          "feature": "centre",
+          "keeping_higher": 875,
+          "keeping_lower": 950,
+          "share_higher": 0.4794520547945205
+        },
+        {
+          "ci95": [
+            0.42541268400110094,
+            0.4628204403072724
+          ],
+          "equal": 1355,
+          "feature": "corners",
+          "keeping_higher": 1204,
+          "keeping_lower": 1507,
+          "share_higher": 0.44411656215418666
+        },
+        {
+          "ci95": [
+            0.25756223767700237,
+            0.29392419058667707
+          ],
+          "equal": 1745,
+          "feature": "own_singletons",
+          "keeping_higher": 640,
+          "keeping_lower": 1681,
+          "share_higher": 0.2757432141318397
+        },
+        {
+          "ci95": [
+            0.8054643701126173,
+            0.8345655029269644
+          ],
+          "equal": 1388,
+          "feature": "opp_singletons",
+          "keeping_higher": 2196,
+          "keeping_lower": 482,
+          "share_higher": 0.8200149365197908
+        },
+        {
+          "ci95": [
+            0.8215952987083606,
+            0.8507074388117684
+          ],
+          "equal": 1582,
+          "feature": "own_tall",
+          "keeping_higher": 2077,
+          "keeping_lower": 407,
+          "share_higher": 0.8361513687600645
+        },
+        {
+          "ci95": [
+            0.6365199170747319,
+            0.68022966833157
+          ],
+          "equal": 2257,
+          "feature": "own_solid",
+          "keeping_higher": 1191,
+          "keeping_lower": 618,
+          "share_higher": 0.6583747927031509
+        },
+        {
+          "ci95": [
+            0.13719247409985363,
+            0.16500532809794854
+          ],
+          "equal": 1518,
+          "feature": "own_exposed",
+          "keeping_higher": 385,
+          "keeping_lower": 2163,
+          "share_higher": 0.1510989010989011
+        },
+        {
+          "ci95": [
+            0.20479301427636132,
+            0.25752877798433116
+          ],
+          "equal": 3084,
+          "feature": "opp_exposed",
+          "keeping_higher": 227,
+          "keeping_lower": 755,
+          "share_higher": 0.23116089613034624
+        },
+        {
+          "ci95": [
+            0.7457029554974189,
+            0.8156353344654063
+          ],
+          "equal": 3528,
+          "feature": "my_win_now",
+          "keeping_higher": 420,
+          "keeping_lower": 118,
+          "share_higher": 0.7806691449814126
+        },
+        {
+          "ci95": [
+            0.0,
+            0.0
+          ],
+          "equal": 4057,
+          "feature": "opp_win_now",
+          "keeping_higher": 0,
+          "keeping_lower": 9,
+          "share_higher": 0.0
+        },
+        {
+          "ci95": [
+            0.4484872262019039,
+            0.48536768133721414
+          ],
+          "equal": 1254,
+          "feature": "pieces_moved",
+          "keeping_higher": 1313,
+          "keeping_lower": 1499,
+          "share_higher": 0.466927453769559
+        },
+        {
+          "ci95": [
+            0.38630789837426643,
+            0.42330393157028073
+          ],
+          "equal": 1361,
+          "feature": "distance",
+          "keeping_higher": 1095,
+          "keeping_lower": 1610,
+          "share_higher": 0.4048059149722736
+        },
+        {
+          "ci95": [
+            0.8683330358043037,
+            0.9130002975290298
+          ],
+          "equal": 3316,
+          "feature": "lands_on_opp",
+          "keeping_higher": 668,
+          "keeping_lower": 82,
+          "share_higher": 0.8906666666666667
+        },
+        {
+          "ci95": [
+            0.010000000000000009,
+            0.99
+          ],
+          "equal": 4062,
+          "feature": "lands_on_own",
+          "keeping_higher": 2,
+          "keeping_lower": 2,
+          "share_higher": 0.5
+        },
+        {
+          "ci95": [
+            0.08821409251217464,
+            0.13311924082115867
+          ],
+          "equal": 3316,
+          "feature": "lands_on_empty",
+          "keeping_higher": 83,
+          "keeping_lower": 667,
+          "share_higher": 0.11066666666666666
+        },
+        {
+          "ci95": [
+            0.18640660673780374,
+            0.523270812617035
+          ],
+          "equal": 4035,
+          "feature": "uncovers_opp",
+          "keeping_higher": 11,
+          "keeping_lower": 20,
+          "share_higher": 0.3548387096774194
+        },
+        {
+          "ci95": [
+            0.06781476522690424,
+            0.10922534542316492
+          ],
+          "equal": 3343,
+          "feature": "uncovers_own",
+          "keeping_higher": 64,
+          "keeping_lower": 659,
+          "share_higher": 0.08852005532503458
+        },
+        {
+          "ci95": [
+            0.882916375567754,
+            0.925083624432246
+          ],
+          "equal": 3316,
+          "feature": "empties_source",
+          "keeping_higher": 678,
+          "keeping_lower": 72,
+          "share_higher": 0.904
+        },
+        {
+          "ci95": [
+            0.48387632239777506,
+            0.5176042816886922
+          ],
+          "equal": 689,
+          "feature": "advance",
+          "keeping_higher": 1691,
+          "keeping_lower": 1686,
+          "share_higher": 0.5007403020432336
+        },
+        {
+          "ci95": [
+            0.35238136270732545,
+            0.398052916389374
+          ],
+          "equal": 2339,
+          "feature": "source_height",
+          "keeping_higher": 648,
+          "keeping_lower": 1079,
+          "share_higher": 0.37521713954834973
+        },
+        {
+          "ci95": [
+            0.8271676411859179,
+            0.8515472182518331
+          ],
+          "equal": 580,
+          "feature": "dest_height",
+          "keeping_higher": 2926,
+          "keeping_lower": 560,
+          "share_higher": 0.8393574297188755
+        }
+      ]
+    },
+    "won_greedy_ties, max height 6+": {
+      "positions_used": 1117,
+      "rows": [
+        {
+          "ci95": [
+            null,
+            null
+          ],
+          "equal": 1117,
+          "feature": "top_diff",
+          "keeping_higher": 0,
+          "keeping_lower": 0,
+          "share_higher": null
+        },
+        {
+          "ci95": [
+            0.09459044973169786,
+            0.18842841819283043
+          ],
+          "equal": 905,
+          "feature": "own_tops",
+          "keeping_higher": 30,
+          "keeping_lower": 182,
+          "share_higher": 0.14150943396226415
+        },
+        {
+          "ci95": [
+            0.8288579485869445,
+            0.8768836782073139
+          ],
+          "equal": 281,
+          "feature": "prisoners",
+          "keeping_higher": 713,
+          "keeping_lower": 123,
+          "share_higher": 0.8528708133971292
+        },
+        {
+          "ci95": [
+            0.2046876827050633,
+            0.2646734646221858
+          ],
+          "equal": 350,
+          "feature": "hostages",
+          "keeping_higher": 180,
+          "keeping_lower": 587,
+          "share_higher": 0.23468057366362452
+        },
+        {
+          "ci95": [
+            0.6715558442764307,
+            0.7292706020045612
+          ],
+          "equal": 149,
+          "feature": "own_max_height",
+          "keeping_higher": 678,
+          "keeping_lower": 290,
+          "share_higher": 0.7004132231404959
+        },
+        {
+          "ci95": [
+            0.1621697036907238,
+            0.21555426725358612
+          ],
+          "equal": 291,
+          "feature": "opp_max_height",
+          "keeping_higher": 156,
+          "keeping_lower": 670,
+          "share_higher": 0.18886198547215496
+        },
+        {
+          "ci95": [
+            0.745251899961914,
+            0.7981365297901521
+          ],
+          "equal": 149,
+          "feature": "own_mobility",
+          "keeping_higher": 747,
+          "keeping_lower": 221,
+          "share_higher": 0.7716942148760331
+        },
+        {
+          "ci95": [
+            0.1635025192004328,
+            0.21306651845647095
+          ],
+          "equal": 161,
+          "feature": "opp_mobility",
+          "keeping_higher": 180,
+          "keeping_lower": 776,
+          "share_higher": 0.18828451882845187
+        },
+        {
+          "ci95": [
+            0.46839744054052335,
+            0.5512805558816591
+          ],
+          "equal": 558,
+          "feature": "centre",
+          "keeping_higher": 285,
+          "keeping_lower": 274,
+          "share_higher": 0.5098389982110912
+        },
+        {
+          "ci95": [
+            0.4438421737043239,
+            0.5163773050336734
+          ],
+          "equal": 388,
+          "feature": "corners",
+          "keeping_higher": 350,
+          "keeping_lower": 379,
+          "share_higher": 0.48010973936899864
+        },
+        {
+          "ci95": [
+            0.17989870043735193,
+            0.2601990990736505
+          ],
+          "equal": 708,
+          "feature": "own_singletons",
+          "keeping_higher": 90,
+          "keeping_lower": 319,
+          "share_higher": 0.2200488997555012
+        },
+        {
+          "ci95": [
+            0.7689464037156638,
+            0.8267409278207244
+          ],
+          "equal": 375,
+          "feature": "opp_singletons",
+          "keeping_higher": 592,
+          "keeping_lower": 150,
+          "share_higher": 0.7978436657681941
+        },
+        {
+          "ci95": [
+            0.8360627106673648,
+            0.8885968959892161
+          ],
+          "equal": 456,
+          "feature": "own_tall",
+          "keeping_higher": 570,
+          "keeping_lower": 91,
+          "share_higher": 0.8623298033282905
+        },
+        {
+          "ci95": [
+            0.6677662736236346,
+            0.7558790465734097
+          ],
+          "equal": 711,
+          "feature": "own_solid",
+          "keeping_higher": 289,
+          "keeping_lower": 117,
+          "share_higher": 0.7118226600985221
+        },
+        {
+          "ci95": [
+            0.10746593557795928,
+            0.15521286806313303
+          ],
+          "equal": 348,
+          "feature": "own_exposed",
+          "keeping_higher": 101,
+          "keeping_lower": 668,
+          "share_higher": 0.13133940182054615
+        },
+        {
+          "ci95": [
+            0.2859725937682586,
+            0.3974806436418133
+          ],
+          "equal": 839,
+          "feature": "opp_exposed",
+          "keeping_higher": 95,
+          "keeping_lower": 183,
+          "share_higher": 0.34172661870503596
+        },
+        {
+          "ci95": [
+            0.5826688198287475,
+            0.7036382341131613
+          ],
+          "equal": 876,
+          "feature": "my_win_now",
+          "keeping_higher": 155,
+          "keeping_lower": 86,
+          "share_higher": 0.6431535269709544
+        },
+        {
+          "ci95": [
+            0.0,
+            0.0
+          ],
+          "equal": 1099,
+          "feature": "opp_win_now",
+          "keeping_higher": 0,
+          "keeping_lower": 18,
+          "share_higher": 0.0
+        },
+        {
+          "ci95": [
+            0.5106089844698074,
+            0.5866554532201622
+          ],
+          "equal": 459,
+          "feature": "pieces_moved",
+          "keeping_higher": 361,
+          "keeping_lower": 297,
+          "share_higher": 0.5486322188449848
+        },
+        {
+          "ci95": [
+            0.3836533662248084,
+            0.46079107821963605
+          ],
+          "equal": 487,
+          "feature": "distance",
+          "keeping_higher": 266,
+          "keeping_lower": 364,
+          "share_higher": 0.4222222222222222
+        },
+        {
+          "ci95": [
+            0.7563213521801008,
+            0.8550146802085633
+          ],
+          "equal": 870,
+          "feature": "lands_on_opp",
+          "keeping_higher": 199,
+          "keeping_lower": 48,
+          "share_higher": 0.805668016194332
+        },
+        {
+          "ci95": [
+            1.0,
+            1.0
+          ],
+          "equal": 1116,
+          "feature": "lands_on_own",
+          "keeping_higher": 1,
+          "keeping_lower": 0,
+          "share_higher": 1.0
+        },
+        {
+          "ci95": [
+            0.14498531979143675,
+            0.24367864781989929
+          ],
+          "equal": 870,
+          "feature": "lands_on_empty",
+          "keeping_higher": 48,
+          "keeping_lower": 199,
+          "share_higher": 0.19433198380566802
+        },
+        {
+          "ci95": [
+            0.3201316779319464,
+            0.651296893496625
+          ],
+          "equal": 1082,
+          "feature": "uncovers_opp",
+          "keeping_higher": 17,
+          "keeping_lower": 18,
+          "share_higher": 0.4857142857142857
+        },
+        {
+          "ci95": [
+            0.09818083156236711,
+            0.19289898064420563
+          ],
+          "equal": 904,
+          "feature": "uncovers_own",
+          "keeping_higher": 31,
+          "keeping_lower": 182,
+          "share_higher": 0.14553990610328638
+        },
+        {
+          "ci95": [
+            0.7607641338870051,
+            0.8586690644935616
+          ],
+          "equal": 870,
+          "feature": "empties_source",
+          "keeping_higher": 200,
+          "keeping_lower": 47,
+          "share_higher": 0.8097165991902834
+        },
+        {
+          "ci95": [
+            0.48402515767256443,
+            0.5498348874741624
+          ],
+          "equal": 231,
+          "feature": "advance",
+          "keeping_higher": 458,
+          "keeping_lower": 428,
+          "share_higher": 0.5169300225733634
+        },
+        {
+          "ci95": [
+            0.32525482474264955,
+            0.4261576046358815
+          ],
+          "equal": 763,
+          "feature": "source_height",
+          "keeping_higher": 133,
+          "keeping_lower": 221,
+          "share_higher": 0.3757062146892655
+        },
+        {
+          "ci95": [
+            0.7816974388231368,
+            0.8326037529428436
+          ],
+          "equal": 194,
+          "feature": "dest_height",
+          "keeping_higher": 745,
+          "keeping_lower": 178,
+          "share_higher": 0.8071505958829902
+        }
+      ]
+    }
+  },
+  "b_lists": [
+    {
+      "criteria": [
+        {
+          "direction": "up",
+          "feature": "prisoners",
+          "reads": "most prisoners"
+        },
+        {
+          "direction": "up",
+          "feature": "own_mobility",
+          "reads": "most own_mobility"
+        },
+        {
+          "direction": "up",
+          "feature": "top_diff",
+          "reads": "most top_diff"
+        }
+      ],
+      "steps": [
+        {
+          "reads": "most prisoners",
+          "train_score": 0.6157862389444184
+        },
+        {
+          "reads": "most own_mobility",
+          "train_score": 0.6402416477268495
+        },
+        {
+          "reads": "most top_diff",
+          "train_score": 0.6426883333329173
+        }
+      ],
+      "trained_on": "pooled",
+      "uniform_pick_score": 0.2343040720139088
+    },
+    {
+      "criteria": [
+        {
+          "direction": "up",
+          "feature": "prisoners",
+          "reads": "most prisoners"
+        },
+        {
+          "direction": "up",
+          "feature": "own_mobility",
+          "reads": "most own_mobility"
+        },
+        {
+          "direction": "up",
+          "feature": "top_diff",
+          "reads": "most top_diff"
+        }
+      ],
+      "steps": [
+        {
+          "reads": "most prisoners",
+          "train_score": 0.8154792355765622
+        },
+        {
+          "reads": "most own_mobility",
+          "train_score": 0.8446707196969829
+        },
+        {
+          "reads": "most top_diff",
+          "train_score": 0.8463308333333441
+        }
+      ],
+      "trained_on": "won",
+      "uniform_pick_score": 0.3568803315949116
+    },
+    {
+      "criteria": [
+        {
+          "direction": "up",
+          "feature": "prisoners",
+          "reads": "most prisoners"
+        },
+        {
+          "direction": "up",
+          "feature": "top_diff",
+          "reads": "most top_diff"
+        },
+        {
+          "direction": "down",
+          "feature": "distance",
+          "reads": "fewest distance"
+        }
+      ],
+      "steps": [
+        {
+          "reads": "most prisoners",
+          "train_score": 0.41609324231325967
+        },
+        {
+          "reads": "most top_diff",
+          "train_score": 0.4422435750360843
+        },
+        {
+          "reads": "fewest distance",
+          "train_score": 0.45880988095238673
+        }
+      ],
+      "trained_on": "drawn",
+      "uniform_pick_score": 0.11172781243333851
+    }
+  ],
+  "b_tree_drawn": [
+    "Δprisoners ≤ 1.5 and Δprisoners ≤ 0.5 and Δown_mobility ≤ 2.5 → keeps 0.025 (58.7 % of weight)",
+    "Δprisoners ≤ 1.5 and Δprisoners ≤ 0.5 and Δown_mobility > 2.5 → keeps 0.072 (8.1 % of weight)",
+    "Δprisoners ≤ 1.5 and Δprisoners > 0.5 and Δown_mobility ≤ 5.5 → keeps 0.146 (14.3 % of weight)",
+    "Δprisoners ≤ 1.5 and Δprisoners > 0.5 and Δown_mobility > 5.5 → keeps 0.236 (5.4 % of weight)",
+    "Δprisoners > 1.5 and Δopp_win_now ≤ -0.5 → keeps 0.687 (1.6 % of weight)",
+    "Δprisoners > 1.5 and Δopp_win_now > -0.5 and Δown_mobility ≤ 5.5 → keeps 0.300 (5.0 % of weight)",
+    "Δprisoners > 1.5 and Δopp_win_now > -0.5 and Δown_mobility > 5.5 → keeps 0.460 (6.9 % of weight)"
+  ],
+  "b_tree_pooled": {
+    "leaves": [
+      "Δprisoners ≤ 0.5 and Δown_mobility ≤ 2.5 and Δown_max_height ≤ -0.5 → keeps 0.063 (18.3 % of weight)",
+      "Δprisoners ≤ 0.5 and Δown_mobility ≤ 2.5 and Δown_max_height > -0.5 → keeps 0.160 (42.8 % of weight)",
+      "Δprisoners ≤ 0.5 and Δown_mobility > 2.5 and source_height ≤ 5.5 → keeps 0.219 (6.7 % of weight)",
+      "Δprisoners ≤ 0.5 and Δown_mobility > 2.5 and source_height > 5.5 → keeps 0.457 (1.9 % of weight)",
+      "Δprisoners > 0.5 and Δown_exposed ≤ -0.5 and Δown_exposed ≤ -1.5 → keeps 0.908 (1.4 % of weight)",
+      "Δprisoners > 0.5 and Δown_exposed ≤ -0.5 and Δown_exposed > -1.5 → keeps 0.687 (3.6 % of weight)",
+      "Δprisoners > 0.5 and Δown_exposed > -0.5 and Δprisoners ≤ 1.5 → keeps 0.294 (16.4 % of weight)",
+      "Δprisoners > 0.5 and Δown_exposed > -0.5 and Δprisoners > 1.5 → keeps 0.511 (9.0 % of weight)"
+    ],
+    "tree": {
+      "nodes": [
+        {
+          "Split": {
+            "feature": 2,
+            "left": 1,
+            "rate": 0.2343040720147091,
+            "right": 8,
+            "threshold": 0.5,
+            "weight": 0.999999999998278
+          }
+        },
+        {
+          "Split": {
+            "feature": 6,
+            "left": 2,
+            "rate": 0.1482108268785151,
+            "right": 5,
+            "threshold": 2.5,
+            "weight": 0.6974316138098788
+          }
+        },
+        {
+          "Split": {
+            "feature": 4,
+            "left": 3,
+            "rate": 0.1307166292387771,
+            "right": 4,
+            "threshold": -0.5,
+            "weight": 0.6108519249376512
+          }
+        },
+        {
+          "Leaf": {
+            "rate": 0.06324893305208387,
+            "weight": 0.1832971781287169
+          }
+        },
+        {
+          "Leaf": {
+            "rate": 0.1596407340886919,
+            "weight": 0.4275547468094517
+          }
+        },
+        {
+          "Split": {
+            "feature": 27,
+            "left": 6,
+            "rate": 0.2716389015520886,
+            "right": 7,
+            "threshold": 5.5,
+            "weight": 0.08657968887271582
+          }
+        },
+        {
+          "Leaf": {
+            "rate": 0.21852480671506805,
+            "weight": 0.06725700746352563
+          }
+        },
+        {
+          "Leaf": {
+            "rate": 0.45651464406566444,
+            "weight": 0.019322681409180583
+          }
+        },
+        {
+          "Split": {
+            "feature": 14,
+            "left": 9,
+            "rate": 0.4327522696234967,
+            "right": 12,
+            "threshold": -0.5,
+            "weight": 0.3025683861902836
+          }
+        },
+        {
+          "Split": {
+            "feature": 14,
+            "left": 10,
+            "rate": 0.7486423252575427,
+            "right": 11,
+            "threshold": -1.5,
+            "weight": 0.049432327878375
+          }
+        },
+        {
+          "Leaf": {
+            "rate": 0.9080875292383193,
+            "weight": 0.01376636003693499
+          }
+        },
+        {
+          "Leaf": {
+            "rate": 0.6870996217504481,
+            "weight": 0.03566596784143775
+          }
+        },
+        {
+          "Split": {
+            "feature": 2,
+            "left": 13,
+            "rate": 0.3710653613745416,
+            "right": 14,
+            "threshold": 1.5,
+            "weight": 0.2531360583117902
+          }
+        },
+        {
+          "Leaf": {
+            "rate": 0.29412334848280985,
+            "weight": 0.16350907312502722
+          }
+        },
+        {
+          "Leaf": {
+            "rate": 0.5114328766503541,
+            "weight": 0.08962698518667166
+          }
+        }
+      ]
+    }
+  },
+  "b_tree_won": [
+    "Δprisoners ≤ 0.5 and Δprisoners ≤ -0.5 and Δown_exposed ≤ 0.5 → keeps 0.093 (17.7 % of weight)",
+    "Δprisoners ≤ 0.5 and Δprisoners ≤ -0.5 and Δown_exposed > 0.5 → keeps 0.300 (3.9 % of weight)",
+    "Δprisoners ≤ 0.5 and Δprisoners > -0.5 and source_height ≤ 3.5 → keeps 0.269 (38.9 % of weight)",
+    "Δprisoners ≤ 0.5 and Δprisoners > -0.5 and source_height > 3.5 → keeps 0.438 (12.1 % of weight)",
+    "Δprisoners > 0.5 and Δown_exposed ≤ -0.5 and Δown_exposed ≤ -1.5 → keeps 0.960 (2.5 % of weight)",
+    "Δprisoners > 0.5 and Δown_exposed ≤ -0.5 and Δown_exposed > -1.5 → keeps 0.834 (4.7 % of weight)",
+    "Δprisoners > 0.5 and Δown_exposed > -0.5 and Δmy_win_now ≤ 0.5 → keeps 0.483 (16.4 % of weight)",
+    "Δprisoners > 0.5 and Δown_exposed > -0.5 and Δmy_win_now > 0.5 → keeps 0.758 (3.8 % of weight)"
+  ],
+  "estimated_class_size": {
+    "drawn": 4780385.009892715,
+    "won_in_3_or_more": 141510932.7983952
+  },
+  "game_positions": {
+    "games": 500,
+    "players": [
+      {
+        "player": "control: table oracle (expect 1)",
+        "rates": {
+          "by_height": {
+            "drawn, max height 2-3": {
+              "ci95": [
+                1.0,
+                1.0
+              ],
+              "positions": 42,
+              "rate": 1.0
+            },
+            "drawn, max height 4-5": {
+              "ci95": [
+                1.0,
+                1.0
+              ],
+              "positions": 96,
+              "rate": 1.0
+            },
+            "drawn, max height 6+": {
+              "ci95": [
+                1.0,
+                1.0
+              ],
+              "positions": 39,
+              "rate": 1.0
+            },
+            "won, max height 2-3": {
+              "ci95": [
+                1.0,
+                1.0
+              ],
+              "positions": 362,
+              "rate": 1.0
+            },
+            "won, max height 4-5": {
+              "ci95": [
+                1.0,
+                1.0
+              ],
+              "positions": 1434,
+              "rate": 1.0
+            },
+            "won, max height 6+": {
+              "ci95": [
+                1.0,
+                1.0
+              ],
+              "positions": 856,
+              "rate": 1.0
+            }
+          },
+          "drawn": {
+            "ci95": [
+              1.0,
+              1.0
+            ],
+            "positions": 177,
+            "rate": 1.0
+          },
+          "mean_of_classes": 1.0,
+          "won": {
+            "ci95": [
+              1.0,
+              1.0
+            ],
+            "positions": 2652,
+            "rate": 1.0
+          }
+        }
+      },
+      {
+        "player": "control: positions where every move keeps the value",
+        "rates": {
+          "by_height": {
+            "drawn, max height 2-3": {
+              "ci95": [
+                0.0,
+                0.0
+              ],
+              "positions": 42,
+              "rate": 0.0
+            },
+            "drawn, max height 4-5": {
+              "ci95": [
+                0.0,
+                0.0
+              ],
+              "positions": 96,
+              "rate": 0.0
+            },
+            "drawn, max height 6+": {
+              "ci95": [
+                0.0,
+                0.0
+              ],
+              "positions": 39,
+              "rate": 0.0
+            },
+            "won, max height 2-3": {
+              "ci95": [
+                -0.0026519337016574817,
+                0.00817679558011052
+              ],
+              "positions": 362,
+              "rate": 0.0027624309392265192
+            },
+            "won, max height 4-5": {
+              "ci95": [
+                0.0,
+                0.0
+              ],
+              "positions": 1434,
+              "rate": 0.0
+            },
+            "won, max height 6+": {
+              "ci95": [
+                0.0014171246485690358,
+                0.01260156694021601
+              ],
+              "positions": 856,
+              "rate": 0.007009345794392523
+            }
+          },
+          "drawn": {
+            "ci95": [
+              0.0,
+              0.0
+            ],
+            "positions": 177,
+            "rate": 0.0
+          },
+          "mean_of_classes": 0.0013197586726998493,
+          "won": {
+            "ci95": [
+              0.0006863495900382034,
+              0.004592685100761194
+            ],
+            "positions": 2652,
+            "rate": 0.0026395173453996985
+          }
+        }
+      },
+      {
+        "player": "control: anti-oracle (expect the line above)",
+        "rates": {
+          "by_height": {
+            "drawn, max height 2-3": {
+              "ci95": [
+                0.0,
+                0.0
+              ],
+              "positions": 42,
+              "rate": 0.0
+            },
+            "drawn, max height 4-5": {
+              "ci95": [
+                0.0,
+                0.0
+              ],
+              "positions": 96,
+              "rate": 0.0
+            },
+            "drawn, max height 6+": {
+              "ci95": [
+                0.0,
+                0.0
+              ],
+              "positions": 39,
+              "rate": 0.0
+            },
+            "won, max height 2-3": {
+              "ci95": [
+                -0.0026519337016574817,
+                0.00817679558011052
+              ],
+              "positions": 362,
+              "rate": 0.0027624309392265192
+            },
+            "won, max height 4-5": {
+              "ci95": [
+                0.0,
+                0.0
+              ],
+              "positions": 1434,
+              "rate": 0.0
+            },
+            "won, max height 6+": {
+              "ci95": [
+                0.0014171246485690358,
+                0.01260156694021601
+              ],
+              "positions": 856,
+              "rate": 0.007009345794392523
+            }
+          },
+          "drawn": {
+            "ci95": [
+              0.0,
+              0.0
+            ],
+            "positions": 177,
+            "rate": 0.0
+          },
+          "mean_of_classes": 0.0013197586726998493,
+          "won": {
+            "ci95": [
+              0.0006863495900382034,
+              0.004592685100761194
+            ],
+            "positions": 2652,
+            "rate": 0.0026395173453996985
+          }
+        }
+      },
+      {
+        "player": "random",
+        "rates": {
+          "by_height": {
+            "drawn, max height 2-3": {
+              "ci95": [
+                0.09902473256946978,
+                0.14840929236344944
+              ],
+              "positions": 42,
+              "rate": 0.12371701246645961
+            },
+            "drawn, max height 4-5": {
+              "ci95": [
+                0.12093850699469882,
+                0.15307409049409826
+              ],
+              "positions": 96,
+              "rate": 0.13700629874439854
+            },
+            "drawn, max height 6+": {
+              "ci95": [
+                0.15651657567820945,
+                0.2548765549754592
+              ],
+              "positions": 39,
+              "rate": 0.20569656532683434
+            },
+            "won, max height 2-3": {
+              "ci95": [
+                0.22561004811328217,
+                0.2623246522217583
+              ],
+              "positions": 362,
+              "rate": 0.24396735016752025
+            },
+            "won, max height 4-5": {
+              "ci95": [
+                0.24350977332152599,
+                0.26311598937913416
+              ],
+              "positions": 1434,
+              "rate": 0.2533128813503301
+            },
+            "won, max height 6+": {
+              "ci95": [
+                0.3192548689977896,
+                0.34719004346492127
+              ],
+              "positions": 856,
+              "rate": 0.33322245623135544
+            }
+          },
+          "drawn": {
+            "ci95": [
+              0.1333412294302589,
+              0.1646348750985558
+            ],
+            "positions": 177,
+            "rate": 0.14898805226440734
+          },
+          "mean_of_classes": 0.2134090478424328,
+          "won": {
+            "ci95": [
+              0.2702937517121962,
+              0.2853663351287203
+            ],
+            "positions": 2652,
+            "rate": 0.27783004342045825
+          }
+        }
+      },
+      {
+        "player": "greedy",
+        "rates": {
+          "by_height": {
+            "drawn, max height 2-3": {
+              "ci95": [
+                0.1151834119457567,
+                0.2963245245621798
+              ],
+              "positions": 42,
+              "rate": 0.20575396825396824
+            },
+            "drawn, max height 4-5": {
+              "ci95": [
+                0.23882704784322245,
+                0.36955588866471395
+              ],
+              "positions": 96,
+              "rate": 0.3041914682539682
+            },
+            "drawn, max height 6+": {
+              "ci95": [
+                0.2930166422034358,
+                0.5586317094449158
+              ],
+              "positions": 39,
+              "rate": 0.4258241758241758
+            },
+            "won, max height 2-3": {
+              "ci95": [
+                0.550998507532447,
+                0.6284805769190133
+              ],
+              "positions": 362,
+              "rate": 0.5897395422257301
+            },
+            "won, max height 4-5": {
+              "ci95": [
+                0.6130038915275076,
+                0.6504267387441269
+              ],
+              "positions": 1434,
+              "rate": 0.6317153151358172
+            },
+            "won, max height 6+": {
+              "ci95": [
+                0.7320936329257846,
+                0.7769832844455262
+              ],
+              "positions": 856,
+              "rate": 0.7545384586856554
+            }
+          },
+          "drawn": {
+            "ci95": [
+              0.2560157982979954,
+              0.3592518906985073
+            ],
+            "positions": 177,
+            "rate": 0.3076338444982514
+          },
+          "mean_of_classes": 0.48663185377729273,
+          "won": {
+            "ci95": [
+              0.6519034464186261,
+              0.6793562796940421
+            ],
+            "positions": 2652,
+            "rate": 0.6656298630563341
+          }
+        }
+      },
+      {
+        "player": "greedy-2ply",
+        "rates": {
+          "by_height": {
+            "drawn, max height 2-3": {
+              "ci95": [
+                0.13104591869465046,
+                0.30914682506952196
+              ],
+              "positions": 42,
+              "rate": 0.2200963718820862
+            },
+            "drawn, max height 4-5": {
+              "ci95": [
+                0.3391637227216299,
+                0.5016596899767829
+              ],
+              "positions": 96,
+              "rate": 0.4204117063492064
+            },
+            "drawn, max height 6+": {
+              "ci95": [
+                0.3529911156530779,
+                0.6205131578511955
+              ],
+              "positions": 39,
+              "rate": 0.4867521367521367
+            },
+            "won, max height 2-3": {
+              "ci95": [
+                0.5943136769167042,
+                0.6725853847337387
+              ],
+              "positions": 362,
+              "rate": 0.6334495308252215
+            },
+            "won, max height 4-5": {
+              "ci95": [
+                0.754392913315937,
+                0.7897814463395951
+              ],
+              "positions": 1434,
+              "rate": 0.7720871798277661
+            },
+            "won, max height 6+": {
+              "ci95": [
+                0.8720648412273173,
+                0.9065510911269328
+              ],
+              "positions": 856,
+              "rate": 0.889307966177125
+            }
+          },
+          "drawn": {
+            "ci95": [
+              0.3289522948350486,
+              0.446040979310768
+            ],
+            "positions": 177,
+            "rate": 0.3874966370729083
+          },
+          "mean_of_classes": 0.5892478217565456,
+          "won": {
+            "ci95": [
+              0.778324459951514,
+              0.8036735529288517
+            ],
+            "positions": 2652,
+            "rate": 0.7909990064401828
+          }
+        }
+      },
+      {
+        "player": "greedy, then most prisoners",
+        "rates": {
+          "by_height": {
+            "drawn, max height 2-3": {
+              "ci95": [
+                0.1118754099655673,
+                0.32820395511379785
+              ],
+              "positions": 42,
+              "rate": 0.22003968253968256
+            },
+            "drawn, max height 4-5": {
+              "ci95": [
+                0.2776856732525097,
+                0.4480087711919346
+              ],
+              "positions": 96,
+              "rate": 0.36284722222222215
+            },
+            "drawn, max height 6+": {
+              "ci95": [
+                0.2676554240794683,
+                0.5528573964333522
+              ],
+              "positions": 39,
+              "rate": 0.41025641025641024
+            },
+            "won, max height 2-3": {
+              "ci95": [
+                0.5789376149864227,
+                0.6656361813829537
+              ],
+              "positions": 362,
+              "rate": 0.6222868981846882
+            },
+            "won, max height 4-5": {
+              "ci95": [
+                0.7130897614458015,
+                0.7543733232766975
+              ],
+              "positions": 1434,
+              "rate": 0.7337315423612495
+            },
+            "won, max height 6+": {
+              "ci95": [
+                0.794301879348644,
+                0.841974266623764
+              ],
+              "positions": 856,
+              "rate": 0.818138072986204
+            }
+          },
+          "drawn": {
+            "ci95": [
+              0.2774246050461635,
+              0.4013889542758705
+            ],
+            "positions": 177,
+            "rate": 0.339406779661017
+          },
+          "mean_of_classes": 0.5425851921240757,
+          "won": {
+            "ci95": [
+              0.7307904577640133,
+              0.7607367514102558
+            ],
+            "positions": 2652,
+            "rate": 0.7457636045871345
+          }
+        }
+      },
+      {
+        "player": "greedy, then fewest prisoners",
+        "rates": {
+          "by_height": {
+            "drawn, max height 2-3": {
+              "ci95": [
+                0.08867714303959365,
+                0.27997365061119994
+              ],
+              "positions": 42,
+              "rate": 0.1843253968253968
+            },
+            "drawn, max height 4-5": {
+              "ci95": [
+                0.16781192302024053,
+                0.3210769658686483
+              ],
+              "positions": 96,
+              "rate": 0.24444444444444444
+            },
+            "drawn, max height 6+": {
+              "ci95": [
+                0.26183859916959196,
+                0.5449990076680149
+              ],
+              "positions": 39,
+              "rate": 0.40341880341880343
+            },
+            "won, max height 2-3": {
+              "ci95": [
+                0.4959794336269439,
+                0.5871236971281206
+              ],
+              "positions": 362,
+              "rate": 0.5415515653775322
+            },
+            "won, max height 4-5": {
+              "ci95": [
+                0.5134798496963848,
+                0.5602283923172968
+              ],
+              "positions": 1434,
+              "rate": 0.5368541210068408
+            },
+            "won, max height 6+": {
+              "ci95": [
+                0.6571007622447345,
+                0.7157408042884212
+              ],
+              "positions": 856,
+              "rate": 0.6864207832665778
+            }
+          },
+          "drawn": {
+            "ci95": [
+              0.2076797357554555,
+              0.32273457686224705
+            ],
+            "positions": 177,
+            "rate": 0.2652071563088513
+          },
+          "mean_of_classes": 0.42548945045206266,
+          "won": {
+            "ci95": [
+              0.568602292211278,
+              0.6029411969792701
+            ],
+            "positions": 2652,
+            "rate": 0.585771744595274
+          }
+        }
+      },
+      {
+        "player": "greedy, then fewest opp_mobility",
+        "rates": {
+          "by_height": {
+            "drawn, max height 2-3": {
+              "ci95": [
+                0.11621827403644384,
+                0.35600394818577835
+              ],
+              "positions": 42,
+              "rate": 0.2361111111111111
+            },
+            "drawn, max height 4-5": {
+              "ci95": [
+                0.28308719913438085,
+                0.46691280086561915
+              ],
+              "positions": 96,
+              "rate": 0.375
+            },
+            "drawn, max height 6+": {
+              "ci95": [
+                0.2732659029433454,
+                0.5728879432105007
+              ],
+              "positions": 39,
+              "rate": 0.4230769230769231
+            },
+            "won, max height 2-3": {
+              "ci95": [
+                0.6288242363489636,
+                0.7201628723066535
+              ],
+              "positions": 362,
+              "rate": 0.6744935543278086
+            },
+            "won, max height 4-5": {
+              "ci95": [
+                0.7464437820530814,
+                0.7876798813592847
+              ],
+              "positions": 1434,
+              "rate": 0.767061831706183
+            },
+            "won, max height 6+": {
+              "ci95": [
+                0.8011375833952331,
+                0.8490932799781538
+              ],
+              "positions": 856,
+              "rate": 0.8251154316866934
+            }
+          },
+          "drawn": {
+            "ci95": [
+              0.2860362793265819,
+              0.4192367903532675
+            ],
+            "positions": 177,
+            "rate": 0.3526365348399247
+          },
+          "mean_of_classes": 0.5629004964654268,
+          "won": {
+            "ci95": [
+              0.7581281355550326,
+              0.7882007806268255
+            ],
+            "positions": 2652,
+            "rate": 0.773164458090929
+          }
+        }
+      },
+      {
+        "player": "greedy, then most opp_mobility",
+        "rates": {
+          "by_height": {
+            "drawn, max height 2-3": {
+              "ci95": [
+                0.047150854258663805,
+                0.25046819336038384
+              ],
+              "positions": 42,
+              "rate": 0.1488095238095238
+            },
+            "drawn, max height 4-5": {
+              "ci95": [
+                0.1328935401309556,
+                0.29141201542459994
+              ],
+              "positions": 96,
+              "rate": 0.21215277777777777
+            },
+            "drawn, max height 6+": {
+              "ci95": [
+                0.24767864260235004,
+                0.5335179385942311
+              ],
+              "positions": 39,
+              "rate": 0.3905982905982906
+            },
+            "won, max height 2-3": {
+              "ci95": [
+                0.43892683602651017,
+                0.5394341216162156
+              ],
+              "positions": 362,
+              "rate": 0.4891804788213629
+            },
+            "won, max height 4-5": {
+              "ci95": [
+                0.47867535514164394,
+                0.5285770855836004
+              ],
+              "positions": 1434,
+              "rate": 0.5036262203626222
+            },
+            "won, max height 6+": {
+              "ci95": [
+                0.6500415360917875,
+                0.7098689000452847
+              ],
+              "positions": 856,
+              "rate": 0.6799552180685361
+            }
+          },
+          "drawn": {
+            "ci95": [
+              0.17691624142834622,
+              0.2959651145038572
+            ],
+            "positions": 177,
+            "rate": 0.23644067796610171
+          },
+          "mean_of_classes": 0.39750484124549423,
+          "won": {
+            "ci95": [
+              0.5403407752712742,
+              0.5767972337784993
+            ],
+            "positions": 2652,
+            "rate": 0.5585690045248868
+          }
+        }
+      },
+      {
+        "player": "greedy, then most dest_height",
+        "rates": {
+          "by_height": {
+            "drawn, max height 2-3": {
+              "ci95": [
+                0.10737828559435014,
+                0.3370661588500942
+              ],
+              "positions": 42,
+              "rate": 0.22222222222222218
+            },
+            "drawn, max height 4-5": {
+              "ci95": [
+                0.26867946303688983,
+                0.45145942585199894
+              ],
+              "positions": 96,
+              "rate": 0.3600694444444444
+            },
+            "drawn, max height 6+": {
+              "ci95": [
+                0.24918583848245415,
+                0.5456859563893408
+              ],
+              "positions": 39,
+              "rate": 0.39743589743589747
+            },
+            "won, max height 2-3": {
+              "ci95": [
+                0.6300896691740347,
+                0.717332061949354
+              ],
+              "positions": 362,
+              "rate": 0.6737108655616943
+            },
+            "won, max height 4-5": {
+              "ci95": [
+                0.7419398049330194,
+                0.7828493296887508
+              ],
+              "positions": 1434,
+              "rate": 0.7623945673108851
+            },
+            "won, max height 6+": {
+              "ci95": [
+                0.7901767359936687,
+                0.83943774998764
+              ],
+              "positions": 856,
+              "rate": 0.8148072429906543
+            }
+          },
+          "drawn": {
+            "ci95": [
+              0.26992864241328474,
+              0.40125779826468144
+            ],
+            "positions": 177,
+            "rate": 0.3355932203389831
+          },
+          "mean_of_classes": 0.5513999553537194,
+          "won": {
+            "ci95": [
+              0.7522526394251174,
+              0.7821607413117939
+            ],
+            "positions": 2652,
+            "rate": 0.7672066903684557
+          }
+        }
+      },
+      {
+        "player": "greedy, then fewest dest_height",
+        "rates": {
+          "by_height": {
+            "drawn, max height 2-3": {
+              "ci95": [
+                0.07494435968690688,
+                0.2941032593607122
+              ],
+              "positions": 42,
+              "rate": 0.18452380952380953
+            },
+            "drawn, max height 4-5": {
+              "ci95": [
+                0.1835507214844712,
+                0.35533816740441765
+              ],
+              "positions": 96,
+              "rate": 0.26944444444444443
+            },
+            "drawn, max height 6+": {
+              "ci95": [
+                0.295953941158462,
+                0.5878067426022215
+              ],
+              "positions": 39,
+              "rate": 0.4418803418803418
+            },
+            "won, max height 2-3": {
+              "ci95": [
+                0.44514496768514705,
+                0.5424240930883336
+              ],
+              "positions": 362,
+              "rate": 0.4937845303867403
+            },
+            "won, max height 4-5": {
+              "ci95": [
+                0.49002482127738084,
+                0.5388786787558266
+              ],
+              "positions": 1434,
+              "rate": 0.5144517500166037
+            },
+            "won, max height 6+": {
+              "ci95": [
+                0.6635663616107432,
+                0.7227459436852073
+              ],
+              "positions": 856,
+              "rate": 0.6931561526479753
+            }
+          },
+          "drawn": {
+            "ci95": [
+              0.22396282822935293,
+              0.3506134429570878
+            ],
+            "positions": 177,
+            "rate": 0.28728813559322036
+          },
+          "mean_of_classes": 0.4283000776364436,
+          "won": {
+            "ci95": [
+              0.5514183324233016,
+              0.5872057069360322
+            ],
+            "positions": 2652,
+            "rate": 0.5693120196796669
+          }
+        }
+      },
+      {
+        "player": "greedy, then most own_mobility",
+        "rates": {
+          "by_height": {
+            "drawn, max height 2-3": {
+              "ci95": [
+                0.16881386105762594,
+                0.4343607421169773
+              ],
+              "positions": 42,
+              "rate": 0.3015873015873016
+            },
+            "drawn, max height 4-5": {
+              "ci95": [
+                0.2573746002991055,
+                0.4301253997008945
+              ],
+              "positions": 96,
+              "rate": 0.34375
+            },
+            "drawn, max height 6+": {
+              "ci95": [
+                0.30041538532662754,
+                0.6098410249297828
+              ],
+              "positions": 39,
+              "rate": 0.4551282051282051
+            },
+            "won, max height 2-3": {
+              "ci95": [
+                0.6827419853899338,
+                0.7711254179249832
+              ],
+              "positions": 362,
+              "rate": 0.7269337016574585
+            },
+            "won, max height 4-5": {
+              "ci95": [
+                0.7041278849274059,
+                0.7472900602143885
+              ],
+              "positions": 1434,
+              "rate": 0.7257089725708972
+            },
+            "won, max height 6+": {
+              "ci95": [
+                0.7844880228298031,
+                0.8341256843353061
+              ],
+              "positions": 856,
+              "rate": 0.8093068535825546
+            }
+          },
+          "drawn": {
+            "ci95": [
+              0.29224364108564493,
+              0.42432886362245303
+            ],
+            "positions": 177,
+            "rate": 0.358286252354049
+          },
+          "mean_of_classes": 0.555572864739116,
+          "won": {
+            "ci95": [
+              0.7374077167711598,
+              0.7683112374772062
+            ],
+            "positions": 2652,
+            "rate": 0.752859477124183
+          }
+        }
+      },
+      {
+        "player": "greedy, then fewest own_mobility",
+        "rates": {
+          "by_height": {
+            "drawn, max height 2-3": {
+              "ci95": [
+                0.040957089611648054,
+                0.22888418022962181
+              ],
+              "positions": 42,
+              "rate": 0.13492063492063494
+            },
+            "drawn, max height 4-5": {
+              "ci95": [
+                0.18080865940804897,
+                0.3400246739252843
+              ],
+              "positions": 96,
+              "rate": 0.26041666666666663
+            },
+            "drawn, max height 6+": {
+              "ci95": [
+                0.2439361073945024,
+                0.5509356874772924
+              ],
+              "positions": 39,
+              "rate": 0.3974358974358974
+            },
+            "won, max height 2-3": {
+              "ci95": [
+                0.437874193634228,
+                0.5356985503805053
+              ],
+              "positions": 362,
+              "rate": 0.48678637200736663
+            },
+            "won, max height 4-5": {
+              "ci95": [
+                0.5278302738151595,
+                0.5750288614707544
+              ],
+              "positions": 1434,
+              "rate": 0.5514295676429569
+            },
+            "won, max height 6+": {
+              "ci95": [
+                0.6711409678127859,
+                0.7293263219068405
+              ],
+              "positions": 856,
+              "rate": 0.7002336448598132
+            }
+          },
+          "drawn": {
+            "ci95": [
+              0.20052791449773552,
+              0.32112933597307425
+            ],
+            "positions": 177,
+            "rate": 0.2608286252354049
+          },
+          "mean_of_classes": 0.42573231161217184,
+          "won": {
+            "ci95": [
+              0.5731912527985527,
+              0.608080743179325
+            ],
+            "positions": 2652,
+            "rate": 0.5906359979889388
+          }
+        }
+      },
+      {
+        "player": "greedy, then most own_max_height",
+        "rates": {
+          "by_height": {
+            "drawn, max height 2-3": {
+              "ci95": [
+                0.10863763784087166,
+                0.3596163304130966
+              ],
+              "positions": 42,
+              "rate": 0.23412698412698413
+            },
+            "drawn, max height 4-5": {
+              "ci95": [
+                0.26847374838918064,
+                0.4520123627219304
+              ],
+              "positions": 96,
+              "rate": 0.3602430555555555
+            },
+            "drawn, max height 6+": {
+              "ci95": [
+                0.3007477012257098,
+                0.605235204757196
+              ],
+              "positions": 39,
+              "rate": 0.45299145299145294
+            },
+            "won, max height 2-3": {
+              "ci95": [
+                0.5517525156167189,
+                0.6476029171641282
+              ],
+              "positions": 362,
+              "rate": 0.5996777163904236
+            },
+            "won, max height 4-5": {
+              "ci95": [
+                0.7236165351195709,
+                0.7665973189018143
+              ],
+              "positions": 1434,
+              "rate": 0.7451069270106926
+            },
+            "won, max height 6+": {
+              "ci95": [
+                0.7856151445205678,
+                0.835607596912454
+              ],
+              "positions": 856,
+              "rate": 0.8106113707165109
+            }
+          },
+          "drawn": {
+            "ci95": [
+              0.28322240273124055,
+              0.41828418860585925
+            ],
+            "positions": 177,
+            "rate": 0.3507532956685499
+          },
+          "mean_of_classes": 0.5485761199308059,
+          "won": {
+            "ci95": [
+              0.730621906233308,
+              0.7621759821528159
+            ],
+            "positions": 2652,
+            "rate": 0.746398944193062
+          }
+        }
+      },
+      {
+        "player": "greedy, then fewest own_max_height",
+        "rates": {
+          "by_height": {
+            "drawn, max height 2-3": {
+              "ci95": [
+                0.1419370972423275,
+                0.402507347202117
+              ],
+              "positions": 42,
+              "rate": 0.27222222222222225
+            },
+            "drawn, max height 4-5": {
+              "ci95": [
+                0.13563668088694178,
+                0.292141096890836
+              ],
+              "positions": 96,
+              "rate": 0.21388888888888888
+            },
+            "drawn, max height 6+": {
+              "ci95": [
+                0.24020849541456113,
+                0.5281675729615072
+              ],
+              "positions": 39,
+              "rate": 0.38418803418803416
+            },
+            "won, max height 2-3": {
+              "ci95": [
+                0.5216057835534297,
+                0.6165157634078963
+              ],
+              "positions": 362,
+              "rate": 0.569060773480663
+            },
+            "won, max height 4-5": {
+              "ci95": [
+                0.5200239416055643,
+                0.5690409451580671
+              ],
+              "positions": 1434,
+              "rate": 0.5445324433818157
+            },
+            "won, max height 6+": {
+              "ci95": [
+                0.6635710298703885,
+                0.7229387609618321
+              ],
+              "positions": 856,
+              "rate": 0.6932548954161103
+            }
+          },
+          "drawn": {
+            "ci95": [
+              0.20347494877117778,
+              0.3270335258050935
+            ],
+            "positions": 177,
+            "rate": 0.26525423728813563
+          },
+          "mean_of_classes": 0.43056937246867466,
+          "won": {
+            "ci95": [
+              0.5781137973859873,
+              0.6136552179124402
+            ],
+            "positions": 2652,
+            "rate": 0.5958845076492137
+          }
+        }
+      },
+      {
+        "player": "greedy, then most opp_singletons",
+        "rates": {
+          "by_height": {
+            "drawn, max height 2-3": {
+              "ci95": [
+                0.10937709968619885,
+                0.3088768685677694
+              ],
+              "positions": 42,
+              "rate": 0.20912698412698413
+            },
+            "drawn, max height 4-5": {
+              "ci95": [
+                0.273450720921915,
+                0.42516039018919605
+              ],
+              "positions": 96,
+              "rate": 0.34930555555555554
+            },
+            "drawn, max height 6+": {
+              "ci95": [
+                0.2790977022229283,
+                0.55911963599441
+              ],
+              "positions": 39,
+              "rate": 0.4191086691086691
+            },
+            "won, max height 2-3": {
+              "ci95": [
+                0.5982985534678756,
+                0.6800010168206448
+              ],
+              "positions": 362,
+              "rate": 0.6391497851442602
+            },
+            "won, max height 4-5": {
+              "ci95": [
+                0.6950731489217481,
+                0.7340727632785573
+              ],
+              "positions": 1434,
+              "rate": 0.7145729561001527
+            },
+            "won, max height 6+": {
+              "ci95": [
+                0.758046471592892,
+                0.8061085128307844
+              ],
+              "positions": 856,
+              "rate": 0.7820774922118382
+            }
+          },
+          "drawn": {
+            "ci95": [
+              0.2741053245702472,
+              0.38874105692020217
+            ],
+            "positions": 177,
+            "rate": 0.3314231907452247
+          },
+          "mean_of_classes": 0.5287448107955339,
+          "won": {
+            "ci95": [
+              0.7117366217778429,
+              0.7403962399138433
+            ],
+            "positions": 2652,
+            "rate": 0.7260664308458431
+          }
+        }
+      },
+      {
+        "player": "greedy, then fewest opp_singletons",
+        "rates": {
+          "by_height": {
+            "drawn, max height 2-3": {
+              "ci95": [
+                0.09005764662449948,
+                0.29327568670883386
+              ],
+              "positions": 42,
+              "rate": 0.19166666666666668
+            },
+            "drawn, max height 4-5": {
+              "ci95": [
+                0.15899341103073636,
+                0.30420103341370797
+              ],
+              "positions": 96,
+              "rate": 0.23159722222222215
+            },
+            "drawn, max height 6+": {
+              "ci95": [
+                0.2902456276748396,
+                0.5667751293459173
+              ],
+              "positions": 39,
+              "rate": 0.4285103785103785
+            },
+            "won, max height 2-3": {
+              "ci95": [
+                0.4693975570852378,
+                0.5613048896393085
+              ],
+              "positions": 362,
+              "rate": 0.5153512233622731
+            },
+            "won, max height 4-5": {
+              "ci95": [
+                0.5248784241854316,
+                0.5715966372477888
+              ],
+              "positions": 1434,
+              "rate": 0.5482375307166102
+            },
+            "won, max height 6+": {
+              "ci95": [
+                0.6967144699459707,
+                0.7508517294309763
+              ],
+              "positions": 856,
+              "rate": 0.7237830996884735
+            }
+          },
+          "drawn": {
+            "ci95": [
+              0.20900294405476072,
+              0.3220166954394551
+            ],
+            "positions": 177,
+            "rate": 0.2655098197471079
+          },
+          "mean_of_classes": 0.43296005603458254,
+          "won": {
+            "ci95": [
+              0.5835076497551569,
+              0.6173129348889576
+            ],
+            "positions": 2652,
+            "rate": 0.6004102923220572
+          }
+        }
+      },
+      {
+        "player": "list (pooled): most prisoners, then most own_mobility, then most top_diff",
+        "rates": {
+          "by_height": {
+            "drawn, max height 2-3": {
+              "ci95": [
+                0.13937403843085872,
+                0.40824500918818896
+              ],
+              "positions": 42,
+              "rate": 0.27380952380952384
+            },
+            "drawn, max height 4-5": {
+              "ci95": [
+                0.23115516269516945,
+                0.4146781706381639
+              ],
+              "positions": 96,
+              "rate": 0.3229166666666667
+            },
+            "drawn, max height 6+": {
+              "ci95": [
+                0.2374446842613581,
+                0.5446065977899239
+              ],
+              "positions": 39,
+              "rate": 0.391025641025641
+            },
+            "won, max height 2-3": {
+              "ci95": [
+                0.6207607249829774,
+                0.7162558496026579
+              ],
+              "positions": 362,
+              "rate": 0.6685082872928176
+            },
+            "won, max height 4-5": {
+              "ci95": [
+                0.7700133658863888,
+                0.8111116922261175
+              ],
+              "positions": 1434,
+              "rate": 0.7905625290562531
+            },
+            "won, max height 6+": {
+              "ci95": [
+                0.7884056564681321,
+                0.8393202002296876
+              ],
+              "positions": 856,
+              "rate": 0.8138629283489098
+            }
+          },
+          "drawn": {
+            "ci95": [
+              0.2582949813912817,
+              0.39424739149007426
+            ],
+            "positions": 177,
+            "rate": 0.326271186440678
+          },
+          "mean_of_classes": 0.5538470059905752,
+          "won": {
+            "ci95": [
+              0.7660492573581028,
+              0.7967963937228422
+            ],
+            "positions": 2652,
+            "rate": 0.7814228255404725
+          }
+        }
+      },
+      {
+        "player": "negated list (pooled)",
+        "rates": {
+          "by_height": {
+            "drawn, max height 2-3": {
+              "ci95": [
+                0.009277396077645078,
+                0.15738927058902158
+              ],
+              "positions": 42,
+              "rate": 0.08333333333333333
+            },
+            "drawn, max height 4-5": {
+              "ci95": [
+                -0.0014593585110799466,
+                0.06048713628885771
+              ],
+              "positions": 96,
+              "rate": 0.029513888888888885
+            },
+            "drawn, max height 6+": {
+              "ci95": [
+                0.0,
+                0.0
+              ],
+              "positions": 39,
+              "rate": 0.0
+            },
+            "won, max height 2-3": {
+              "ci95": [
+                0.012075994872475009,
+                0.043172623912055376
+              ],
+              "positions": 362,
+              "rate": 0.027624309392265192
+            },
+            "won, max height 4-5": {
+              "ci95": [
+                0.008046295802599282,
+                0.01949903195193349
+              ],
+              "positions": 1434,
+              "rate": 0.013772663877266387
+            },
+            "won, max height 6+": {
+              "ci95": [
+                0.01870622930868971,
+                0.04009439374426979
+              ],
+              "positions": 856,
+              "rate": 0.02940031152647975
+            }
+          },
+          "drawn": {
+            "ci95": [
+              0.011238811182561512,
+              0.06032427732967956
+            ],
+            "positions": 177,
+            "rate": 0.03578154425612053
+          },
+          "mean_of_classes": 0.02824459314364599,
+          "won": {
+            "ci95": [
+              0.015602149184191706,
+              0.025813134878151178
+            ],
+            "positions": 2652,
+            "rate": 0.020707642031171442
+          }
+        }
+      },
+      {
+        "player": "list (drawn): most prisoners, then most top_diff, then fewest distance",
+        "rates": {
+          "by_height": {
+            "drawn, max height 2-3": {
+              "ci95": [
+                0.10976391643598735,
+                0.350553543881473
+              ],
+              "positions": 42,
+              "rate": 0.23015873015873015
+            },
+            "drawn, max height 4-5": {
+              "ci95": [
+                0.2662393856481295,
+                0.4490383921296482
+              ],
+              "positions": 96,
+              "rate": 0.35763888888888884
+            },
+            "drawn, max height 6+": {
+              "ci95": [
+                0.23854836018668554,
+                0.5306824090440837
+              ],
+              "positions": 39,
+              "rate": 0.38461538461538464
+            },
+            "won, max height 2-3": {
+              "ci95": [
+                0.5884587312723243,
+                0.6817727867492492
+              ],
+              "positions": 362,
+              "rate": 0.6351157590107868
+            },
+            "won, max height 4-5": {
+              "ci95": [
+                0.7639999020515832,
+                0.804642589812666
+              ],
+              "positions": 1434,
+              "rate": 0.7843212459321246
+            },
+            "won, max height 6+": {
+              "ci95": [
+                0.796056351842767,
+                0.8458244892787286
+              ],
+              "positions": 856,
+              "rate": 0.8209404205607478
+            }
+          },
+          "drawn": {
+            "ci95": [
+              0.26747985686510467,
+              0.39918680980156196
+            ],
+            "positions": 177,
+            "rate": 0.3333333333333333
+          },
+          "mean_of_classes": 0.554553840767076,
+          "won": {
+            "ci95": [
+              0.7605903831061216,
+              0.7909583132955158
+            ],
+            "positions": 2652,
+            "rate": 0.7757743482008187
+          }
+        }
+      },
+      {
+        "player": "negated list (drawn)",
+        "rates": {
+          "by_height": {
+            "drawn, max height 2-3": {
+              "ci95": [
+                0.032217660367913015,
+                0.17016329201303937
+              ],
+              "positions": 42,
+              "rate": 0.10119047619047619
+            },
+            "drawn, max height 4-5": {
+              "ci95": [
+                0.007447051158476978,
+                0.07935850439707859
+              ],
+              "positions": 96,
+              "rate": 0.04340277777777778
+            },
+            "drawn, max height 6+": {
+              "ci95": [
+                0.0023696293348843683,
+                0.15147652451126947
+              ],
+              "positions": 39,
+              "rate": 0.07692307692307693
+            },
+            "won, max height 2-3": {
+              "ci95": [
+                0.021935206723167636,
+                0.05817529051440143
+              ],
+              "positions": 362,
+              "rate": 0.04005524861878453
+            },
+            "won, max height 4-5": {
+              "ci95": [
+                0.008905969444574394,
+                0.019917833437805895
+              ],
+              "positions": 1434,
+              "rate": 0.014411901441190145
+            },
+            "won, max height 6+": {
+              "ci95": [
+                0.020694833279882398,
+                0.04225020454833301
+              ],
+              "positions": 856,
+              "rate": 0.031472518914107704
+            }
+          },
+          "drawn": {
+            "ci95": [
+              0.03418830484341179,
+              0.09481357839575957
+            ],
+            "positions": 177,
+            "rate": 0.06450094161958568
+          },
+          "mean_of_classes": 0.043959962298696094,
+          "won": {
+            "ci95": [
+              0.01820315703174687,
+              0.028634808923866144
+            ],
+            "positions": 2652,
+            "rate": 0.023418982977806507
+          }
+        }
+      },
+      {
+        "player": "tree (pooled, depth 3)",
+        "rates": {
+          "by_height": {
+            "drawn, max height 2-3": {
+              "ci95": [
+                0.07100900506758678,
+                0.27581639175781003
+              ],
+              "positions": 42,
+              "rate": 0.1734126984126984
+            },
+            "drawn, max height 4-5": {
+              "ci95": [
+                0.27298955528521357,
+                0.4499271113814532
+              ],
+              "positions": 96,
+              "rate": 0.3614583333333334
+            },
+            "drawn, max height 6+": {
+              "ci95": [
+                0.26286251101207503,
+                0.5337186855691215
+              ],
+              "positions": 39,
+              "rate": 0.39829059829059826
+            },
+            "won, max height 2-3": {
+              "ci95": [
+                0.6286159677916806,
+                0.7166944768281563
+              ],
+              "positions": 362,
+              "rate": 0.6726552223099185
+            },
+            "won, max height 4-5": {
+              "ci95": [
+                0.7635936141425921,
+                0.8029568275124521
+              ],
+              "positions": 1434,
+              "rate": 0.7832752208275221
+            },
+            "won, max height 6+": {
+              "ci95": [
+                0.79029031494521,
+                0.8396134456244385
+              ],
+              "positions": 856,
+              "rate": 0.8149518802848242
+            }
+          },
+          "drawn": {
+            "ci95": [
+              0.26246998533997445,
+              0.38743585270145686
+            ],
+            "positions": 177,
+            "rate": 0.32495291902071566
+          },
+          "mean_of_classes": 0.5516764343720976,
+          "won": {
+            "ci95": [
+              0.7637219957353885,
+              0.7930779037115705
+            ],
+            "positions": 2652,
+            "rate": 0.7783999497234795
+          }
+        }
+      },
+      {
+        "player": "negated tree (pooled)",
+        "rates": {
+          "by_height": {
+            "drawn, max height 2-3": {
+              "ci95": [
+                -0.0020515336682106824,
+                0.09694949285188414
+              ],
+              "positions": 42,
+              "rate": 0.047448979591836735
+            },
+            "drawn, max height 4-5": {
+              "ci95": [
+                0.021993271379950552,
+                0.10717339528671613
+              ],
+              "positions": 96,
+              "rate": 0.06458333333333334
+            },
+            "drawn, max height 6+": {
+              "ci95": [
+                0.034360284471637526,
+                0.21692176681041375
+              ],
+              "positions": 39,
+              "rate": 0.12564102564102564
+            },
+            "won, max height 2-3": {
+              "ci95": [
+                0.07380944994749947,
+                0.13005795336741768
+              ],
+              "positions": 362,
+              "rate": 0.10193370165745858
+            },
+            "won, max height 4-5": {
+              "ci95": [
+                0.09957672975603236,
+                0.1291302946622891
+              ],
+              "positions": 1434,
+              "rate": 0.11435351220916072
+            },
+            "won, max height 6+": {
+              "ci95": [
+                0.12613383123218921,
+                0.1685869075306056
+              ],
+              "positions": 856,
+              "rate": 0.1473603693813974
+            }
+          },
+          "drawn": {
+            "ci95": [
+              0.04110152572729494,
+              0.10684036289255977
+            ],
+            "positions": 177,
+            "rate": 0.07397094430992736
+          },
+          "mean_of_classes": 0.09864147002419685,
+          "won": {
+            "ci95": [
+              0.11209356599760814,
+              0.13453042547932456
+            ],
+            "positions": 2652,
+            "rate": 0.12331199573846635
+          }
+        }
+      }
+    ],
+    "positions": 2829,
+    "won": 2652
+  },
+  "greedy_train_score": 0.5319010723299961,
+  "held_out": [
+    {
+      "player": "control: table oracle (expect 1)",
+      "rates": {
+        "by_height": {
+          "drawn, max height 2-3": {
+            "ci95": [
+              1.0,
+              1.0
+            ],
+            "positions": 2340,
+            "rate": 1.0
+          },
+          "drawn, max height 4-5": {
+            "ci95": [
+              1.0,
+              1.0
+            ],
+            "positions": 5913,
+            "rate": 1.0
+          },
+          "drawn, max height 6+": {
+            "ci95": [
+              1.0,
+              1.0
+            ],
+            "positions": 1747,
+            "rate": 1.0
+          },
+          "won, max height 2-3": {
+            "ci95": [
+              1.0,
+              1.0
+            ],
+            "positions": 2564,
+            "rate": 1.0
+          },
+          "won, max height 4-5": {
+            "ci95": [
+              1.0,
+              1.0
+            ],
+            "positions": 5740,
+            "rate": 1.0
+          },
+          "won, max height 6+": {
+            "ci95": [
+              1.0,
+              1.0
+            ],
+            "positions": 1696,
+            "rate": 1.0
+          }
+        },
+        "drawn": {
+          "ci95": [
+            1.0,
+            1.0
+          ],
+          "positions": 10000,
+          "rate": 1.0
+        },
+        "mean_of_classes": 1.0,
+        "won": {
+          "ci95": [
+            1.0,
+            1.0
+          ],
+          "positions": 10000,
+          "rate": 1.0
+        }
+      }
+    },
+    {
+      "player": "control: positions where every move keeps the value",
+      "rates": {
+        "by_height": {
+          "drawn, max height 2-3": {
+            "ci95": [
+              0.0,
+              0.0
+            ],
+            "positions": 2340,
+            "rate": 0.0
+          },
+          "drawn, max height 4-5": {
+            "ci95": [
+              0.0,
+              0.0
+            ],
+            "positions": 5913,
+            "rate": 0.0
+          },
+          "drawn, max height 6+": {
+            "ci95": [
+              -0.0005495134516313627,
+              0.001694333142530046
+            ],
+            "positions": 1747,
+            "rate": 0.0005724098454493417
+          },
+          "won, max height 2-3": {
+            "ci95": [
+              0.007859296915972449,
+              0.0163216703227171
+            ],
+            "positions": 2564,
+            "rate": 0.012090483619344774
+          },
+          "won, max height 4-5": {
+            "ci95": [
+              0.004083429051362553,
+              0.00811169289985696
+            ],
+            "positions": 5740,
+            "rate": 0.006097560975609756
+          },
+          "won, max height 6+": {
+            "ci95": [
+              0.002664280391056798,
+              0.01030741772215075
+            ],
+            "positions": 1696,
+            "rate": 0.006485849056603774
+          }
+        },
+        "drawn": {
+          "ci95": [
+            -0.00009600000000001644,
+            0.00029600000000001646
+          ],
+          "positions": 10000,
+          "rate": 0.0001
+        },
+        "mean_of_classes": 0.0039000000000000003,
+        "won": {
+          "ci95": [
+            0.005986655694709594,
+            0.009413344305290406
+          ],
+          "positions": 10000,
+          "rate": 0.0077
+        }
+      }
+    },
+    {
+      "player": "control: anti-oracle (expect the line above)",
+      "rates": {
+        "by_height": {
+          "drawn, max height 2-3": {
+            "ci95": [
+              0.0,
+              0.0
+            ],
+            "positions": 2340,
+            "rate": 0.0
+          },
+          "drawn, max height 4-5": {
+            "ci95": [
+              0.0,
+              0.0
+            ],
+            "positions": 5913,
+            "rate": 0.0
+          },
+          "drawn, max height 6+": {
+            "ci95": [
+              -0.0005495134516313627,
+              0.001694333142530046
+            ],
+            "positions": 1747,
+            "rate": 0.0005724098454493417
+          },
+          "won, max height 2-3": {
+            "ci95": [
+              0.007859296915972449,
+              0.0163216703227171
+            ],
+            "positions": 2564,
+            "rate": 0.012090483619344774
+          },
+          "won, max height 4-5": {
+            "ci95": [
+              0.004083429051362553,
+              0.00811169289985696
+            ],
+            "positions": 5740,
+            "rate": 0.006097560975609756
+          },
+          "won, max height 6+": {
+            "ci95": [
+              0.002664280391056798,
+              0.01030741772215075
+            ],
+            "positions": 1696,
+            "rate": 0.006485849056603774
+          }
+        },
+        "drawn": {
+          "ci95": [
+            -0.00009600000000001644,
+            0.00029600000000001646
+          ],
+          "positions": 10000,
+          "rate": 0.0001
+        },
+        "mean_of_classes": 0.0039000000000000003,
+        "won": {
+          "ci95": [
+            0.005986655694709594,
+            0.009413344305290406
+          ],
+          "positions": 10000,
+          "rate": 0.0077
+        }
+      }
+    },
+    {
+      "player": "random",
+      "rates": {
+        "by_height": {
+          "drawn, max height 2-3": {
+            "ci95": [
+              0.08768913973901905,
+              0.0915722248233813
+            ],
+            "positions": 2340,
+            "rate": 0.08963068228120018
+          },
+          "drawn, max height 4-5": {
+            "ci95": [
+              0.10512829326441117,
+              0.10815398571172385
+            ],
+            "positions": 5913,
+            "rate": 0.10664113948806751
+          },
+          "drawn, max height 6+": {
+            "ci95": [
+              0.15501361734636543,
+              0.16509965953264516
+            ],
+            "positions": 1747,
+            "rate": 0.1600566384395053
+          },
+          "won, max height 2-3": {
+            "ci95": [
+              0.36733116356930956,
+              0.3877664827479628
+            ],
+            "positions": 2564,
+            "rate": 0.3775488231586362
+          },
+          "won, max height 4-5": {
+            "ci95": [
+              0.3385405194934287,
+              0.3509813601970196
+            ],
+            "positions": 5740,
+            "rate": 0.34476093984522416
+          },
+          "won, max height 6+": {
+            "ci95": [
+              0.3715459685114355,
+              0.3944734117060179
+            ],
+            "positions": 1696,
+            "rate": 0.3830096901087267
+          }
+        },
+        "drawn": {
+          "ci95": [
+            0.110582118672503,
+            0.11340264166445096
+          ],
+          "positions": 10000,
+          "rate": 0.11199238016847698
+        },
+        "mean_of_classes": 0.2358235606699733,
+        "won": {
+          "ci95": [
+            0.3548067180635242,
+            0.3645027642794149
+          ],
+          "positions": 10000,
+          "rate": 0.35965474117146956
+        }
+      }
+    },
+    {
+      "player": "greedy",
+      "rates": {
+        "by_height": {
+          "drawn, max height 2-3": {
+            "ci95": [
+              0.2423415080062214,
+              0.26726634140931943
+            ],
+            "positions": 2340,
+            "rate": 0.2548039247077704
+          },
+          "drawn, max height 4-5": {
+            "ci95": [
+              0.33297408219911573,
+              0.3495555046429989
+            ],
+            "positions": 5913,
+            "rate": 0.3412647934210573
+          },
+          "drawn, max height 6+": {
+            "ci95": [
+              0.4323620066952625,
+              0.4657835671228949
+            ],
+            "positions": 1747,
+            "rate": 0.4490727869090787
+          },
+          "won, max height 2-3": {
+            "ci95": [
+              0.6921995296075824,
+              0.720865614210291
+            ],
+            "positions": 2564,
+            "rate": 0.7065325719089367
+          },
+          "won, max height 4-5": {
+            "ci95": [
+              0.7135840249631339,
+              0.7315470141487416
+            ],
+            "positions": 5740,
+            "rate": 0.7225655195559377
+          },
+          "won, max height 6+": {
+            "ci95": [
+              0.7539359330960045,
+              0.7854934432142684
+            ],
+            "positions": 1696,
+            "rate": 0.7697146881551364
+          }
+        },
+        "drawn": {
+          "ci95": [
+            0.3333476156980872,
+            0.3463863975109312
+          ],
+          "positions": 10000,
+          "rate": 0.3398670066045092
+        },
+        "mean_of_classes": 0.5331590886890901,
+        "won": {
+          "ci95": [
+            0.7195664156174977,
+            0.7333359259298444
+          ],
+          "positions": 10000,
+          "rate": 0.726451170773671
+        }
+      }
+    },
+    {
+      "player": "greedy-2ply",
+      "rates": {
+        "by_height": {
+          "drawn, max height 2-3": {
+            "ci95": [
+              0.3174416244968213,
+              0.3476364764146151
+            ],
+            "positions": 2340,
+            "rate": 0.3325390504557182
+          },
+          "drawn, max height 4-5": {
+            "ci95": [
+              0.44451989004344394,
+              0.4646769562919131
+            ],
+            "positions": 5913,
+            "rate": 0.4545984231676785
+          },
+          "drawn, max height 6+": {
+            "ci95": [
+              0.560087125733254,
+              0.598531276788985
+            ],
+            "positions": 1747,
+            "rate": 0.5793092012611195
+          },
+          "won, max height 2-3": {
+            "ci95": [
+              0.7574310537651312,
+              0.7844952856261078
+            ],
+            "positions": 2564,
+            "rate": 0.7709631696956195
+          },
+          "won, max height 4-5": {
+            "ci95": [
+              0.820265867409619,
+              0.8362529041788385
+            ],
+            "positions": 5740,
+            "rate": 0.8282593857942288
+          },
+          "won, max height 6+": {
+            "ci95": [
+              0.8750130558452127,
+              0.8995012074072595
+            ],
+            "positions": 1696,
+            "rate": 0.8872571316262361
+          }
+        },
+        "drawn": {
+          "ci95": [
+            0.4399732698634347,
+            0.4556737359085726
+          ],
+          "positions": 10000,
+          "rate": 0.44782350288600364
+        },
+        "mean_of_classes": 0.6356990782828288,
+        "won": {
+          "ci95": [
+            0.8174153097941941,
+            0.8297339975651139
+          ],
+          "positions": 10000,
+          "rate": 0.823574653679654
+        }
+      }
+    },
+    {
+      "player": "greedy, then most prisoners",
+      "rates": {
+        "by_height": {
+          "drawn, max height 2-3": {
+            "ci95": [
+              0.31928632473332624,
+              0.35277648899615505
+            ],
+            "positions": 2340,
+            "rate": 0.33603140686474064
+          },
+          "drawn, max height 4-5": {
+            "ci95": [
+              0.43379464895367825,
+              0.4561423743927824
+            ],
+            "positions": 5913,
+            "rate": 0.4449685116732303
+          },
+          "drawn, max height 6+": {
+            "ci95": [
+              0.4866576893150052,
+              0.5283094652629121
+            ],
+            "positions": 1747,
+            "rate": 0.5074835772889587
+          },
+          "won, max height 2-3": {
+            "ci95": [
+              0.7634505490068514,
+              0.7926708387057996
+            ],
+            "positions": 2564,
+            "rate": 0.7780606938563255
+          },
+          "won, max height 4-5": {
+            "ci95": [
+              0.8070654131656407,
+              0.8251094338611229
+            ],
+            "positions": 5740,
+            "rate": 0.8160874235133818
+          },
+          "won, max height 6+": {
+            "ci95": [
+              0.835735831005653,
+              0.8667826999916527
+            ],
+            "positions": 1696,
+            "rate": 0.8512592654986528
+          }
+        },
+        "drawn": {
+          "ci95": [
+            0.4218266946535286,
+            0.4389705275686966
+          ],
+          "positions": 10000,
+          "rate": 0.4303986111111126
+        },
+        "mean_of_classes": 0.6213505627705636,
+        "won": {
+          "ci95": [
+            0.8053749845863127,
+            0.8192300442737162
+          ],
+          "positions": 10000,
+          "rate": 0.8123025144300144
+        }
+      }
+    },
+    {
+      "player": "greedy, then fewest prisoners",
+      "rates": {
+        "by_height": {
+          "drawn, max height 2-3": {
+            "ci95": [
+              0.17226677981695693,
+              0.19929616341265244
+            ],
+            "positions": 2340,
+            "rate": 0.18578147161480468
+          },
+          "drawn, max height 4-5": {
+            "ci95": [
+              0.2498466045476919,
+              0.2690563238935406
+            ],
+            "positions": 5913,
+            "rate": 0.25945146422061627
+          },
+          "drawn, max height 6+": {
+            "ci95": [
+              0.371085490726607,
+              0.4112706572277096
+            ],
+            "positions": 1747,
+            "rate": 0.3911780739771583
+          },
+          "won, max height 2-3": {
+            "ci95": [
+              0.6106722628438687,
+              0.6456404182348031
+            ],
+            "positions": 2564,
+            "rate": 0.6281563405393359
+          },
+          "won, max height 4-5": {
+            "ci95": [
+              0.6248869290737971,
+              0.6478413743687919
+            ],
+            "positions": 5740,
+            "rate": 0.6363641517212945
+          },
+          "won, max height 6+": {
+            "ci95": [
+              0.6819741285513631,
+              0.7226052739643599
+            ],
+            "positions": 1696,
+            "rate": 0.7022897012578615
+          }
+        },
+        "drawn": {
+          "ci95": [
+            0.2577282695978106,
+            0.2727223797528401
+          ],
+          "positions": 10000,
+          "rate": 0.26522532467532534
+        },
+        "mean_of_classes": 0.4553329834054836,
+        "won": {
+          "ci95": [
+            0.6367451116461388,
+            0.654136172625145
+          ],
+          "positions": 10000,
+          "rate": 0.6454406421356419
+        }
+      }
+    },
+    {
+      "player": "greedy, then fewest opp_mobility",
+      "rates": {
+        "by_height": {
+          "drawn, max height 2-3": {
+            "ci95": [
+              0.320549517865383,
+              0.3557630584471938
+            ],
+            "positions": 2340,
+            "rate": 0.3381562881562884
+          },
+          "drawn, max height 4-5": {
+            "ci95": [
+              0.4112378265433568,
+              0.43425475235865857
+            ],
+            "positions": 5913,
+            "rate": 0.4227462894510077
+          },
+          "drawn, max height 6+": {
+            "ci95": [
+              0.4766567923775093,
+              0.519704316462135
+            ],
+            "positions": 1747,
+            "rate": 0.4981805544198222
+          },
+          "won, max height 2-3": {
+            "ci95": [
+              0.7658341047428611,
+              0.7964235284196092
+            ],
+            "positions": 2564,
+            "rate": 0.7811288165812351
+          },
+          "won, max height 4-5": {
+            "ci95": [
+              0.7980730691915299,
+              0.8171523557899927
+            ],
+            "positions": 5740,
+            "rate": 0.8076127124907613
+          },
+          "won, max height 6+": {
+            "ci95": [
+              0.8347385251728581,
+              0.8669517263994695
+            ],
+            "positions": 1696,
+            "rate": 0.8508451257861638
+          }
+        },
+        "drawn": {
+          "ci95": [
+            0.40727544102250507,
+            0.4249857494536889
+          ],
+          "positions": 10000,
+          "rate": 0.416130595238097
+        },
+        "mean_of_classes": 0.6121425270562783,
+        "won": {
+          "ci95": [
+            0.8008740013996571,
+            0.815434916349262
+          ],
+          "positions": 10000,
+          "rate": 0.8081544588744596
+        }
+      }
+    },
+    {
+      "player": "greedy, then most opp_mobility",
+      "rates": {
+        "by_height": {
+          "drawn, max height 2-3": {
+            "ci95": [
+              0.15471789240615966,
+              0.18273841671681587
+            ],
+            "positions": 2340,
+            "rate": 0.16872815456148776
+          },
+          "drawn, max height 4-5": {
+            "ci95": [
+              0.25371128588085456,
+              0.27417722450384974
+            ],
+            "positions": 5913,
+            "rate": 0.26394425519235215
+          },
+          "drawn, max height 6+": {
+            "ci95": [
+              0.37530678148146873,
+              0.4172845996617159
+            ],
+            "positions": 1747,
+            "rate": 0.3962956905715923
+          },
+          "won, max height 2-3": {
+            "ci95": [
+              0.5935366282009747,
+              0.6301809633598304
+            ],
+            "positions": 2564,
+            "rate": 0.6118587957804026
+          },
+          "won, max height 4-5": {
+            "ci95": [
+              0.6209883886294422,
+              0.6448370886420282
+            ],
+            "positions": 5740,
+            "rate": 0.6329127386357352
+          },
+          "won, max height 6+": {
+            "ci95": [
+              0.6733257349966233,
+              0.7153535102863955
+            ],
+            "positions": 1696,
+            "rate": 0.6943396226415094
+          }
+        },
+        "drawn": {
+          "ci95": [
+            0.256861922873044,
+            0.2727090439379236
+          ],
+          "positions": 10000,
+          "rate": 0.2647854834054838
+        },
+        "mean_of_classes": 0.4513589953102454,
+        "won": {
+          "ci95": [
+            0.6288835778040283,
+            0.6469814366259858
+          ],
+          "positions": 10000,
+          "rate": 0.637932507215007
+        }
+      }
+    },
+    {
+      "player": "greedy, then most dest_height",
+      "rates": {
+        "by_height": {
+          "drawn, max height 2-3": {
+            "ci95": [
+              0.31910694323907385,
+              0.3530603339282039
+            ],
+            "positions": 2340,
+            "rate": 0.3360836385836389
+          },
+          "drawn, max height 4-5": {
+            "ci95": [
+              0.4101108548834984,
+              0.43318841307330425
+            ],
+            "positions": 5913,
+            "rate": 0.42164963397840133
+          },
+          "drawn, max height 6+": {
+            "ci95": [
+              0.4684594982344923,
+              0.51136532618106
+            ],
+            "positions": 1747,
+            "rate": 0.48991241220777615
+          },
+          "won, max height 2-3": {
+            "ci95": [
+              0.7624842492775227,
+              0.7923203714787365
+            ],
+            "positions": 2564,
+            "rate": 0.7774023103781296
+          },
+          "won, max height 4-5": {
+            "ci95": [
+              0.7991431925499306,
+              0.8180639586032135
+            ],
+            "positions": 5740,
+            "rate": 0.808603575576572
+          },
+          "won, max height 6+": {
+            "ci95": [
+              0.8348012977802731,
+              0.8667513751757024
+            ],
+            "positions": 1696,
+            "rate": 0.8507763364779878
+          }
+        },
+        "drawn": {
+          "ci95": [
+            0.40476010014257263,
+            0.42234529668282844
+          ],
+          "positions": 10000,
+          "rate": 0.41355269841270054
+        },
+        "mean_of_classes": 0.6106543849206362,
+        "won": {
+          "ci95": [
+            0.8005685522813035,
+            0.81494359057584
+          ],
+          "positions": 10000,
+          "rate": 0.8077560714285718
+        }
+      }
+    },
+    {
+      "player": "greedy, then fewest dest_height",
+      "rates": {
+        "by_height": {
+          "drawn, max height 2-3": {
+            "ci95": [
+              0.16261692000660588,
+              0.1900977727080863
+            ],
+            "positions": 2340,
+            "rate": 0.1763573463573461
+          },
+          "drawn, max height 4-5": {
+            "ci95": [
+              0.25827878547246724,
+              0.2786016152587694
+            ],
+            "positions": 5913,
+            "rate": 0.26844020036561833
+          },
+          "drawn, max height 6+": {
+            "ci95": [
+              0.38227028973666977,
+              0.42368095548189155
+            ],
+            "positions": 1747,
+            "rate": 0.40297562260928066
+          },
+          "won, max height 2-3": {
+            "ci95": [
+              0.6001055575777533,
+              0.6360015295628755
+            ],
+            "positions": 2564,
+            "rate": 0.6180535435703144
+          },
+          "won, max height 4-5": {
+            "ci95": [
+              0.6247258005997967,
+              0.6481157181215131
+            ],
+            "positions": 5740,
+            "rate": 0.6364207593606549
+          },
+          "won, max height 6+": {
+            "ci95": [
+              0.6795839689630433,
+              0.7208077089345305
+            ],
+            "positions": 1696,
+            "rate": 0.7001958389487869
+          }
+        },
+        "drawn": {
+          "ci95": [
+            0.2625547723462001,
+            0.27823752924110307
+          ],
+          "positions": 10000,
+          "rate": 0.2703961507936516
+        },
+        "mean_of_classes": 0.4564619047619052,
+        "won": {
+          "ci95": [
+            0.6336547141377483,
+            0.6514006033225691
+          ],
+          "positions": 10000,
+          "rate": 0.6425276587301587
+        }
+      }
+    },
+    {
+      "player": "greedy, then most own_mobility",
+      "rates": {
+        "by_height": {
+          "drawn, max height 2-3": {
+            "ci95": [
+              0.33032291478378234,
+              0.36634375188288454
+            ],
+            "positions": 2340,
+            "rate": 0.34833333333333344
+          },
+          "drawn, max height 4-5": {
+            "ci95": [
+              0.39637485093270597,
+              0.4195674231526424
+            ],
+            "positions": 5913,
+            "rate": 0.4079711370426742
+          },
+          "drawn, max height 6+": {
+            "ci95": [
+              0.4777036231364661,
+              0.5214759227517235
+            ],
+            "positions": 1747,
+            "rate": 0.4995897729440948
+          },
+          "won, max height 2-3": {
+            "ci95": [
+              0.7719624811722984,
+              0.8021534834662875
+            ],
+            "positions": 2564,
+            "rate": 0.7870579823192929
+          },
+          "won, max height 4-5": {
+            "ci95": [
+              0.7782498127629786,
+              0.7982368306748852
+            ],
+            "positions": 5740,
+            "rate": 0.7882433217189319
+          },
+          "won, max height 6+": {
+            "ci95": [
+              0.8093586479687074,
+              0.8433339620941858
+            ],
+            "positions": 1696,
+            "rate": 0.8263463050314466
+          }
+        },
+        "drawn": {
+          "ci95": [
+            0.40106269677957607,
+            0.41898063655375917
+          ],
+          "positions": 10000,
+          "rate": 0.4100216666666676
+        },
+        "mean_of_classes": 0.6022116666666674,
+        "won": {
+          "ci95": [
+            0.7869012933727683,
+            0.801902039960566
+          ],
+          "positions": 10000,
+          "rate": 0.7944016666666671
+        }
+      }
+    },
+    {
+      "player": "greedy, then fewest own_mobility",
+      "rates": {
+        "by_height": {
+          "drawn, max height 2-3": {
+            "ci95": [
+              0.1650207359199034,
+              0.19365447775530997
+            ],
+            "positions": 2340,
+            "rate": 0.1793376068376067
+          },
+          "drawn, max height 4-5": {
+            "ci95": [
+              0.27133637112274606,
+              0.29201556528854994
+            ],
+            "positions": 5913,
+            "rate": 0.281675968205648
+          },
+          "drawn, max height 6+": {
+            "ci95": [
+              0.3714785466215512,
+              0.4140013236322173
+            ],
+            "positions": 1747,
+            "rate": 0.39273993512688427
+          },
+          "won, max height 2-3": {
+            "ci95": [
+              0.6088035391181404,
+              0.6447131015474862
+            ],
+            "positions": 2564,
+            "rate": 0.6267583203328133
+          },
+          "won, max height 4-5": {
+            "ci95": [
+              0.6482942243957331,
+              0.6713863795531635
+            ],
+            "positions": 5740,
+            "rate": 0.6598403019744483
+          },
+          "won, max height 6+": {
+            "ci95": [
+              0.6882670954332128,
+              0.7298932819252777
+            ],
+            "positions": 1696,
+            "rate": 0.7090801886792453
+          }
+        },
+        "drawn": {
+          "ci95": [
+            0.26912246112291177,
+            0.2851408722104222
+          ],
+          "positions": 10000,
+          "rate": 0.277131666666667
+        },
+        "mean_of_classes": 0.4684204166666668,
+        "won": {
+          "ci95": [
+            0.6508872202343832,
+            0.66853111309895
+          ],
+          "positions": 10000,
+          "rate": 0.6597091666666666
+        }
+      }
+    },
+    {
+      "player": "greedy, then most own_max_height",
+      "rates": {
+        "by_height": {
+          "drawn, max height 2-3": {
+            "ci95": [
+              0.2917838273388352,
+              0.3266207310657235
+            ],
+            "positions": 2340,
+            "rate": 0.30920227920227933
+          },
+          "drawn, max height 4-5": {
+            "ci95": [
+              0.40061260173080354,
+              0.42446893773429767
+            ],
+            "positions": 5913,
+            "rate": 0.4125407697325506
+          },
+          "drawn, max height 6+": {
+            "ci95": [
+              0.4591234331783022,
+              0.5031765640959373
+            ],
+            "positions": 1747,
+            "rate": 0.4811499986371197
+          },
+          "won, max height 2-3": {
+            "ci95": [
+              0.7320848540440795,
+              0.7639629878695972
+            ],
+            "positions": 2564,
+            "rate": 0.7480239209568383
+          },
+          "won, max height 4-5": {
+            "ci95": [
+              0.7836626741207261,
+              0.8034819804890855
+            ],
+            "positions": 5740,
+            "rate": 0.7935723273049058
+          },
+          "won, max height 6+": {
+            "ci95": [
+              0.8158651713138922,
+              0.849855291399495
+            ],
+            "positions": 1696,
+            "rate": 0.8328602313566936
+          }
+        },
+        "drawn": {
+          "ci95": [
+            0.3912697979918603,
+            0.40942139248433146
+          ],
+          "positions": 10000,
+          "rate": 0.4003455952380959
+        },
+        "mean_of_classes": 0.5944512698412703,
+        "won": {
+          "ci95": [
+            0.7809642720844555,
+            0.7961496168044336
+          ],
+          "positions": 10000,
+          "rate": 0.7885569444444446
+        }
+      }
+    },
+    {
+      "player": "greedy, then fewest own_max_height",
+      "rates": {
+        "by_height": {
+          "drawn, max height 2-3": {
+            "ci95": [
+              0.1840799531504286,
+              0.21400239659858747
+            ],
+            "positions": 2340,
+            "rate": 0.19904117487450804
+          },
+          "drawn, max height 4-5": {
+            "ci95": [
+              0.26629290681944073,
+              0.28760984713404836
+            ],
+            "positions": 5913,
+            "rate": 0.27695137697674455
+          },
+          "drawn, max height 6+": {
+            "ci95": [
+              0.3759172092368402,
+              0.4186735177236634
+            ],
+            "positions": 1747,
+            "rate": 0.3972953634802518
+          },
+          "won, max height 2-3": {
+            "ci95": [
+              0.6295676817051569,
+              0.664505009773931
+            ],
+            "positions": 2564,
+            "rate": 0.6470363457395439
+          },
+          "won, max height 4-5": {
+            "ci95": [
+              0.6490100967889352,
+              0.6722474986933986
+            ],
+            "positions": 5740,
+            "rate": 0.6606287977411669
+          },
+          "won, max height 6+": {
+            "ci95": [
+              0.6974914213491422,
+              0.738662273619411
+            ],
+            "positions": 1696,
+            "rate": 0.7180768474842766
+          }
+        },
+        "drawn": {
+          "ci95": [
+            0.2715331486235892,
+            0.2879558196303799
+          ],
+          "positions": 10000,
+          "rate": 0.27974448412698455
+        },
+        "mean_of_classes": 0.4733156832056835,
+        "won": {
+          "ci95": [
+            0.6581158681244352,
+            0.6756578964443296
+          ],
+          "positions": 10000,
+          "rate": 0.6668868822843824
+        }
+      }
+    },
+    {
+      "player": "greedy, then most opp_singletons",
+      "rates": {
+        "by_height": {
+          "drawn, max height 2-3": {
+            "ci95": [
+              0.2979372805211017,
+              0.3285706559868352
+            ],
+            "positions": 2340,
+            "rate": 0.31325396825396845
+          },
+          "drawn, max height 4-5": {
+            "ci95": [
+              0.38370577735042866,
+              0.40363688168172673
+            ],
+            "positions": 5913,
+            "rate": 0.3936713295160777
+          },
+          "drawn, max height 6+": {
+            "ci95": [
+              0.4684306596451303,
+              0.5082967914956021
+            ],
+            "positions": 1747,
+            "rate": 0.4883637255703662
+          },
+          "won, max height 2-3": {
+            "ci95": [
+              0.7383373564181676,
+              0.7673208461004094
+            ],
+            "positions": 2564,
+            "rate": 0.7528291012592885
+          },
+          "won, max height 4-5": {
+            "ci95": [
+              0.7680372360978843,
+              0.7862457631328491
+            ],
+            "positions": 5740,
+            "rate": 0.7771414996153667
+          },
+          "won, max height 6+": {
+            "ci95": [
+              0.8108290324300959,
+              0.8426764145600215
+            ],
+            "positions": 1696,
+            "rate": 0.8267527234950587
+          }
+        },
+        "drawn": {
+          "ci95": [
+            0.38359487259104397,
+            0.3991979845518193
+          ],
+          "positions": 10000,
+          "rate": 0.39139642857143164
+        },
+        "mean_of_classes": 0.5853591464091483,
+        "won": {
+          "ci95": [
+            0.7723493101110448,
+            0.7862944183826854
+          ],
+          "positions": 10000,
+          "rate": 0.7793218642468651
+        }
+      }
+    },
+    {
+      "player": "greedy, then fewest opp_singletons",
+      "rates": {
+        "by_height": {
+          "drawn, max height 2-3": {
+            "ci95": [
+              0.18019167740106498,
+              0.2068861213433997
+            ],
+            "positions": 2340,
+            "rate": 0.19353889937223234
+          },
+          "drawn, max height 4-5": {
+            "ci95": [
+              0.2759326371903605,
+              0.2949299228401327
+            ],
+            "positions": 5913,
+            "rate": 0.2854312800152466
+          },
+          "drawn, max height 6+": {
+            "ci95": [
+              0.3844496347212032,
+              0.4233814771167781
+            ],
+            "positions": 1747,
+            "rate": 0.40391555591899064
+          },
+          "won, max height 2-3": {
+            "ci95": [
+              0.633074303783635,
+              0.6671781586958165
+            ],
+            "positions": 2564,
+            "rate": 0.6501262312397258
+          },
+          "won, max height 4-5": {
+            "ci95": [
+              0.6513506320316413,
+              0.6735347700227492
+            ],
+            "positions": 5740,
+            "rate": 0.6624427010271953
+          },
+          "won, max height 6+": {
+            "ci95": [
+              0.6961660378345529,
+              0.735663757762931
+            ],
+            "positions": 1696,
+            "rate": 0.715914897798742
+          }
+        },
+        "drawn": {
+          "ci95": [
+            0.27724150595987473,
+            0.2920138259304592
+          ],
+          "positions": 10000,
+          "rate": 0.284627665945167
+        },
+        "mean_of_classes": 0.476490654345655,
+        "won": {
+          "ci95": [
+            0.6599248563772302,
+            0.6767824291150559
+          ],
+          "positions": 10000,
+          "rate": 0.6683536427461431
+        }
+      }
+    },
+    {
+      "player": "list (pooled): most prisoners, then most own_mobility, then most top_diff",
+      "rates": {
+        "by_height": {
+          "drawn, max height 2-3": {
+            "ci95": [
+              0.3678706723410169,
+              0.4061891567188124
+            ],
+            "positions": 2340,
+            "rate": 0.38702991452991464
+          },
+          "drawn, max height 4-5": {
+            "ci95": [
+              0.4447267971914276,
+              0.46944536583918295
+            ],
+            "positions": 5913,
+            "rate": 0.4570860815153053
+          },
+          "drawn, max height 6+": {
+            "ci95": [
+              0.4771063218011656,
+              0.5227982765579264
+            ],
+            "positions": 1747,
+            "rate": 0.499952299179546
+          },
+          "won, max height 2-3": {
+            "ci95": [
+              0.817177995856634,
+              0.8455235122036885
+            ],
+            "positions": 2564,
+            "rate": 0.8313507540301612
+          },
+          "won, max height 4-5": {
+            "ci95": [
+              0.8382094017136936,
+              0.8564479734314865
+            ],
+            "positions": 5740,
+            "rate": 0.8473286875725901
+          },
+          "won, max height 6+": {
+            "ci95": [
+              0.8654650652612317,
+              0.8955412240469443
+            ],
+            "positions": 1696,
+            "rate": 0.880503144654088
+          }
+        },
+        "drawn": {
+          "ci95": [
+            0.43869730690432723,
+            0.4576660264290063
+          ],
+          "positions": 10000,
+          "rate": 0.44818166666666676
+        },
+        "mean_of_classes": 0.6485200000000001,
+        "won": {
+          "ci95": [
+            0.8419883536445233,
+            0.8557283130221435
+          ],
+          "positions": 10000,
+          "rate": 0.8488583333333334
+        }
+      }
+    },
+    {
+      "player": "negated list (pooled)",
+      "rates": {
+        "by_height": {
+          "drawn, max height 2-3": {
+            "ci95": [
+              0.000686340626744344,
+              0.004869214928811212
+            ],
+            "positions": 2340,
+            "rate": 0.002777777777777778
+          },
+          "drawn, max height 4-5": {
+            "ci95": [
+              0.00045558930217489194,
+              0.002024821092999582
+            ],
+            "positions": 5913,
+            "rate": 0.001240205197587237
+          },
+          "drawn, max height 6+": {
+            "ci95": [
+              0.006024935687406958,
+              0.014486417107861119
+            ],
+            "positions": 1747,
+            "rate": 0.010255676397634039
+          },
+          "won, max height 2-3": {
+            "ci95": [
+              0.06314523906566416,
+              0.08272059556772116
+            ],
+            "positions": 2564,
+            "rate": 0.07293291731669266
+          },
+          "won, max height 4-5": {
+            "ci95": [
+              0.03198778273309512,
+              0.041362972203025664
+            ],
+            "positions": 5740,
+            "rate": 0.03667537746806039
+          },
+          "won, max height 6+": {
+            "ci95": [
+              0.037329765384988285,
+              0.0565185050552633
+            ],
+            "positions": 1696,
+            "rate": 0.04692413522012579
+          }
+        },
+        "drawn": {
+          "ci95": [
+            0.0021725456637096616,
+            0.004177454336290339
+          ],
+          "positions": 10000,
+          "rate": 0.0031750000000000003
+        },
+        "mean_of_classes": 0.025442499999999996,
+        "won": {
+          "ci95": [
+            0.04367622389959794,
+            0.05174377610040205
+          ],
+          "positions": 10000,
+          "rate": 0.047709999999999995
+        }
+      }
+    },
+    {
+      "player": "list (drawn): most prisoners, then most top_diff, then fewest distance",
+      "rates": {
+        "by_height": {
+          "drawn, max height 2-3": {
+            "ci95": [
+              0.37563646472732465,
+              0.41270704361618454
+            ],
+            "positions": 2340,
+            "rate": 0.3941717541717546
+          },
+          "drawn, max height 4-5": {
+            "ci95": [
+              0.46422834732197765,
+              0.4880414697880224
+            ],
+            "positions": 5913,
+            "rate": 0.476134908555
+          },
+          "drawn, max height 6+": {
+            "ci95": [
+              0.4871259277145604,
+              0.5313819906216356
+            ],
+            "positions": 1747,
+            "rate": 0.509253959168098
+          },
+          "won, max height 2-3": {
+            "ci95": [
+              0.8015795204170107,
+              0.8297387323130988
+            ],
+            "positions": 2564,
+            "rate": 0.8156591263650548
+          },
+          "won, max height 4-5": {
+            "ci95": [
+              0.8409422125719838,
+              0.8582563936997935
+            ],
+            "positions": 5740,
+            "rate": 0.8495993031358886
+          },
+          "won, max height 6+": {
+            "ci95": [
+              0.8625000837390021,
+              0.8921186269528222
+            ],
+            "positions": 1696,
+            "rate": 0.8773093553459121
+          }
+        },
+        "drawn": {
+          "ci95": [
+            0.4535809427565346,
+            0.4719019143863231
+          ],
+          "positions": 10000,
+          "rate": 0.46274142857142886
+        },
+        "mean_of_classes": 0.6541690476190478,
+        "won": {
+          "ci95": [
+            0.8389497215822607,
+            0.8522436117510727
+          ],
+          "positions": 10000,
+          "rate": 0.8455966666666667
+        }
+      }
+    },
+    {
+      "player": "negated list (drawn)",
+      "rates": {
+        "by_height": {
+          "drawn, max height 2-3": {
+            "ci95": [
+              0.0002331748179325117,
+              0.0030787909940333
+            ],
+            "positions": 2340,
+            "rate": 0.001655982905982906
+          },
+          "drawn, max height 4-5": {
+            "ci95": [
+              0.0010867061505286553,
+              0.0032117323183816545
+            ],
+            "positions": 5913,
+            "rate": 0.002149219234455155
+          },
+          "drawn, max height 6+": {
+            "ci95": [
+              0.0073394449769058475,
+              0.01567143081015769
+            ],
+            "positions": 1747,
+            "rate": 0.01150543789353177
+          },
+          "won, max height 2-3": {
+            "ci95": [
+              0.07711088507644866,
+              0.09727066161399041
+            ],
+            "positions": 2564,
+            "rate": 0.08719077334521953
+          },
+          "won, max height 4-5": {
+            "ci95": [
+              0.034906216506697896,
+              0.04437369057808725
+            ],
+            "positions": 5740,
+            "rate": 0.039639953542392574
+          },
+          "won, max height 6+": {
+            "ci95": [
+              0.03122967573223122,
+              0.048585575840095846
+            ],
+            "positions": 1696,
+            "rate": 0.03990762578616353
+          }
+        },
+        "drawn": {
+          "ci95": [
+            0.0026485534274089187,
+            0.004688113239257746
+          ],
+          "positions": 10000,
+          "rate": 0.0036683333333333325
+        },
+        "mean_of_classes": 0.027772857142857134,
+        "won": {
+          "ci95": [
+            0.047828882934727646,
+            0.05592587897003423
+          ],
+          "positions": 10000,
+          "rate": 0.05187738095238094
+        }
+      }
+    },
+    {
+      "player": "tree (pooled, depth 3)",
+      "rates": {
+        "by_height": {
+          "drawn, max height 2-3": {
+            "ci95": [
+              0.3505091031823836,
+              0.3842405915673127
+            ],
+            "positions": 2340,
+            "rate": 0.36737484737484816
+          },
+          "drawn, max height 4-5": {
+            "ci95": [
+              0.4364731972428408,
+              0.45864732009989867
+            ],
+            "positions": 5913,
+            "rate": 0.4475602586713697
+          },
+          "drawn, max height 6+": {
+            "ci95": [
+              0.46294144225263845,
+              0.5056900439232099
+            ],
+            "positions": 1747,
+            "rate": 0.4843157430879242
+          },
+          "won, max height 2-3": {
+            "ci95": [
+              0.7786364763761453,
+              0.8065828609687768
+            ],
+            "positions": 2564,
+            "rate": 0.7926096686724611
+          },
+          "won, max height 4-5": {
+            "ci95": [
+              0.8200972346899512,
+              0.8377163541602236
+            ],
+            "positions": 5740,
+            "rate": 0.8289067944250874
+          },
+          "won, max height 6+": {
+            "ci95": [
+              0.8364160037952856,
+              0.867750662871381
+            ],
+            "positions": 1696,
+            "rate": 0.8520833333333333
+          }
+        },
+        "drawn": {
+          "ci95": [
+            0.42666862632965213,
+            0.4437674847814614
+          ],
+          "positions": 10000,
+          "rate": 0.43521805555555676
+        },
+        "mean_of_classes": 0.6293745039682547,
+        "won": {
+          "ci95": [
+            0.8167773445526024,
+            0.8302845602093029
+          ],
+          "positions": 10000,
+          "rate": 0.8235309523809526
+        }
+      }
+    },
+    {
+      "player": "negated tree (pooled)",
+      "rates": {
+        "by_height": {
+          "drawn, max height 2-3": {
+            "ci95": [
+              0.007205035238622636,
+              0.014281533747946345
+            ],
+            "positions": 2340,
+            "rate": 0.01074328449328449
+          },
+          "drawn, max height 4-5": {
+            "ci95": [
+              0.01666174302273934,
+              0.022723227945184447
+            ],
+            "positions": 5913,
+            "rate": 0.019692485483961894
+          },
+          "drawn, max height 6+": {
+            "ci95": [
+              0.03313512556289897,
+              0.048538219218631294
+            ],
+            "positions": 1747,
+            "rate": 0.04083667239076513
+          },
+          "won, max height 2-3": {
+            "ci95": [
+              0.2389139025349108,
+              0.2704391274304438
+            ],
+            "positions": 2564,
+            "rate": 0.2546765149826773
+          },
+          "won, max height 4-5": {
+            "ci95": [
+              0.2167736566021442,
+              0.23682542530704237
+            ],
+            "positions": 5740,
+            "rate": 0.2267995409545933
+          },
+          "won, max height 6+": {
+            "ci95": [
+              0.18256151217926728,
+              0.21794949411004097
+            ],
+            "positions": 1696,
+            "rate": 0.20025550314465412
+          }
+        },
+        "drawn": {
+          "ci95": [
+            0.018895966577475498,
+            0.023688557232048324
+          ],
+          "positions": 10000,
+          "rate": 0.02129226190476191
+        },
+        "mean_of_classes": 0.12536879509379528,
+        "won": {
+          "ci95": [
+            0.22179248845978228,
+            0.23709816810587497
+          ],
+          "positions": 10000,
+          "rate": 0.22944532828282863
+        }
+      }
+    }
+  ],
+  "moves_per_position": {
+    "train": 15.290825
+  },
+  "peak_rss_mib": 504.953125,
+  "seconds": 59.320730542,
+  "seed": 31,
+  "single_tie_breaks": [
+    {
+      "criterion": "most prisoners",
+      "pooled_share_greedy_ties": 0.8132750709993526,
+      "train_score_after_greedy": 0.6187630167744377
+    },
+    {
+      "criterion": "fewest opp_mobility",
+      "pooled_share_greedy_ties": 0.2397799597474663,
+      "train_score_after_greedy": 0.60869344336174
+    },
+    {
+      "criterion": "most dest_height",
+      "pooled_share_greedy_ties": 0.7577439587004647,
+      "train_score_after_greedy": 0.6063339781741488
+    },
+    {
+      "criterion": "most own_mobility",
+      "pooled_share_greedy_ties": 0.7152539229674031,
+      "train_score_after_greedy": 0.5983607142852617
+    },
+    {
+      "criterion": "most own_max_height",
+      "pooled_share_greedy_ties": 0.6828993720864527,
+      "train_score_after_greedy": 0.588746211218877
+    },
+    {
+      "criterion": "most opp_singletons",
+      "pooled_share_greedy_ties": 0.7815781855628186,
+      "train_score_after_greedy": 0.5830408053747206
+    },
+    {
+      "criterion": "fewest opp_max_height",
+      "pooled_share_greedy_ties": 0.3385399537967012,
+      "train_score_after_greedy": 0.5824130735926107
+    },
+    {
+      "criterion": "most own_tall",
+      "pooled_share_greedy_ties": 0.7966334457458211,
+      "train_score_after_greedy": 0.5809488203458634
+    },
+    {
+      "criterion": "fewest own_exposed",
+      "pooled_share_greedy_ties": 0.22170455018185276,
+      "train_score_after_greedy": 0.5809404788956445
+    },
+    {
+      "criterion": "fewest hostages",
+      "pooled_share_greedy_ties": 0.37236726326088465,
+      "train_score_after_greedy": 0.5644769751077604
+    },
+    {
+      "criterion": "fewest own_singletons",
+      "pooled_share_greedy_ties": 0.29794712148143193,
+      "train_score_after_greedy": 0.5603202678566963
+    },
+    {
+      "criterion": "fewest distance",
+      "pooled_share_greedy_ties": 0.3999286945670092,
+      "train_score_after_greedy": 0.5504373115074825
+    },
+    {
+      "criterion": "fewest source_height",
+      "pooled_share_greedy_ties": 0.36617662689181435,
+      "train_score_after_greedy": 0.5486086129144152
+    },
+    {
+      "criterion": "most empties_source",
+      "pooled_share_greedy_ties": 0.8876737168336699,
+      "train_score_after_greedy": 0.5444656240976743
+    },
+    {
+      "criterion": "fewest own_tops",
+      "pooled_share_greedy_ties": 0.09422449553713542,
+      "train_score_after_greedy": 0.5435029951294196
+    },
+    {
+      "criterion": "fewest uncovers_own",
+      "pooled_share_greedy_ties": 0.09591794660344294,
+      "train_score_after_greedy": 0.5434941657643402
+    },
+    {
+      "criterion": "fewest corners",
+      "pooled_share_greedy_ties": 0.4500581990702658,
+      "train_score_after_greedy": 0.5422576190471631
+    },
+    {
+      "criterion": "fewest lands_on_empty",
+      "pooled_share_greedy_ties": 0.16597029392368648,
+      "train_score_after_greedy": 0.5422135606056094
+    },
+    {
+      "criterion": "most lands_on_opp",
+      "pooled_share_greedy_ties": 0.8337286244161687,
+      "train_score_after_greedy": 0.5421643939389429
+    },
+    {
+      "criterion": "fewest opp_exposed",
+      "pooled_share_greedy_ties": 0.3368421052631579,
+      "train_score_after_greedy": 0.5418331385276818
+    },
+    {
+      "criterion": "most own_solid",
+      "pooled_share_greedy_ties": 0.660484981978374,
+      "train_score_after_greedy": 0.5405477119403875
+    },
+    {
+      "criterion": "fewest pieces_moved",
+      "pooled_share_greedy_ties": 0.4778763513315169,
+      "train_score_after_greedy": 0.5393887202376413
+    },
+    {
+      "criterion": "most my_win_now",
+      "pooled_share_greedy_ties": 0.6732155362973765,
+      "train_score_after_greedy": 0.5365252435060407
+    },
+    {
+      "criterion": "fewest advance",
+      "pooled_share_greedy_ties": 0.49812298582942804,
+      "train_score_after_greedy": 0.5356169047614262
+    },
+    {
+      "criterion": "fewest opp_win_now",
+      "pooled_share_greedy_ties": 0.0,
+      "train_score_after_greedy": 0.5339748322506308
+    },
+    {
+      "criterion": "fewest uncovers_opp",
+      "pooled_share_greedy_ties": 0.3159484724122207,
+      "train_score_after_greedy": 0.5328692370125361
+    },
+    {
+      "criterion": "most lands_on_own",
+      "pooled_share_greedy_ties": 0.8,
+      "train_score_after_greedy": 0.5319220643934882
+    },
+    {
+      "criterion": "fewest centre",
+      "pooled_share_greedy_ties": 0.4569163452291878,
+      "train_score_after_greedy": 0.5309826019115229
+    }
+  ],
+  "test_per_class": 10000,
+  "threads": 4,
+  "timings": {
+    "held_out_scoring": 28.413961125,
+    "learning": 22.815674375,
+    "load": 0.866864917,
+    "samples": 2.721876584
+  },
+  "train_height_buckets": [
+    {
+      "bucket": "max height 2-3",
+      "drawn": 4811,
+      "won": 5117
+    },
+    {
+      "bucket": "max height 4-5",
+      "drawn": 11741,
+      "won": 11390
+    },
+    {
+      "bucket": "max height 6+",
+      "drawn": 3448,
+      "won": 3493
+    }
+  ],
+  "train_keep_share_of_moves": {
+    "drawn": 0.11172781243332632,
+    "won": 0.3568803315948595
+  },
+  "train_per_class": 20000
+}
