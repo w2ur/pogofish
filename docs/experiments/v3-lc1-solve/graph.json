@@ -1,0 +1,232 @@
+{
+  "components": 25886,
+  "components_entered_directly_from_start_component_by_size": {
+    "1": 3216
+  },
+  "components_reachable_from_start": 25886,
+  "edges": 656696,
+  "exit_moves_per_node_histogram": {
+    "0": 570,
+    "1": 1728,
+    "10": 27472,
+    "11": 27272,
+    "12": 26360,
+    "13": 28016,
+    "14": 24288,
+    "15": 28400,
+    "16": 17352,
+    "17": 11120,
+    "18": 7592,
+    "19": 4256,
+    "2": 2608,
+    "20": 864,
+    "21": 272,
+    "22": 128,
+    "3": 3104,
+    "4": 6908,
+    "5": 4320,
+    "6": 10784,
+    "7": 15208,
+    "8": 25010,
+    "9": 15904
+  },
+  "largest_components": [
+    {
+      "contains_start": false,
+      "entries": 3192,
+      "internal_edges": 534864,
+      "nodes": 233472
+    },
+    {
+      "contains_start": true,
+      "entries": 1,
+      "internal_edges": 33960,
+      "nodes": 11736
+    },
+    {
+      "contains_start": false,
+      "entries": 48,
+      "internal_edges": 1364,
+      "nodes": 692
+    },
+    {
+      "contains_start": false,
+      "entries": 48,
+      "internal_edges": 1364,
+      "nodes": 692
+    },
+    {
+      "contains_start": false,
+      "entries": 48,
+      "internal_edges": 1364,
+      "nodes": 692
+    },
+    {
+      "contains_start": false,
+      "entries": 48,
+      "internal_edges": 1364,
+      "nodes": 692
+    },
+    {
+      "contains_start": false,
+      "entries": 48,
+      "internal_edges": 1364,
+      "nodes": 692
+    },
+    {
+      "contains_start": false,
+      "entries": 48,
+      "internal_edges": 1364,
+      "nodes": 692
+    },
+    {
+      "contains_start": false,
+      "entries": 48,
+      "internal_edges": 1364,
+      "nodes": 692
+    },
+    {
+      "contains_start": false,
+      "entries": 48,
+      "internal_edges": 1364,
+      "nodes": 692
+    },
+    {
+      "contains_start": false,
+      "entries": 120,
+      "internal_edges": 722,
+      "nodes": 276
+    },
+    {
+      "contains_start": false,
+      "entries": 120,
+      "internal_edges": 722,
+      "nodes": 276
+    },
+    {
+      "contains_start": false,
+      "entries": 120,
+      "internal_edges": 722,
+      "nodes": 276
+    },
+    {
+      "contains_start": false,
+      "entries": 120,
+      "internal_edges": 722,
+      "nodes": 276
+    },
+    {
+      "contains_start": false,
+      "entries": 120,
+      "internal_edges": 722,
+      "nodes": 276
+    },
+    {
+      "contains_start": false,
+      "entries": 120,
+      "internal_edges": 722,
+      "nodes": 276
+    },
+    {
+      "contains_start": false,
+      "entries": 120,
+      "internal_edges": 722,
+      "nodes": 276
+    },
+    {
+      "contains_start": false,
+      "entries": 120,
+      "internal_edges": 722,
+      "nodes": 276
+    },
+    {
+      "contains_start": false,
+      "entries": 80,
+      "internal_edges": 536,
+      "nodes": 232
+    },
+    {
+      "contains_start": false,
+      "entries": 80,
+      "internal_edges": 536,
+      "nodes": 232
+    }
+  ],
+  "load_and_build_seconds": 0.63048125,
+  "nodes": 289536,
+  "nodes_in_nontrivial_components": 264304,
+  "nontrivial_component_size_histogram": {
+    "11": 40,
+    "112": 8,
+    "11736": 1,
+    "14": 16,
+    "16": 16,
+    "18": 32,
+    "19": 16,
+    "23": 48,
+    "232": 2,
+    "233472": 1,
+    "276": 8,
+    "4": 192,
+    "40": 26,
+    "44": 32,
+    "57": 16,
+    "6": 96,
+    "62": 8,
+    "692": 8,
+    "7": 8,
+    "71": 8,
+    "8": 48,
+    "9": 16,
+    "92": 8
+  },
+  "nontrivial_components": 654,
+  "out_degree_histogram": {
+    "1": 130832,
+    "10": 488,
+    "11": 160,
+    "12": 288,
+    "13": 112,
+    "14": 160,
+    "15": 88,
+    "16": 176,
+    "17": 88,
+    "18": 92,
+    "19": 80,
+    "2": 70416,
+    "20": 124,
+    "21": 88,
+    "22": 40,
+    "23": 80,
+    "24": 30,
+    "3": 40336,
+    "4": 20626,
+    "5": 10808,
+    "6": 8032,
+    "7": 3256,
+    "8": 2096,
+    "9": 1040
+  },
+  "peak_rss_mib": 485.96875,
+  "seconds": 0.664723584,
+  "shortest_exit_distance_histogram": {
+    "1": 143906,
+    "11": 864,
+    "13": 440,
+    "15": 48,
+    "17": 96,
+    "19": 32,
+    "21": 48,
+    "25": 56,
+    "29": 8,
+    "3": 98992,
+    "5": 30180,
+    "7": 10432,
+    "9": 3864
+  },
+  "start_component": {
+    "entries": 1,
+    "internal_edges": 33960,
+    "nodes": 11736
+  }
+}

@@ -1,0 +1,224 @@
+{
+  "cap": 2,
+  "peak_rss_mib": 1102.28125,
+  "rows": [
+    {
+      "depth": 1,
+      "memo": 1,
+      "nodes": 1,
+      "red_wins_within": false,
+      "seconds": 3.208e-6,
+      "white_wins_within": false
+    },
+    {
+      "depth": 2,
+      "memo": 2,
+      "nodes": 2,
+      "red_wins_within": false,
+      "seconds": 4.58e-7,
+      "white_wins_within": false
+    },
+    {
+      "depth": 3,
+      "memo": 8,
+      "nodes": 8,
+      "red_wins_within": false,
+      "seconds": 1.667e-6,
+      "white_wins_within": false
+    },
+    {
+      "depth": 4,
+      "memo": 10,
+      "nodes": 10,
+      "red_wins_within": false,
+      "seconds": 1e-6,
+      "white_wins_within": false
+    },
+    {
+      "depth": 5,
+      "memo": 36,
+      "nodes": 36,
+      "red_wins_within": false,
+      "seconds": 7.042e-6,
+      "white_wins_within": false
+    },
+    {
+      "depth": 6,
+      "memo": 40,
+      "nodes": 40,
+      "red_wins_within": false,
+      "seconds": 4.125e-6,
+      "white_wins_within": false
+    },
+    {
+      "depth": 7,
+      "memo": 129,
+      "nodes": 129,
+      "red_wins_within": false,
+      "seconds": 0.000017,
+      "white_wins_within": false
+    },
+    {
+      "depth": 8,
+      "memo": 141,
+      "nodes": 141,
+      "red_wins_within": false,
+      "seconds": 0.000014792,
+      "white_wins_within": false
+    },
+    {
+      "depth": 9,
+      "memo": 440,
+      "nodes": 440,
+      "red_wins_within": false,
+      "seconds": 0.00004,
+      "white_wins_within": false
+    },
+    {
+      "depth": 10,
+      "memo": 479,
+      "nodes": 479,
+      "red_wins_within": false,
+      "seconds": 0.000057417,
+      "white_wins_within": false
+    },
+    {
+      "depth": 11,
+      "memo": 1669,
+      "nodes": 1669,
+      "red_wins_within": false,
+      "seconds": 0.000146666,
+      "white_wins_within": false
+    },
+    {
+      "depth": 12,
+      "memo": 1803,
+      "nodes": 1800,
+      "red_wins_within": false,
+      "seconds": 0.000176375,
+      "white_wins_within": false
+    },
+    {
+      "depth": 13,
+      "memo": 5863,
+      "nodes": 5717,
+      "red_wins_within": false,
+      "seconds": 0.000432125,
+      "white_wins_within": false
+    },
+    {
+      "depth": 14,
+      "memo": 6355,
+      "nodes": 5976,
+      "red_wins_within": false,
+      "seconds": 0.000426458,
+      "white_wins_within": false
+    },
+    {
+      "depth": 15,
+      "memo": 25059,
+      "nodes": 23915,
+      "red_wins_within": false,
+      "seconds": 0.001819375,
+      "white_wins_within": false
+    },
+    {
+      "depth": 16,
+      "memo": 25402,
+      "nodes": 22035,
+      "red_wins_within": false,
+      "seconds": 0.001580625,
+      "white_wins_within": false
+    },
+    {
+      "depth": 17,
+      "memo": 158988,
+      "nodes": 154843,
+      "red_wins_within": false,
+      "seconds": 0.014183875,
+      "white_wins_within": false
+    },
+    {
+      "depth": 18,
+      "memo": 160314,
+      "nodes": 131164,
+      "red_wins_within": false,
+      "seconds": 0.012874417,
+      "white_wins_within": false
+    },
+    {
+      "depth": 19,
+      "memo": 570212,
+      "nodes": 538929,
+      "red_wins_within": false,
+      "seconds": 0.060210125,
+      "white_wins_within": false
+    },
+    {
+      "depth": 20,
+      "memo": 572169,
+      "nodes": 537600,
+      "red_wins_within": false,
+      "seconds": 0.063744291,
+      "white_wins_within": false
+    },
+    {
+      "depth": 21,
+      "memo": 2285823,
+      "nodes": 2245176,
+      "red_wins_within": false,
+      "seconds": 0.261288208,
+      "white_wins_within": false
+    },
+    {
+      "depth": 22,
+      "memo": 2294307,
+      "nodes": 2128441,
+      "red_wins_within": false,
+      "seconds": 0.334513208,
+      "white_wins_within": false
+    },
+    {
+      "depth": 23,
+      "memo": 1322172,
+      "nodes": 8854688,
+      "red_wins_within": false,
+      "seconds": 1.362620542,
+      "white_wins_within": false
+    },
+    {
+      "depth": 24,
+      "memo": 6019994,
+      "nodes": 12697822,
+      "red_wins_within": false,
+      "seconds": 1.296821708,
+      "white_wins_within": false
+    },
+    {
+      "depth": 25,
+      "memo": 5497268,
+      "nodes": 55477274,
+      "red_wins_within": false,
+      "seconds": 5.059505417,
+      "white_wins_within": false
+    },
+    {
+      "depth": 26,
+      "memo": 5378751,
+      "nodes": 55881483,
+      "red_wins_within": false,
+      "seconds": 5.74681325,
+      "white_wins_within": false
+    },
+    {
+      "depth": 27,
+      "memo": 1227007,
+      "nodes": 251848256,
+      "red_wins_within": false,
+      "seconds": 22.346455209,
+      "white_wins_within": false
+    }
+  ],
+  "seconds": 36.889350125,
+  "verdict": null
+}

@@ -1,0 +1,53 @@
+{
+  "cap": 2,
+  "dynamic": true,
+  "limit_per_component": 20000000,
+  "peak_rss_mib": 1145.34375,
+  "rows": [
+    {
+      "copies": 26,
+      "entries": 8,
+      "entries_solved": 2,
+      "finished": false,
+      "internal_edges": 124,
+      "max_depth": 76,
+      "nodes": 40,
+      "searched": 20000004,
+      "seconds": 31.159108042
+    },
+    {
+      "copies": 32,
+      "entries": 4,
+      "entries_solved": 4,
+      "finished": true,
+      "internal_edges": 68,
+      "max_depth": 13,
+      "nodes": 44,
+      "searched": 54,
+      "seconds": 0.000254291
+    },
+    {
+      "copies": 16,
+      "entries": 4,
+      "entries_solved": 4,
+      "finished": true,
+      "internal_edges": 169,
+      "max_depth": 16,
+      "nodes": 57,
+      "searched": 156,
+      "seconds": 0.00036825
+    },
+    {
+      "copies": 8,
+      "entries": 16,
+      "entries_solved": 14,
+      "finished": false,
+      "internal_edges": 184,
+      "max_depth": 77,
+      "nodes": 62,
+      "searched": 20000000,
+      "seconds": 37.312484583
+    }
+  ],
+  "seconds": 69.213591666
+}
