@@ -1,0 +1,32 @@
+{
+  "by_distance": {
+    "win_in_1": {
+      "opponent_wins_within_d": 47,
+      "opponent_wins_within_d_minus_2": 0,
+      "sampled": 47
+    },
+    "win_in_3": {
+      "opponent_wins_within_d": 72,
+      "opponent_wins_within_d_minus_2": 0,
+      "sampled": 72
+    },
+    "win_in_5": {
+      "opponent_wins_within_d": 108,
+      "opponent_wins_within_d_minus_2": 0,
+      "sampled": 108
+    },
+    "win_in_7": {
+      "opponent_wins_within_d": 73,
+      "opponent_wins_within_d_minus_2": 0,
+      "sampled": 73
+    }
+  },
+  "method": "random lc1-2 games inside G on the engine (history kept), then a random exit into an uncapped win in d plies for the opponent; plain negamax on the engine under lc1-2, no table",
+  "negamax_nodes": 717470,
+  "peak_rss_mib": 215.65625,
+  "samples": 300,
+  "samples_whose_walk_repeated_a_position": 288,
+  "seconds": 11.47413725,
+  "walk_plies_max": 234,
+  "walk_plies_median": 44
+}

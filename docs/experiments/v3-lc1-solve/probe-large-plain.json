@@ -1,0 +1,31 @@
+{
+  "cap": 2,
+  "dynamic": false,
+  "limit_per_component": 10000000,
+  "peak_rss_mib": 1261.1875,
+  "rows": [
+    {
+      "copies": 1,
+      "entries": 1,
+      "entries_solved": 0,
+      "finished": false,
+      "internal_edges": 33960,
+      "max_depth": 4340,
+      "nodes": 11736,
+      "searched": 10000007,
+      "seconds": 1.059778875
+    },
+    {
+      "copies": 1,
+      "entries": 3192,
+      "entries_solved": 0,
+      "finished": false,
+      "internal_edges": 534864,
+      "max_depth": 2621,
+      "nodes": 233472,
+      "searched": 10000002,
+      "seconds": 1.1410741660000001
+    }
+  ],
+  "seconds": 2.7465145829999997
+}
