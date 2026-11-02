@@ -1,6 +1,7 @@
 pub mod arena;
 pub mod checkpoint;
 pub mod elo;
+pub mod lc1solve;
 pub mod mcts;
 pub mod measure;
 pub mod minimax;

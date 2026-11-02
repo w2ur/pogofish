@@ -26,3 +26,7 @@ path = "src/bin/retro.rs"
 [[bin]]
 name = "ladder"
 path = "src/bin/ladder.rs"
+
+[[bin]]
+name = "lc1solve"
+path = "src/bin/lc1solve.rs"

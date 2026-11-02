@@ -119,6 +119,14 @@ cargo run --release -p pogofish-infer --example retro_net -- $D --games 400 --se
 ```
 The round-1 `solve` binary (depth-limited minimax) is invalidated (`v1-verdict.md`); use `retro`.
 
+### `lc1-2` on the draw graph (round 3)
+```bash
+# Reads the solved uncapped table of docs/experiments/v3-solve.md; see v3-lc1-solve.md
+# (the root is not solved: the counts search does not finish on the hard components).
+cargo build --release -p pogofish-search --bin lc1solve
+./target/release/lc1solve graph models/v3-solve/table.bin --out graph.json   # also: exits, probe, deepen, pilot, dump
+```
+
 ### Exporting a net for the terminal game
 ```bash
 # Checks the pure-Rust copy against the checkpoint (1e-5 on 100 positions) before writing.
