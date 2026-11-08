@@ -54,6 +54,20 @@ pilot**: 2.8 s fixed + 1.43 × 20 ≈ 29 s + 2.27 × 20 ≈ 45 s, about **77 s**
 near 0.59 GB (the table dominates). The arena term is the noisy one: it rests on 50 pairs
 whose game lengths vary with the opening, and a net that plays longer games takes longer.
 
+TD(λ) retrain under `lc1-2`, 20-iteration pilot (seed 1, scratch directory, deleted):
+
+```bash
+/usr/bin/time -l env DYLD_LIBRARY_PATH=$L ./target/release/td_train models/v4-td-pilot \
+  --rules lc1-2 --features mover-relative-repetition --lambda 0.7 --lr 0.1 --iterations 20 \
+  --temp-decay 1000 --eval-every 50 --eval-pairs 200 --checkpoint-every 50 --seed 1
+```
+
+Measured: 2.69 s wall, 116 MB max RSS (no evaluation fell inside 20 iterations). 1,000
+iterations (50,000 games), **extrapolated from pilot**: about 135 s plus 20 evaluations. The
+three full runs took 61.0 s, 61.7 s and 61.4 s each (evaluations included), 111–117 MB; the
+pilot overestimated by about 2.2 times, because early iterations, at high temperature and
+with an untrained net, play longer games than later ones.
+
 ## Main table
 
 <!-- v4-table:start -->
