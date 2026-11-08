@@ -17,7 +17,7 @@
 //! - `net:<pfw>[:sims]`: the net's most-visited move(s) after `sims`
 //!   simulations (default 100), or with `:0` the move(s) of highest prior;
 //! - `td:<pfv>`: a TD(λ) value net (see [`TdPlayer`]);
-//! - `qtab:<file>`: parsed, not yet available.
+//! - `qtab:<v.bin>`: a tabular value learner's table (see [`QtabPlayer`]).
 
 use crate::mcts::{search, Evaluator, MctsConfig};
 use crate::mlp::Mlp;
@@ -29,9 +29,12 @@ use pogofish_engine::{
 use pogofish_search::arena::Agent;
 use pogofish_search::perfect::{Criterion, Policy, PolicyPlayer, Sample, Solved};
 use pogofish_search::principles::GreedyTwoPly;
-use pogofish_search::retro::Value;
+use pogofish_search::qtab::QTable;
+use pogofish_search::retro::{Bitset, Game, Value};
 use pogofish_search::rng::SplitMix64;
 use serde::Serialize;
+use std::collections::HashMap;
+use std::sync::{Arc, Mutex, OnceLock};
 
 /// Default simulations of a `net:` player (the round-2 protocol).
 pub const DEFAULT_SIMS: u32 = 100;
@@ -48,6 +51,17 @@ pub trait TiedChooser: Send {
     /// The moves the player picks from uniformly, never empty for a position
     /// with a legal move.
     fn tied(&mut self, s: &GameState, rules: &RuleSet) -> Vec<Move>;
+    /// For a player read from a learnt table of visited positions (`qtab`):
+    /// whether at least one legal move of `s` leads to a visited position.
+    /// `None` for every other player.
+    fn child_visited(&self, _s: &GameState) -> Option<bool> {
+        None
+    }
+    /// For a `qtab` player: the positions it visited, and how many of them
+    /// are set in `reach`. `None` for every other player.
+    fn coverage(&self, _reach: &Bitset) -> Option<(u64, u64)> {
+        None
+    }
 }
 
 /// Any tied chooser as an arena agent: a uniform pick from its tied set
@@ -234,6 +248,83 @@ impl TiedChooser for TdPlayer {
     }
 }
 
+/// A learnt table of the published game, as `qtrain` saves it.
+pub struct Qtab {
+    pub g: Game,
+    pub t: QTable,
+}
+
+/// The tabular value learner (`qtrain`), one ply deep like [`TdPlayer`]:
+/// the moves of highest Q(s, a), the exact result when the move ends the
+/// game under the live rules, else −V(position after the move) read from
+/// the table. Exact float ties only. An unvisited position reads V₀ = 0.
+/// The table is loaded once per process and shared by every copy.
+pub struct QtabPlayer {
+    pub table: Arc<Qtab>,
+    pub label: String,
+}
+
+impl QtabPlayer {
+    /// Load `v.bin` (with the `visited.bin` and `state.json` next to it), or
+    /// share the copy this process already loaded.
+    pub fn load(path: &str) -> anyhow::Result<QtabPlayer> {
+        static LOADED: OnceLock<Mutex<HashMap<String, Arc<Qtab>>>> = OnceLock::new();
+        let mut loaded = LOADED
+            .get_or_init(|| Mutex::new(HashMap::new()))
+            .lock()
+            .expect("qtab cache");
+        let table = match loaded.get(path) {
+            Some(t) => t.clone(),
+            None => {
+                let g = Game::published();
+                let (t, _) = QTable::load(path.as_ref(), g.size())
+                    .with_context(|| format!("loading {path}"))?;
+                let t = Arc::new(Qtab { g, t });
+                loaded.insert(path.to_string(), t.clone());
+                t
+            }
+        };
+        Ok(QtabPlayer {
+            table,
+            label: path.to_string(),
+        })
+    }
+}
+
+impl TiedChooser for QtabPlayer {
+    fn name(&self) -> String {
+        format!("qtab:{}", self.label)
+    }
+
+    fn tied(&mut self, s: &GameState, rules: &RuleSet) -> Vec<Move> {
+        let qs = self.table.t.q_values(&self.table.g, s, rules);
+        let scores: Vec<f32> = qs.iter().map(|&(_, q)| q).collect();
+        argmax_all(&scores).into_iter().map(|i| qs[i].0).collect()
+    }
+
+    fn child_visited(&self, s: &GameState) -> Option<bool> {
+        Some(legal_moves(s).into_iter().any(|m| {
+            let next = apply_move(s, m).expect("legal move");
+            self.table.t.is_visited(&self.table.g, &next)
+        }))
+    }
+
+    fn coverage(&self, reach: &Bitset) -> Option<(u64, u64)> {
+        let visited = &self.table.t.visited;
+        let both = visited
+            .words
+            .iter()
+            .zip(&reach.words)
+            .map(|(a, b)| {
+                (a.load(std::sync::atomic::Ordering::Relaxed)
+                    & b.load(std::sync::atomic::Ordering::Relaxed))
+                .count_ones() as u64
+            })
+            .sum();
+        Some((visited.count(), both))
+    }
+}
+
 /// A pure-Rust net: its most-visited move(s) after `sims` simulations (no
 /// root noise), or with `sims == 0` the legal move(s) of highest prior.
 pub struct NetPlayer {
@@ -333,10 +424,10 @@ pub fn player_from_spec<'a>(
             net: ValueMlp::load(rest.as_ref())?,
             label: rest.to_string(),
         })),
-        "qtab" if !rest.is_empty() => bail!("qtab: player arrives in Task 7"),
+        "qtab" if !rest.is_empty() => Ok(Box::new(QtabPlayer::load(rest)?)),
         _ => bail!(
             "unknown player '{spec}': expected random, greedy, greedy-2ply, table, \
-             net:<pfw>[:sims], td:<pfv> or qtab:<file>"
+             net:<pfw>[:sims], td:<pfv> or qtab:<v.bin>"
         ),
     }
 }
@@ -541,11 +632,7 @@ mod tests {
             assert!(player_from_spec(bad, None).is_err(), "{bad}");
         }
         assert!(player_from_spec("td:/no/such/file.pfv", None).is_err());
-        let e = player_from_spec("qtab:x.bin", None)
-            .err()
-            .unwrap()
-            .to_string();
-        assert_eq!(e, "qtab: player arrives in Task 7");
+        assert!(player_from_spec("qtab:/no/such/v.bin", None).is_err());
         assert!(player_from_spec("table", None).is_err());
         for good in ["random", "greedy", "greedy-2ply"] {
             assert_eq!(player_from_spec(good, None).unwrap().name(), good);
@@ -677,6 +764,100 @@ mod tests {
             })
             .collect();
         assert!(!wins_now.is_empty() && wins_now.len() < legal_moves(&s).len());
+        assert_eq!(p.tied(&s, &LC1_2), wins_now);
+    }
+
+    /// A learnt table of the small game (3 White, 3 Red), all zero.
+    fn small_qtab() -> QtabPlayer {
+        let g = Game::new(3, 3, pogofish_search::retro::MoveRule::published());
+        let t = QTable::new(g.size());
+        QtabPlayer {
+            table: Arc::new(Qtab { g, t }),
+            label: "small".into(),
+        }
+    }
+
+    #[test]
+    fn qtab_player_picks_the_moves_that_maximise_q() {
+        let mut p = small_qtab();
+        assert_eq!(p.name(), "qtab:small");
+        let shared = p.table.clone();
+        let g = &shared.g;
+        // A live position with at least three moves, none ending the game.
+        let s = (0..g.size())
+            .map(|i| g.unrank(i).to_state())
+            .find(|s| {
+                is_terminal(s, &LC1_2).is_none()
+                    && legal_moves(s).len() >= 3
+                    && legal_moves(s).iter().all(|&m| {
+                        is_terminal(&apply_move_under(s, m, &LC1_2).unwrap(), &LC1_2).is_none()
+                    })
+            })
+            .unwrap();
+        let moves = legal_moves(&s);
+        // All children at V = 0: every move ties.
+        assert_eq!(p.tied(&s, &LC1_2), moves);
+        assert_eq!(p.child_visited(&s), Some(false));
+        // Two children at V = -0.5 (Q = 0.5) beat the rest (Q = 0).
+        let mut t = QTable::new(g.size());
+        for &m in &moves[1..3] {
+            let c = apply_move_under(&s, m, &LC1_2).unwrap();
+            let i = g.rank(&pogofish_search::retro::Board::from_state(&c));
+            t.v[i as usize] = -0.5;
+            t.visited.set(i);
+        }
+        let reach = Bitset::new(g.size());
+        reach.set(0);
+        let i = g.rank(&pogofish_search::retro::Board::from_state(
+            &apply_move_under(&s, moves[1], &LC1_2).unwrap(),
+        ));
+        reach.set(i);
+        let g2 = Game::new(3, 3, pogofish_search::retro::MoveRule::published());
+        p.table = Arc::new(Qtab { g: g2, t });
+        assert_eq!(p.tied(&s, &LC1_2), moves[1..3].to_vec());
+        assert_eq!(p.child_visited(&s), Some(true));
+        assert_eq!(p.coverage(&reach), Some((2, 1)));
+        // Other players report neither.
+        let r = player_from_spec("random", None).unwrap();
+        assert_eq!(r.child_visited(&s), None);
+        assert_eq!(r.coverage(&reach), None);
+    }
+
+    #[test]
+    fn qtab_player_takes_a_move_that_wins_at_once() {
+        // Every child that does not win at once gets V = -0.99 (Q = 0.99), so
+        // only the exact win scores 1.
+        let mut p = small_qtab();
+        let shared = p.table.clone();
+        let g = &shared.g;
+        let s = (0..g.size())
+            .map(|i| g.unrank(i).to_state())
+            .find(|s| {
+                let mover = s.to_move();
+                let wins = legal_moves(s)
+                    .iter()
+                    .filter(|&&m| {
+                        matches!(is_terminal(&apply_move_under(s, m, &LC1_2).unwrap(), &LC1_2),
+                            Some(o) if o.winner() == Some(mover))
+                    })
+                    .count();
+                is_terminal(s, &LC1_2).is_none() && wins >= 1 && wins < legal_moves(s).len()
+            })
+            .unwrap();
+        let mut t = QTable::new(g.size());
+        let mut wins_now = Vec::new();
+        for m in legal_moves(&s) {
+            let c = apply_move_under(&s, m, &LC1_2).unwrap();
+            match is_terminal(&c, &LC1_2) {
+                Some(o) if o.winner() == Some(s.to_move()) => wins_now.push(m),
+                _ => {
+                    let i = g.rank(&pogofish_search::retro::Board::from_state(&c));
+                    t.v[i as usize] = -0.99;
+                }
+            }
+        }
+        let g2 = Game::new(3, 3, pogofish_search::retro::MoveRule::published());
+        p.table = Arc::new(Qtab { g: g2, t });
         assert_eq!(p.tied(&s, &LC1_2), wins_now);
     }
 }

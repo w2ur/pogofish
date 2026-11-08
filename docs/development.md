@@ -10,7 +10,7 @@ command, the board build the hub embeds, and the round-1 web article. The
 
 - `pogofish-engine` — game rules, state, legal moves, rule variants (LC1/LC2/LC3).
 - `pogofish-infer` — pure-Rust inference (no libtorch): input features, action indexing, the MLP forward pass reading exported `.pfw` weights (and the TD value net's `.pfv`), and the neural MCTS shared with training; the `v4bench` binary measures any player against the solved table and greedy. The terminal game depends on it.
-- `pogofish-search` — minimax (alpha-beta + transposition table), MCTS (PUCT), checkpointer, and two scripted baselines: `random` and `greedy` (wins when it can, else maximises own stacks on top minus the opponent's).
+- `pogofish-search` — minimax (alpha-beta + transposition table), MCTS (PUCT), checkpointer, and two scripted baselines: `random` and `greedy` (wins when it can, else maximises own stacks on top minus the opponent's); the tabular value learner (`qtrain`, one value per position, no libtorch).
 - `pogofish-train` — AlphaZero training via tch-rs/libtorch (no gating: every checkpoint is kept and rated), self-play, TD(λ) value learning (`td_train`, `export_td`), the `arena` evaluation binary, and an `analyze` binary that produces the insights JSON the article reads.
 - `pogofish-cli` — the terminal game: play the trained AlphaZero net (pure-Rust inference, no libtorch), choose your colour and level, ask for hints, see the AI's estimate.
 - `pogofish-wasm` — wasm-bindgen wrappers for the browser.
@@ -95,6 +95,10 @@ cargo run --release -p pogofish-search --bin measure -- --games 20000 --seed 1 -
 DYLD_LIBRARY_PATH=$(find target/release/build -path "*/torch-sys-*/out/libtorch/libtorch/lib" | head -1) \
   ./target/release/export_td models/v4-td-lc1-s1/weights.pt models/v4-td-lc1-s1/td.pfv
 ./target/release/v4bench models/v3-solve td:models/v4-td-lc1-s1/td.pfv --out td.json
+
+# Tabular value learner (931 MB table, resumable), then bench it against greedy and random
+./target/release/qtrain models/v4-qtab-s1 --games 500000 --seed 1
+./target/release/v4bench models/v3-solve qtab:models/v4-qtab-s1/v.bin --opponent random --out qtab.json
 
 # Elo ladder from arena reports, and its plot
 cargo run --release -p pogofish-search --bin ladder -- arena.json --out ladder.json

@@ -2,7 +2,7 @@
 //!
 //! ```text
 //! v4bench <table-dir> <player-spec> --out <json> [--pairs 1000] [--seed 404]
-//!         [--sample-seed 31] [--threads 4] [--sample-cap N]
+//!         [--sample-seed 31] [--threads 4] [--sample-cap N] [--opponent greedy|random]
 //! ```
 //!
 //! Measures one player two ways, without libtorch:
@@ -16,7 +16,14 @@
 //!    repetition features reads "never seen" (`"history": "none"`).
 //! 2. **Score against greedy** under `lc1-2` in the arena: colour-swapped
 //!    pairs from random 4-ply openings, 1,000-ply limit; unfinished games are
-//!    counted apart and never scored.
+//!    counted apart and never scored. `--opponent random` plays the bench's
+//!    `random` player instead (it takes a win and avoids an immediate loss),
+//!    not the arena's uniform `Scripted::Random`.
+//!
+//! For a `qtab:` player the JSON also holds `keep_visited` (the keep rates
+//! on the measured positions with at least one move to a visited position,
+//! with n) and `coverage` (positions visited, and their share of the
+//! reachable ones).
 //!
 //! Before measuring, falsification controls run on the full held-out sample:
 //! the table oracle must keep 1.000 / 1.000, the anti-oracle must equal the
@@ -69,12 +76,14 @@ struct Args {
     sample_seed: u64,
     threads: usize,
     sample_cap: Option<usize>,
+    opponent: String,
 }
 
 fn parse_args(argv: &[String]) -> anyhow::Result<Args> {
     let mut pos = Vec::new();
     let mut out = None;
     let (mut pairs, mut seed, mut sample_seed, mut threads, mut cap) = (1000, 404, 31, 4, None);
+    let mut opponent = "greedy".to_string();
     let mut it = argv.iter();
     while let Some(a) = it.next() {
         if !a.starts_with("--") {
@@ -89,15 +98,21 @@ fn parse_args(argv: &[String]) -> anyhow::Result<Args> {
             "--sample-seed" => sample_seed = v.parse()?,
             "--threads" => threads = v.parse()?,
             "--sample-cap" => cap = Some(v.parse()?),
+            "--opponent" => opponent = v.clone(),
             _ => bail!("unknown option {a}"),
         }
     }
     let usage = "usage: v4bench <table-dir> <player-spec> --out <json> [--pairs 1000] \
-                 [--seed 404] [--sample-seed 31] [--threads 4] [--sample-cap N]";
+                 [--seed 404] [--sample-seed 31] [--threads 4] [--sample-cap N] \
+                 [--opponent greedy|random]";
     ensure!(pos.len() == 2, "{usage}");
     ensure!(
         threads >= 1 && pairs >= 1,
         "--threads and --pairs must be at least 1"
+    );
+    ensure!(
+        opponent == "greedy" || opponent == "random",
+        "--opponent must be greedy or random, got {opponent}"
     );
     Ok(Args {
         table: pos[0].clone(),
@@ -108,6 +123,7 @@ fn parse_args(argv: &[String]) -> anyhow::Result<Args> {
         sample_seed,
         threads,
         sample_cap: cap,
+        opponent,
     })
 }
 
@@ -321,19 +337,57 @@ fn run() -> anyhow::Result<()> {
         a.spec, player.0.rate, player.1.rate
     );
 
-    // The arena against greedy (one thread, deterministic for a seed).
+    // A table learner's figures on the positions it has seen around.
+    let probe = player_from_spec(&a.spec, Some(&sv))?;
+    let (keep_visited, coverage) = match probe.coverage(&sv.reach) {
+        None => (Json::Null, Json::Null),
+        Some((visited, visited_reachable)) => {
+            let mut p = player_from_spec(&a.spec, Some(&sv))?;
+            let mut class = |set: &[Sample]| -> Json {
+                let mut rates: Vec<f64> = Vec::new();
+                for x in set {
+                    if p.child_visited(&x.state) == Some(true) {
+                        rates.push(keep_of(x, &p.tied(&x.state, &RULES)));
+                    }
+                }
+                match rates.len() {
+                    0 => json!({"rate": null, "ci95": null, "n": 0}),
+                    1 => json!({"rate": rates[0], "ci95": null, "n": 1}),
+                    _ => json!(rate_stat(&rates)),
+                }
+            };
+            let kv = json!({"won": class(&won[..cap]), "drawn": class(&drawn[..cap])});
+            let reachable = sv.reach.count();
+            let cov = json!({
+                "visited": visited,
+                "visited_reachable": visited_reachable,
+                "reachable": reachable,
+                "share_of_reachable": visited_reachable as f64 / reachable as f64,
+            });
+            eprintln!("keep on positions with a visited child: {kv}; coverage {cov}");
+            (kv, cov)
+        }
+    };
+
+    // The arena against the opponent (one thread, deterministic for a seed).
     let t = Instant::now();
     let cfg = ArenaConfig::new(RULES, a.pairs, OPENING_PLIES, MAX_PLIES, a.seed);
     let mut agent = TiedAgent(player_from_spec(&a.spec, Some(&sv))?);
-    let report = run_match(&mut agent, &mut Scripted::Greedy, &cfg).map_err(anyhow::Error::msg)?;
+    let report = if a.opponent == "random" {
+        let mut them = TiedAgent(player_from_spec("random", None)?);
+        run_match(&mut agent, &mut them, &cfg)
+    } else {
+        run_match(&mut agent, &mut Scripted::Greedy, &cfg)
+    }
+    .map_err(anyhow::Error::msg)?;
     let arena_s = t.elapsed().as_secs_f64();
     eprintln!(
-        "arena vs greedy: {:.3} [{:.3}, {:.3}], {} unfinished, in {arena_s:.1} s",
-        report.score, report.ci95[0], report.ci95[1], report.a.unfinished
+        "arena vs {}: {:.3} [{:.3}, {:.3}], {} unfinished, in {arena_s:.1} s",
+        a.opponent, report.score, report.ci95[0], report.ci95[1], report.a.unfinished
     );
 
     let name = player_from_spec(&a.spec, Some(&sv))?.name();
-    let out = json!({
+    let mut out = json!({
         "player": name,
         "spec": a.spec,
         "command": argv,
@@ -348,6 +402,7 @@ fn run() -> anyhow::Result<()> {
             "measured_per_class": cap, "controls_per_class": TEST_PER_CLASS,
         },
         "keep": class_json(player),
+        "opponent": a.opponent,
         "arena": report,
         "controls": {
             "oracle": {"keep": class_json(oracle), "expected": [ORACLE.0, ORACLE.1]},
@@ -363,6 +418,10 @@ fn run() -> anyhow::Result<()> {
         "threads": a.threads,
         "peak_rss_mib": peak_rss_mib(),
     });
+    if !coverage.is_null() {
+        out["keep_visited"] = keep_visited;
+        out["coverage"] = coverage;
+    }
     std::fs::write(&a.out, serde_json::to_string_pretty(&out)? + "\n")
         .with_context(|| format!("writing {}", a.out))?;
     eprintln!("wrote {}", a.out);

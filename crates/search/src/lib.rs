@@ -1,6 +1,7 @@
 pub mod arena;
 pub mod checkpoint;
 pub mod elo;
+pub mod interrupt;
 pub mod lc1solve;
 pub mod mcts;
 pub mod perfect;
@@ -8,5 +9,6 @@ pub mod measure;
 pub mod minimax;
 pub mod players;
 pub mod principles;
+pub mod qtab;
 pub mod retro;
 pub mod rng;

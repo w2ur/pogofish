@@ -34,3 +34,7 @@ path = "src/bin/perfect.rs"
 [[bin]]
 name = "lc1solve"
 path = "src/bin/lc1solve.rs"
+
+[[bin]]
+name = "qtrain"
+path = "src/bin/qtrain.rs"

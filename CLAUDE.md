@@ -10,7 +10,7 @@ Pogofish is a browser-based Pogo board game with AI opponents trained via AlphaZ
 - Rust 1.79+ (stable toolchain)
 - `pogofish-engine` — Game rules, state, legal moves, rulesets (`Uncapped`, LC1/LC2/LC3, LC1Draw; `RuleSet` parses and prints `uncapped`, `lc1-N`, `lc1d-N`, …)
 - `pogofish-infer` — Pure-Rust inference (no libtorch): input features, action indexing, MLP forward pass reading exported `.pfw` weights (and the TD value net's `.pfv`), and the neural MCTS shared with training (`Evaluator` trait), the `v4bench` binary (one protocol for every player)
-- `pogofish-search` — Minimax (alpha-beta + TT), MCTS (PUCT), checkpointer, scripted `random`/`greedy` players (seeded, no dependency), the retrograde solver of the uncapped game (`retro.rs`, binary `retro`)
+- `pogofish-search` — Minimax (alpha-beta + TT), MCTS (PUCT), checkpointer, scripted `random`/`greedy` players (seeded, no dependency), the retrograde solver of the uncapped game (`retro.rs`, binary `retro`), the tabular value learner (`qtab.rs`, binary `qtrain`, no libtorch)
 - `pogofish-train` — AlphaZero training (tch-rs/libtorch, no gating, exact resume), self-play, TD(λ) value learning (`td_train`), `export_td`, `arena` evaluation binary
 - `pogofish-cli` — Terminal game (crossterm) against the bundled net: colour, level (simulations), hint, the AI's estimate, undo, saved game records; game logic in `session.rs`, key handling tested headless in `app.rs`
 - `pogofish-wasm` — wasm-bindgen wrappers for browser use
@@ -88,12 +88,25 @@ openings, no CI and counts truncations as draws.
 # score vs greedy under lc1-2 (1,000 colour-swapped pairs, 4-ply openings, seed 404).
 # Controls run first (oracle, anti-oracle, random vs round 3); a failure is exit 2, no JSON.
 # Players: random, greedy, greedy-2ply, table, net:PFW[:SIMS] (100; 0 = policy argmax),
-# td:PFV (a TD value net, one ply: exact result if the move ends the game, else -V(next))
+# td:PFV (a TD value net, one ply: exact result if the move ends the game, else -V(next)),
+# qtab:V.BIN (the tabular learner, same one-ply rule; its JSON adds keep_visited and coverage)
 cargo build --release -p pogofish-infer --bin v4bench
 ./target/release/v4bench models/v3-solve net:crates/cli/assets/az-lc1-s1.pfw --out bench.json
 ```
 `--sample-cap N` scores the player on N positions per class (a pilot; the controls keep the
-full sample). See `docs/experiments/v4-evaluation.md`.
+full sample). `--opponent random` plays the bench's `random` player (takes a win, avoids an
+immediate loss) instead of greedy. See `docs/experiments/v4-evaluation.md`.
+
+### Tabular value learner
+```bash
+# One V per position of the published game (931 MB dense f32 + a visited bitset, in
+# models/v4-qtab-sN/), Q-learning in afterstate form under lc1-2, epsilon-greedy 1.0 -> 0.05.
+# Resumable: Ctrl+C saves at the next game boundary (exit 130), rerun to resume, bit-identical;
+# a finished run is a no-op. One run at a time on the 8 GB Mac.
+cargo build --release -p pogofish-search --bin qtrain
+./target/release/qtrain models/v4-qtab-s1 --games 500000 --seed 1
+./target/release/v4bench models/v3-solve qtab:models/v4-qtab-s1/v.bin --out qtab.json
+```
 
 ### TD(λ) value learning
 ```bash
