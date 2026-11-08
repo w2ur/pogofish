@@ -13,9 +13,17 @@ marker pairs
 
     <!-- v4-table:start -->    ...  <!-- v4-table:end -->
     <!-- v4-appendix:start --> ...  <!-- v4-appendix:end -->
+    <!-- v4-tabular:start -->  ...  <!-- v4-tabular:end -->
+
+The main and appendix tables hold the runs against greedy (`opponent` absent or
+"greedy"). The tabular block holds the tabular learner's (`qtab:`) runs against
+both opponents and its pre-registered criteria, met or failed per seed; it is
+written when the document has its markers. Only `qtab:` players may have a run against
+`random`.
 
 Exit 0 on success, 2 when it cannot run (a JSON with a foreign table hash or
-without `command`, no JSON, a missing marker): nothing is written then.
+without `command`, two JSON for the same player and opponent, a run against
+`random` of another player, no JSON, a missing marker): nothing is written then.
 """
 import json
 import re
@@ -28,7 +36,13 @@ APPENDIX_DIR = "appendix-lc1d"
 MARKS = {
     "main": ("<!-- v4-table:start -->", "<!-- v4-table:end -->"),
     "appendix": ("<!-- v4-appendix:start -->", "<!-- v4-appendix:end -->"),
+    "tabular": ("<!-- v4-tabular:start -->", "<!-- v4-tabular:end -->"),
 }
+OPPONENTS = ("greedy", "random")
+# Pre-registered thresholds ("Tabular learner — pre-registration"): lower 95 % bounds.
+SCORE_BAR = 0.5
+RANDOM_KEEP = (0.360, 0.112)
+SEEDS_REQUIRED = 3
 
 GROUPS = ("controls", "scripted", "table learner", "TD", "nets")
 SCRIPTED_ORDER = ("random", "greedy", "greedy-2ply")
@@ -76,8 +90,23 @@ def load_dir(directory: Path) -> list[dict]:
         for key in ("player", "keep", "arena"):
             if key not in data:
                 raise Refusal(f"{path}: no `{key}`")
+        if opponent(data) not in OPPONENTS:
+            raise Refusal(f"{path}: unknown opponent {data.get('opponent')!r}")
+        if opponent(data) == "random" and not data["player"].startswith("qtab:"):
+            raise Refusal(f"{path}: only qtab: players have a run against random")
         runs.append(data)
+    seen: dict[tuple[str, str], Path] = {}
+    for path, run in zip(files, runs):
+        key = (run["player"], opponent(run))
+        if key in seen:
+            raise Refusal(f"{seen[key]} and {path}: two JSON for {key[0]} against {key[1]}")
+        seen[key] = path
     return runs
+
+
+def opponent(run: dict) -> str:
+    """The arena opponent; JSON written before `--opponent` existed played greedy."""
+    return run.get("opponent", "greedy")
 
 
 def group_of(player: str) -> str:
@@ -104,7 +133,7 @@ def sort_key(run: dict):
     family = seed.group(1) or "" if seed else ""
     seed_n = int(seed.group(2)) if seed else 0
     sims = re.search(r":(\d+)$", player)
-    return (rank, seed_n, family, int(sims.group(1)) if sims else 0, player)
+    return (rank, family, seed_n, int(sims.group(1)) if sims else 0, player)
 
 
 def trained_under(player: str) -> str:
@@ -136,7 +165,7 @@ def rate(stat: dict) -> str:
 
 
 def render(runs: list[dict], heading_note: str) -> str:
-    runs = sorted(runs, key=sort_key)
+    runs = sorted((r for r in runs if opponent(r) == "greedy"), key=sort_key)
     lines = [
         "| # | Player | Trained under | Keep won (95 % CI) | Keep drawn (95 % CI) "
         "| Score vs greedy (95 % CI) | Finished pairs | Unfinished games | Distinct games |",
@@ -161,6 +190,95 @@ def render(runs: list[dict], heading_note: str) -> str:
     return "\n".join(out)
 
 
+def lower(stat: dict | None) -> float | None:
+    return None if stat is None or stat.get("ci95") is None else stat["ci95"][0]
+
+
+def verdict(value: float | None, bar: float) -> str:
+    if value is None:
+        return "not measured"
+    return f"{'met' if value > bar else 'failed'} ({value:.3f})"
+
+
+def score(run: dict | None) -> str:
+    if run is None:
+        return "not measured"
+    a = run["arena"]
+    return f"{a['score']:.3f} [{a['ci95'][0]:.3f}, {a['ci95'][1]:.3f}]"
+
+
+def unfinished(run: dict | None) -> str:
+    if run is None:
+        return "—"
+    return f"{run['arena']['a']['unfinished']} of {run['arena']['games']}"
+
+
+def keep_visited(stat: dict | None) -> str:
+    if stat is None:
+        return "not measured"
+    if stat.get("rate") is None:
+        return "— (n = 0)"
+    ci = stat.get("ci95")
+    interval = f" [{ci[0]:.3f}, {ci[1]:.3f}]" if ci else ""
+    return f"{stat['rate']:.3f}{interval} (n = {stat['n']})"
+
+
+def render_tabular(runs: list[dict]) -> str:
+    """The tabular learner's runs, one row per seed, and its criteria."""
+    by_player: dict[str, dict[str, dict]] = {}
+    for run in runs:
+        if run["player"].startswith("qtab:"):
+            by_player.setdefault(run["player"], {})[opponent(run)] = run
+    if not by_player:
+        return "No tabular learner run yet."
+    players = sorted(by_player, key=lambda p: sort_key({"player": p}))
+    head = ("| Player | Score vs random (95 % CI) | Score vs greedy (95 % CI) | Unfinished vs random "
+            "| Unfinished vs greedy | Keep won, visited child | Keep drawn, visited child "
+            "| Reachable positions visited |")
+    lines = [head, "|---|---|---|---|---|---|---|---|"]
+    crit = {1: [], 2: [], 3: []}
+    for p in players:
+        r, g = by_player[p].get("random"), by_player[p].get("greedy")
+        any_run = g or r
+        kv = any_run.get("keep_visited") or {}
+        cov = any_run.get("coverage")
+        share = (f"{cov['visited_reachable']:,} of {cov['reachable']:,} "
+                 f"({100 * cov['share_of_reachable']:.2f} %)") if cov else "not measured"
+        lines.append(f"| {label(p)} | {score(r)} | {score(g)} | {unfinished(r)} | {unfinished(g)} "
+                     f"| {keep_visited(kv.get('won'))} | {keep_visited(kv.get('drawn'))} | {share} |")
+        crit[1].append(verdict(lower(r["arena"]) if r else None, SCORE_BAR))
+        crit[2].append(verdict(lower(g["arena"]) if g else None, SCORE_BAR))
+        keep = any_run["keep"]
+        won, drawn = verdict(lower(keep["won"]), RANDOM_KEEP[0]), verdict(lower(keep["drawn"]), RANDOM_KEEP[1])
+        both = "met" if won.startswith("met") and drawn.startswith("met") else "failed"
+        crit[3].append(f"{both}: won {won}, drawn {drawn}")
+
+    def overall(cells: list[str]) -> str:
+        if len(cells) < SEEDS_REQUIRED or any(c.startswith("not measured") for c in cells):
+            return f"not measured on all {SEEDS_REQUIRED} seeds"
+        return "met" if all(c.startswith("met") for c in cells) else "failed"
+
+    names = [label(p) for p in players]
+    clines = ["| Criterion | " + " | ".join(names) + " | All seeds |",
+              "|---" * (len(names) + 2) + "|"]
+    texts = {
+        1: f"1. Against random: lower 95 % bound > {SCORE_BAR}",
+        2: f"2. Against greedy: lower 95 % bound > {SCORE_BAR}",
+        3: f"3. Keep: lower 95 % bound > {RANDOM_KEEP[0]:.3f} (won) and > {RANDOM_KEEP[1]:.3f} (drawn)",
+    }
+    for k in (1, 2, 3):
+        clines.append(f"| {texts[k]} | " + " | ".join(crit[k]) + f" | {overall(crit[k])} |")
+    note = ("Against random: the bench's `random` player (takes a win, avoids an immediate loss), "
+            "1,000 colour-swapped pairs, seed 404, score over finished pairs only. Keep, visited "
+            "child: the keep rate on the held-out positions where at least one move leads to a "
+            "position the learner updated (criterion 4, no threshold), with n. Reachable positions "
+            "visited: positions updated at least once, out of those reachable from the start. "
+            "The keep rates of criterion 3 are the main table's.")
+    return "\n".join(lines + ["", "\n".join(clines), "", note, "", "Commands against random:", ""]
+                     + [f"- `{shlex.join(by_player[p]['random']['command'])}`"
+                        for p in players if "random" in by_player[p]])
+
+
 def rewrite(text: str, kind: str, body: str) -> str:
     start, end = MARKS[kind]
     if text.count(start) != 1 or text.count(end) != 1:
@@ -181,6 +299,11 @@ def main(argv: list[str]) -> int:
         appendix_runs = load_dir(json_dir / APPENDIX_DIR)
         text = rewrite(text, "main", render(main_runs, NOTE))
         text = rewrite(text, "appendix", render(appendix_runs, NOTE))
+        start, _ = MARKS["tabular"]
+        if start in text:
+            text = rewrite(text, "tabular", render_tabular(main_runs))
+        if any(opponent(r) == "random" for r in appendix_runs):
+            raise Refusal("the appendix holds runs against greedy only")
     except (Refusal, OSError) as err:
         print(f"v4_table: {err}", file=sys.stderr)
         return 2
