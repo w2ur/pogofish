@@ -71,9 +71,57 @@ with an untrained net, play longer games than later ones.
 ## Main table
 
 <!-- v4-table:start -->
+| # | Player | Trained under | Keep won (95 % CI) | Keep drawn (95 % CI) | Score vs greedy (95 % CI) | Finished pairs | Unfinished games | Distinct games |
+|---|---|---|---|---|---|---|---|---|
+| 1 | table (perfect player) | — | 1.000 [1.000, 1.000] | 1.000 [1.000, 1.000] | 0.919 [0.908, 0.930] | 1000 of 1000 | 0 of 2000 (0.0 %) | 1968 of 2000 |
+| 2 | random (takes a win, avoids an immediate loss) | — | 0.360 [0.355, 0.365] | 0.112 [0.111, 0.113] | 0.031 [0.024, 0.038] | 1000 of 1000 | 0 of 2000 (0.0 %) | 1975 of 2000 |
+| 3 | greedy | — | 0.726 [0.720, 0.733] | 0.340 [0.333, 0.346] | 0.493 [0.474, 0.512] | 1000 of 1000 | 0 of 2000 (0.0 %) | 1935 of 2000 |
+| 4 | greedy-2ply | — | 0.824 [0.817, 0.830] | 0.448 [0.440, 0.456] | 0.755 [0.739, 0.772] | 1000 of 1000 | 0 of 2000 (0.0 %) | 1961 of 2000 |
+| 5 | TD(λ) v4-td-lc1-s1 | lc1-2 | 0.844 [0.837, 0.851]† | 0.483 [0.473, 0.492]† | 0.779 [0.763, 0.796] | 1000 of 1000 | 0 of 2000 (0.0 %) | 1956 of 2000 |
+| 6 | TD(λ) v4-td-lc1-s2 | lc1-2 | 0.828 [0.820, 0.835]† | 0.457 [0.447, 0.467]† | 0.764 [0.747, 0.781] | 1000 of 1000 | 0 of 2000 (0.0 %) | 1966 of 2000 |
+| 7 | TD(λ) v4-td-lc1-s3 | lc1-2 | 0.828 [0.821, 0.835]† | 0.447 [0.437, 0.457]† | 0.771 [0.754, 0.788] | 1000 of 1000 | 0 of 2000 (0.0 %) | 1952 of 2000 |
+| 8 | net az-lc1-s1, policy argmax, no search | lc1-2 | 0.817 [0.809, 0.824]† | 0.467 [0.457, 0.477]† | 0.578 [0.558, 0.598] | 1000 of 1000 | 0 of 2000 (0.0 %) | 1959 of 2000 |
+| 9 | net az-lc1-s1, 100 simulations | lc1-2 | 0.953 [0.949, 0.957]† | 0.689 [0.680, 0.698]† | 0.890 [0.878, 0.903] | 1000 of 1000 | 0 of 2000 (0.0 %) | 1959 of 2000 |
+| 10 | net az-lc1-m2-s1, 100 simulations | lc1-2 | 0.953 [0.948, 0.957]† | 0.695 [0.686, 0.704]† | 0.883 [0.870, 0.897] | 1000 of 1000 | 0 of 2000 (0.0 %) | 1966 of 2000 |
+| 11 | net az-lc1-m2-s2, 100 simulations | lc1-2 | 0.952 [0.947, 0.956]† | 0.697 [0.688, 0.706]† | 0.887 [0.875, 0.900] | 1000 of 1000 | 0 of 2000 (0.0 %) | 1963 of 2000 |
+| 12 | net az-lc1-m2-s3, 100 simulations | lc1-2 | 0.952 [0.948, 0.956]† | 0.696 [0.687, 0.705]† | 0.887 [0.874, 0.900] | 1000 of 1000 | 0 of 2000 (0.0 %) | 1967 of 2000 |
+
+Keep won (drawn): the share of held-out won (drawn) positions in which the player's move keeps the position's value in the uncapped table. Score: against greedy, over finished pairs only; unfinished games (1,000-ply limit) are counted apart and are never draws.
+
+† Read from the uncapped game's table, but the player learnt under the rule of the "Trained under" column and is scored under `lc1-2` (a position's third occurrence loses for the player who causes it). The table ignores repetition and the sampled positions carry no history, so the repetition inputs of a net read "never seen": these two figures are not an in-game measure. The score against greedy is played under the live rules.
+
+Commands, by row:
+
+1. `./target/release/v4bench models/v3-solve table --out docs/experiments/v4/table.json`
+2. `./target/release/v4bench models/v3-solve random --out docs/experiments/v4/random.json`
+3. `./target/release/v4bench models/v3-solve greedy --out docs/experiments/v4/greedy.json`
+4. `./target/release/v4bench models/v3-solve greedy-2ply --out docs/experiments/v4/greedy-2ply.json`
+5. `./target/release/v4bench models/v3-solve td:models/v4-td-lc1-s1/td.pfv --out docs/experiments/v4/td-lc1-s1.json`
+6. `./target/release/v4bench models/v3-solve td:models/v4-td-lc1-s2/td.pfv --out docs/experiments/v4/td-lc1-s2.json`
+7. `./target/release/v4bench models/v3-solve td:models/v4-td-lc1-s3/td.pfv --out docs/experiments/v4/td-lc1-s3.json`
+8. `./target/release/v4bench models/v3-solve net:crates/cli/assets/az-lc1-s1.pfw:0 --out docs/experiments/v4/az-lc1-s1-0.json`
+9. `./target/release/v4bench models/v3-solve net:crates/cli/assets/az-lc1-s1.pfw:100 --out docs/experiments/v4/az-lc1-s1-100.json`
+10. `./target/release/v4bench models/v3-solve net:models/v3/az-lc1-m2-s1/final.pfw:100 --out docs/experiments/v4/az-lc1-m2-s1-100.json`
+11. `./target/release/v4bench models/v3-solve net:models/v3/az-lc1-m2-s2/final.pfw:100 --out docs/experiments/v4/az-lc1-m2-s2-100.json`
+12. `./target/release/v4bench models/v3-solve net:models/v3/az-lc1-m2-s3/final.pfw:100 --out docs/experiments/v4/az-lc1-m2-s3-100.json`
 <!-- v4-table:end -->
 
 ## Appendix: nets trained under lc1d-2
 
 <!-- v4-appendix:start -->
+| # | Player | Trained under | Keep won (95 % CI) | Keep drawn (95 % CI) | Score vs greedy (95 % CI) | Finished pairs | Unfinished games | Distinct games |
+|---|---|---|---|---|---|---|---|---|
+| 1 | net az-lc1d-s1, 100 simulations | lc1d-2 | 0.956 [0.952, 0.960]† | 0.712 [0.703, 0.721]† | 0.893 [0.880, 0.906] | 1000 of 1000 | 0 of 2000 (0.0 %) | 1966 of 2000 |
+| 2 | net az-lc1d-s2, 100 simulations | lc1d-2 | 0.956 [0.952, 0.960]† | 0.712 [0.703, 0.721]† | 0.889 [0.876, 0.902] | 1000 of 1000 | 0 of 2000 (0.0 %) | 1962 of 2000 |
+| 3 | net az-lc1d-s3, 100 simulations | lc1d-2 | 0.957 [0.953, 0.961]† | 0.716 [0.707, 0.725]† | 0.895 [0.882, 0.908] | 1000 of 1000 | 0 of 2000 (0.0 %) | 1966 of 2000 |
+
+Keep won (drawn): the share of held-out won (drawn) positions in which the player's move keeps the position's value in the uncapped table. Score: against greedy, over finished pairs only; unfinished games (1,000-ply limit) are counted apart and are never draws.
+
+† Read from the uncapped game's table, but the player learnt under the rule of the "Trained under" column and is scored under `lc1-2` (a position's third occurrence loses for the player who causes it). The table ignores repetition and the sampled positions carry no history, so the repetition inputs of a net read "never seen": these two figures are not an in-game measure. The score against greedy is played under the live rules.
+
+Commands, by row:
+
+1. `./target/release/v4bench models/v3-solve net:models/v3/az-lc1d-s1/final.pfw:100 --out docs/experiments/v4/appendix-lc1d/az-lc1d-s1-100.json`
+2. `./target/release/v4bench models/v3-solve net:models/v3/az-lc1d-s2/final.pfw:100 --out docs/experiments/v4/appendix-lc1d/az-lc1d-s2-100.json`
+3. `./target/release/v4bench models/v3-solve net:models/v3/az-lc1d-s3/final.pfw:100 --out docs/experiments/v4/appendix-lc1d/az-lc1d-s3-100.json`
 <!-- v4-appendix:end -->
