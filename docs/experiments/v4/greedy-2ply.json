@@ -1,0 +1,183 @@
+{
+  "arena": {
+    "a": {
+      "draws": 0,
+      "losses": 489,
+      "unfinished": 0,
+      "wins": 1511
+    },
+    "a_as_red": {
+      "draws": 0,
+      "losses": 324,
+      "unfinished": 0,
+      "wins": 676
+    },
+    "a_as_white": {
+      "draws": 0,
+      "losses": 165,
+      "unfinished": 0,
+      "wins": 835
+    },
+    "a_by_variant_rule": {
+      "draws": 0,
+      "losses": 0,
+      "unfinished": 0,
+      "wins": 0
+    },
+    "ci95": [
+      0.7385775486125394,
+      0.7724224513874605
+    ],
+    "config": {
+      "max_plies": 1000,
+      "opening_plies": 4,
+      "pairs": 1000,
+      "rules": {
+        "LC1": {
+          "repetitions": 2
+        }
+      },
+      "seed": 404
+    },
+    "distinct_games": 1961,
+    "distinct_openings": 993,
+    "distinct_positions_after_opening": 17587,
+    "games": 2000,
+    "player_a": "greedy-2ply",
+    "player_b": "greedy",
+    "score": 0.7555,
+    "scored_pairs": 1000,
+    "significant": true,
+    "white_score": 0.5795
+  },
+  "command": [
+    "./target/release/v4bench",
+    "models/v3-solve",
+    "greedy-2ply",
+    "--out",
+    "docs/experiments/v4/greedy-2ply.json"
+  ],
+  "controls": {
+    "anti_oracle": {
+      "expected": [
+        0.008,
+        0.0
+      ],
+      "keep": {
+        "drawn": {
+          "ci95": [
+            -0.00009600000000001644,
+            0.00029600000000001646
+          ],
+          "n": 10000,
+          "rate": 0.0001
+        },
+        "won": {
+          "ci95": [
+            0.005986655694709594,
+            0.009413344305290406
+          ],
+          "n": 10000,
+          "rate": 0.0077
+        }
+      },
+      "positions_where_every_move_keeps": [
+        0.0077,
+        0.0001
+      ]
+    },
+    "compared_with_round_3": true,
+    "oracle": {
+      "expected": [
+        1.0,
+        1.0
+      ],
+      "keep": {
+        "drawn": {
+          "ci95": [
+            1.0,
+            1.0
+          ],
+          "n": 10000,
+          "rate": 1.0
+        },
+        "won": {
+          "ci95": [
+            1.0,
+            1.0
+          ],
+          "n": 10000,
+          "rate": 1.0
+        }
+      }
+    },
+    "random": {
+      "expected": [
+        0.36,
+        0.112
+      ],
+      "keep": {
+        "drawn": {
+          "ci95": [
+            0.110582118672503,
+            0.11340264166445096
+          ],
+          "n": 10000,
+          "rate": 0.11199238016847698
+        },
+        "won": {
+          "ci95": [
+            0.3548067180635242,
+            0.3645027642794149
+          ],
+          "n": 10000,
+          "rate": 0.35965474117146956
+        }
+      }
+    }
+  },
+  "git_rev": "837d0a1f98fd48af6c49e9442dab9c484208156b",
+  "history": "none",
+  "keep": {
+    "drawn": {
+      "ci95": [
+        0.4399732698634347,
+        0.4556737359085726
+      ],
+      "n": 10000,
+      "rate": 0.44782350288600364
+    },
+    "won": {
+      "ci95": [
+        0.8174153097941941,
+        0.8297339975651139
+      ],
+      "n": 10000,
+      "rate": 0.823574653679654
+    }
+  },
+  "peak_rss_mib": 557.09375,
+  "player": "greedy-2ply",
+  "rules": "lc1-2",
+  "sample": {
+    "controls_per_class": 10000,
+    "measured_per_class": 10000,
+    "sample_cap": null,
+    "seed": 31,
+    "test_per_class": 10000,
+    "train_per_class": 20000
+  },
+  "spec": "greedy-2ply",
+  "table_sha256": "1690c767b68a6214eb1fb4d74d932198a13f67c744b7c6e61102eeb44c5e3704",
+  "table_tiebreak": "Moves that lose at once under the live rules (a third occurrence under lc1-2) are set aside unless every candidate does. Among the rest: from a won position, the moves to Loss(d) with the smallest d; from a drawn position, the moves whose child is not Win; from a lost position, the moves to Win(d) with the largest d. Uniform pick among them.",
+  "threads": 4,
+  "timings": {
+    "arena": 1.15312925,
+    "controls": 0.585076459,
+    "keep": 0.470307542,
+    "load": 0.096760417,
+    "sample": 0.660386167,
+    "sha256": 1.327595542,
+    "total": 4.321203541
+  }
+}

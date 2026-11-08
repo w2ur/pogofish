@@ -1,0 +1,183 @@
+{
+  "arena": {
+    "a": {
+      "draws": 0,
+      "losses": 1014,
+      "unfinished": 0,
+      "wins": 986
+    },
+    "a_as_red": {
+      "draws": 0,
+      "losses": 602,
+      "unfinished": 0,
+      "wins": 398
+    },
+    "a_as_white": {
+      "draws": 0,
+      "losses": 412,
+      "unfinished": 0,
+      "wins": 588
+    },
+    "a_by_variant_rule": {
+      "draws": 0,
+      "losses": 0,
+      "unfinished": 0,
+      "wins": 0
+    },
+    "ci95": [
+      0.4742471380469158,
+      0.5117528619530841
+    ],
+    "config": {
+      "max_plies": 1000,
+      "opening_plies": 4,
+      "pairs": 1000,
+      "rules": {
+        "LC1": {
+          "repetitions": 2
+        }
+      },
+      "seed": 404
+    },
+    "distinct_games": 1935,
+    "distinct_openings": 993,
+    "distinct_positions_after_opening": 18837,
+    "games": 2000,
+    "player_a": "greedy",
+    "player_b": "greedy",
+    "score": 0.493,
+    "scored_pairs": 1000,
+    "significant": false,
+    "white_score": 0.595
+  },
+  "command": [
+    "./target/release/v4bench",
+    "models/v3-solve",
+    "greedy",
+    "--out",
+    "docs/experiments/v4/greedy.json"
+  ],
+  "controls": {
+    "anti_oracle": {
+      "expected": [
+        0.008,
+        0.0
+      ],
+      "keep": {
+        "drawn": {
+          "ci95": [
+            -0.00009600000000001644,
+            0.00029600000000001646
+          ],
+          "n": 10000,
+          "rate": 0.0001
+        },
+        "won": {
+          "ci95": [
+            0.005986655694709594,
+            0.009413344305290406
+          ],
+          "n": 10000,
+          "rate": 0.0077
+        }
+      },
+      "positions_where_every_move_keeps": [
+        0.0077,
+        0.0001
+      ]
+    },
+    "compared_with_round_3": true,
+    "oracle": {
+      "expected": [
+        1.0,
+        1.0
+      ],
+      "keep": {
+        "drawn": {
+          "ci95": [
+            1.0,
+            1.0
+          ],
+          "n": 10000,
+          "rate": 1.0
+        },
+        "won": {
+          "ci95": [
+            1.0,
+            1.0
+          ],
+          "n": 10000,
+          "rate": 1.0
+        }
+      }
+    },
+    "random": {
+      "expected": [
+        0.36,
+        0.112
+      ],
+      "keep": {
+        "drawn": {
+          "ci95": [
+            0.110582118672503,
+            0.11340264166445096
+          ],
+          "n": 10000,
+          "rate": 0.11199238016847698
+        },
+        "won": {
+          "ci95": [
+            0.3548067180635242,
+            0.3645027642794149
+          ],
+          "n": 10000,
+          "rate": 0.35965474117146956
+        }
+      }
+    }
+  },
+  "git_rev": "837d0a1f98fd48af6c49e9442dab9c484208156b",
+  "history": "none",
+  "keep": {
+    "drawn": {
+      "ci95": [
+        0.3333476156980872,
+        0.3463863975109312
+      ],
+      "n": 10000,
+      "rate": 0.3398670066045092
+    },
+    "won": {
+      "ci95": [
+        0.7195664156174977,
+        0.7333359259298444
+      ],
+      "n": 10000,
+      "rate": 0.726451170773671
+    }
+  },
+  "peak_rss_mib": 556.6875,
+  "player": "greedy",
+  "rules": "lc1-2",
+  "sample": {
+    "controls_per_class": 10000,
+    "measured_per_class": 10000,
+    "sample_cap": null,
+    "seed": 31,
+    "test_per_class": 10000,
+    "train_per_class": 20000
+  },
+  "spec": "greedy",
+  "table_sha256": "1690c767b68a6214eb1fb4d74d932198a13f67c744b7c6e61102eeb44c5e3704",
+  "table_tiebreak": "Moves that lose at once under the live rules (a third occurrence under lc1-2) are set aside unless every candidate does. Among the rest: from a won position, the moves to Loss(d) with the smallest d; from a drawn position, the moves whose child is not Win; from a lost position, the moves to Win(d) with the largest d. Uniform pick among them.",
+  "threads": 4,
+  "timings": {
+    "arena": 0.850679833,
+    "controls": 0.585155542,
+    "keep": 0.507639,
+    "load": 0.097646041,
+    "sample": 0.648699916,
+    "sha256": 1.330476083,
+    "total": 4.049966042
+  }
+}
