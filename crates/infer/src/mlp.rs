@@ -35,7 +35,7 @@ pub struct Linear {
 }
 
 impl Linear {
-    fn apply(&self, x: &[f32]) -> Vec<f32> {
+    pub(crate) fn apply(&self, x: &[f32]) -> Vec<f32> {
         (0..self.outputs)
             .map(|o| {
                 let row = &self.weight[o * self.inputs..(o + 1) * self.inputs];

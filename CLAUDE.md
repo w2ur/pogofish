@@ -9,9 +9,9 @@ Pogofish is a browser-based Pogo board game with AI opponents trained via AlphaZ
 ### Rust workspace (`crates/`)
 - Rust 1.79+ (stable toolchain)
 - `pogofish-engine` — Game rules, state, legal moves, rulesets (`Uncapped`, LC1/LC2/LC3, LC1Draw; `RuleSet` parses and prints `uncapped`, `lc1-N`, `lc1d-N`, …)
-- `pogofish-infer` — Pure-Rust inference (no libtorch): input features, action indexing, MLP forward pass reading exported `.pfw` weights, and the neural MCTS shared with training (`Evaluator` trait), the `v4bench` binary (one protocol for every player)
+- `pogofish-infer` — Pure-Rust inference (no libtorch): input features, action indexing, MLP forward pass reading exported `.pfw` weights (and the TD value net's `.pfv`), and the neural MCTS shared with training (`Evaluator` trait), the `v4bench` binary (one protocol for every player)
 - `pogofish-search` — Minimax (alpha-beta + TT), MCTS (PUCT), checkpointer, scripted `random`/`greedy` players (seeded, no dependency), the retrograde solver of the uncapped game (`retro.rs`, binary `retro`)
-- `pogofish-train` — AlphaZero training (tch-rs/libtorch, no gating, exact resume), self-play, TD(λ) value learning (`td_train`), `arena` evaluation binary
+- `pogofish-train` — AlphaZero training (tch-rs/libtorch, no gating, exact resume), self-play, TD(λ) value learning (`td_train`), `export_td`, `arena` evaluation binary
 - `pogofish-cli` — Terminal game (crossterm) against the bundled net: colour, level (simulations), hint, the AI's estimate, undo, saved game records; game logic in `session.rs`, key handling tested headless in `app.rs`
 - `pogofish-wasm` — wasm-bindgen wrappers for browser use
 
@@ -87,7 +87,8 @@ openings, no CI and counts truncations as draws.
 # solved table (10,000 won + 10,000 drawn, sample seed 31, positions without history) and
 # score vs greedy under lc1-2 (1,000 colour-swapped pairs, 4-ply openings, seed 404).
 # Controls run first (oracle, anti-oracle, random vs round 3); a failure is exit 2, no JSON.
-# Players: random, greedy, greedy-2ply, table, net:PFW[:SIMS] (100; 0 = policy argmax)
+# Players: random, greedy, greedy-2ply, table, net:PFW[:SIMS] (100; 0 = policy argmax),
+# td:PFV (a TD value net, one ply: exact result if the move ends the game, else -V(next))
 cargo build --release -p pogofish-infer --bin v4bench
 ./target/release/v4bench models/v3-solve net:crates/cli/assets/az-lc1-s1.pfw --out bench.json
 ```
@@ -100,6 +101,12 @@ full sample). See `docs/experiments/v4-evaluation.md`.
 ./target/release/td_train models/td-mr-s1 --iterations 1000 --temp-decay 1000 --eval-every 50 \
   --eval-pairs 200 --lambda 0.7 --lr 0.1 --seed 1
 # In the arena: td:models/td-mr-s1/weights.pt[:128x64]
+# For the v4 bench (pure Rust, no libtorch at bench time): export, then td:PFV. Features and
+# hidden sizes come from the run's config.json; refuses to write unless the copy matches the
+# checkpoint within 1e-5 on 100 positions.
+DYLD_LIBRARY_PATH=$(find target/release/build -path "*/torch-sys-*/out/libtorch/libtorch/lib" | head -1) \
+  ./target/release/export_td models/v4-td-lc1-s1/weights.pt models/v4-td-lc1-s1/td.pfv
+./target/release/v4bench models/v3-solve td:models/v4-td-lc1-s1/td.pfv --out td.json
 ```
 
 ### Training

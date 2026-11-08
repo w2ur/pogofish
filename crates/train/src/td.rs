@@ -18,6 +18,8 @@ use anyhow::{ensure, Context};
 use pogofish_engine::{
     apply_move_under, initial_state, is_terminal, legal_moves, GameState, Move, Outcome, RuleSet,
 };
+use pogofish_infer::mlp::Linear;
+use pogofish_infer::value::ValueMlp;
 use pogofish_search::arena::{run_match, Agent, ArenaConfig};
 use pogofish_search::players::Scripted;
 use pogofish_search::rng::SplitMix64;
@@ -288,6 +290,82 @@ impl Agent for TdCheckpoint {
     fn choose(&mut self, state: &GameState, rules: &RuleSet, rng: &mut SplitMix64) -> Move {
         choose(&self.net, state, rules, 0.0, rng)
     }
+}
+
+/// The pure-Rust copy of the TD net held in `vs` (layers `td_fc0`, …,
+/// `td_out`, as [`TdNet::new`] names them).
+pub fn to_value_mlp(vs: &nn::VarStore, features: TdFeatures) -> anyhow::Result<ValueMlp> {
+    let vars = vs.variables();
+    let linear = |name: &str| -> anyhow::Result<Linear> {
+        let w = vars
+            .get(&format!("{name}.weight"))
+            .with_context(|| format!("{name}.weight missing"))?;
+        let b = vars
+            .get(&format!("{name}.bias"))
+            .with_context(|| format!("{name}.bias missing"))?;
+        let size = w.size();
+        Ok(Linear {
+            inputs: size[1] as usize,
+            outputs: size[0] as usize,
+            weight: Vec::<f32>::try_from(w.contiguous().view([-1]))?,
+            bias: Vec::<f32>::try_from(b.contiguous().view([-1]))?,
+        })
+    };
+    let mut layers = Vec::new();
+    while vars.contains_key(&format!("td_fc{}.weight", layers.len())) {
+        layers.push(linear(&format!("td_fc{}", layers.len()))?);
+    }
+    layers.push(linear("td_out")?);
+    let net = ValueMlp { features, layers };
+    // Round-trip through the file format, which also checks every shape.
+    ValueMlp::from_bytes(&net.to_bytes())
+}
+
+/// Largest absolute difference between the libtorch net and its pure-Rust
+/// copy on `n` positions from seeded random `lc1-2` playouts (so the
+/// repetition input is exercised).
+pub fn value_max_difference(net: &TdNet, copy: &ValueMlp, n: usize) -> f32 {
+    let rules = RuleSet::LC1 { repetitions: 2 };
+    let mut rng = SplitMix64::new(17);
+    let (mut worst, mut seen) = (0f32, 0);
+    while seen < n {
+        let mut s = initial_state();
+        for _ in 0..40 {
+            if is_terminal(&s, &rules).is_some() || seen == n {
+                break;
+            }
+            let theirs = net.values(std::slice::from_ref(&s))[0];
+            let ours = copy.forward(&copy.features.encode(&s));
+            worst = worst.max((theirs - ours).abs());
+            seen += 1;
+            let moves = legal_moves(&s);
+            s = apply_move_under(&s, moves[rng.below(moves.len())], &rules).expect("legal");
+        }
+    }
+    worst
+}
+
+/// Load a TD checkpoint of the given shape and write it as a `.pfv` file.
+/// Refuses to write unless the copy matches the checkpoint within 1e-5 on
+/// 100 positions; returns the copy and the largest difference.
+pub fn export_td(
+    weights: &Path,
+    hidden: &[i64],
+    features: TdFeatures,
+    out: &Path,
+) -> anyhow::Result<(ValueMlp, f32)> {
+    let mut vs = nn::VarStore::new(tch::Device::Cpu);
+    let net = TdNet::new(&vs.root(), hidden, features);
+    load_var_store_strict(&mut vs, weights)
+        .with_context(|| format!("loading TD checkpoint {}", weights.display()))?;
+    let copy = to_value_mlp(&vs, features)?;
+    let worst = value_max_difference(&net, &copy, 100);
+    ensure!(
+        worst < 1e-5,
+        "the exported net differs from the checkpoint by {worst} (limit 1e-5); not written"
+    );
+    std::fs::write(out, copy.to_bytes()).with_context(|| format!("writing {}", out.display()))?;
+    Ok((copy, worst))
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize, PartialEq)]
@@ -573,6 +651,36 @@ mod tests {
             (cfg.temperature(50) - 0.01).abs() < 1e-12,
             "held at the end"
         );
+    }
+
+    #[test]
+    fn export_td_round_trip() {
+        // A freshly initialised net, saved as a checkpoint, exported, and
+        // reloaded from the file: it agrees with libtorch within 1e-5.
+        let dir = std::env::temp_dir().join(format!("pogofish-export-td-{}", std::process::id()));
+        std::fs::create_dir_all(&dir).unwrap();
+        let features = TdFeatures::MoverRelativeRepetition;
+        let hidden = [16, 8];
+        let vs = nn::VarStore::new(tch::Device::Cpu);
+        let net = TdNet::new(&vs.root(), &hidden, features);
+        seeded_init(&vs, 5);
+        let (weights, out) = (dir.join("weights.pt"), dir.join("td.pfv"));
+        save_var_store(&vs, &weights).unwrap();
+
+        let (copy, worst) = export_td(&weights, &hidden, features, &out).unwrap();
+        assert!(worst < 1e-5, "{worst}");
+        let reloaded = ValueMlp::load(&out).unwrap();
+        assert_eq!(reloaded.features, features);
+        assert_eq!(reloaded.layers.len(), 3);
+        assert!(value_max_difference(&net, &reloaded, 100) < 1e-5);
+        let s = initial_state();
+        let x = copy.features.encode(&s);
+        assert_eq!(copy.forward(&x), reloaded.forward(&x));
+        // A wrong shape is refused, and nothing is written for it.
+        let bad = dir.join("bad.pfv");
+        assert!(export_td(&weights, &[16], features, &bad).is_err());
+        assert!(!bad.exists());
+        std::fs::remove_dir_all(&dir).unwrap();
     }
 
     fn net() -> (nn::VarStore, TdNet) {

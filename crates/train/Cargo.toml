@@ -25,6 +25,10 @@ name = "export_weights"
 path = "src/bin/export_weights.rs"
 
 [[bin]]
+name = "export_td"
+path = "src/bin/export_td.rs"
+
+[[bin]]
 name = "arena"
 path = "src/bin/arena.rs"
 

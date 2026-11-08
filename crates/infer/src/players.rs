@@ -16,12 +16,16 @@
 //!   (see [`TablePlayer`]);
 //! - `net:<pfw>[:sims]`: the net's most-visited move(s) after `sims`
 //!   simulations (default 100), or with `:0` the move(s) of highest prior;
-//! - `td:<pfv>` and `qtab:<file>`: parsed, not yet available.
+//! - `td:<pfv>`: a TD(λ) value net (see [`TdPlayer`]);
+//! - `qtab:<file>`: parsed, not yet available.
 
 use crate::mcts::{search, Evaluator, MctsConfig};
 use crate::mlp::Mlp;
+use crate::value::ValueMlp;
 use anyhow::{bail, Context};
-use pogofish_engine::{apply_move, is_terminal, legal_moves, GameState, Move, RuleSet};
+use pogofish_engine::{
+    apply_move, apply_move_under, is_terminal, legal_moves, GameState, Move, RuleSet,
+};
 use pogofish_search::arena::Agent;
 use pogofish_search::perfect::{Criterion, Policy, PolicyPlayer, Sample, Solved};
 use pogofish_search::principles::GreedyTwoPly;
@@ -195,6 +199,41 @@ impl TiedChooser for AntiOracle<'_> {
     }
 }
 
+/// A TD(λ) value net, one ply deep: the moves that maximise the exact result
+/// when they end the game under the live rules, else −V(position after the
+/// move). Exact float ties only. The position after the move keeps the
+/// game's history, so the repetition input reads what the net trained on.
+pub struct TdPlayer {
+    pub net: ValueMlp,
+    pub label: String,
+}
+
+impl TiedChooser for TdPlayer {
+    fn name(&self) -> String {
+        format!("td:{}", self.label)
+    }
+
+    fn tied(&mut self, s: &GameState, rules: &RuleSet) -> Vec<Move> {
+        let mover = s.to_move();
+        let moves = legal_moves(s);
+        let scores: Vec<f32> = moves
+            .iter()
+            .map(|&m| {
+                let next = apply_move_under(s, m, rules).expect("legal move");
+                match is_terminal(&next, rules) {
+                    Some(o) => match o.winner() {
+                        None => 0.0,
+                        Some(w) if w == mover => 1.0,
+                        Some(_) => -1.0,
+                    },
+                    None => -self.net.forward(&self.net.features.encode(&next)),
+                }
+            })
+            .collect();
+        argmax_all(&scores).into_iter().map(|i| moves[i]).collect()
+    }
+}
+
 /// A pure-Rust net: its most-visited move(s) after `sims` simulations (no
 /// root noise), or with `sims == 0` the legal move(s) of highest prior.
 pub struct NetPlayer {
@@ -290,7 +329,10 @@ pub fn player_from_spec<'a>(
                 label: path.to_string(),
             }))
         }
-        "td" if !rest.is_empty() => bail!("td: player arrives in Task 4"),
+        "td" if !rest.is_empty() => Ok(Box::new(TdPlayer {
+            net: ValueMlp::load(rest.as_ref())?,
+            label: rest.to_string(),
+        })),
         "qtab" if !rest.is_empty() => bail!("qtab: player arrives in Task 7"),
         _ => bail!(
             "unknown player '{spec}': expected random, greedy, greedy-2ply, table, \
@@ -498,11 +540,7 @@ mod tests {
         for bad in ["", "minimax", "net:", "net", "td", "qtab", "greedy-3ply"] {
             assert!(player_from_spec(bad, None).is_err(), "{bad}");
         }
-        let e = player_from_spec("td:x.pfv", None)
-            .err()
-            .unwrap()
-            .to_string();
-        assert_eq!(e, "td: player arrives in Task 4");
+        assert!(player_from_spec("td:/no/such/file.pfv", None).is_err());
         let e = player_from_spec("qtab:x.bin", None)
             .err()
             .unwrap()
@@ -569,5 +607,76 @@ mod tests {
                 all_keep as u8 as f64
             );
         }
+    }
+
+    /// A value net that reads one input: the top-of-cell-0 ownership.
+    fn probe_value_net() -> ValueMlp {
+        let f = Features::MoverRelative;
+        let mut hidden = zero(f.size(), 1);
+        // Input 14k + 12 is the top's owner in cell k (+1 own, -1 opponent's,
+        // 0 empty); distinct weights make moves differ.
+        for k in 0..9 {
+            hidden.weight[k * 14 + 12] = (k + 1) as f32;
+        }
+        let mut out = zero(1, 1);
+        out.weight[0] = 1.0;
+        ValueMlp {
+            features: f,
+            layers: vec![hidden, out],
+        }
+    }
+
+    #[test]
+    fn td_player_picks_the_moves_that_maximise_minus_v_of_the_next_position() {
+        let s = initial_state();
+        let net = probe_value_net();
+        let mut p = TdPlayer {
+            net: net.clone(),
+            label: "probe".into(),
+        };
+        assert_eq!(p.name(), "td:probe");
+        let moves = legal_moves(&s);
+        let score = |m: Move| {
+            let next = apply_move_under(&s, m, &LC1_2).unwrap();
+            -net.forward(&net.features.encode(&next))
+        };
+        let best = moves.iter().map(|&m| score(m)).fold(f32::MIN, f32::max);
+        let want: Vec<Move> = moves
+            .iter()
+            .copied()
+            .filter(|&m| score(m) == best)
+            .collect();
+        assert!(
+            !want.is_empty() && want.len() < moves.len(),
+            "the probe must separate moves"
+        );
+        assert_eq!(p.tied(&s, &LC1_2), want);
+    }
+
+    #[test]
+    fn td_player_takes_a_move_that_wins_at_once_whatever_the_net_says() {
+        // A constant V = tanh(10) ~ 1 scores every non-terminal move about -1,
+        // so only a move that ends the game in a win can be picked.
+        let f = Features::MoverRelative;
+        let mut out = zero(1, 1);
+        out.bias = vec![10.0];
+        let net = ValueMlp {
+            features: f,
+            layers: vec![zero(f.size(), 1), out],
+        };
+        let mut p = TdPlayer {
+            net,
+            label: "const".into(),
+        };
+        let s = pogofish_engine::testing::near_mate_in_one(pogofish_engine::Color::White);
+        let wins_now: Vec<Move> = legal_moves(&s)
+            .into_iter()
+            .filter(|&m| {
+                let next = apply_move_under(&s, m, &LC1_2).unwrap();
+                matches!(is_terminal(&next, &LC1_2), Some(o) if o.winner() == Some(s.to_move()))
+            })
+            .collect();
+        assert!(!wins_now.is_empty() && wins_now.len() < legal_moves(&s).len());
+        assert_eq!(p.tied(&s, &LC1_2), wins_now);
     }
 }

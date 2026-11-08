@@ -9,9 +9,9 @@ command, the board build the hub embeds, and the round-1 web article. The
 ### `crates/` — Rust workspace
 
 - `pogofish-engine` — game rules, state, legal moves, rule variants (LC1/LC2/LC3).
-- `pogofish-infer` — pure-Rust inference (no libtorch): input features, action indexing, the MLP forward pass reading exported `.pfw` weights, and the neural MCTS shared with training; the `v4bench` binary measures any player against the solved table and greedy. The terminal game depends on it.
+- `pogofish-infer` — pure-Rust inference (no libtorch): input features, action indexing, the MLP forward pass reading exported `.pfw` weights (and the TD value net's `.pfv`), and the neural MCTS shared with training; the `v4bench` binary measures any player against the solved table and greedy. The terminal game depends on it.
 - `pogofish-search` — minimax (alpha-beta + transposition table), MCTS (PUCT), checkpointer, and two scripted baselines: `random` and `greedy` (wins when it can, else maximises own stacks on top minus the opponent's).
-- `pogofish-train` — AlphaZero training via tch-rs/libtorch (no gating: every checkpoint is kept and rated), self-play, TD(λ) value learning (`td_train`), the `arena` evaluation binary, and an `analyze` binary that produces the insights JSON the article reads.
+- `pogofish-train` — AlphaZero training via tch-rs/libtorch (no gating: every checkpoint is kept and rated), self-play, TD(λ) value learning (`td_train`, `export_td`), the `arena` evaluation binary, and an `analyze` binary that produces the insights JSON the article reads.
 - `pogofish-cli` — the terminal game: play the trained AlphaZero net (pure-Rust inference, no libtorch), choose your colour and level, ask for hints, see the AI's estimate.
 - `pogofish-wasm` — wasm-bindgen wrappers for the browser.
 
@@ -90,6 +90,11 @@ cargo run --release -p pogofish-search --bin measure -- --games 20000 --seed 1 -
 # v4 bench: one player, value kept on the solved table's held-out sample and score vs greedy
 # under lc1-2, after falsification controls (no libtorch; docs/experiments/v4-evaluation.md)
 ./target/release/v4bench models/v3-solve greedy-2ply --out bench.json
+
+# Export a TD net to the pure-Rust .pfv (1e-5 check on 100 positions), then bench it
+DYLD_LIBRARY_PATH=$(find target/release/build -path "*/torch-sys-*/out/libtorch/libtorch/lib" | head -1) \
+  ./target/release/export_td models/v4-td-lc1-s1/weights.pt models/v4-td-lc1-s1/td.pfv
+./target/release/v4bench models/v3-solve td:models/v4-td-lc1-s1/td.pfv --out td.json
 
 # Elo ladder from arena reports, and its plot
 cargo run --release -p pogofish-search --bin ladder -- arena.json --out ladder.json
