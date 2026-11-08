@@ -2,8 +2,10 @@
 # The whole v4 evaluation of docs/experiments/v4-evaluation.md, end to end.
 # Usage: scripts/v4-eval.sh   (from anywhere; runs at the repository root)
 # Exit: 0 done, 2 could not run (foreign table hash, missing prerequisite).
-# Every stage is resumable or idempotent: a finished TD run is a no-op, and the
-# bench commands are read back from the committed JSON, never retyped.
+# Every stage is resumable or idempotent: a finished TD or tabular run is a
+# no-op, and the bench commands are read back from the committed JSON, never
+# retyped (the tabular learner's JSON against greedy and against random among
+# them). qtrain exits 130 when interrupted, which stops the script.
 # macOS strips DYLD_LIBRARY_PATH from the environment of a script started
 # through /usr/bin/env, so the script sets it itself (CLAUDE.md "Training").
 # Do not run td_train under /usr/bin/time: that strips it too.
@@ -15,7 +17,7 @@ accepted=$(grep -m1 '^ACCEPTED_TABLE_SHA256' tools/v4_table.py | grep -o '[0-9a-
 [ -f models/v3-solve/table.bin ] || { echo "models/v3-solve/table.bin is missing" >&2; exit 2; }
 
 echo "== build"
-cargo build --release -p pogofish-search --bin retro
+cargo build --release -p pogofish-search --bin retro --bin qtrain
 cargo build --release -p pogofish-infer --bin v4bench
 cargo build --release -p pogofish-train --bin td_train --bin export_td
 
@@ -49,13 +51,22 @@ for s in 1 2 3; do
   ./target/release/export_td "$run/weights.pt" "$run/td.pfv"
 done
 
-# Task 7 adds the tabular-learner stage here (train, then bench as qtab:).
+echo "== tabular learner under lc1-2, three seeds (resumable; 931 MB each, one at a time)"
+for s in 1 2 3; do
+  ./target/release/qtrain models/v4-qtab-s$s --games 500000 --seed "$s"
+done
 
 echo "== v4bench, every player (main and appendix), commands read from the JSON"
 for f in docs/experiments/v4/*.json docs/experiments/v4/appendix-lc1d/*.json; do
-  cmd=$(jq -r '.command | @sh' "$f")
+  # The argv array, one element per line (no element holds a newline), run
+  # as is: nothing in the JSON is ever handed to the shell to parse.
+  cmd=()
+  while IFS= read -r arg; do
+    cmd+=("$arg")
+  done < <(jq -r '.command[]' "$f")
+  [ "${#cmd[@]}" -gt 0 ] || { echo "$f: empty command" >&2; exit 2; }
   echo "-- $f"
-  eval "$cmd"
+  "${cmd[@]}"
 done
 
 echo "== tables"
