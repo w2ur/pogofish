@@ -95,3 +95,8 @@ Cargo.lock.bak
 /act3-*.jpeg
 /mobile-*.png
 /mobile-*.jpeg
+
+# Article visuals: generated frames, sheets and GIFs
+/tools/article-visuals/**/*.png
+/tools/article-visuals/**/*.gif
+/tools/article-visuals/**/*.jpeg

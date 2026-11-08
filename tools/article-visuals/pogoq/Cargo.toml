@@ -1,0 +1,9 @@
+[package]
+name = "pogoq"
+version = "0.1.0"
+edition = "2021"
+publish = false
+
+[dependencies]
+pogofish-search = { path = "../../../crates/search" }
+serde_json = { workspace = true }
