@@ -18,17 +18,17 @@ use pogofish_engine::{
 };
 use pogofish_search::arena::{random_opening, run_match, Agent, ArenaConfig};
 use pogofish_search::perfect::{
-    feature_index, feature_name, feature_shares, keep_rate, keeps_value, learn_rule_list,
-    list_score, move_features, position_row, row_of, tree_input, Criterion, Policy, PolicyPlayer,
-    Row, Sample, ShareTally, Tree, NF, POS_FEATURES,
+    build_sample, feature_index, feature_name, feature_shares, keep_rate, keeps_value,
+    learn_rule_list, list_score, move_features, sample_indices, tree_input, Criterion, Policy,
+    PolicyPlayer, Row, Sample, ShareTally, Solved, Tree, NF, POS_FEATURES,
 };
 use pogofish_search::players::Scripted;
 use pogofish_search::principles::GreedyTwoPly;
-use pogofish_search::retro::{decode, load_reachable, load_solved, Bitset, Board, Game, Value};
+use pogofish_search::retro::{decode, Board, Game, Value};
 use pogofish_search::rng::SplitMix64;
 use serde_json::{json, Value as Json};
 use std::collections::{BTreeMap, HashMap, HashSet};
-use std::path::PathBuf;
+use std::path::Path;
 use std::sync::atomic::{AtomicUsize, Ordering};
 use std::sync::Mutex;
 use std::time::Instant;
@@ -131,90 +131,6 @@ fn tuple_move(m: (u8, u8, u8)) -> Move {
     }
 }
 
-struct Solved {
-    g: Game,
-    t: Vec<u16>,
-    reach: Bitset,
-}
-
-impl Solved {
-    fn load(dir: &str) -> anyhow::Result<Solved> {
-        let g = Game::published();
-        let dir = PathBuf::from(dir);
-        let t = load_solved(&g, &dir)?;
-        let reach = load_reachable(&g, &dir)?;
-        Ok(Solved { g, t, reach })
-    }
-
-    fn value(&self, b: &Board) -> Value {
-        decode(self.t[self.g.rank(b) as usize])
-    }
-
-    fn state_value(&self, s: &GameState) -> Value {
-        self.value(&Board::from_state(s))
-    }
-}
-
-// ----------------------------------------------------------- sampling
-
-/// Uniform sample of `n` reachable positions of one class (won in 3 or
-/// more plies, or drawn), skipping indices in `exclude`. Also returns the
-/// number of draws from the index space, to estimate the class size.
-fn sample_indices(
-    sv: &Solved,
-    won: bool,
-    n: usize,
-    seed: u64,
-    exclude: &HashSet<u64>,
-) -> (Vec<u64>, u64) {
-    let mut rng = SplitMix64::new(seed);
-    let mut out = Vec::new();
-    let mut seen = HashSet::new();
-    let mut tries = 0u64;
-    while out.len() < n {
-        tries += 1;
-        let i = rng.next_u64() % sv.g.size();
-        if !sv.reach.get(i) || exclude.contains(&i) || !seen.insert(i) {
-            continue;
-        }
-        let ok = match decode(sv.t[i as usize]) {
-            Value::Win(d) => won && d >= 3,
-            Value::Draw => !won,
-            _ => false,
-        };
-        if ok {
-            out.push(i);
-        } else {
-            seen.remove(&i);
-        }
-    }
-    (out, tries)
-}
-
-fn build_sample(sv: &Solved, idx: u64) -> Sample {
-    let b = sv.g.unrank(idx);
-    let state = b.to_state();
-    let parent = sv.value(&b);
-    let mover = state.to_move();
-    let moves = legal_moves(&state);
-    let mut rows = Vec::with_capacity(moves.len());
-    let mut keeps = Vec::with_capacity(moves.len());
-    for &m in &moves {
-        let next = apply_move(&state, m).expect("legal");
-        rows.push(row_of(&state, m, &next));
-        keeps.push(keeps_value(parent, sv.state_value(&next)).expect("won or drawn"));
-    }
-    Sample {
-        won: matches!(parent, Value::Win(_)),
-        max_height: *b.h.iter().max().unwrap(),
-        before: position_row(&state, mover),
-        state,
-        moves,
-        rows,
-        keeps,
-    }
-}
-
 fn build_samples(sv: &Solved, idx: &[u64]) -> Vec<Sample> {
     par_map(idx.len(), |i| build_sample(sv, idx[i]))
 }
@@ -222,7 +138,7 @@ fn build_samples(sv: &Solved, idx: &[u64]) -> Vec<Sample> {
 fn pilot(args: &[String]) -> anyhow::Result<Json> {
     let per: usize = arg(args, "--per-class").map_or(Ok(200), |s| s.parse())?;
     let t0 = Instant::now();
-    let sv = Solved::load(&args[1])?;
+    let sv = Solved::load(Path::new(&args[1]))?;
     let load = t0.elapsed().as_secs_f64();
     let t1 = Instant::now();
     let (w, tw) = sample_indices(&sv, true, per, 1, &HashSet::new());
@@ -371,7 +287,7 @@ fn learn(args: &[String]) -> anyhow::Result<Json> {
     let seed: u64 = need(args, "--seed")?.parse()?;
     let players_out = need(args, "--players")?;
     let t0 = Instant::now();
-    let sv = Solved::load(&args[1])?;
+    let sv = Solved::load(Path::new(&args[1]))?;
     let load_s = t0.elapsed().as_secs_f64();
 
     let t1 = Instant::now();
@@ -699,7 +615,7 @@ fn arena(args: &[String]) -> anyhow::Result<Json> {
     let text = std::fs::read_to_string(need(args, "--players")?)?;
     let entries: Vec<Json> = serde_json::from_str(&text)?;
     let sv = match arg(args, "--table") {
-        Some(d) => Some(Solved::load(&d)?),
+        Some(d) => Some(Solved::load(Path::new(&d))?),
         None => None,
     };
     enum P {
@@ -886,7 +802,7 @@ fn canonical(g: &Game, b: &Board) -> u64 {
 fn opening(args: &[String]) -> anyhow::Result<Json> {
     let plies: usize = need(args, "--plies")?.parse()?;
     let guide_depth: usize = arg(args, "--guide-depth").map_or(Ok(4), |s| s.parse())?;
-    let sv = Solved::load(&args[1])?;
+    let sv = Solved::load(Path::new(&args[1]))?;
     let g = &sv.g;
     let players: Vec<PolicyPlayer> = match arg(args, "--players") {
         Some(p) => {

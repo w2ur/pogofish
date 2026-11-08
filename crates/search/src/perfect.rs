@@ -12,12 +12,14 @@
 
 use crate::arena::Agent;
 use crate::principles::{features, FEATURE_NAMES};
-use crate::retro::Value;
+use crate::retro::{decode, load_reachable, load_solved, Bitset, Board, Game, Value};
 use crate::rng::SplitMix64;
 use pogofish_engine::{
     apply_move, is_terminal, legal_moves, manhattan_distance, Color, GameState, Move, RuleSet,
 };
 use serde::{Deserialize, Serialize};
+use std::collections::HashSet;
+use std::path::Path;
 
 /// The position features of `principles.rs` minus `repetition` (the
 /// table's positions carry no history), in the same order.
@@ -604,6 +606,106 @@ pub fn feature_shares(samples: &[&Sample], greedy_ties_only: bool) -> (usize, Ve
     (used, tally)
 }
 
+// ----------------------------------------------------------- the solved table
+
+/// The solved uncapped game: its table and its reachable set.
+pub struct Solved {
+    pub g: Game,
+    pub t: Vec<u16>,
+    pub reach: Bitset,
+}
+
+impl Solved {
+    /// Loads `table.bin` and `reachable.bin` from `dir`.
+    pub fn load(dir: &Path) -> anyhow::Result<Solved> {
+        let g = Game::published();
+        let t = load_solved(&g, dir)?;
+        let reach = load_reachable(&g, dir)?;
+        Ok(Solved { g, t, reach })
+    }
+
+    pub fn value(&self, b: &Board) -> Value {
+        decode(self.t[self.g.rank(b) as usize])
+    }
+
+    pub fn state_value(&self, s: &GameState) -> Value {
+        self.value(&Board::from_state(s))
+    }
+}
+
+// ----------------------------------------------------------- sampling
+
+/// Uniform sample of `n` reachable positions of one class (won in 3 or
+/// more plies, or drawn), skipping indices in `exclude`. Also returns the
+/// number of draws from the index space, to estimate the class size.
+pub fn sample_indices(
+    sv: &Solved,
+    won: bool,
+    n: usize,
+    seed: u64,
+    exclude: &HashSet<u64>,
+) -> (Vec<u64>, u64) {
+    let mut rng = SplitMix64::new(seed);
+    let mut out = Vec::new();
+    let mut seen = HashSet::new();
+    let mut tries = 0u64;
+    while out.len() < n {
+        tries += 1;
+        let i = rng.next_u64() % sv.g.size();
+        if !sv.reach.get(i) || exclude.contains(&i) || !seen.insert(i) {
+            continue;
+        }
+        let ok = match decode(sv.t[i as usize]) {
+            Value::Win(d) => won && d >= 3,
+            Value::Draw => !won,
+            _ => false,
+        };
+        if ok {
+            out.push(i);
+        } else {
+            seen.remove(&i);
+        }
+    }
+    (out, tries)
+}
+
+/// The held-out positions of `perfect learn`: the won and the drawn test
+/// indices, drawn after the training ones (seeds `seed` and `seed + 1`) and
+/// excluding them (seeds `seed + 2` and `seed + 3`).
+pub fn held_out(sv: &Solved, n_train: usize, n_test: usize, seed: u64) -> (Vec<u64>, Vec<u64>) {
+    let none = HashSet::new();
+    let (tr_w, _) = sample_indices(sv, true, n_train, seed, &none);
+    let (tr_d, _) = sample_indices(sv, false, n_train, seed + 1, &none);
+    let train_set: HashSet<u64> = tr_w.iter().chain(&tr_d).copied().collect();
+    let (te_w, _) = sample_indices(sv, true, n_test, seed + 2, &train_set);
+    let (te_d, _) = sample_indices(sv, false, n_test, seed + 3, &train_set);
+    (te_w, te_d)
+}
+
+pub fn build_sample(sv: &Solved, idx: u64) -> Sample {
+    let b = sv.g.unrank(idx);
+    let state = b.to_state();
+    let parent = sv.value(&b);
+    let mover = state.to_move();
+    let moves = legal_moves(&state);
+    let mut rows = Vec::with_capacity(moves.len());
+    let mut keeps = Vec::with_capacity(moves.len());
+    for &m in &moves {
+        let next = apply_move(&state, m).expect("legal");
+        rows.push(row_of(&state, m, &next));
+        keeps.push(keeps_value(parent, sv.state_value(&next)).expect("won or drawn"));
+    }
+    Sample {
+        won: matches!(parent, Value::Win(_)),
+        max_height: *b.h.iter().max().unwrap(),
+        before: position_row(&state, mover),
+        state,
+        moves,
+        rows,
+        keeps,
+    }
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
@@ -910,5 +1012,25 @@ mod tests {
             negated: false,
         };
         assert_eq!(p.choose_among(&[0.0; POS_FEATURES], &rows), vec![1, 2]);
+    }
+
+    /// Indices recorded from the unmodified `perfect learn` (seed 31,
+    /// 200 train and 200 test positions per class) before the sampler moved
+    /// into the library.
+    #[test]
+    #[ignore = "needs the solved table: POGOFISH_TABLE=models/v3-solve"]
+    fn held_out_matches_perfect_learn_order() {
+        let dir = std::env::var("POGOFISH_TABLE")
+            .expect("POGOFISH_TABLE must name the directory holding table.bin and reachable.bin");
+        let sv = Solved::load(std::path::Path::new(&dir)).expect("load the solved table");
+        let (won, drawn) = held_out(&sv, 200, 200, 31);
+        assert_eq!(
+            &won[..5],
+            &[1897416, 69852433, 185092407, 81198008, 81785303]
+        );
+        assert_eq!(
+            &drawn[..5],
+            &[184960122, 211983030, 78147537, 87706101, 32749533]
+        );
     }
 }
