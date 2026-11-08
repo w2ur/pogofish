@@ -29,7 +29,7 @@ cargo run --release -p pogofish-infer --example retro_net -- $D --games 400 --se
 
 Every step is deterministic. The solve was interrupted once with SIGINT and resumed;
 the resulting table is byte-identical to an uninterrupted solve (SHA-256
-`1690c767…5e3704`). The net analysis was run twice and its JSON reproduced exactly
+`1690c767b68a6214eb1fb4d74d932198a13f67c744b7c6e61102eeb44c5e3704`). The net analysis was run twice and its JSON reproduced exactly
 (timings aside).
 
 ## Positions
