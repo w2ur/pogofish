@@ -6,3 +6,4 @@ pub mod actions;
 pub mod features;
 pub mod mcts;
 pub mod mlp;
+pub mod players;

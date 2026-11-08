@@ -9,7 +9,7 @@ Pogofish is a browser-based Pogo board game with AI opponents trained via AlphaZ
 ### Rust workspace (`crates/`)
 - Rust 1.79+ (stable toolchain)
 - `pogofish-engine` — Game rules, state, legal moves, rulesets (`Uncapped`, LC1/LC2/LC3, LC1Draw; `RuleSet` parses and prints `uncapped`, `lc1-N`, `lc1d-N`, …)
-- `pogofish-infer` — Pure-Rust inference (no libtorch): input features, action indexing, MLP forward pass reading exported `.pfw` weights, and the neural MCTS shared with training (`Evaluator` trait)
+- `pogofish-infer` — Pure-Rust inference (no libtorch): input features, action indexing, MLP forward pass reading exported `.pfw` weights, and the neural MCTS shared with training (`Evaluator` trait), the `v4bench` binary (one protocol for every player)
 - `pogofish-search` — Minimax (alpha-beta + TT), MCTS (PUCT), checkpointer, scripted `random`/`greedy` players (seeded, no dependency), the retrograde solver of the uncapped game (`retro.rs`, binary `retro`)
 - `pogofish-train` — AlphaZero training (tch-rs/libtorch, no gating, exact resume), self-play, TD(λ) value learning (`td_train`), `arena` evaluation binary
 - `pogofish-cli` — Terminal game (crossterm) against the bundled net: colour, level (simulations), hint, the AI's estimate, undo, saved game records; game logic in `session.rs`, key handling tested headless in `app.rs`
@@ -78,8 +78,21 @@ Rate players from arena reports (Bradley–Terry, 95% CI) and plot:
 cargo run --release -p pogofish-search --bin ladder -- arena.json --anchor random --out ladder.json
 uv run tools/plot_ladder.py ladder.json ladder.png
 ```
-Evaluate with `arena` only; the round-1 `tournament` binary has no colour-swapped
+Evaluate with `arena` or `v4bench`; the round-1 `tournament` binary has no colour-swapped
 openings, no CI and counts truncations as draws.
+
+### v4 bench
+```bash
+# One player, two measures, no libtorch: value kept on round 3's held-out sample of the
+# solved table (10,000 won + 10,000 drawn, sample seed 31, positions without history) and
+# score vs greedy under lc1-2 (1,000 colour-swapped pairs, 4-ply openings, seed 404).
+# Controls run first (oracle, anti-oracle, random vs round 3); a failure is exit 2, no JSON.
+# Players: random, greedy, greedy-2ply, table, net:PFW[:SIMS] (100; 0 = policy argmax)
+cargo build --release -p pogofish-infer --bin v4bench
+./target/release/v4bench models/v3-solve net:crates/cli/assets/az-lc1-s1.pfw --out bench.json
+```
+`--sample-cap N` scores the player on N positions per class (a pilot; the controls keep the
+full sample). See `docs/experiments/v4-evaluation.md`.
 
 ### TD(λ) value learning
 ```bash
