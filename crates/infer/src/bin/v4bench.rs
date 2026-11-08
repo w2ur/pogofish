@@ -26,7 +26,8 @@
 //! class only (a pilot); the controls still use the full sample.
 //!
 //! Exit: 0 measured; 2 could not run (bad arguments, a table that is not the
-//! documented one, a failed control) — then no JSON is written. The bench
+//! documented one, a failed control) — then no JSON is written, and a JSON
+//! left at `--out` by an earlier run is deleted first. The bench
 //! reports figures and has no finding of its own, so it never exits 1.
 
 use anyhow::{bail, ensure, Context};
@@ -135,6 +136,8 @@ fn sha256(path: &Path) -> anyhow::Result<String> {
 fn git_rev() -> String {
     let run = |args: &[&str]| {
         Command::new("git")
+            .arg("-C")
+            .arg(env!("CARGO_MANIFEST_DIR"))
             .args(args)
             .output()
             .ok()
@@ -225,6 +228,13 @@ fn main() -> ExitCode {
 fn run() -> anyhow::Result<()> {
     let argv: Vec<String> = std::env::args().collect();
     let a = parse_args(&argv[1..])?;
+    // A JSON left by an earlier run must not survive a run that fails.
+    match std::fs::remove_file(&a.out) {
+        Err(e) if e.kind() != std::io::ErrorKind::NotFound => {
+            return Err(e).with_context(|| format!("removing the stale {}", a.out));
+        }
+        _ => {}
+    }
     let t0 = Instant::now();
     // Fail on a bad spec before loading the table.
     if a.spec != "table" {
