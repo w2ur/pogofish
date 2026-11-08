@@ -180,3 +180,29 @@ rerun):
 move after taking a move that wins at once and avoiding one that loses at once, round 3's
 `Policy::Random`), not the arena's uniform `Scripted::Random`. `greedy` in criterion 2 is the
 bench's usual opponent.
+
+### Tabular learner — pilot and budget
+
+Five minutes of `qtrain` on seed 1 in a scratch directory (deleted), stopped by SIGINT:
+
+```bash
+/usr/bin/time -l ./target/release/qtrain <scratch> --games 100000000 --seed 1 --save-every 60
+```
+
+With `--games 100000000`, ε stayed near 1.0 throughout (0.9996 at the end): the pilot measures
+almost uniform play. Measured on the 8 GB M2 Mac, one thread: 42,502 games and 5,671,034 plies
+(updates) in 300.6 s, so 141 games/s and 18,860 positions/s, 133 plies per game on average;
+6 games cut at 1,000 plies; 5,353,008 positions visited. Wall time 301.1 s, max RSS from
+`/usr/bin/time -l` 997 MB. Five saves of `v.bin` + `visited.bin` fell inside the 300 s and are
+included in the rates.
+
+Sparse map, measured once (a standalone program, `HashMap<u64, f32>` with the standard hasher,
+1,000,000 random keys below 232,792,560, of which 997,780 distinct): peak RSS 73.2 MB against
+1.5 MB empty, **71.8 B per entry** at peak (the estimate was ~40 B; the peak includes the copy
+made when the map grows). A map passes the dense array's 931 MB at about 13 M entries; the pilot
+visited 5.4 M positions in 5 minutes.
+
+**Budget, extrapolated from pilot:** `--games 500000` per seed, about 500,000 / 141 ≈ 3,540 s,
+just under 1 h, and about 66 M updates. The extrapolation rests on near-uniform play; as ε
+falls, the games' length can change (greedy play may repeat positions and end on a third
+occurrence, or run to the limit), and the run time with it.
