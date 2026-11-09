@@ -669,17 +669,41 @@ pub fn sample_indices(
     (out, tries)
 }
 
-/// The held-out positions of `perfect learn`: the won and the drawn test
-/// indices, drawn after the training ones (seeds `seed` and `seed + 1`) and
-/// excluding them (seeds `seed + 2` and `seed + 3`).
-pub fn held_out(sv: &Solved, n_train: usize, n_test: usize, seed: u64) -> (Vec<u64>, Vec<u64>) {
+/// The positions of `perfect learn`, as indices: training ones first (won
+/// with seed `seed`, drawn with `seed + 1`), then held-out ones excluding
+/// them (won with `seed + 2`, drawn with `seed + 3`).
+pub struct Split {
+    pub train_won: Vec<u64>,
+    pub train_drawn: Vec<u64>,
+    pub test_won: Vec<u64>,
+    pub test_drawn: Vec<u64>,
+    /// Draws from the index space behind each training class (won, drawn),
+    /// to estimate the class sizes.
+    pub train_draws: (u64, u64),
+}
+
+/// Draw the training and held-out positions of `perfect learn`.
+pub fn split(sv: &Solved, n_train: usize, n_test: usize, seed: u64) -> Split {
     let none = HashSet::new();
-    let (tr_w, _) = sample_indices(sv, true, n_train, seed, &none);
-    let (tr_d, _) = sample_indices(sv, false, n_train, seed + 1, &none);
-    let train_set: HashSet<u64> = tr_w.iter().chain(&tr_d).copied().collect();
-    let (te_w, _) = sample_indices(sv, true, n_test, seed + 2, &train_set);
-    let (te_d, _) = sample_indices(sv, false, n_test, seed + 3, &train_set);
-    (te_w, te_d)
+    let (train_won, draws_w) = sample_indices(sv, true, n_train, seed, &none);
+    let (train_drawn, draws_d) = sample_indices(sv, false, n_train, seed + 1, &none);
+    let train_set: HashSet<u64> = train_won.iter().chain(&train_drawn).copied().collect();
+    let (test_won, _) = sample_indices(sv, true, n_test, seed + 2, &train_set);
+    let (test_drawn, _) = sample_indices(sv, false, n_test, seed + 3, &train_set);
+    Split {
+        train_won,
+        train_drawn,
+        test_won,
+        test_drawn,
+        train_draws: (draws_w, draws_d),
+    }
+}
+
+/// The held-out positions of `perfect learn`: the won and the drawn test
+/// indices of [`split`].
+pub fn held_out(sv: &Solved, n_train: usize, n_test: usize, seed: u64) -> (Vec<u64>, Vec<u64>) {
+    let s = split(sv, n_train, n_test, seed);
+    (s.test_won, s.test_drawn)
 }
 
 pub fn build_sample(sv: &Solved, idx: u64) -> Sample {

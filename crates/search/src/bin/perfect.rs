@@ -19,8 +19,8 @@ use pogofish_engine::{
 use pogofish_search::arena::{random_opening, run_match, Agent, ArenaConfig};
 use pogofish_search::perfect::{
     build_sample, feature_index, feature_name, feature_shares, keep_rate, keeps_value,
-    learn_rule_list, list_score, move_features, sample_indices, tree_input, Criterion, Policy,
-    PolicyPlayer, Row, Sample, ShareTally, Solved, Tree, NF, POS_FEATURES,
+    learn_rule_list, list_score, move_features, sample_indices, split, tree_input, Criterion,
+    Policy, PolicyPlayer, Row, Sample, ShareTally, Solved, Tree, NF, POS_FEATURES,
 };
 use pogofish_search::players::Scripted;
 use pogofish_search::principles::GreedyTwoPly;
@@ -291,16 +291,12 @@ fn learn(args: &[String]) -> anyhow::Result<Json> {
     let load_s = t0.elapsed().as_secs_f64();
 
     let t1 = Instant::now();
-    let none = HashSet::new();
-    let (tr_w, draws_w) = sample_indices(&sv, true, n_train, seed, &none);
-    let (tr_d, draws_d) = sample_indices(&sv, false, n_train, seed + 1, &none);
-    let train_set: HashSet<u64> = tr_w.iter().chain(&tr_d).copied().collect();
-    let (te_w, _) = sample_indices(&sv, true, n_test, seed + 2, &train_set);
-    let (te_d, _) = sample_indices(&sv, false, n_test, seed + 3, &train_set);
-    let mut train = build_samples(&sv, &tr_w);
-    train.extend(build_samples(&sv, &tr_d));
-    let mut test = build_samples(&sv, &te_w);
-    test.extend(build_samples(&sv, &te_d));
+    let drawn_from = split(&sv, n_train, n_test, seed);
+    let (draws_w, draws_d) = drawn_from.train_draws;
+    let mut train = build_samples(&sv, &drawn_from.train_won);
+    train.extend(build_samples(&sv, &drawn_from.train_drawn));
+    let mut test = build_samples(&sv, &drawn_from.test_won);
+    test.extend(build_samples(&sv, &drawn_from.test_drawn));
     let sample_s = t1.elapsed().as_secs_f64();
     eprintln!("samples built in {sample_s:.1} s");
 

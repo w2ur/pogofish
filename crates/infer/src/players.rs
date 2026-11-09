@@ -29,7 +29,7 @@ use pogofish_engine::{
 use pogofish_search::arena::Agent;
 use pogofish_search::perfect::{Criterion, Policy, PolicyPlayer, Sample, Solved};
 use pogofish_search::principles::GreedyTwoPly;
-use pogofish_search::qtab::QTable;
+use pogofish_search::qtab::{argmax_all, result_for, QTable};
 use pogofish_search::retro::{Bitset, Game, Value};
 use pogofish_search::rng::SplitMix64;
 use serde::Serialize;
@@ -235,11 +235,7 @@ impl TiedChooser for TdPlayer {
             .map(|&m| {
                 let next = apply_move_under(s, m, rules).expect("legal move");
                 match is_terminal(&next, rules) {
-                    Some(o) => match o.winner() {
-                        None => 0.0,
-                        Some(w) if w == mover => 1.0,
-                        Some(_) => -1.0,
-                    },
+                    Some(o) => result_for(o, mover),
                     None => -self.net.forward(&self.net.features.encode(&next)),
                 }
             })
@@ -331,19 +327,6 @@ pub struct NetPlayer {
     pub net: Mlp,
     pub sims: u32,
     pub label: String,
-}
-
-/// Indices of the maximum values (exact ties).
-fn argmax_all<T: PartialOrd + Copy>(xs: &[T]) -> Vec<usize> {
-    let mut best: Vec<usize> = Vec::new();
-    for (i, &x) in xs.iter().enumerate() {
-        match best.first() {
-            Some(&b) if x < xs[b] => {}
-            Some(&b) if x == xs[b] => best.push(i),
-            _ => best = vec![i],
-        }
-    }
-    best
 }
 
 impl TiedChooser for NetPlayer {

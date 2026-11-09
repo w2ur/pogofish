@@ -100,8 +100,9 @@ pub enum GameEnd {
     Truncated,
 }
 
-/// The value of an ended game for the player who made the last move.
-fn result_for(o: Outcome, mover: pogofish_engine::Color) -> f32 {
+/// The value of an ended game for the player who made the last move: +1
+/// a win, −1 a loss, 0 a draw. Shared with the bench's one-ply players.
+pub fn result_for(o: Outcome, mover: pogofish_engine::Color) -> f32 {
     match o.winner() {
         None => 0.0,
         Some(w) if w == mover => 1.0,
@@ -115,7 +116,7 @@ pub fn updated(v: f32, target: f32, alpha: f32) -> f32 {
 }
 
 /// Indices of the maximum values (exact ties).
-pub fn argmax_all(xs: &[f32]) -> Vec<usize> {
+pub fn argmax_all<T: PartialOrd + Copy>(xs: &[T]) -> Vec<usize> {
     let mut best: Vec<usize> = Vec::new();
     for (i, &x) in xs.iter().enumerate() {
         match best.first() {
