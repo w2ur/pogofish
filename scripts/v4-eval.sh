@@ -5,7 +5,8 @@
 # Every stage is resumable or idempotent: a finished TD or tabular run is a
 # no-op, and the bench commands are read back from the committed JSON, never
 # retyped (the tabular learner's JSON against greedy and against random among
-# them). qtrain exits 130 when interrupted, which stops the script.
+# them). td_train and qtrain exit 130 when interrupted, which stops the
+# script before a partial run is exported or benched.
 # macOS strips DYLD_LIBRARY_PATH from the environment of a script started
 # through /usr/bin/env, so the script sets it itself (CLAUDE.md "Training").
 # Do not run td_train under /usr/bin/time: that strips it too.

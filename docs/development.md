@@ -81,7 +81,7 @@ cargo install --git https://github.com/w2ur/pogofish pogofish-cli
 # Measure the uncapped game with scripted players (JSON report; ~2 s)
 cargo run --release -p pogofish-search --bin measure -- --games 20000 --seed 1 --out docs/experiments/v2-measure.json
 
-# TD(λ) value learning (resumable; docs/experiments/v2-td.md)
+# TD(λ) value learning (resumable: Ctrl+C saves and exits 130; docs/experiments/v2-td.md)
 ./target/release/td_train models/td-mr-s1 --iterations 1000 --temp-decay 1000 --lambda 0.7 --lr 0.1 --seed 1
 
 # Evaluate players against each other (colours swapped, random openings, 95% CI)

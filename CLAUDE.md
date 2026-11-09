@@ -110,7 +110,8 @@ cargo build --release -p pogofish-search --bin qtrain
 
 ### TD(λ) value learning
 ```bash
-# Resumable (rerun after Ctrl+C, or raise --iterations to extend); see docs/experiments/v2-td.md
+# Resumable: Ctrl+C saves (exit 130), rerun to resume, or raise --iterations to extend;
+# see docs/experiments/v2-td.md
 ./target/release/td_train models/td-mr-s1 --iterations 1000 --temp-decay 1000 --eval-every 50 \
   --eval-pairs 200 --lambda 0.7 --lr 0.1 --seed 1
 # In the arena: td:models/td-mr-s1/weights.pt[:128x64]

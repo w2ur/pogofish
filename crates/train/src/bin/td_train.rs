@@ -1,5 +1,6 @@
 //! TD(λ) self-play training (plan task 4.1). Resumable: rerun the same
 //! command after Ctrl+C (or with a larger --iterations to extend the run).
+//! Exit: 0 finished (or already finished); 130 interrupted (saved, resumable).
 //!
 //! Usage: td_train <out_dir> [--rules R] [--iterations N] [--games G] [--lambda L] [--lr LR]
 //!                 [--hidden 128x64] [--features mover-relative|mover-relative-repetition|absolute] [--temp-start T] [--temp-end T] [--temp-decay N]
@@ -9,8 +10,9 @@
 use anyhow::{bail, Context};
 use pogofish_train::td::{parse_hidden, train_td, TdConfig, TdStop};
 use std::path::PathBuf;
+use std::process::ExitCode;
 
-fn main() -> anyhow::Result<()> {
+fn main() -> anyhow::Result<ExitCode> {
     let raw: Vec<String> = std::env::args().skip(1).collect();
     let Some(dir) = raw.first().filter(|a| !a.starts_with("--")) else {
         bail!("usage: td_train <out_dir> [--iterations N] [--games G] [--lambda L] [--lr LR] [--hidden 128x64] [--features mover-relative|mover-relative-repetition|absolute] [--temp-start T] [--temp-end T] [--temp-decay N] [--eval-every K] [--eval-pairs P] [--checkpoint-every K] [--max-plies P] [--seed S]");
@@ -48,9 +50,14 @@ fn main() -> anyhow::Result<()> {
         i += 2;
     }
     pogofish_train::interrupt::install();
-    match train_td(&cfg, &PathBuf::from(dir))? {
-        TdStop::Finished => eprintln!("finished"),
-        TdStop::Interrupted => eprintln!("interrupted; rerun the same command to resume"),
-    }
-    Ok(())
+    Ok(match train_td(&cfg, &PathBuf::from(dir))? {
+        TdStop::Finished => {
+            eprintln!("finished");
+            ExitCode::SUCCESS
+        }
+        TdStop::Interrupted => {
+            eprintln!("interrupted; rerun the same command to resume");
+            ExitCode::from(130)
+        }
+    })
 }
