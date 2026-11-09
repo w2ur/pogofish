@@ -102,7 +102,8 @@ immediate loss) instead of greedy. See `docs/experiments/v4-evaluation.md`.
 # One V per position of the published game (931 MB dense f32 + a visited bitset, in
 # models/v4-qtab-sN/), Q-learning in afterstate form under lc1-2, epsilon-greedy 1.0 -> 0.05.
 # Resumable: Ctrl+C saves at the next game boundary (exit 130), rerun to resume, bit-identical;
-# a finished run is a no-op. One run at a time on the 8 GB Mac.
+# a finished run is a no-op. One run at a time on the 8 GB Mac. Each save keeps the previous
+# generation in prev/ (resumed from if a save is cut), so a run takes up to twice 931 MB on disk.
 cargo build --release -p pogofish-search --bin qtrain
 ./target/release/qtrain models/v4-qtab-s1 --games 500000 --seed 1
 ./target/release/v4bench models/v3-solve qtab:models/v4-qtab-s1/v.bin --out qtab.json

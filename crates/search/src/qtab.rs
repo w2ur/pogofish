@@ -20,9 +20,12 @@
 //! A run lives in a directory: `v.bin` (V, raw little-endian f32),
 //! `visited.bin` (the bitset, little-endian u64 words), `state.json`
 //! (counters, generator, checksums of the two files), `config.json` and
-//! `metrics.jsonl`. Every file is written to a temporary name and renamed;
-//! `state.json` goes last and carries the checksums, so a save cut between
-//! two renames is detected on load instead of resuming from mixed files.
+//! `metrics.jsonl`. A save writes the three files of the new generation to
+//! temporary names, keeps the current generation as the previous one in
+//! `prev/` (hard links, so no copy, but twice the disk while both differ),
+//! then renames the new files into place, `state.json` last. `state.json`
+//! carries the checksums, so a save cut between two renames is detected on
+//! load, and the run resumes from `prev/` instead of from mixed files.
 
 use crate::retro::{Bitset, Board, Game};
 use crate::rng::SplitMix64;
@@ -143,13 +146,34 @@ impl Checksum {
 
 const CHUNK: usize = 1 << 20;
 
+/// The temporary name a file of `path` is written under before its rename.
+fn staged(path: &Path) -> PathBuf {
+    path.with_extension("tmp")
+}
+
 /// Write `bytes` (produced chunk by chunk) to `path` through a temporary
 /// file and a rename; returns the checksum of what was written.
 fn write_atomic(
     path: &Path,
+    fill: impl FnMut(&mut dyn FnMut(&[u8]) -> std::io::Result<()>) -> std::io::Result<()>,
+) -> anyhow::Result<u64> {
+    let sum = write_staged(path, fill)?;
+    install(path)?;
+    Ok(sum)
+}
+
+/// Rename the staged file of `path` into place.
+fn install(path: &Path) -> anyhow::Result<()> {
+    std::fs::rename(staged(path), path).with_context(|| format!("renaming to {}", path.display()))
+}
+
+/// Write `bytes` (produced chunk by chunk) to the staged name of `path`,
+/// synced; returns the checksum of what was written.
+fn write_staged(
+    path: &Path,
     mut fill: impl FnMut(&mut dyn FnMut(&[u8]) -> std::io::Result<()>) -> std::io::Result<()>,
 ) -> anyhow::Result<u64> {
-    let tmp = path.with_extension("tmp");
+    let tmp = staged(path);
     let mut f = std::io::BufWriter::new(
         std::fs::File::create(&tmp).with_context(|| format!("creating {}", tmp.display()))?,
     );
@@ -160,7 +184,6 @@ fn write_atomic(
     })?;
     let f = f.into_inner().map_err(|e| e.into_error())?;
     f.sync_all()?;
-    std::fs::rename(&tmp, path).with_context(|| format!("renaming to {}", path.display()))?;
     Ok(sum.0)
 }
 
@@ -222,9 +245,10 @@ impl QTable {
         qs
     }
 
-    /// Write `v.bin` and `visited.bin` into `dir`; returns their checksums.
-    fn save(&self, dir: &Path) -> anyhow::Result<(u64, u64)> {
-        let v_sum = write_atomic(&dir.join("v.bin"), |out| {
+    /// Write `v.bin` and `visited.bin` of `dir` to their staged names;
+    /// returns their checksums.
+    fn save_staged(&self, dir: &Path) -> anyhow::Result<(u64, u64)> {
+        let v_sum = write_staged(&dir.join("v.bin"), |out| {
             let mut buf = Vec::with_capacity(CHUNK * 4);
             for chunk in self.v.chunks(CHUNK) {
                 buf.clear();
@@ -236,7 +260,7 @@ impl QTable {
             Ok(())
         })?;
         let bytes = self.visited.to_bytes();
-        let b_sum = write_atomic(&dir.join("visited.bin"), |out| out(&bytes))?;
+        let b_sum = write_staged(&dir.join("visited.bin"), |out| out(&bytes))?;
         Ok((v_sum, b_sum))
     }
 
@@ -350,13 +374,76 @@ fn state_path(dir: &Path) -> PathBuf {
     dir.join("state.json")
 }
 
-fn save_run(dir: &Path, table: &QTable, state: &mut QState) -> anyhow::Result<()> {
-    let (v_sum, b_sum) = table.save(dir)?;
+/// The directory holding the previous generation of a run.
+pub fn prev_dir(dir: &Path) -> PathBuf {
+    dir.join("prev")
+}
+
+/// The files of one generation, `state.json` last (the order of install).
+const GENERATION: [&str; 3] = ["v.bin", "visited.bin", "state.json"];
+
+/// Save the run. The new generation is written to staged names first; when
+/// `current_is_whole` (the files in place are a generation that loads), they
+/// are hard-linked into `prev/`, replacing the previous one, before the new
+/// files are renamed into place. When it is not (the run resumed from
+/// `prev/`), `prev/` is the only whole generation and is left alone.
+fn save_run(
+    dir: &Path,
+    table: &QTable,
+    state: &mut QState,
+    current_is_whole: bool,
+) -> anyhow::Result<()> {
+    let (v_sum, b_sum) = table.save_staged(dir)?;
     state.v_checksum = v_sum;
     state.visited_checksum = b_sum;
     let text = serde_json::to_string_pretty(state)? + "\n";
-    write_atomic(&state_path(dir), |out| out(text.as_bytes()))?;
+    write_staged(&state_path(dir), |out| out(text.as_bytes()))?;
+    if current_is_whole && state_path(dir).exists() {
+        let (prev, link) = (prev_dir(dir), dir.join("prev.tmp"));
+        if link.exists() {
+            std::fs::remove_dir_all(&link)?;
+        }
+        std::fs::create_dir(&link).with_context(|| format!("creating {}", link.display()))?;
+        for f in GENERATION {
+            std::fs::hard_link(dir.join(f), link.join(f))
+                .with_context(|| format!("linking {} into {}", f, link.display()))?;
+        }
+        if prev.exists() {
+            std::fs::remove_dir_all(&prev)?;
+        }
+        std::fs::rename(&link, &prev).with_context(|| format!("renaming to {}", prev.display()))?;
+    }
+    for f in GENERATION {
+        install(&dir.join(f))?;
+    }
     Ok(())
+}
+
+/// Load the run saved in `dir`: the current generation, or the previous one
+/// in `prev/` when the current files do not load (a save cut between two
+/// renames). `None` when no generation was ever saved. The flag is true
+/// when the current generation loaded.
+pub fn load_run(dir: &Path, size: u64) -> anyhow::Result<Option<(QTable, QState, bool)>> {
+    let prev = prev_dir(dir);
+    if !state_path(dir).exists() && !state_path(&prev).exists() {
+        return Ok(None);
+    }
+    match QTable::load(&dir.join("v.bin"), size) {
+        Ok((t, s)) => Ok(Some((t, s, true))),
+        Err(current) if state_path(&prev).exists() => {
+            let (t, s) = QTable::load(&prev.join("v.bin"), size).with_context(|| {
+                format!(
+                    "the current generation does not load ({current:#}), nor does the previous one"
+                )
+            })?;
+            eprintln!(
+                "{current:#}; resuming from the previous generation in {}",
+                prev.display()
+            );
+            Ok(Some((t, s, false)))
+        }
+        Err(current) => Err(current),
+    }
 }
 
 /// Train, or resume the run found in `dir` (its saved config must equal
@@ -377,25 +464,28 @@ pub fn train(
     let rules: RuleSet = cfg.rules.parse().map_err(anyhow::Error::msg)?;
     ensure!(cfg.games > 0, "--games must be at least 1");
     std::fs::create_dir_all(dir).with_context(|| format!("creating {}", dir.display()))?;
-    let (mut table, mut state) = if state_path(dir).exists() {
+    if config_path(dir).exists() {
         let saved: QConfig = serde_json::from_str(&std::fs::read_to_string(config_path(dir))?)?;
         ensure!(
             saved == *cfg,
             "{} holds a run with a different configuration: {saved:?}",
             dir.display()
         );
-        QTable::load(&dir.join("v.bin"), g.size())?
-    } else {
-        let state = QState {
-            games_played: 0,
-            plies: 0,
-            unfinished: 0,
-            rng_state: cfg.seed,
-            visited: 0,
-            v_checksum: 0,
-            visited_checksum: 0,
-        };
-        (QTable::new(g.size()), state)
+    }
+    let (mut table, mut state, mut current_is_whole) = match load_run(dir, g.size())? {
+        Some(run) => run,
+        None => {
+            let state = QState {
+                games_played: 0,
+                plies: 0,
+                unfinished: 0,
+                rng_state: cfg.seed,
+                visited: 0,
+                v_checksum: 0,
+                visited_checksum: 0,
+            };
+            (QTable::new(g.size()), state, false)
+        }
     };
     if state.games_played >= cfg.games {
         return Ok(QStop::Finished);
@@ -431,7 +521,7 @@ pub fn train(
         state.rng_state = rng.state();
         if stop(&state) {
             state.visited = table.visited.count();
-            save_run(dir, &table, &mut state)?;
+            save_run(dir, &table, &mut state, current_is_whole)?;
             log(&state, &table, cfg.epsilon(state.games_played))?;
             return Ok(QStop::Interrupted);
         }
@@ -445,14 +535,15 @@ pub fn train(
         if last_save.elapsed().as_secs_f64() >= save_every_s {
             state.rng_state = rng.state();
             state.visited = table.visited.count();
-            save_run(dir, &table, &mut state)?;
+            save_run(dir, &table, &mut state, current_is_whole)?;
+            current_is_whole = true;
             log(&state, &table, eps)?;
             last_save = Instant::now();
         }
     }
     state.rng_state = rng.state();
     state.visited = table.visited.count();
-    save_run(dir, &table, &mut state)?;
+    save_run(dir, &table, &mut state, current_is_whole)?;
     log(&state, &table, cfg.epsilon(cfg.games - 1))?;
     Ok(QStop::Finished)
 }
@@ -696,6 +787,62 @@ mod tests {
         bytes[0] ^= 1;
         std::fs::write(one.join("v.bin"), bytes).unwrap();
         assert!(QTable::load(&one.join("v.bin"), g.size()).is_err());
+        std::fs::remove_dir_all(&base).unwrap();
+    }
+
+    // Regression: <fix commit> — save_run renamed three files with no
+    // previous generation kept, so a save cut between two renames lost the run.
+    #[test]
+    fn a_save_cut_between_renames_resumes_from_the_previous_generation() {
+        let g = small();
+        let start = small_start(&g);
+        let cfg = QConfig {
+            games: 60,
+            max_plies: 200,
+            seed: 7,
+            ..QConfig::default()
+        };
+        let base = std::env::temp_dir().join(format!("qtab-cut-{}", std::process::id()));
+        let _ = std::fs::remove_dir_all(&base);
+        let (reference, run, later) = (base.join("ref"), base.join("run"), base.join("later"));
+        let games = |state: &Path| -> u64 {
+            let text = std::fs::read_to_string(state).unwrap();
+            serde_json::from_str::<QState>(&text).unwrap().games_played
+        };
+        let stop_at = |n: u64| move |s: &QState| s.games_played == n;
+        let train_to = |dir: &Path, n: u64| train(&cfg, dir, &g, &start, f64::INFINITY, stop_at(n));
+        assert_eq!(
+            train(&cfg, &reference, &g, &start, f64::INFINITY, |_| false).unwrap(),
+            QStop::Finished
+        );
+        // Two saves: game 30 in place, game 25 kept as the previous generation.
+        assert_eq!(train_to(&run, 25).unwrap(), QStop::Interrupted);
+        assert_eq!(train_to(&run, 30).unwrap(), QStop::Interrupted);
+        assert_eq!(games(&run.join("prev/state.json")), 25);
+        // The next save is cut after renaming v.bin, before state.json: the
+        // v.bin in place is game 35's, state.json still game 30's.
+        assert_eq!(train_to(&later, 35).unwrap(), QStop::Interrupted);
+        std::fs::copy(later.join("v.bin"), run.join("v.bin")).unwrap();
+        assert!(QTable::load(&run.join("v.bin"), g.size()).is_err());
+
+        // The run resumes from game 25. Its first save keeps game 25 as the
+        // previous generation (the files in place were not a whole one).
+        assert_eq!(train_to(&run, 27).unwrap(), QStop::Interrupted);
+        assert_eq!(games(&run.join("state.json")), 27);
+        assert_eq!(games(&run.join("prev/state.json")), 25);
+        assert!(QTable::load(&run.join("prev/v.bin"), g.size()).is_ok());
+        // Then it ends exactly where the uninterrupted run does.
+        assert_eq!(
+            train(&cfg, &run, &g, &start, 0.0, |_| false).unwrap(),
+            QStop::Finished
+        );
+        for f in ["v.bin", "visited.bin", "state.json"] {
+            assert_eq!(
+                std::fs::read(reference.join(f)).unwrap(),
+                std::fs::read(run.join(f)).unwrap(),
+                "{f}"
+            );
+        }
         std::fs::remove_dir_all(&base).unwrap();
     }
 
