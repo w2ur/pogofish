@@ -14,10 +14,10 @@ Tous les joueurs appris l’ont été sous lc1-2, et toutes les parties de ce to
 ## Ce qu’il faut retenir
 
 1. **Pour la première fois, tous les joueurs sont mesurés de la même façon,** du hasard au jeu parfait : mêmes 20 000 positions, même adversaire (le glouton), mêmes 1 000 paires de parties. Les chiffres des tours précédents, mesurés chacun à sa manière, ne se comparent pas à ceux-ci.
-2. **Le renforcement classique sans réseau de neurones, entraîné ici, ne vaut guère mieux que le hasard.** Il bat le hasard de peu (0,540 à 0,548) et perd presque tout contre le glouton (0,043 à 0,045). Son entraînement a été court : environ huit minutes par graine, au lieu de l’heure prévue.
+2. **Le renforcement classique sans réseau de neurones, entraîné ici, ne vaut guère mieux que le hasard.** Il bat le hasard de peu (0,540 à 0,548) et perd presque tout contre le glouton (0,043 à 0,045). Son entraînement a été court : environ huit minutes par graine, au lieu de l’heure prévue. Avec dix fois plus de parties (une graine, 1 h 45, essai exploratoire), il bat nettement le hasard (0,784) et quadruple son score contre le glouton (0,178), qu’il ne bat toujours pas.
 3. **Un réseau de neurones qui juge la position après son propre coup, un demi-coup, sans regarder la réponse,** appris par différence temporelle, marque 0,764 à 0,779 contre le glouton, sans se distinguer du glouton qui calcule un demi-coup de plus (0,755). Mais l’écart avec le renforcement classique ne mesure pas le seul apport du réseau : la règle d’apprentissage et le nombre de parties changent en même temps.
 4. **La recherche fait la différence chez AlphaZero.** Le même réseau, sans recherche, marque 0,578 ; avec 100 simulations avant chaque coup, 0,890.
-5. **Le joueur parfait du jeu publié marque 0,919,** au-dessus de tous les AlphaZero (0,883 à 0,890). Mais il est parfait pour le jeu A, pas pour lc1-2 : l’écart n’est pas la distance au jeu parfait sous la règle de l’article.
+5. **Le joueur parfait du jeu publié marque 0,919,** au-dessus de tous les AlphaZero (0,883 à 0,890). Mais il est parfait pour le jeu A, pas pour lc1-2 : l’écart n’est pas la distance au jeu parfait sous la règle de l’article. Il ne marque pas 1 parce que l’ouverture tirée au hasard est, 926 fois sur 1 000, déjà gagnée pour un camp : chaque ouverture se joue des deux côtés, et ses 162 défaites viennent toutes d’ouvertures perdues d’avance ; la répétition n’en a décidé aucune.
 
 ---
 
@@ -82,6 +82,8 @@ Les échecs restent des échecs : aucune constante n’a été retouchée, aucu
 
 **La prédiction a tenu, pas sa raison.** Il avait été prédit, par écrit, que l’apprenant conserverait la valeur à peu près comme le hasard, *parce que* la plupart des positions de l’échantillon n’auraient aucun coup menant à une position visitée. Le taux est bien celui du hasard. Mais la raison est fausse : sur la graine 1, 6 536 des 10 000 positions gagnées et 5 572 des 10 000 positions nulles ont au moins un coup vers une position visitée. Sur celles-là, l’apprenant conserve 0,377† [0,371 ; 0,383] et 0,108† [0,106 ; 0,110] ; le taux du hasard sur ces mêmes positions n’a pas été mesuré, ces chiffres ne montrent donc ni qu’il fait mieux que le hasard là où il a des valeurs, ni qu’il fait moins bien. Pourquoi il joue comme le hasard reste inexpliqué.
 
+**Dix fois plus de parties (essai exploratoire, après le verdict, non pré-enregistré).** Graine 1, 5 000 000 de parties au lieu de 500 000, tout le reste identique : 6 316 s (1 h 45), 45,6 % des positions atteignables visitées au lieu de 6,9 %. Contre le hasard, 0,784 [0,766 ; 0,801] au lieu de 0,540 ; contre le glouton, 0,178 [0,163 ; 0,193] au lieu de 0,045 ; valeur conservée 0,376† [0,371 ; 0,381] gagnées et 0,123† [0,121 ; 0,125] nulles, au-dessus du hasard (0,360 / 0,112). Le verdict des 500 000 parties porte donc sur ce budget, pas sur l’apprentissage tabulaire : pour l’article, « avec ce budget, l’apprenant ne dépasse pas le hasard », pas « le Q-learning sans réseau ne marche pas ». Jusqu’où plus de parties le mèneraient n’est pas mesuré (une graine, un seul budget plus long). Le verdict pré-enregistré reste inchangé.
+
 ---
 
 ## 3. Qu’ajoute un réseau de neurones ?
@@ -136,6 +138,8 @@ Le réseau ne change pas : pour ce réseau, l’écart est ce qu’ajoutent 100
 **Ce qu’il vaut** (ligne 1) : 0,919 [0,908 ; 0,930] contre le glouton. Ses taux de valeur conservée, 1,000, sont vrais par construction : la table est la référence.
 
 **Ce que cela ne dit pas.** La borne basse de la table, 0,908, est au-dessus de la borne haute de chaque AlphaZero (0,897 à 0,903). Mais la table joue parfaitement le jeu A, pas le jeu B : l’écart n’est pas la distance au jeu parfait sous lc1-2, qui reste inconnue puisque lc1-2 n’est pas résolu.
+
+**Pourquoi 0,919 et pas 1.** Rejouées une à une (`crates/infer/examples/table_losses.rs`, qui refuse de conclure si ses totaux diffèrent de ceux de l’arène), les 2 000 parties de la table contre le glouton se répartissent ainsi : d’une ouverture gagnée pour elle, 926 victoires et aucune défaite ; d’une ouverture nulle, 148 victoires et aucune défaite ; d’une ouverture perdue, 764 victoires et 162 défaites. Quatre demi-coups au hasard laissent 926 ouvertures sur 1 000 gagnées pour un camp, et chaque ouverture se joue des deux côtés : la table hérite donc chaque fois du camp perdant une fois, et le glouton convertit 162 de ces 926 positions. Aucune partie n’a été décidée par la répétition : une table qui la connaîtrait ne changerait pas ce score. Le plafond de l’épreuve est sous 1 pour tous les joueurs.
 
 **La table refaite à neuf.** Reconstruite de zéro, elle est identique octet pour octet à celle du troisième tour (empreinte cryptographique SHA-256, *Secure Hash Algorithm*, dans `v4-evaluation.md`), en 15,9 s pour l’exploration et 61,3 s pour la résolution.
 

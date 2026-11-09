@@ -445,6 +445,67 @@ subset was not measured, so these figures are not a like-for-like comparison wit
 0.360 / 0.112 over the whole sample, and they show neither that the learner does better than
 random where it has values nor that it does worse.
 
+## Exploratory runs (after the verdict, not pre-registered)
+
+Run on 2026-11-09 at the owner's request, after the verdict above was recorded. They do not
+change it: the criteria were written for 500,000 games per seed, and these runs were chosen
+knowing the results. One seed only.
+
+### Tabular learner, ten times the games
+
+The pre-registered runs took about eight minutes each instead of the hour the pilot
+suggested, so the question was whether the learner fails for lack of games. Seed 1 again,
+everything else unchanged except `--games`:
+
+```bash
+./target/release/qtrain models/v4-qtab-long-s1 --games 5000000 --seed 1
+./target/release/v4bench models/v3-solve qtab:models/v4-qtab-long-s1/v.bin \
+  --out docs/experiments/v4/exploratory/qtab-lc1-long-s1.json
+./target/release/v4bench models/v3-solve qtab:models/v4-qtab-long-s1/v.bin --opponent random \
+  --out docs/experiments/v4/exploratory/qtab-lc1-long-s1-vs-random.json
+```
+
+Measured: 6,316 s wall (1 h 45), max RSS 996 MB (`/usr/bin/time -l`); 205,954,216 plies,
+15 games cut at 1,000 plies; 104,881,819 positions visited, 45.6 % of the reachable ones
+(against 6.87–6.88 % at 500,000 games). The run took longer than ten times the short runs
+because ε falls ten times more slowly, so near-random play, with its longer games, lasts
+longer: 248 games/s at the first hour's log, 792 at the end.
+
+| Games | Score vs random (95 % CI) | Score vs greedy (95 % CI) | Keep won (95 % CI) | Keep drawn (95 % CI) |
+|---|---|---|---|---|
+| 500,000 (seed 1, main table) | 0.540 [0.519, 0.562] | 0.045 [0.037, 0.054] | 0.360† | 0.113† |
+| 5,000,000 (seed 1) | 0.784 [0.766, 0.801] | 0.178 [0.163, 0.193] | 0.376† [0.371, 0.381] | 0.123† [0.121, 0.125] |
+
+No game was unfinished in either arena. With ten times the games the learner beats random
+clearly, its keep rates rise above random's 0.360 / 0.112, and its score against greedy
+quadruples; it still loses to greedy by a wide margin. So the 500,000-game verdict is a
+verdict on that budget, not on tabular learning: how far more games would take it is not
+measured (one seed, one longer budget).
+
+### Why the perfect player scores 0.919, not 1
+
+`crates/infer/examples/table_losses.rs` replays the table's arena against greedy game by
+game (same seed, openings and tie-breaking) and reads each opening's value in the uncapped
+table for the side the table plays. It exits 2 unless the replay gives the arena's totals
+(1,838 wins, 162 losses, 143 as Red); it does.
+
+```bash
+cargo run --release -p pogofish-infer --example table_losses -- models/v3-solve
+```
+
+| Opening, for the table's side | Wins | Losses |
+|---|---|---|
+| won | 926 | 0 |
+| drawn | 148 | 0 |
+| lost | 764 | 162 |
+
+Every loss comes from an opening already lost for the table. Four random plies leave 926 of
+the 1,000 openings won for one side; each is played once from each side, so the table gets
+the losing side of every one, and greedy converts 162 of those 926. No game was ended by
+the repetition rule (`a_by_variant_rule` is 0 in `v4/table.json`), so a table that knew
+repetition would not change this score. The arena's ceiling against greedy is therefore
+below 1 for every player, by an amount that depends on how well greedy converts.
+
 ## Decisions
 
 Taken by the owner on 2026-11-08 before the runs, with their reasons. Criteria are numbered
@@ -482,8 +543,9 @@ as in the pre-registration above.
 
 ## What we do not know
 
-- **Why the tabular learner plays like random** where most sample positions have a visited
-  child. The prediction's reason is refuted; no replacement is tested. How often each
+- **Why the tabular learner plays like random at 500,000 games** where most sample positions
+  have a visited child (at 5,000,000 it no longer does, "Exploratory runs").
+  The prediction's reason is refuted; no replacement is tested. How often each
   position was updated, and random's keep rate on the visited subset, were not measured.
 - **How the players keep the value in play.** The sample is uniform over reachable positions
   and has no history; round 3 showed such positions are not the ones games visit. No keep
