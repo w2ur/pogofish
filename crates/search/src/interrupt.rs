@@ -1,7 +1,8 @@
-//! Graceful Ctrl+C for long jobs of this crate, without libtorch: the first
-//! SIGINT sets a flag that the job polls between units of work, so it can
-//! save a resumable state; a second SIGINT exits at once (status 130). The
-//! same pattern as `pogofish-train`'s `interrupt` module.
+//! Graceful Ctrl+C for long jobs, without libtorch: the first SIGINT sets a
+//! flag that the job polls between units of work, so it can save a
+//! resumable state; a second SIGINT exits at once (status 130). The one
+//! handler of the workspace: `retro solve`, `qtrain`, and through
+//! `pogofish_train::interrupt` the training binaries use it.
 
 use std::sync::atomic::{AtomicBool, Ordering};
 
@@ -24,9 +25,19 @@ pub fn install() {
     }
 }
 
-/// True once SIGINT has arrived.
+/// True once SIGINT has arrived (or [`request`] was called).
 pub fn requested() -> bool {
     REQUESTED.load(Ordering::SeqCst)
+}
+
+/// Ask the job to stop at its next check, as SIGINT would.
+pub fn request() {
+    REQUESTED.store(true, Ordering::SeqCst);
+}
+
+/// Clear the flag (tests, or a job that handled the interrupt and resumes).
+pub fn reset() {
+    REQUESTED.store(false, Ordering::SeqCst);
 }
 
 #[cfg(test)]
@@ -36,8 +47,10 @@ mod tests {
     #[test]
     fn sigint_sets_the_flag_without_killing_the_process() {
         install();
+        reset();
+        assert!(!requested());
         unsafe { libc::raise(libc::SIGINT) };
         assert!(requested());
-        REQUESTED.store(false, Ordering::SeqCst);
+        reset();
     }
 }

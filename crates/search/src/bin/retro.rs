@@ -19,6 +19,7 @@ use pogofish_search::retro::{
     load_solved, load_table, par_range, principle_comparison, propagate_level, save_table, Bitset,
     Board, Game, Status, Value, DIST_MASK, DRAW, LOSS, WIN,
 };
+use pogofish_search::interrupt;
 use pogofish_search::rng::SplitMix64;
 use serde_json::{json, Value as Json};
 use std::collections::BTreeMap;
@@ -29,14 +30,6 @@ use std::time::Instant;
 
 /// Save a checkpoint at the first level boundary after this many seconds.
 const SAVE_EVERY_SECS: f64 = 300.0;
-
-static STOP: AtomicBool = AtomicBool::new(false);
-
-extern "C" fn on_sigint(_: libc::c_int) {
-    if STOP.swap(true, Ordering::SeqCst) {
-        unsafe { libc::_exit(130) };
-    }
-}
 
 fn peak_rss_mib() -> f64 {
     let mut u: libc::rusage = unsafe { std::mem::zeroed() };
@@ -200,12 +193,7 @@ fn pilot(g: &Game, threads: usize) -> anyhow::Result<Json> {
 // ------------------------------------------------------------------ solve
 
 fn solve(g: &Game, dir: &Path, threads: usize) -> anyhow::Result<Json> {
-    unsafe {
-        libc::signal(
-            libc::SIGINT,
-            on_sigint as extern "C" fn(libc::c_int) as libc::sighandler_t,
-        );
-    }
+    interrupt::install();
     let path = dir.join("table.bin");
     let (mut t, mut level, done) = if path.exists() {
         let (t, l, d) = load_table(&path, g.size())?;
@@ -246,7 +234,7 @@ fn solve(g: &Game, dir: &Path, threads: usize) -> anyhow::Result<Json> {
             if resolved == 0 {
                 break;
             }
-            if STOP.load(Ordering::SeqCst) {
+            if interrupt::requested() {
                 save_table(&path, &t, level, false)?;
                 eprintln!("interrupted: saved at level {level}; rerun to resume");
                 return Ok(json!({"interrupted_at_level": level}));
