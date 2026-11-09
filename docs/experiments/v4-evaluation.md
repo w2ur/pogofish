@@ -77,14 +77,17 @@ with an untrained net, play longer games than later ones.
 | 2 | random (takes a win, avoids an immediate loss) | — | 0.360 [0.355, 0.365] | 0.112 [0.111, 0.113] | 0.031 [0.024, 0.038] | 1000 of 1000 | 0 of 2000 (0.0 %) | 1975 of 2000 |
 | 3 | greedy | — | 0.726 [0.720, 0.733] | 0.340 [0.333, 0.346] | 0.493 [0.474, 0.512] | 1000 of 1000 | 0 of 2000 (0.0 %) | 1935 of 2000 |
 | 4 | greedy-2ply | — | 0.824 [0.817, 0.830] | 0.448 [0.440, 0.456] | 0.755 [0.739, 0.772] | 1000 of 1000 | 0 of 2000 (0.0 %) | 1961 of 2000 |
-| 5 | TD(λ) v4-td-lc1-s1 | lc1-2 | 0.844 [0.837, 0.851]† | 0.483 [0.473, 0.492]† | 0.779 [0.763, 0.796] | 1000 of 1000 | 0 of 2000 (0.0 %) | 1956 of 2000 |
-| 6 | TD(λ) v4-td-lc1-s2 | lc1-2 | 0.828 [0.820, 0.835]† | 0.457 [0.447, 0.467]† | 0.764 [0.747, 0.781] | 1000 of 1000 | 0 of 2000 (0.0 %) | 1966 of 2000 |
-| 7 | TD(λ) v4-td-lc1-s3 | lc1-2 | 0.828 [0.821, 0.835]† | 0.447 [0.437, 0.457]† | 0.771 [0.754, 0.788] | 1000 of 1000 | 0 of 2000 (0.0 %) | 1952 of 2000 |
-| 8 | net az-lc1-s1, policy argmax, no search | lc1-2 | 0.817 [0.809, 0.824]† | 0.467 [0.457, 0.477]† | 0.578 [0.558, 0.598] | 1000 of 1000 | 0 of 2000 (0.0 %) | 1959 of 2000 |
-| 9 | net az-lc1-s1, 100 simulations | lc1-2 | 0.953 [0.949, 0.957]† | 0.689 [0.680, 0.698]† | 0.890 [0.878, 0.903] | 1000 of 1000 | 0 of 2000 (0.0 %) | 1959 of 2000 |
-| 10 | net az-lc1-m2-s1, 100 simulations | lc1-2 | 0.953 [0.948, 0.957]† | 0.695 [0.686, 0.704]† | 0.883 [0.870, 0.897] | 1000 of 1000 | 0 of 2000 (0.0 %) | 1966 of 2000 |
-| 11 | net az-lc1-m2-s2, 100 simulations | lc1-2 | 0.952 [0.947, 0.956]† | 0.697 [0.688, 0.706]† | 0.887 [0.875, 0.900] | 1000 of 1000 | 0 of 2000 (0.0 %) | 1963 of 2000 |
-| 12 | net az-lc1-m2-s3, 100 simulations | lc1-2 | 0.952 [0.948, 0.956]† | 0.696 [0.687, 0.705]† | 0.887 [0.874, 0.900] | 1000 of 1000 | 0 of 2000 (0.0 %) | 1967 of 2000 |
+| 5 | tabular learner models/v4-qtab-s1/v.bin | lc1-2 | 0.360 [0.355, 0.365]† | 0.113 [0.112, 0.115]† | 0.045 [0.037, 0.054] | 1000 of 1000 | 0 of 2000 (0.0 %) | 1973 of 2000 |
+| 6 | tabular learner models/v4-qtab-s2/v.bin | lc1-2 | 0.360 [0.356, 0.365]† | 0.113 [0.112, 0.114]† | 0.043 [0.034, 0.052] | 1000 of 1000 | 0 of 2000 (0.0 %) | 1973 of 2000 |
+| 7 | tabular learner models/v4-qtab-s3/v.bin | lc1-2 | 0.360 [0.355, 0.365]† | 0.113 [0.112, 0.115]† | 0.045 [0.036, 0.054] | 1000 of 1000 | 0 of 2000 (0.0 %) | 1972 of 2000 |
+| 8 | TD(λ) v4-td-lc1-s1 | lc1-2 | 0.844 [0.837, 0.851]† | 0.483 [0.473, 0.492]† | 0.779 [0.763, 0.796] | 1000 of 1000 | 0 of 2000 (0.0 %) | 1956 of 2000 |
+| 9 | TD(λ) v4-td-lc1-s2 | lc1-2 | 0.828 [0.820, 0.835]† | 0.457 [0.447, 0.467]† | 0.764 [0.747, 0.781] | 1000 of 1000 | 0 of 2000 (0.0 %) | 1966 of 2000 |
+| 10 | TD(λ) v4-td-lc1-s3 | lc1-2 | 0.828 [0.821, 0.835]† | 0.447 [0.437, 0.457]† | 0.771 [0.754, 0.788] | 1000 of 1000 | 0 of 2000 (0.0 %) | 1952 of 2000 |
+| 11 | net az-lc1-s1, policy argmax, no search | lc1-2 | 0.817 [0.809, 0.824]† | 0.467 [0.457, 0.477]† | 0.578 [0.558, 0.598] | 1000 of 1000 | 0 of 2000 (0.0 %) | 1959 of 2000 |
+| 12 | net az-lc1-s1, 100 simulations | lc1-2 | 0.953 [0.949, 0.957]† | 0.689 [0.680, 0.698]† | 0.890 [0.878, 0.903] | 1000 of 1000 | 0 of 2000 (0.0 %) | 1959 of 2000 |
+| 13 | net az-lc1-m2-s1, 100 simulations | lc1-2 | 0.953 [0.948, 0.957]† | 0.695 [0.686, 0.704]† | 0.883 [0.870, 0.897] | 1000 of 1000 | 0 of 2000 (0.0 %) | 1966 of 2000 |
+| 14 | net az-lc1-m2-s2, 100 simulations | lc1-2 | 0.952 [0.947, 0.956]† | 0.697 [0.688, 0.706]† | 0.887 [0.875, 0.900] | 1000 of 1000 | 0 of 2000 (0.0 %) | 1963 of 2000 |
+| 15 | net az-lc1-m2-s3, 100 simulations | lc1-2 | 0.952 [0.948, 0.956]† | 0.696 [0.687, 0.705]† | 0.887 [0.874, 0.900] | 1000 of 1000 | 0 of 2000 (0.0 %) | 1967 of 2000 |
 
 Keep won (drawn): the share of held-out won (drawn) positions in which the player's move keeps the position's value in the uncapped table. Score: against greedy, over finished pairs only; unfinished games (1,000-ply limit) are counted apart and are never draws.
 
@@ -96,14 +99,17 @@ Commands, by row:
 2. `./target/release/v4bench models/v3-solve random --out docs/experiments/v4/random.json`
 3. `./target/release/v4bench models/v3-solve greedy --out docs/experiments/v4/greedy.json`
 4. `./target/release/v4bench models/v3-solve greedy-2ply --out docs/experiments/v4/greedy-2ply.json`
-5. `./target/release/v4bench models/v3-solve td:models/v4-td-lc1-s1/td.pfv --out docs/experiments/v4/td-lc1-s1.json`
-6. `./target/release/v4bench models/v3-solve td:models/v4-td-lc1-s2/td.pfv --out docs/experiments/v4/td-lc1-s2.json`
-7. `./target/release/v4bench models/v3-solve td:models/v4-td-lc1-s3/td.pfv --out docs/experiments/v4/td-lc1-s3.json`
-8. `./target/release/v4bench models/v3-solve net:crates/cli/assets/az-lc1-s1.pfw:0 --out docs/experiments/v4/az-lc1-s1-0.json`
-9. `./target/release/v4bench models/v3-solve net:crates/cli/assets/az-lc1-s1.pfw:100 --out docs/experiments/v4/az-lc1-s1-100.json`
-10. `./target/release/v4bench models/v3-solve net:models/v3/az-lc1-m2-s1/final.pfw:100 --out docs/experiments/v4/az-lc1-m2-s1-100.json`
-11. `./target/release/v4bench models/v3-solve net:models/v3/az-lc1-m2-s2/final.pfw:100 --out docs/experiments/v4/az-lc1-m2-s2-100.json`
-12. `./target/release/v4bench models/v3-solve net:models/v3/az-lc1-m2-s3/final.pfw:100 --out docs/experiments/v4/az-lc1-m2-s3-100.json`
+5. `./target/release/v4bench models/v3-solve qtab:models/v4-qtab-s1/v.bin --out docs/experiments/v4/qtab-lc1-s1.json`
+6. `./target/release/v4bench models/v3-solve qtab:models/v4-qtab-s2/v.bin --out docs/experiments/v4/qtab-lc1-s2.json`
+7. `./target/release/v4bench models/v3-solve qtab:models/v4-qtab-s3/v.bin --out docs/experiments/v4/qtab-lc1-s3.json`
+8. `./target/release/v4bench models/v3-solve td:models/v4-td-lc1-s1/td.pfv --out docs/experiments/v4/td-lc1-s1.json`
+9. `./target/release/v4bench models/v3-solve td:models/v4-td-lc1-s2/td.pfv --out docs/experiments/v4/td-lc1-s2.json`
+10. `./target/release/v4bench models/v3-solve td:models/v4-td-lc1-s3/td.pfv --out docs/experiments/v4/td-lc1-s3.json`
+11. `./target/release/v4bench models/v3-solve net:crates/cli/assets/az-lc1-s1.pfw:0 --out docs/experiments/v4/az-lc1-s1-0.json`
+12. `./target/release/v4bench models/v3-solve net:crates/cli/assets/az-lc1-s1.pfw:100 --out docs/experiments/v4/az-lc1-s1-100.json`
+13. `./target/release/v4bench models/v3-solve net:models/v3/az-lc1-m2-s1/final.pfw:100 --out docs/experiments/v4/az-lc1-m2-s1-100.json`
+14. `./target/release/v4bench models/v3-solve net:models/v3/az-lc1-m2-s2/final.pfw:100 --out docs/experiments/v4/az-lc1-m2-s2-100.json`
+15. `./target/release/v4bench models/v3-solve net:models/v3/az-lc1-m2-s3/final.pfw:100 --out docs/experiments/v4/az-lc1-m2-s3-100.json`
 <!-- v4-table:end -->
 
 ## Appendix: nets trained under lc1d-2
@@ -206,3 +212,40 @@ visited 5.4 M positions in 5 minutes.
 just under 1 h, and about 66 M updates. The extrapolation rests on near-uniform play; as ε
 falls, the games' length can change (greedy play may repeat positions and end on a third
 occurrence, or run to the limit), and the run time with it.
+
+### Tabular learner — runs and criteria
+
+```bash
+for s in 1 2 3; do
+  /usr/bin/time -l ./target/release/qtrain models/v4-qtab-s$s --games 500000 --seed $s
+done
+```
+
+Measured: 483.3 s, 474.8 s and 484.8 s wall per seed (seeds 1, 2, 3), max RSS 994–997 MB;
+20,477,485, 20,449,665 and 20,484,384 plies; 2, 0 and 4 games cut at 1,000 plies; 15,824,401,
+15,802,065 and 15,833,513 positions visited. The pilot overestimated the run time by about
+7.4 times: averaged over the run, a game lasted 41 plies against 133 in the pilot's uniform
+play, and plies ran at 42,000–43,000 per second against 18,860. The run length stayed the
+pre-set 500,000 games: no run was extended or repeated.
+
+<!-- v4-tabular:start -->
+| Player | Score vs random (95 % CI) | Score vs greedy (95 % CI) | Unfinished vs random | Unfinished vs greedy | Keep won, visited child | Keep drawn, visited child | Reachable positions visited |
+|---|---|---|---|---|---|---|---|
+| tabular learner models/v4-qtab-s1/v.bin | 0.540 [0.519, 0.562] | 0.045 [0.037, 0.054] | 0 of 2000 | 0 of 2000 | 0.377 [0.371, 0.383] (n = 6536) | 0.108 [0.106, 0.110] (n = 5572) | 15,824,401 of 230,015,628 (6.88 %) |
+| tabular learner models/v4-qtab-s2/v.bin | 0.545 [0.524, 0.567] | 0.043 [0.034, 0.052] | 0 of 2000 | 0 of 2000 | 0.378 [0.371, 0.384] (n = 6488) | 0.108 [0.106, 0.110] (n = 5517) | 15,802,065 of 230,015,628 (6.87 %) |
+| tabular learner models/v4-qtab-s3/v.bin | 0.548 [0.527, 0.569] | 0.045 [0.036, 0.054] | 0 of 2000 | 0 of 2000 | 0.377 [0.371, 0.383] (n = 6515) | 0.108 [0.106, 0.110] (n = 5537) | 15,833,513 of 230,015,628 (6.88 %) |
+
+| Criterion | tabular learner models/v4-qtab-s1/v.bin | tabular learner models/v4-qtab-s2/v.bin | tabular learner models/v4-qtab-s3/v.bin | All seeds |
+|---|---|---|---|---|
+| 1. Against random: lower 95 % bound > 0.5 | met (0.5192) | met (0.5243) | met (0.5268) | met |
+| 2. Against greedy: lower 95 % bound > 0.5 | failed (0.0366) | failed (0.0342) | failed (0.0361) | failed |
+| 3. Keep: lower 95 % bound > 0.360 (won) and > 0.112 (drawn) | failed: won failed (0.3553), drawn failed (0.1116) | failed: won failed (0.3556), drawn failed (0.1116) | failed: won failed (0.3555), drawn failed (0.1117) | failed |
+
+Against random: the bench's `random` player (takes a win, avoids an immediate loss), 1,000 colour-swapped pairs, seed 404, score over finished pairs only. Keep, visited child: the keep rate on the held-out positions where at least one move leads to a position the learner updated (criterion 4, no threshold), with n. Reachable positions visited: positions updated at least once, out of those reachable from the start. The keep rates of criterion 3 are the main table's.
+
+Commands against random:
+
+- `./target/release/v4bench models/v3-solve qtab:models/v4-qtab-s1/v.bin --opponent random --out docs/experiments/v4/qtab-lc1-s1-vs-random.json`
+- `./target/release/v4bench models/v3-solve qtab:models/v4-qtab-s2/v.bin --opponent random --out docs/experiments/v4/qtab-lc1-s2-vs-random.json`
+- `./target/release/v4bench models/v3-solve qtab:models/v4-qtab-s3/v.bin --opponent random --out docs/experiments/v4/qtab-lc1-s3-vs-random.json`
+<!-- v4-tabular:end -->
