@@ -1,7 +1,8 @@
 #!/usr/bin/env bash
 # The whole v4 evaluation of docs/experiments/v4-evaluation.md, end to end.
 # Usage: scripts/v4-eval.sh   (from anywhere; runs at the repository root)
-# Exit: 0 done, 2 could not run (foreign table hash, missing prerequisite).
+# Exit: 0 done, 2 could not run (foreign table hash, missing prerequisite),
+# 130 interrupted (rerun to resume).
 # Every stage is resumable or idempotent: a finished TD or tabular run is a
 # no-op, and the bench commands are read back from the committed JSON, never
 # retyped (the tabular learner's JSON against greedy and against random among
@@ -25,17 +26,31 @@ cargo build --release -p pogofish-train --bin td_train --bin export_td
 echo "== table fingerprint (rebuild from scratch, compare, delete)"
 R=./target/release/retro
 D=models/v4-solve
+# retro writes table.bin at init and at every save, and an interrupted solve
+# exits 0: only the done flag of its header (u16 at byte 10, after the magic
+# POGORT01 and the level) says the table is finished. A partial table is
+# resumed, never hashed and never deleted.
+table_done() {
+  [ -f "$1" ] && [ "$(head -c 8 "$1")" = POGORT01 ] &&
+    [ "$(od -An -tu2 -j10 -N2 "$1" | tr -d ' ')" = 1 ]
+}
 if [ ! -f "$D/table.bin" ]; then
   rm -rf "$D"
   "$R" reach "$D"
+fi
+if ! table_done "$D/table.bin"; then
   "$R" solve "$D"
 fi
+if ! table_done "$D/table.bin"; then
+  echo "retro solve stopped before the end; rerun to resume" >&2
+  exit 130
+fi
 rebuilt=$(shasum -a 256 "$D/table.bin" | cut -d' ' -f1)
-rm -rf "$D"
 if [ "$rebuilt" != "$accepted" ]; then
-  echo "rebuilt table is $rebuilt, accepted is $accepted" >&2
+  echo "rebuilt table is $rebuilt, accepted is $accepted (kept in $D)" >&2
   exit 2
 fi
+rm -rf "$D"
 
 echo "== pogoq (needs the table)"
 POGOFISH_TABLE=$PWD/models/v3-solve cargo test --release -p pogoq -- --ignored
