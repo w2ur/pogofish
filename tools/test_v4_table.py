@@ -259,3 +259,26 @@ def test_tabular_criteria_need_three_seeds(fixture):
     block = tabular_block(doc)
     assert "| 1. Against random: lower 95 % bound > 0.5 | not measured | not measured on all 3 seeds |" in block
     assert "| 2. Against greedy: lower 95 % bound > 0.5 | met (0.8800) | not measured on all 3 seeds |" in block
+
+
+@pytest.mark.parametrize("where, value", [
+    ("keep.won.ci95", None),
+    ("keep.drawn.ci95", [0.1]),
+    ("keep.won.rate", None),
+    ("keep.drawn.rate", "0.4"),
+    ("arena.ci95", None),
+    ("arena.score", True),
+])
+def test_refuses_a_rate_without_a_number_and_a_two_number_interval(fixture, where, value):
+    # Regression: <fix commit> — a keep rate with ci95 null (n <= 1) crashed rate()
+    # with a TypeError instead of a refusal.
+    main_dir, doc = fixture
+    run = make_run("greedy")
+    *path, last = where.split(".")
+    node = run
+    for key in path:
+        node = node[key]
+    node[last] = value
+    write(main_dir, run)
+    assert v4_table.main([str(main_dir), str(doc)]) == 2
+    assert doc.read_text() == DOC

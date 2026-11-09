@@ -22,8 +22,10 @@ written when the document has its markers. Only `qtab:` players may have a run a
 `random`.
 
 Exit 0 on success, 2 when it cannot run (a JSON with a foreign table hash or
-without `command`, two JSON for the same player and opponent, a run against
-`random` of another player, no JSON, a missing marker): nothing is written then.
+without `command`, a keep rate or arena score without a number and a
+two-number 95 % interval, two JSON for the same player and opponent, a run
+against `random` of another player, no JSON, a missing marker): nothing is
+written then.
 """
 import json
 import re
@@ -90,6 +92,7 @@ def load_dir(directory: Path) -> list[dict]:
         for key in ("player", "keep", "arena"):
             if key not in data:
                 raise Refusal(f"{path}: no `{key}`")
+        check_rates(path, data)
         if opponent(data) not in OPPONENTS:
             raise Refusal(f"{path}: unknown opponent {data.get('opponent')!r}")
         if opponent(data) == "random" and not data["player"].startswith("qtab:"):
@@ -102,6 +105,22 @@ def load_dir(directory: Path) -> list[dict]:
             raise Refusal(f"{seen[key]} and {path}: two JSON for {key[0]} against {key[1]}")
         seen[key] = path
     return runs
+
+
+def is_number(x) -> bool:
+    return isinstance(x, (int, float)) and not isinstance(x, bool)
+
+
+def check_rates(path: Path, run: dict) -> None:
+    """Every figure the tables print needs a number and a two-number interval."""
+    stats = {"keep.won": run["keep"].get("won"), "keep.drawn": run["keep"].get("drawn"),
+             "arena": run["arena"]}
+    for name, stat in stats.items():
+        value_key = "score" if name == "arena" else "rate"
+        ci = stat.get("ci95") if isinstance(stat, dict) else None
+        if not (isinstance(stat, dict) and is_number(stat.get(value_key))
+                and isinstance(ci, list) and len(ci) == 2 and all(is_number(x) for x in ci)):
+            raise Refusal(f"{path}: `{name}` needs a numeric {value_key} and a two-number ci95")
 
 
 def opponent(run: dict) -> str:
