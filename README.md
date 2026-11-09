@@ -71,6 +71,7 @@ The board is served by the hub, william.revah.paris, which copies `app/dist-boar
 
 - [Development](docs/development.md): the workspace crates, the web app and the board build, every training, measurement and export command, the round-1 article, deployment detail.
 - [Rules](docs/rules.md): each rule, the engine line that implements it, and the test that pins it.
+- [Every player on one protocol](docs/experiments/v4-evaluation.md), from random to perfect play.
 - [Round-2 results](docs/experiments/v2-results.md) and [round-1 verdict](docs/experiments/v1-verdict.md).
 - The story: [English](https://william.revah.paris/en/stories/pogofish/) · [French](https://william.revah.paris/stories/pogofish/).
 
