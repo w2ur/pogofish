@@ -104,7 +104,7 @@ Les échecs restent des échecs : aucune constante n’a été retouchée, aucu
 - la règle d’apprentissage et la manière d’explorer : TD(λ) d’un côté, Q-learning à un pas de l’autre ;
 - le nombre de parties : 500 000 par graine pour l’apprenant tabulaire, 50 000 pour le réseau, dix fois moins.
 
-**Une question ouverte, pas une conclusion.** Le plan lisait cet écart comme « ce qu’apporte la généralisation ». Ce tour ne sépare pas les trois facteurs, et cela reste vrai quelle que soit ta décision. La lecture proposée par le plan attend ta décision (décision 5 de `v4-evaluation.md`). Dans tous les cas, l’article ne peut pas dire que le réseau, à lui seul, fait passer de 0,043–0,045 à 0,764–0,779.
+**Une question ouverte, pas une conclusion.** Le plan lisait cet écart comme « ce qu’apporte la généralisation ». Ce tour ne sépare pas les trois facteurs ; tu as décidé, le 9 novembre 2026, de laisser la question ouverte (décision 5 de `v4-evaluation.md`). Dans tous les cas, l’article ne peut pas dire que le réseau, à lui seul, fait passer de 0,043–0,045 à 0,764–0,779.
 
 ---
 
@@ -162,7 +162,7 @@ L’article ne mentionne pas l’échelon intermédiaire, le réseau par différ
 
 - **Pourquoi l’apprenant tabulaire joue comme le hasard,** alors que la plupart des positions de l’échantillon ont un coup vers une position visitée. La raison prédite est réfutée ; aucune autre n’a été testée. Ni le nombre de mises à jour par position, ni le taux du hasard sur les positions visitées n’ont été mesurés.
 - **Ce que donnerait un entraînement tabulaire plus long.** Les trois graines ont duré environ huit minutes chacune (474,8 à 484,8 s), pas l’heure prévue. Ce qu’une heure aurait changé n’est pas mesuré.
-- **Si l’écart entre l’apprenant tabulaire et le réseau mesure la généralisation.** La représentation, la règle d’apprentissage et le nombre de parties changent ensemble. La lecture « ce qu’apporte la généralisation » attend ta décision.
+- **Si l’écart entre l’apprenant tabulaire et le réseau mesure la généralisation.** La représentation, la règle d’apprentissage et le nombre de parties changent ensemble. La lecture « ce qu’apporte la généralisation » reste une question ouverte, par ta décision du 9 novembre 2026.
 - **Comment les joueurs conservent la valeur en partie.** Aucun taux n’est mesuré sur des positions rencontrées en jouant, ni avec leur histoire.
 - **La distance au jeu parfait sous lc1-2.** lc1-2 n’est pas résolu depuis le départ ; le joueur parfait de ce tour l’est pour le jeu publié.
 - **Pourquoi AlphaZero sans recherche conserve la valeur aussi souvent que le glouton à deux demi-coups, et marque pourtant bien moins.**

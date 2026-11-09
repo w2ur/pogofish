@@ -471,7 +471,7 @@ as in the pre-registration above.
    sample positions where at least one child was visited, with its n. The table-to-TD gap is
    read as what generalisation by a net brings. The runs do not support adopting that
    reading as it stands, because the learning rule and the game count also differ (see the
-   paragraph after the main table); this departure is put to the owner, pending.
+   paragraph after the main table); the owner decided on 2026-11-09 to leave the question open.
 6. **Tabular criterion 2, "beats greedy"**, was added: it is the bar TD met in round 2.
 7. **`lc1d-2` nets in an appendix**: the main table holds only players trained under `lc1-2`,
    the scripted players and the perfect player.
