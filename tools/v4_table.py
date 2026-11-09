@@ -197,7 +197,8 @@ def lower(stat: dict | None) -> float | None:
 def verdict(value: float | None, bar: float) -> str:
     if value is None:
         return "not measured"
-    return f"{'met' if value > bar else 'failed'} ({value:.3f})"
+    # Four decimals: at three, a bound just under the bar (0.1116 < 0.112) reads as equal.
+    return f"{'met' if value > bar else 'failed'} ({value:.4f})"
 
 
 def score(run: dict | None) -> str:

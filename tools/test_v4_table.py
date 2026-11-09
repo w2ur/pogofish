@@ -236,11 +236,11 @@ def test_tabular_block_reports_criteria_per_seed(fixture):
     rows = {line.split("|")[1].strip(): [c.strip() for c in line.split("|")[2:-1]]
             for line in block.splitlines() if line.startswith("| ")}
     c1 = rows["1. Against random: lower 95 % bound > 0.5"]
-    assert c1 == ["met (0.880)", "failed (0.480)", "met (0.880)", "failed"]
+    assert c1 == ["met (0.8800)", "failed (0.4800)", "met (0.8800)", "failed"]
     c2 = rows["2. Against greedy: lower 95 % bound > 0.5"]
-    assert c2 == ["met (0.580)"] * 3 + ["met"]
+    assert c2 == ["met (0.5800)"] * 3 + ["met"]
     c3 = rows["3. Keep: lower 95 % bound > 0.360 (won) and > 0.112 (drawn)"]
-    assert c3[:3] == ["failed: won met (0.490), drawn failed (0.100)"] * 3 and c3[3] == "failed"
+    assert c3[:3] == ["failed: won met (0.4900), drawn failed (0.1000)"] * 3 and c3[3] == "failed"
     seed_row = rows["tabular learner models/v4-qtab-s1/v.bin"]
     assert seed_row[0] == "0.900 [0.880, 0.920]" and seed_row[1] == "0.600 [0.580, 0.620]"
     assert seed_row[5] == "0.400 [0.300, 0.500] (n = 12)"
@@ -258,4 +258,4 @@ def test_tabular_criteria_need_three_seeds(fixture):
     assert v4_table.main([str(main_dir), str(doc)]) == 0
     block = tabular_block(doc)
     assert "| 1. Against random: lower 95 % bound > 0.5 | not measured | not measured on all 3 seeds |" in block
-    assert "| 2. Against greedy: lower 95 % bound > 0.5 | met (0.880) | not measured on all 3 seeds |" in block
+    assert "| 2. Against greedy: lower 95 % bound > 0.5 | met (0.8800) | not measured on all 3 seeds |" in block
