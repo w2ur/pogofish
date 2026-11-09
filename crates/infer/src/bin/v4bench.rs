@@ -188,24 +188,24 @@ fn git_rev(dir: &Path) -> String {
     }
 }
 
-/// Run `job(i)` for `i` in `0..n` on `workers.len()` threads, each owning
-/// one worker; results in index order.
+/// Run `job(i)` for `i` in `0..n` on `workers.len()` threads, each
+/// borrowing one worker; results in index order.
 fn par_map<W: Send, T: Send>(
     n: usize,
-    workers: Vec<W>,
+    workers: &mut [W],
     job: impl Fn(&mut W, usize) -> T + Sync,
 ) -> Vec<T> {
     let next = AtomicUsize::new(0);
     let out: Mutex<Vec<Option<T>>> = Mutex::new((0..n).map(|_| None).collect());
     std::thread::scope(|s| {
-        for mut w in workers {
+        for w in workers.iter_mut() {
             let (next, out, job) = (&next, &out, &job);
             s.spawn(move || loop {
                 let i = next.fetch_add(1, Ordering::Relaxed);
                 if i >= n {
                     break;
                 }
-                let r = job(&mut w, i);
+                let r = job(w, i);
                 out.lock().unwrap()[i] = Some(r);
             });
         }
@@ -217,24 +217,26 @@ fn par_map<W: Send, T: Send>(
         .collect()
 }
 
-/// Keep rates (won, drawn) of a chooser, one instance per thread.
-fn keep<'a>(
-    won: &[Sample],
-    drawn: &[Sample],
+type Chooser<'a> = Box<dyn TiedChooser + 'a>;
+
+/// `threads` instances of a chooser: `tied` takes `&mut self`, so each
+/// thread needs its own.
+fn instances<'a>(
     threads: usize,
-    make: impl Fn() -> anyhow::Result<Box<dyn TiedChooser + 'a>>,
-) -> anyhow::Result<(RateStat, RateStat)> {
-    let mut stats = Vec::new();
-    for set in [won, drawn] {
-        let workers = (0..threads)
-            .map(|_| make())
-            .collect::<anyhow::Result<Vec<_>>>()?;
+    make: impl Fn() -> anyhow::Result<Chooser<'a>>,
+) -> anyhow::Result<Vec<Chooser<'a>>> {
+    (0..threads).map(|_| make()).collect()
+}
+
+/// Keep rates (won, drawn) of a chooser, one instance per thread.
+fn keep(won: &[Sample], drawn: &[Sample], workers: &mut [Chooser<'_>]) -> (RateStat, RateStat) {
+    let mut rate = |set: &[Sample]| {
         let rates = par_map(set.len(), workers, |p, i| {
             keep_of(&set[i], &p.tied(&set[i].state, &RULES))
         });
-        stats.push(rate_stat(&rates));
-    }
-    Ok((stats[0], stats[1]))
+        rate_stat(&rates)
+    };
+    (rate(won), rate(drawn))
 }
 
 fn class_json(r: (RateStat, RateStat)) -> Json {
@@ -268,10 +270,12 @@ fn run() -> anyhow::Result<()> {
         _ => {}
     }
     let t0 = Instant::now();
-    // Fail on a bad spec before loading the table.
-    if a.spec != "table" {
-        player_from_spec(&a.spec, None)?;
-    }
+    // Fail on a bad spec before loading the table; this instance is kept.
+    let first = if a.spec == "table" {
+        None
+    } else {
+        Some(player_from_spec(&a.spec, None)?)
+    };
 
     let dir = Path::new(&a.table);
     let t = Instant::now();
@@ -288,7 +292,7 @@ fn run() -> anyhow::Result<()> {
     let t = Instant::now();
     let (iw, id) = held_out(&sv, TRAIN_PER_CLASS, TEST_PER_CLASS, a.sample_seed);
     let build = |idx: &[u64]| {
-        par_map(idx.len(), vec![(); a.threads], |_, i| {
+        par_map(idx.len(), &mut vec![(); a.threads], |_, i| {
             build_sample(&sv, idx[i])
         })
     };
@@ -298,13 +302,21 @@ fn run() -> anyhow::Result<()> {
 
     // Controls, on the full held-out sample.
     let t = Instant::now();
-    let oracle = keep(&won, &drawn, a.threads, || {
-        Ok(Box::new(TablePlayer { sv: &sv }))
-    })?;
-    let anti = keep(&won, &drawn, a.threads, || {
-        Ok(Box::new(AntiOracle { sv: &sv }))
-    })?;
-    let random = keep(&won, &drawn, a.threads, || player_from_spec("random", None))?;
+    let oracle = keep(
+        &won,
+        &drawn,
+        &mut instances(a.threads, || Ok(Box::new(TablePlayer { sv: &sv })))?,
+    );
+    let anti = keep(
+        &won,
+        &drawn,
+        &mut instances(a.threads, || Ok(Box::new(AntiOracle { sv: &sv })))?,
+    );
+    let random = keep(
+        &won,
+        &drawn,
+        &mut instances(a.threads, || player_from_spec("random", None))?,
+    );
     let all_keep = |set: &[Sample]| {
         set.iter().filter(|s| s.keeps.iter().all(|&k| k)).count() as f64 / set.len() as f64
     };
@@ -344,9 +356,16 @@ fn run() -> anyhow::Result<()> {
     // The player's keep rates, on the (possibly capped) sample.
     let cap = a.sample_cap.unwrap_or(TEST_PER_CLASS).min(TEST_PER_CLASS);
     let t = Instant::now();
-    let player = keep(&won[..cap], &drawn[..cap], a.threads, || {
+    // The player, built once per thread (the first instance is the one
+    // checked above); instance 0 then serves the probes and the arena.
+    let mut players: Vec<Chooser<'_>> = first.into_iter().collect();
+    players.extend(instances(a.threads - players.len(), || {
         player_from_spec(&a.spec, Some(&sv))
-    })?;
+    })?);
+    let player = keep(&won[..cap], &drawn[..cap], &mut players);
+    players.truncate(1);
+    let mut p = players.pop().expect("at least one thread");
+    let name = p.name();
     let keep_s = t.elapsed().as_secs_f64();
     eprintln!(
         "{} keeps {:.3} / {:.3} in {keep_s:.1} s",
@@ -354,11 +373,9 @@ fn run() -> anyhow::Result<()> {
     );
 
     // A table learner's figures on the positions it has seen around.
-    let probe = player_from_spec(&a.spec, Some(&sv))?;
-    let (keep_visited, coverage) = match probe.coverage(&sv.reach) {
+    let (keep_visited, coverage) = match p.coverage(&sv.reach) {
         None => (Json::Null, Json::Null),
         Some((visited, visited_reachable)) => {
-            let mut p = player_from_spec(&a.spec, Some(&sv))?;
             let mut class = |set: &[Sample]| -> Json {
                 let mut rates: Vec<f64> = Vec::new();
                 for x in set {
@@ -388,7 +405,7 @@ fn run() -> anyhow::Result<()> {
     // The arena against the opponent (one thread, deterministic for a seed).
     let t = Instant::now();
     let cfg = ArenaConfig::new(RULES, a.pairs, OPENING_PLIES, MAX_PLIES, a.seed);
-    let mut agent = TiedAgent(player_from_spec(&a.spec, Some(&sv))?);
+    let mut agent = TiedAgent(p);
     let report = if a.opponent == "random" {
         let mut them = TiedAgent(player_from_spec("random", None)?);
         run_match(&mut agent, &mut them, &cfg)
@@ -402,7 +419,6 @@ fn run() -> anyhow::Result<()> {
         a.opponent, report.score, report.ci95[0], report.ci95[1], report.a.unfinished
     );
 
-    let name = player_from_spec(&a.spec, Some(&sv))?.name();
     let mut out = json!({
         "player": name,
         "spec": a.spec,
