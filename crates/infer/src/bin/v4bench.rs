@@ -32,6 +32,11 @@
 //! `--sample-cap N` measures the player on the first N positions of each
 //! class only (a pilot); the controls still use the full sample.
 //!
+//! `git_rev` is the commit the bench ran on, read before anything is
+//! written, with `-dirty` when tracked files differ from it outside
+//! `docs/experiments/` (where the bench writes its JSON and the doc its
+//! tables, so a rerun does not mark itself dirty).
+//!
 //! Exit: 0 measured; 2 could not run (bad arguments, a table that is not the
 //! documented one, a failed control) — then no JSON is written, and a JSON
 //! left at `--out` by an earlier run is deleted first. The bench
@@ -149,11 +154,13 @@ fn sha256(path: &Path) -> anyhow::Result<String> {
         .to_string())
 }
 
-fn git_rev() -> String {
+/// The commit checked out in the repository holding `dir`, with `-dirty`
+/// when a tracked file outside `docs/experiments/` differs from it.
+fn git_rev(dir: &Path) -> String {
     let run = |args: &[&str]| {
         Command::new("git")
             .arg("-C")
-            .arg(env!("CARGO_MANIFEST_DIR"))
+            .arg(dir)
             .args(args)
             .output()
             .ok()
@@ -162,8 +169,15 @@ fn git_rev() -> String {
     };
     match run(&["rev-parse", "HEAD"]) {
         Some(rev) => {
-            let dirty = run(&["status", "--porcelain", "--untracked-files=no"])
-                .is_some_and(|s| !s.is_empty());
+            let dirty = run(&[
+                "status",
+                "--porcelain",
+                "--untracked-files=no",
+                "--",
+                ":(top)",
+                ":(top,exclude)docs/experiments",
+            ])
+            .is_some_and(|s| !s.is_empty());
             if dirty {
                 format!("{rev}-dirty")
             } else {
@@ -244,6 +258,8 @@ fn main() -> ExitCode {
 fn run() -> anyhow::Result<()> {
     let argv: Vec<String> = std::env::args().collect();
     let a = parse_args(&argv[1..])?;
+    // Before anything is written or deleted, so the rev is the tree's.
+    let rev = git_rev(Path::new(env!("CARGO_MANIFEST_DIR")));
     // A JSON left by an earlier run must not survive a run that fails.
     match std::fs::remove_file(&a.out) {
         Err(e) if e.kind() != std::io::ErrorKind::NotFound => {
@@ -391,7 +407,7 @@ fn run() -> anyhow::Result<()> {
         "player": name,
         "spec": a.spec,
         "command": argv,
-        "git_rev": git_rev(),
+        "git_rev": rev,
         "table_sha256": sha,
         "history": "none",
         "rules": RULES.to_string(),
@@ -426,4 +442,70 @@ fn run() -> anyhow::Result<()> {
         .with_context(|| format!("writing {}", a.out))?;
     eprintln!("wrote {}", a.out);
     Ok(())
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    fn git(dir: &Path, args: &[&str]) {
+        let out = Command::new("git")
+            .arg("-C")
+            .arg(dir)
+            .args(args)
+            .output()
+            .unwrap();
+        assert!(out.status.success(), "git {args:?}: {out:?}");
+    }
+
+    // Regression: <fix commit> — git_rev was read after --out was deleted, so
+    // every rerun of a committed bench JSON was marked dirty.
+    #[test]
+    fn git_rev_is_dirty_only_for_tracked_changes_outside_docs_experiments() {
+        let repo = std::env::temp_dir().join(format!("v4bench-rev-{}", std::process::id()));
+        let _ = std::fs::remove_dir_all(&repo);
+        let (bench, src) = (repo.join("docs/experiments/v4"), repo.join("crates/infer"));
+        std::fs::create_dir_all(&bench).unwrap();
+        std::fs::create_dir_all(&src).unwrap();
+        std::fs::write(bench.join("greedy.json"), "{}\n").unwrap();
+        std::fs::write(src.join("lib.rs"), "\n").unwrap();
+        git(&repo, &["init", "-q"]);
+        git(&repo, &["add", "."]);
+        git(
+            &repo,
+            &[
+                "-c",
+                "user.name=t",
+                "-c",
+                "user.email=t@t",
+                "commit",
+                "-q",
+                "-m",
+                "x",
+            ],
+        );
+        let head = {
+            let out = Command::new("git")
+                .arg("-C")
+                .arg(&repo)
+                .args(["rev-parse", "HEAD"])
+                .output()
+                .unwrap();
+            String::from_utf8(out.stdout).unwrap().trim().to_string()
+        };
+        // Read from a subdirectory, as the bench does (its manifest dir).
+        assert_eq!(git_rev(&src), head);
+        // The bench's own output deleted, or rewritten: still clean.
+        std::fs::remove_file(bench.join("greedy.json")).unwrap();
+        assert_eq!(git_rev(&src), head);
+        std::fs::write(bench.join("greedy.json"), "{\"x\": 1}\n").unwrap();
+        assert_eq!(git_rev(&src), head);
+        // An untracked file is not a change of the tree.
+        std::fs::write(src.join("scratch.rs"), "\n").unwrap();
+        assert_eq!(git_rev(&src), head);
+        // A tracked source change is.
+        std::fs::write(src.join("lib.rs"), "// changed\n").unwrap();
+        assert_eq!(git_rev(&src), format!("{head}-dirty"));
+        std::fs::remove_dir_all(&repo).unwrap();
+    }
 }
