@@ -23,9 +23,10 @@ a JSON whose hash differs or that has no `command`.
 (`perfect learn`, sample seed 31): 20,000 won and 20,000 drawn training positions (seeds 31
 and 32) are drawn first, then 10,000 won and 10,000 drawn held-out positions (seeds 33 and
 34), excluding the training ones; "won" means won in 3 plies or more. Only the held-out
-positions are measured; the training set is drawn so that the held-out set is round 3's. Each reachable position of
-a class weighs the same, so the sample is not made of positions met in play. Two strata, won
-and drawn; lost positions are not sampled. (`sample` in each JSON.)
+positions are measured; the training set is drawn so that the held-out set is round 3's.
+Each reachable position of a class weighs the same, so the sample is not made of positions
+met in play. Two strata, won and drawn; lost positions are not sampled. (`sample` in each
+JSON.)
 
 **History-free positions.** Sample positions come from `unrank`: they carry no history
 (`"history": "none"` in each JSON). A net with repetition inputs therefore reads every
@@ -57,8 +58,8 @@ arena's generator.
   drawn one any move whose child the opponent does not win, from a lost one the slowest loss
   (`Win(d)` with the largest `d`). The rule is recorded in each JSON (`table_tiebreak`).
 - `random`: every legal move, after taking a move that wins at once and avoiding one that
-  loses at once. This is round 3's `Policy::Random`, the only definition that reproduces its
-  held-out rates 0.360 / 0.112. It is not the arena's uniform `Scripted::Random`, which round
+  loses at once. This is round 3's `Policy::Random`, the definition behind its 0.360 / 0.112
+  control. It is not the arena's uniform `Scripted::Random`, which round
   3's arena used for its "random vs greedy" control (0.001, `v3-principles-perfect/arena.json`;
   `crates/search/src/bin/perfect.rs`): the two random rows are different players.
 - `greedy`: the moves leaving the most tops after the move (round 3's list `[top_diff up]`,
@@ -161,11 +162,11 @@ TD(λ) retrain under `lc1-2`, 20-iteration pilot (seed 1, scratch directory, del
   --temp-decay 1000 --eval-every 50 --eval-pairs 200 --checkpoint-every 50 --seed 1
 ```
 
-Measured: 2.69 s wall, 116 MB max RSS from `/usr/bin/time -l` (no evaluation fell inside 20 iterations). 1,000
-iterations (50,000 games), **extrapolated from pilot**: about 135 s plus 20 evaluations. The
-three full runs took 61.0 s, 61.7 s and 61.4 s each (evaluations included), 111–117 MB; the
-pilot overestimated by about 2.2 times, because early iterations, at high temperature and
-with an untrained net, play longer games than later ones.
+Measured: 2.69 s wall, 116 MB max RSS from `/usr/bin/time -l` (no evaluation fell inside 20
+iterations). 1,000 iterations (50,000 games), **extrapolated from pilot**: about 135 s plus
+20 evaluations. The three full runs took 61.0 s, 61.7 s and 61.4 s each (evaluations
+included), 111–117 MB; the pilot overestimated by about 2.2 times, because early iterations,
+at high temperature and with an untrained net, play longer games than later ones.
 
 ## Main table
 
@@ -211,39 +212,46 @@ Commands, by row:
 15. `./target/release/v4bench models/v3-solve net:models/v3/az-lc1-m2-s3/final.pfw:100 --out docs/experiments/v4/az-lc1-m2-s3-100.json`
 <!-- v4-table:end -->
 
-Read: from the top, by score against greedy, with the keep rates (won / drawn) beside it.
-Perfect uncapped play scores 0.919 [0.908, 0.930]; its keep rates of 1.000 are true by
-construction, since the table is the reference. AlphaZero with 100 simulations, four nets
-trained under `lc1-2`, scores 0.883–0.890 and keeps 0.952–0.953† / 0.689–0.697†; the table's
-lower bound, 0.908, is above every net's upper bound (0.897–0.903), but that table plays the
-uncapped game perfectly, not `lc1-2`, so the gap is not the distance to perfect `lc1-2`
-play. The same net `az-lc1-s1` without search (`:0`, its policy's choice) falls from 0.890
-[0.878, 0.903] to 0.578 [0.558, 0.598], and from 0.953† / 0.689† to 0.817† / 0.467†: the
-net is unchanged, so this gap is what 100 simulations of search add. TD(λ), a value net
-looking one ply ahead with no tree, scores 0.764–0.779 over three seeds and keeps
-0.828–0.844† / 0.447–0.483†. Two-ply greedy scores 0.755 [0.739, 0.772] and keeps 0.824 / 0.448; every TD interval against
-greedy overlaps it, so TD and two-ply greedy are not separated in play (seed 1 keeps the
-value more often on the sample; seeds 2 and 3 do not, within the intervals). AlphaZero
-without search keeps the value about as often as two-ply greedy on the sample (0.817† against
-0.824 won) but scores far lower (0.578 against 0.755): on this sample, keep rate and play
-order these two players differently, as round 3 found for its learnt lists. Greedy against
-itself scores 0.493 [0.474, 0.512] and keeps 0.726 / 0.340; one ply more of the same count
-(two-ply greedy) is worth 0.26 in score. The tabular learner scores 0.043–0.045 and keeps
-0.360† / 0.113†, within 0.001 of random's; `random` scores 0.031 [0.024, 0.038], an interval that
-overlaps the learner's against greedy (seed 1: [0.037, 0.054]), although the learner beats
-random head to head (table below). TD and the tabular learner choose a move the same way
-(exact result, else −V of the position after the move), both learnt under `lc1-2`, and the
-table learner played 500,000 games per seed against TD's 50,000 (1,000 iterations of 50,
-`v2-td.md`); the gap between them, 0.764–0.779 against 0.043–0.045, is what a net in place of
-one value per position brings, *together with* the learning rule (TD(λ) with softmax play
-against one-step Q-learning with ε-greedy play) and the number of games. This round does not
-separate them.
+Read: from the top, with the score against greedy and the keep rates (won / drawn). Figures
+with three decimals are the generator's formatting of the JSON values; an exact half rounds
+as shown in the table (two-ply greedy's 0.7555 prints as 0.755). Perfect uncapped play
+scores 0.919 [0.908, 0.930]; its keep rates of 1.000 are true by construction, since the
+table is the reference. AlphaZero with 100 simulations, four nets trained under `lc1-2`,
+scores 0.883–0.890 and keeps 0.952–0.953† / 0.689–0.697†; the table's lower bound, 0.908, is
+above every net's upper bound (0.897–0.903), but that table plays the uncapped game
+perfectly, not `lc1-2`, so the gap is not the distance to perfect `lc1-2` play. The same net
+`az-lc1-s1` without search (`:0`, its policy's choice) falls from 0.890 [0.878, 0.903] to
+0.578 [0.558, 0.598], and from 0.953† / 0.689† to 0.817† / 0.467†: the net is unchanged, so
+for this net this gap is what 100 simulations of search add. TD(λ), a value net looking one
+ply ahead with no tree, scores 0.764–0.779 over three seeds and keeps 0.828–0.844† /
+0.447–0.483†. Two-ply greedy scores 0.755 [0.739, 0.772] and keeps 0.824 / 0.448; every TD
+interval against greedy overlaps it, so TD and two-ply greedy are not separated in play
+(seed 1 keeps the value more often on the sample; seeds 2 and 3 do not, within the
+intervals). AlphaZero without search keeps the value about as often as two-ply greedy on won
+positions (0.817† [0.809, 0.824] against 0.824 [0.817, 0.830]) and more often on drawn ones,
+with intervals that do not overlap (0.467† [0.457, 0.477] against 0.448 [0.440, 0.456]), yet
+scores far lower (0.578 against 0.755): on this sample, keep rate and play order these two
+players differently, as round 3 found for its learnt lists. Greedy against itself scores
+0.493 [0.474, 0.512] and keeps 0.726 / 0.340; one ply more of the same count (two-ply
+greedy) is worth 0.26 in score. The tabular learner scores 0.043–0.045 and keeps 0.360† on won
+positions, equal to random's at three decimals, and 0.113† on drawn ones against random's
+0.112; `random` scores 0.031 [0.024, 0.038], an
+interval that overlaps the learner's against greedy (seed 1: [0.037, 0.054]), although the
+learner beats random head to head (table below). TD and the tabular learner choose a move
+the same way (exact result, else −V of the position after the move), both learnt under
+`lc1-2`, and the table learner played 500,000 games per seed against TD's 50,000 (1,000
+iterations of 50, `v2-td.md`); the gap between them, 0.764–0.779 against 0.043–0.045, is
+what a net in place of one value per position brings, *together with* the learning rule
+(TD(λ) with softmax play against one-step Q-learning with ε-greedy play) and the number of
+games. This round does not separate them.
 
 **Truncations.** No bench game reached the 1,000-ply limit and none was drawn, in any of the
 21 bench JSONs (main table, appendix, and the tabular learner against random):
 `arena.a.unfinished` and `arena.a.draws` are 0 in each. Every score is over all 1,000 pairs.
-Truncations during training are reported with each run (the tabular learner's under "runs
-and criteria").
+In training, no TD self-play game was truncated: `truncated_games` sums to 0 for each TD seed
+over its 1,000 iterations (`models/v4-td-lc1-sN/metrics.jsonl`, gitignored; `jq -s
+'map(.truncated_games)|add'`, the field numeric on every line). The tabular learner's
+truncated games are under "runs and criteria".
 
 **Reproduction of round 3.** The figures `v3-principles-perfect.md` reports for the same
 players on the same sample and arena are reproduced:
@@ -263,8 +271,9 @@ match round 3 in distinct games (1,935, 1,961 and 1,968 of 2,000) and in White's
 
 **Earlier figures, not comparable.** Round 2's `lc1-2` TD agents, other nets than the ones
 retrained here, scored 0.740–0.785 against greedy (`v2-td.md`), and its AlphaZero nets
-0.855–0.887 (`v2-results.md`), both on 200 pairs from arena seed 7. The protocol differs, so neither
-range is compared with this table. The README keeps round 2's AlphaZero figure (decision 4).
+0.855–0.887 (`v2-results.md`), both on 200 pairs from arena seed 7. The protocol differs, so
+neither range is compared with this table. The README keeps round 2's AlphaZero figure
+(decision 4).
 
 **DQN.** Round 1's DQN agent has no row. It was trained under a protocol `v1-verdict.md`
 invalidates, and was never evaluated at all: every tournament loaded its trunk under randomly
@@ -419,9 +428,9 @@ Commands against random:
 **Criterion 1 is met, criteria 2 and 3 failed, on all three seeds.** The learner beats random
 head to head (0.540–0.548, lower bounds 0.519–0.527) and loses to greedy (0.043–0.045). Its
 keep rates, 0.360† / 0.113† on every seed, do not clear random's 0.360 / 0.112 (lower bounds
-0.3553–0.3556† won, 0.1116–0.1117† drawn). These failures stand: no constant was retuned and no run was repeated. The
-runs were much shorter than the budget extrapolated from the pilot; the measured times and
-the reason are under "runs and criteria" above.
+0.3553–0.3556† won, 0.1116–0.1117† drawn). These failures stand: no constant was retuned and
+no run was repeated. The runs were much shorter than the budget extrapolated from the pilot;
+the measured times and the reason are under "runs and criteria" above.
 
 **The prediction's outcome held; its stated reason did not.** The written prediction was that
 the keep rate would be close to random's "because most sample positions have no visited
@@ -448,21 +457,28 @@ as in the pre-registration above.
    `v1-verdict.md`, the tabular learner replaces it as the search-free baseline, and measuring
    it would need a strict loader and an export for no reader.
 3. **`tools/article-visuals/` versioned**, with `pogoq` attached to the workspace and a test
-   (`pogoq values` on the centre opening reports `Win(11)` for the mover). No further reason
-   is recorded.
+   (`pogoq values` on the centre opening reports `Win(11)` for the mover): the article's
+   published images become reproducible.
 4. **The README keeps round 2's figure** (0.855–0.887 against greedy, `v2-results.md`): it is
    still true and sourced, and this round measures one seed of that net (`az-lc1-s1`), so it
    cannot reproduce a three-seed claim.
-5. **Tabular criterion 3 stays on the common sample**, with a prediction written before the
-   pilot and a secondary measure on the positions with a visited child: restricting the
-   criterion to visited positions would break "the same sample for every player".
+5. **Tabular criterion 3 stays on the common sample, with a written prediction and a
+   secondary breakdown.** The table learner knows only positions it played; on an unseen
+   sample position every child reads 0 and it plays like random. Restricting the criterion
+   to visited positions would change the sample and break "the same sample for all". So:
+   the criterion is unchanged; the prediction "close to random for lack of coverage" is
+   committed before the pilot; a secondary, unthresholded measure gives the same rate on the
+   sample positions where at least one child was visited, with its n. The table-to-TD gap is
+   read as what generalisation by a net brings. The runs do not support adopting that
+   reading as it stands, because the learning rule and the game count also differ (see the
+   paragraph after the main table); this departure is put to the owner, pending.
 6. **Tabular criterion 2, "beats greedy"**, was added: it is the bar TD met in round 2.
 7. **`lc1d-2` nets in an appendix**: the main table holds only players trained under `lc1-2`,
    the scripted players and the perfect player.
 8. **AlphaZero without search gets a row** (`net:…:0`): it isolates what search adds within
    AlphaZero.
 9. **The rebuilt table is deleted once its hash matches** (decided by Claude, reversible):
-   it is 466 MB on a small disk, and `scripts/v4-eval.sh` rebuilds it when absent.
+   `scripts/v4-eval.sh` rebuilds it in about a minute when needed.
 
 ## What we do not know
 
@@ -476,8 +492,8 @@ as in the pre-registration above.
   (`v3-lc1-solve.md`); the perfect player here is perfect for the uncapped game.
 - **Whether the table-to-TD gap is generalisation.** The representation, the learning rule
   and the number of games change together (above).
-- **Why AlphaZero without search keeps the value as often as two-ply greedy yet scores far
-  lower against greedy.**
+- **Why AlphaZero without search keeps the value as often as two-ply greedy on won
+  positions, and more often on drawn ones, yet scores far lower against greedy.**
 - **Other search budgets, opponents and seeds.** Nets are measured at 0 and 100 simulations
   only, against greedy only, on one arena seed; round 2's AlphaZero nets of seeds 2 and 3
   are not measured.
