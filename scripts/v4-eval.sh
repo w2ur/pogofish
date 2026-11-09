@@ -18,6 +18,34 @@ accepted=$(grep -m1 '^ACCEPTED_TABLE_SHA256' tools/v4_table.py | grep -o '[0-9a-
 [ -n "$accepted" ] || { echo "no accepted table hash in tools/v4_table.py" >&2; exit 2; }
 [ -f models/v3-solve/table.bin ] || { echo "models/v3-solve/table.bin is missing" >&2; exit 2; }
 
+SEEDS="1 2 3"
+td_run() { echo "models/v4-td-lc1-s$1"; }
+qtab_run() { echo "models/v4-qtab-s$1"; }
+BENCH_JSON=(docs/experiments/v4/*.json docs/experiments/v4/appendix-lc1d/*.json)
+
+# Every player file the committed bench commands read and this script does not
+# produce must exist before any long stage. The list is read from the JSON
+# (the path of each net:, td: and qtab: spec), never typed here.
+produced=()
+for s in $SEEDS; do
+  produced+=("$(td_run "$s")/td.pfv" "$(qtab_run "$s")/v.bin")
+done
+paths=$(jq -r '.command[] | select(test("^(net|td|qtab):"))
+                | sub("^[a-z]+:"; "") | sub(":[0-9]+$"; "")' "${BENCH_JSON[@]}" | sort -u) ||
+  { echo "could not read the bench JSON commands" >&2; exit 2; }
+[ -n "$paths" ] || { echo "no player file found in the bench JSON commands" >&2; exit 2; }
+missing=()
+while IFS= read -r path; do
+  for p in "${produced[@]}"; do
+    [ "$p" = "$path" ] && continue 2
+  done
+  [ -f "$path" ] || missing+=("$path")
+done <<< "$paths"
+if [ "${#missing[@]}" -gt 0 ]; then
+  printf 'missing prerequisite: %s\n' "${missing[@]}" >&2
+  exit 2
+fi
+
 echo "== build"
 cargo build --release -p pogofish-search --bin retro --bin qtrain
 cargo build --release -p pogofish-infer --bin v4bench
@@ -59,8 +87,8 @@ echo "== TD(lambda) under lc1-2, three seeds (resumable) and export"
 libtorch=$(find target/release/build -path "*/torch-sys-*/out/libtorch/libtorch/lib" | head -1)
 [ -n "$libtorch" ] || { echo "libtorch not found under target/release/build" >&2; exit 2; }
 export DYLD_LIBRARY_PATH=$libtorch
-for s in 1 2 3; do
-  run=models/v4-td-lc1-s$s
+for s in $SEEDS; do
+  run=$(td_run "$s")
   ./target/release/td_train "$run" --rules lc1-2 --features mover-relative-repetition \
     --lambda 0.7 --lr 0.1 --iterations 1000 --temp-decay 1000 --eval-every 50 \
     --eval-pairs 200 --checkpoint-every 50 --seed "$s"
@@ -68,12 +96,12 @@ for s in 1 2 3; do
 done
 
 echo "== tabular learner under lc1-2, three seeds (resumable; 931 MB each, one at a time)"
-for s in 1 2 3; do
-  ./target/release/qtrain models/v4-qtab-s$s --games 500000 --seed "$s"
+for s in $SEEDS; do
+  ./target/release/qtrain "$(qtab_run "$s")" --games 500000 --seed "$s"
 done
 
 echo "== v4bench, every player (main and appendix), commands read from the JSON"
-for f in docs/experiments/v4/*.json docs/experiments/v4/appendix-lc1d/*.json; do
+for f in "${BENCH_JSON[@]}"; do
   # The argv array, one element per line (no element holds a newline), run
   # as is: nothing in the JSON is ever handed to the shell to parse.
   cmd=()
