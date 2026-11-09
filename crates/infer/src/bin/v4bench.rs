@@ -474,7 +474,7 @@ mod tests {
         assert!(out.status.success(), "git {args:?}: {out:?}");
     }
 
-    // Regression: <fix commit> — git_rev was read after --out was deleted, so
+    // Regression: da6cb1e — git_rev was read after --out was deleted, so
     // every rerun of a committed bench JSON was marked dirty.
     #[test]
     fn git_rev_is_dirty_only_for_tracked_changes_outside_docs_experiments() {

@@ -270,7 +270,7 @@ def test_tabular_criteria_need_three_seeds(fixture):
     ("arena.score", True),
 ])
 def test_refuses_a_rate_without_a_number_and_a_two_number_interval(fixture, where, value):
-    # Regression: <fix commit> — a keep rate with ci95 null (n <= 1) crashed rate()
+    # Regression: 3124266 — a keep rate with ci95 null (n <= 1) crashed rate()
     # with a TypeError instead of a refusal.
     main_dir, doc = fixture
     run = make_run("greedy")

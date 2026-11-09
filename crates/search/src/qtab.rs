@@ -791,7 +791,7 @@ mod tests {
         std::fs::remove_dir_all(&base).unwrap();
     }
 
-    // Regression: <fix commit> — save_run renamed three files with no
+    // Regression: 8fdff7b — save_run renamed three files with no
     // previous generation kept, so a save cut between two renames lost the run.
     #[test]
     fn a_save_cut_between_renames_resumes_from_the_previous_generation() {

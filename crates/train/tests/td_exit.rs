@@ -28,7 +28,7 @@ fn iteration(dir: &Path) -> u64 {
         .unwrap_or(0)
 }
 
-// Regression: <fix commit> — td_train exited 0 when interrupted, so
+// Regression: d5072d5 — td_train exited 0 when interrupted, so
 // scripts/v4-eval.sh exported and benched a partial net.
 #[test]
 fn an_interrupted_run_exits_130_and_a_finished_one_exits_0() {
