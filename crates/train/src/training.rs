@@ -406,6 +406,9 @@ pub fn train(cfg: &TrainConfig, dir: &Path) -> anyhow::Result<TrainStop> {
         paths.f("config.json"),
         serde_json::to_string_pretty(cfg)? + "\n",
     )?;
+    if state.iteration == 0 && cfg.checkpoint_every > 0 {
+        crate::checkpoint::save_initial_checkpoint(&vs, dir)?;
+    }
 
     let sp = cfg.selfplay();
     let symmetries = verified_symmetries();

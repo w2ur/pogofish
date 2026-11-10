@@ -69,3 +69,38 @@ fn a_non_markov_ruleset_is_refused() {
     assert!(train_td(&cfg, &d).is_err());
     let _ = std::fs::remove_dir_all(d);
 }
+
+/// Round 5: a fresh run saves its initialisation as iteration 0, equal to the
+/// seeded initialisation, and the run is unchanged by it.
+#[test]
+fn a_fresh_run_saves_its_initialisation_as_iteration_zero() {
+    use pogofish_train::td::{seeded_init, TdNet};
+    let (with, without) = (tmp("init-with"), tmp("init-without"));
+    let cfg = small(2);
+    assert_eq!(train_td(&cfg, &with).unwrap(), TdStop::Finished);
+    let none = TdConfig {
+        checkpoint_every: 0,
+        ..small(2)
+    };
+    assert_eq!(train_td(&none, &without).unwrap(), TdStop::Finished);
+    assert!(!without.join("checkpoints/iter_00000.pt").exists());
+    for ((na, a), (nb, b)) in weights(&with).iter().zip(weights(&without).iter()) {
+        assert_eq!(na, nb);
+        assert!(a.equal(b), "{na}: the initial checkpoint changed the run");
+    }
+    let vs = tch::nn::VarStore::new(tch::Device::Cpu);
+    let _net = TdNet::new(&vs.root(), &cfg.hidden, cfg.features);
+    seeded_init(&vs, cfg.seed);
+    let mut saved = tch::Tensor::load_multi(with.join("checkpoints/iter_00000.pt")).unwrap();
+    saved.sort_by(|a, b| a.0.cmp(&b.0));
+    let vars = vs.variables();
+    assert_eq!(saved.len(), vars.len());
+    for (name, t) in &saved {
+        assert!(
+            t.equal(&vars[name]),
+            "{name} is not the seeded initialisation"
+        );
+    }
+    let _ = std::fs::remove_dir_all(with);
+    let _ = std::fs::remove_dir_all(without);
+}

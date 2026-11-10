@@ -21,6 +21,20 @@ pub fn save_var_store(vs: &nn::VarStore, path: &Path) -> anyhow::Result<()> {
         .with_context(|| format!("saving weights to {}", path.display()))
 }
 
+/// Save the untrained net of a fresh run as `checkpoints/iter_00000.pt` in
+/// `dir` (round 5, `docs/experiments/v5-video.md`: the stage before any
+/// game), unless it is already there. Written to a temporary name, then
+/// renamed. A write only: the run is unchanged.
+pub fn save_initial_checkpoint(vs: &nn::VarStore, dir: &Path) -> anyhow::Result<()> {
+    let path = dir.join("checkpoints").join("iter_00000.pt");
+    if path.exists() {
+        return Ok(());
+    }
+    let tmp = dir.join("checkpoints").join("iter_00000.pt.tmp");
+    save_var_store(vs, &tmp)?;
+    std::fs::rename(&tmp, &path).with_context(|| format!("renaming to {}", path.display()))
+}
+
 /// Load a file written by [`save_var_store`] into `vs`.
 ///
 /// Errors, without modifying `vs`, if a variable is missing from the file, if

@@ -508,6 +508,9 @@ pub fn train_td(cfg: &TdConfig, dir: &Path) -> anyhow::Result<TdStop> {
         }
     };
     std::fs::write(run.config_path(), serde_json::to_string_pretty(cfg)? + "\n")?;
+    if state.iteration == 0 && cfg.checkpoint_every > 0 {
+        crate::checkpoint::save_initial_checkpoint(&vs, dir)?;
+    }
 
     let mut opt = nn::Sgd::default().build(&vs, cfg.lr)?;
     let started = Instant::now();

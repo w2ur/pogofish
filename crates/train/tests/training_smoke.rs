@@ -37,6 +37,10 @@ fn smoke_train_writes_its_files() {
     ] {
         assert!(d.join(f).exists(), "{f}");
     }
+    assert!(
+        d.join("checkpoints/iter_00000.pt").exists(),
+        "the initialisation"
+    );
     assert!(d.join("checkpoints/iter_00001.pt").exists());
     assert!(
         d.join("checkpoints/iter_00002.pt").exists(),
@@ -233,4 +237,51 @@ fn an_older_run_resumes() {
         .unwrap()
         .contains("\"iteration\": 2"));
     let _ = std::fs::remove_dir_all(d);
+}
+
+/// Round 5: the iteration-0 checkpoint is the seeded initialisation, and
+/// saving it does not change the run.
+#[test]
+fn the_initial_checkpoint_is_the_seeded_net_and_leaves_the_run_unchanged() {
+    use pogofish_train::net::{ArchConfig, AzNet};
+    let (with, without) = (tmp("init-with"), tmp("init-without"));
+    let cfg = tiny(1);
+    assert_eq!(train(&cfg, &with).unwrap(), TrainStop::Finished);
+    let none = TrainConfig {
+        checkpoint_every: 0,
+        ..tiny(1)
+    };
+    assert_eq!(train(&none, &without).unwrap(), TrainStop::Finished);
+    assert!(!without.join("checkpoints/iter_00000.pt").exists());
+    let load = |p: &Path| {
+        let mut v = tch::Tensor::load_multi(p).unwrap();
+        v.sort_by(|a, b| a.0.cmp(&b.0));
+        v
+    };
+    let (a, b) = (
+        load(&with.join("weights.pt")),
+        load(&without.join("weights.pt")),
+    );
+    assert_eq!(a.len(), b.len());
+    for ((na, x), (_, y)) in a.iter().zip(b.iter()) {
+        assert!(x.equal(y), "{na}: the initial checkpoint changed the run");
+    }
+    let vs = tch::nn::VarStore::new(tch::Device::Cpu);
+    let _net = AzNet::from_config_with(
+        &vs.root(),
+        &ArchConfig::from_name(&cfg.arch).unwrap(),
+        cfg.features,
+    );
+    pogofish_train::td::seeded_init(&vs, cfg.seed);
+    let vars = vs.variables();
+    let init = load(&with.join("checkpoints/iter_00000.pt"));
+    assert_eq!(init.len(), vars.len());
+    for (name, t) in &init {
+        assert!(
+            t.equal(&vars[name]),
+            "{name} is not the seeded initialisation"
+        );
+    }
+    let _ = std::fs::remove_dir_all(with);
+    let _ = std::fs::remove_dir_all(without);
 }
