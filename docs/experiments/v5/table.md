@@ -14,7 +14,7 @@ Budget: 5,000,000 self-play games.
 | 0 % | 0 | 0.031 [0.024, 0.038] | 0.031 [0.024, 0.038] | 0.031 [0.024, 0.038] | 0.360 / 0.112 | loss, 10 plies |
 | 1 % | 50,000 | 0.032 [0.024, 0.040] | 0.029 [0.022, 0.036] | 0.030 [0.023, 0.037] | 0.360 / 0.112 | loss, 10 plies |
 | 2 % | 100,000 | 0.032 [0.024, 0.039] | 0.031 [0.024, 0.038] | 0.033 [0.025, 0.041] | 0.360 / 0.113 | loss, 10 plies |
-| 5 % | 250,000 | — | — | — | — | — |
+| 5 % | 250,000 | 0.035 [0.027, 0.043] | 0.036 [0.028, 0.045] | 0.038 [0.030, 0.047] | 0.361 / 0.114 | loss, 10 plies |
 | 10 % | 500,000 | — | — | — | — | — |
 | 25 % | 1,250,000 | — | — | — | — | — |
 | 50 % | 2,500,000 | — | — | — | — | — |
@@ -42,12 +42,12 @@ Budget: 10,000 self-play games.
 | Stage | Games trained | Seed 1 | Seed 2 | Seed 3 | Keep won / drawn (seed 1) | Game shown (seed 1) |
 |---|---|---|---|---|---|---|
 | 0 % | 0 | 0.205 [0.189, 0.222] | — | — | 0.439 / 0.145 | loss, 10 plies |
-| 1 % | 100 | — | — | — | — | — |
-| 2 % | 200 | — | — | — | — | — |
-| 5 % | 500 | — | — | — | — | — |
-| 10 % | 1,000 | — | — | — | — | — |
-| 25 % | 2,500 | — | — | — | — | — |
-| 50 % | 5,000 | — | — | — | — | — |
+| 1 % | 100 | 0.323 [0.302, 0.343] | — | — | 0.643 / 0.304 | loss, 16 plies |
+| 2 % | 200 | 0.407 [0.386, 0.428] | — | — | 0.681 / 0.340 | loss, 14 plies |
+| 5 % | 500 | 0.715 [0.697, 0.733] | — | — | 0.806 / 0.469 | win, 9 plies |
+| 10 % | 1,000 | 0.809 [0.793, 0.825] | — | — | 0.860 / 0.537 | win, 11 plies |
+| 25 % | 2,500 | 0.868 [0.854, 0.881] | — | — | 0.902 / 0.595 | win, 9 plies |
+| 50 % | 5,000 | 0.893 [0.880, 0.906] | — | — | 0.938 / 0.671 | win, 9 plies |
 | 100 % | 10,000 | — | — | — | — | — |
 
 ## AlphaZero, no search (policy argmax)
@@ -57,20 +57,20 @@ Budget: 10,000 self-play games.
 | Stage | Games trained | Seed 1 | Seed 2 | Seed 3 | Keep won / drawn (seed 1) | Game shown (seed 1) |
 |---|---|---|---|---|---|---|
 | 0 % | 0 | 0.005 [0.002, 0.009] | — | — | 0.356 / 0.121 | loss, 10 plies |
-| 1 % | 100 | — | — | — | — | — |
-| 2 % | 200 | — | — | — | — | — |
-| 5 % | 500 | — | — | — | — | — |
-| 10 % | 1,000 | — | — | — | — | — |
-| 25 % | 2,500 | — | — | — | — | — |
-| 50 % | 5,000 | — | — | — | — | — |
+| 1 % | 100 | 0.007 [0.004, 0.011] | — | — | 0.357 / 0.120 | loss, 18 plies |
+| 2 % | 200 | 0.010 [0.006, 0.014] | — | — | 0.394 / 0.138 | loss, 18 plies |
+| 5 % | 500 | 0.081 [0.069, 0.092] | — | — | 0.613 / 0.270 | loss, 14 plies |
+| 10 % | 1,000 | 0.107 [0.094, 0.120] | — | — | 0.634 / 0.308 | loss, 16 plies |
+| 25 % | 2,500 | 0.313 [0.294, 0.332] | — | — | 0.689 / 0.352 | win, 15 plies |
+| 50 % | 5,000 | 0.517 [0.497, 0.537] | — | — | 0.771 / 0.431 | loss, 16 plies |
 | 100 % | 10,000 | — | — | — | — | — |
 
 ## Criteria (pre-registered)
 
 | Criterion | Figures | Verdict |
 |---|---|---|
-| 1. Controls pass | 35 of 96 benches wrote a JSON (a bench whose controls fail writes none) | pending |
-| 2. No unfinished game | 0 unfinished over 35 benches | pending |
+| 1. Controls pass | 50 of 96 benches wrote a JSON (a bench whose controls fail writes none) | pending |
+| 2. No unfinished game | 0 unfinished over 50 benches | pending |
 | 3. qtab seed 1 reproduces round 4 | round 4 0.178 [0.163, 0.193] (v4-evaluation.md, exploratory 5,000,000-game run) | pending |
 | 3. td seed 1 reproduces round 4 | 0.783 [0.767, 0.800] against round 4's 0.779 [0.763, 0.796] (v4 main table row 8) | met |
 | 3. td seed 2 reproduces round 4 | 0.771 [0.754, 0.788] against round 4's 0.764 [0.747, 0.781] (v4 main table row 9) | met |
