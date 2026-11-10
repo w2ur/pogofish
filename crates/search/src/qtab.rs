@@ -460,6 +460,65 @@ pub fn train(
     g: &Game,
     start: &GameState,
     save_every_s: f64,
+    stop: impl FnMut(&QState) -> bool,
+) -> anyhow::Result<QStop> {
+    train_with_snapshots(cfg, dir, g, start, save_every_s, &[], stop)
+}
+
+/// The directory of the snapshot taken after `games` games.
+pub fn snapshot_dir(dir: &Path, games: u64) -> PathBuf {
+    dir.join("snapshots").join(format!("g{games:09}"))
+}
+
+/// Copy the run as it stands (V, the visited set, the state with its
+/// checksums) into [`snapshot_dir`], unless that snapshot is already whole.
+/// A write only: the run itself is not touched. Written under a temporary
+/// name, then renamed, so a snapshot that exists is complete.
+fn write_snapshot(dir: &Path, table: &QTable, state: &QState) -> anyhow::Result<()> {
+    let fin = snapshot_dir(dir, state.games_played);
+    if state_path(&fin).exists() {
+        return Ok(());
+    }
+    let tmp = fin.with_extension("tmp");
+    if tmp.exists() {
+        std::fs::remove_dir_all(&tmp)?;
+    }
+    std::fs::create_dir_all(&tmp).with_context(|| format!("creating {}", tmp.display()))?;
+    let (v_sum, b_sum) = table.save_staged(&tmp)?;
+    let snap = QState {
+        visited: table.visited.count(),
+        v_checksum: v_sum,
+        visited_checksum: b_sum,
+        ..state.clone()
+    };
+    let text = serde_json::to_string_pretty(&snap)? + "\n";
+    write_staged(&state_path(&tmp), |out| out(text.as_bytes()))?;
+    for f in GENERATION {
+        install(&tmp.join(f))?;
+    }
+    if fin.exists() {
+        std::fs::remove_dir_all(&fin)?;
+    }
+    std::fs::rename(&tmp, &fin).with_context(|| format!("renaming to {}", fin.display()))?;
+    eprintln!(
+        "snapshot after {} games: {}",
+        state.games_played,
+        fin.display()
+    );
+    Ok(())
+}
+
+/// [`train`], also writing a snapshot ([`snapshot_dir`]) each time the run
+/// has played exactly one of `snapshots` games (0: before the first game).
+/// Snapshots do not change the run; a resumed run writes the ones it has not
+/// written yet.
+pub fn train_with_snapshots(
+    cfg: &QConfig,
+    dir: &Path,
+    g: &Game,
+    start: &GameState,
+    save_every_s: f64,
+    snapshots: &[u64],
     mut stop: impl FnMut(&QState) -> bool,
 ) -> anyhow::Result<QStop> {
     let rules: RuleSet = cfg.rules.parse().map_err(anyhow::Error::msg)?;
@@ -520,6 +579,9 @@ pub fn train(
     };
     while state.games_played < cfg.games {
         state.rng_state = rng.state();
+        if snapshots.contains(&state.games_played) {
+            write_snapshot(dir, &table, &state)?;
+        }
         if stop(&state) {
             state.visited = table.visited.count();
             save_run(dir, &table, &mut state, current_is_whole)?;
@@ -544,6 +606,9 @@ pub fn train(
     }
     state.rng_state = rng.state();
     state.visited = table.visited.count();
+    if snapshots.contains(&state.games_played) {
+        write_snapshot(dir, &table, &state)?;
+    }
     save_run(dir, &table, &mut state, current_is_whole)?;
     log(&state, &table, cfg.epsilon(cfg.games - 1))?;
     Ok(QStop::Finished)
@@ -843,6 +908,76 @@ mod tests {
                 std::fs::read(run.join(f)).unwrap(),
                 "{f}"
             );
+        }
+        std::fs::remove_dir_all(&base).unwrap();
+    }
+
+    #[test]
+    fn snapshots_are_the_run_at_that_game_and_do_not_change_it() {
+        let g = small();
+        let start = small_start(&g);
+        let cfg = QConfig {
+            games: 60,
+            max_plies: 200,
+            seed: 7,
+            ..QConfig::default()
+        };
+        let base = std::env::temp_dir().join(format!("qtab-snap-{}", std::process::id()));
+        let _ = std::fs::remove_dir_all(&base);
+        let (plain, snap, cut, at10) = (
+            base.join("plain"),
+            base.join("snap"),
+            base.join("cut"),
+            base.join("at10"),
+        );
+        let points = [0u64, 10, 40, 60];
+        let never = |_: &QState| false;
+        train(&cfg, &plain, &g, &start, f64::INFINITY, never).unwrap();
+        train_with_snapshots(&cfg, &snap, &g, &start, f64::INFINITY, &points, never).unwrap();
+        // The run is unchanged by its snapshots.
+        for f in ["v.bin", "visited.bin", "state.json"] {
+            assert_eq!(
+                std::fs::read(plain.join(f)).unwrap(),
+                std::fs::read(snap.join(f)).unwrap(),
+                "{f}"
+            );
+        }
+        // Game 0: V = 0, nothing visited.
+        let (t0, s0) = QTable::load(&snapshot_dir(&snap, 0).join("v.bin"), g.size()).unwrap();
+        assert!(t0.v.iter().all(|&x| x == 0.0));
+        assert_eq!((s0.games_played, s0.visited), (0, 0));
+        // Game 10: the same files as a run stopped (and saved) at game 10.
+        train(&cfg, &at10, &g, &start, f64::INFINITY, |s| {
+            s.games_played == 10
+        })
+        .unwrap();
+        for f in ["v.bin", "visited.bin", "state.json"] {
+            assert_eq!(
+                std::fs::read(at10.join(f)).unwrap(),
+                std::fs::read(snapshot_dir(&snap, 10).join(f)).unwrap(),
+                "{f}"
+            );
+        }
+        // The last game's snapshot is the finished run.
+        assert_eq!(
+            std::fs::read(snap.join("v.bin")).unwrap(),
+            std::fs::read(snapshot_dir(&snap, 60).join("v.bin")).unwrap()
+        );
+        // Interrupted between two snapshots and resumed: the same snapshots.
+        let stop25 = |s: &QState| s.games_played == 25;
+        assert_eq!(
+            train_with_snapshots(&cfg, &cut, &g, &start, f64::INFINITY, &points, stop25).unwrap(),
+            QStop::Interrupted
+        );
+        train_with_snapshots(&cfg, &cut, &g, &start, f64::INFINITY, &points, never).unwrap();
+        for p in points {
+            for f in ["v.bin", "visited.bin", "state.json"] {
+                assert_eq!(
+                    std::fs::read(snapshot_dir(&snap, p).join(f)).unwrap(),
+                    std::fs::read(snapshot_dir(&cut, p).join(f)).unwrap(),
+                    "game {p}, {f}"
+                );
+            }
         }
         std::fs::remove_dir_all(&base).unwrap();
     }
