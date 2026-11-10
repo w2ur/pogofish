@@ -1,0 +1,26 @@
+{
+  "arena_seed": 404,
+  "ended_by_repetition_rule": false,
+  "moves": [
+    [1, 2, 3],
+    [6, 1, 7],
+    [3, 1, 6],
+    [7, 2, 1],
+    [2, 2, 8],
+    [1, 1, 0],
+    [8, 1, 7],
+    [0, 3, 3],
+    [7, 2, 1],
+    [3, 1, 6],
+    [3, 1, 6]
+  ],
+  "opening_plies": 4,
+  "opponent": "greedy",
+  "pair": 0,
+  "player": "td:models/v5-td-s3/pfv/iter_00250.pfv",
+  "player_colour": "White",
+  "player_result": "win",
+  "plies": 11,
+  "rules": "lc1-2",
+  "spec": "td:models/v5-td-s3/pfv/iter_00250.pfv"
+}
