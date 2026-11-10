@@ -1,0 +1,31 @@
+{
+  "arena_seed": 404,
+  "ended_by_repetition_rule": false,
+  "moves": [
+    [1, 2, 3],
+    [6, 1, 7],
+    [3, 1, 6],
+    [7, 2, 1],
+    [2, 2, 8],
+    [1, 1, 0],
+    [8, 1, 7],
+    [0, 3, 3],
+    [6, 2, 4],
+    [1, 1, 4],
+    [7, 1, 4],
+    [7, 1, 4],
+    [8, 3, 7],
+    [4, 2, 6],
+    [7, 3, 2],
+    [4, 2, 2]
+  ],
+  "opening_plies": 4,
+  "opponent": "greedy",
+  "pair": 0,
+  "player": "net:models/v5-az-s2/pfw/iter_00002.pfw:100",
+  "player_colour": "White",
+  "player_result": "loss",
+  "plies": 16,
+  "rules": "lc1-2",
+  "spec": "net:models/v5-az-s2/pfw/iter_00002.pfw:100"
+}

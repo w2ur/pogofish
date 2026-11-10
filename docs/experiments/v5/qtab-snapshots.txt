@@ -10,3 +10,6 @@ c3365c4bbc55538d26da64643ee49a2c39f84b8f653c4756bc956dd098ffa946  qtab-s3-p002  
 2ae16d73e5b26541ff97fd8ca05c580a9ffab83d066d4269731317d88d42ed5a  qtab-s2-p005  {"games_played":250000,"visited":23910572,"unfinished":23}
 d442d455b25f3a73f50e0f85b64c41d86fcab00feb03f50099c6aeed6a2df210  qtab-s1-p005  {"games_played":250000,"visited":23950623,"unfinished":12}
 037dc7bd2fb085956d381705b3be648883dcc5d54d1dd760c031e7d04ec9b7c9  qtab-s3-p005  {"games_played":250000,"visited":24014325,"unfinished":21}
+1b712a05244580ae1649f7e92b59c979a80753436dc03c1d80f899bc4ce2b300  qtab-s1-p010  {"games_played":500000,"visited":39047418,"unfinished":14}
+5dd2c328d7c08108eb4116362da11d6883658b3621fc1884359b1736f25931fe  qtab-s2-p010  {"games_played":500000,"visited":39045883,"unfinished":24}
+af46a4f952d7c73def7756d293d660b010a7deee4533f0b2be374e7bd5c53274  qtab-s3-p010  {"games_played":500000,"visited":39067658,"unfinished":22}
