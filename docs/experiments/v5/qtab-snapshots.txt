@@ -1,0 +1,6 @@
+e11aec101cc76c4e8012c7026206bae71b66af405475db38ab8c3230cb37d9cb  qtab-s1-p000  {"games_played":0,"visited":0,"unfinished":0}
+e11aec101cc76c4e8012c7026206bae71b66af405475db38ab8c3230cb37d9cb  qtab-s3-p000  {"games_played":0,"visited":0,"unfinished":0}
+e11aec101cc76c4e8012c7026206bae71b66af405475db38ab8c3230cb37d9cb  qtab-s2-p000  {"games_played":0,"visited":0,"unfinished":0}
+5356a1b4609a918c955effdea719a81e3018614199959532ebaa5277e72b3715  qtab-s3-p001  {"games_played":50000,"visited":6001382,"unfinished":12}
+b696413f58ad1a139dce8bf1881cc15d8364175d5d1f326a6e5802c7ce0b95f4  qtab-s1-p001  {"games_played":50000,"visited":5980517,"unfinished":6}
+1b6307a14ac0fac4adbb88be8a5ef0f13146c70fe3a63dfafa18c91dce48650b  qtab-s2-p001  {"games_played":50000,"visited":5935596,"unfinished":11}

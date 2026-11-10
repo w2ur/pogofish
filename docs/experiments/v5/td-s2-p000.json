@@ -1,0 +1,184 @@
+{
+  "arena": {
+    "a": {
+      "draws": 0,
+      "losses": 1875,
+      "unfinished": 0,
+      "wins": 125
+    },
+    "a_as_red": {
+      "draws": 0,
+      "losses": 947,
+      "unfinished": 0,
+      "wins": 53
+    },
+    "a_as_white": {
+      "draws": 0,
+      "losses": 928,
+      "unfinished": 0,
+      "wins": 72
+    },
+    "a_by_variant_rule": {
+      "draws": 0,
+      "losses": 0,
+      "unfinished": 0,
+      "wins": 0
+    },
+    "ci95": [
+      0.052059964351385365,
+      0.07294003564861463
+    ],
+    "config": {
+      "max_plies": 1000,
+      "opening_plies": 4,
+      "pairs": 1000,
+      "rules": {
+        "LC1": {
+          "repetitions": 2
+        }
+      },
+      "seed": 404
+    },
+    "distinct_games": 1972,
+    "distinct_openings": 993,
+    "distinct_positions_after_opening": 14106,
+    "games": 2000,
+    "player_a": "td:models/v5-td-s2/pfv/iter_00000.pfv",
+    "player_b": "greedy",
+    "score": 0.0625,
+    "scored_pairs": 1000,
+    "significant": true,
+    "white_score": 0.5095
+  },
+  "command": [
+    "./target/release/v4bench",
+    "models/v3-solve",
+    "td:models/v5-td-s2/pfv/iter_00000.pfv",
+    "--out",
+    "docs/experiments/v5/td-s2-p000.json"
+  ],
+  "controls": {
+    "anti_oracle": {
+      "expected": [
+        0.008,
+        0.0
+      ],
+      "keep": {
+        "drawn": {
+          "ci95": [
+            -0.00009600000000001644,
+            0.00029600000000001646
+          ],
+          "n": 10000,
+          "rate": 0.0001
+        },
+        "won": {
+          "ci95": [
+            0.005986655694709594,
+            0.009413344305290406
+          ],
+          "n": 10000,
+          "rate": 0.0077
+        }
+      },
+      "positions_where_every_move_keeps": [
+        0.0077,
+        0.0001
+      ]
+    },
+    "compared_with_round_3": true,
+    "oracle": {
+      "expected": [
+        1.0,
+        1.0
+      ],
+      "keep": {
+        "drawn": {
+          "ci95": [
+            1.0,
+            1.0
+          ],
+          "n": 10000,
+          "rate": 1.0
+        },
+        "won": {
+          "ci95": [
+            1.0,
+            1.0
+          ],
+          "n": 10000,
+          "rate": 1.0
+        }
+      }
+    },
+    "random": {
+      "expected": [
+        0.36,
+        0.112
+      ],
+      "keep": {
+        "drawn": {
+          "ci95": [
+            0.110582118672503,
+            0.11340264166445096
+          ],
+          "n": 10000,
+          "rate": 0.11199238016847698
+        },
+        "won": {
+          "ci95": [
+            0.3548067180635242,
+            0.3645027642794149
+          ],
+          "n": 10000,
+          "rate": 0.35965474117146956
+        }
+      }
+    }
+  },
+  "git_rev": "0317e07a5a88adc11a26c9953171b13cad6ad9ab",
+  "history": "none",
+  "keep": {
+    "drawn": {
+      "ci95": [
+        0.11509621401923144,
+        0.12790378598076857
+      ],
+      "n": 10000,
+      "rate": 0.1215
+    },
+    "won": {
+      "ci95": [
+        0.34243990583071515,
+        0.36116009416928485
+      ],
+      "n": 10000,
+      "rate": 0.3518
+    }
+  },
+  "opponent": "greedy",
+  "peak_rss_mib": 0.5131072998046875,
+  "player": "td:models/v5-td-s2/pfv/iter_00000.pfv",
+  "rules": "lc1-2",
+  "sample": {
+    "controls_per_class": 10000,
+    "measured_per_class": 10000,
+    "sample_cap": null,
+    "seed": 31,
+    "test_per_class": 10000,
+    "train_per_class": 20000
+  },
+  "spec": "td:models/v5-td-s2/pfv/iter_00000.pfv",
+  "table_sha256": "1690c767b68a6214eb1fb4d74d932198a13f67c744b7c6e61102eeb44c5e3704",
+  "table_tiebreak": "Moves that lose at once under the live rules (a third occurrence under lc1-2) are set aside unless every candidate does. Among the rest: from a won position, the moves to Loss(d) with the smallest d; from a drawn position, the moves whose child is not Win; from a lost position, the moves to Win(d) with the largest d. Uniform pick among them.",
+  "threads": 4,
+  "timings": {
+    "arena": 0.886365736,
+    "controls": 2.495408731,
+    "keep": 2.8992610340000002,
+    "load": 0.300205269,
+    "sample": 2.627028206,
+    "sha256": 1.451713945,
+    "total": 10.660385746
+  }
+}
