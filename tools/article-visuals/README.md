@@ -5,6 +5,7 @@ Scripts that made the images and GIFs of the Pogofish article. The `.mjs` script
 - `sequence.mjs OUT 'MOVES_JSON'` renders a game as one image per move; `seq2.mjs` does the same with an optional repetition counter (third argument, rules JSON).
 - `narrow.mjs OUT PREFIX_JSON VERDICT_JSON` makes one panel per legal move from a position, with the solver's verdict under each.
 - `scene2.mjs OUT` draws the first three steps of the retrograde analysis as a tree, one frame per step, for the GIF.
+- `greedy.mjs OUT search|game|sheet …` plays the greedy player against itself under `lc1-2` (a port of `crates/search/src/players.rs`): `search LO-HI` lists seeded games, `game SEED` renders one captioned frame per ply into OUT, `sheet SEED PLY` writes OUT as one panel per move greedy weighs at that ply, with its score.
 - `azgame.mjs` plays the greedy player (White) against the online AlphaZero net (Red) on the live board and prints the game as a move list.
 - `capture.mjs OUT [light|dark]` takes board screenshots of the live page.
 - `shortest.mjs` searches the engine breadth-first for the shortest game that ends, and prints the move lists.
