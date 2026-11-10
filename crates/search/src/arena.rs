@@ -216,6 +216,52 @@ fn play(
     }
 }
 
+/// The generator of pair `pair` and the opening it draws first; the pair's
+/// two games then continue on the same generator.
+fn pair_start(cfg: &ArenaConfig, pair: u32) -> Result<(SplitMix64, GameState, Vec<Move>), String> {
+    let mut rng = SplitMix64::new(crate::measure::game_seed(cfg.seed, 7, pair as u64));
+    let (start, opening) = random_opening(&cfg.rules, cfg.opening_plies, &mut rng)?;
+    Ok((rng, start, opening))
+}
+
+/// One game of a match, as played.
+#[derive(Debug, Clone, Serialize, PartialEq)]
+pub struct GameRecord {
+    /// The random opening.
+    pub opening: Vec<Move>,
+    /// The players' moves after it.
+    pub moves: Vec<Move>,
+    /// White's result: 1, ½ or 0; `None` if cut at the ply limit.
+    pub white_result: Option<f64>,
+    pub by_variant_rule: bool,
+}
+
+/// The first game [`run_match`] plays for these players and settings: pair 0,
+/// A as White, on the same generator stream, so the same moves (round 5,
+/// `docs/experiments/v5-video.md`). Errors if no opening can be drawn.
+pub fn first_game(
+    a: &mut dyn Agent,
+    b: &mut dyn Agent,
+    cfg: &ArenaConfig,
+) -> Result<GameRecord, String> {
+    let (mut rng, start, opening) = pair_start(cfg, 0)?;
+    let log = play(
+        &start,
+        a,
+        b,
+        cfg,
+        opening.len() as u32,
+        &mut rng,
+        &mut HashSet::new(),
+    );
+    Ok(GameRecord {
+        opening,
+        moves: log.moves,
+        white_result: log.white_result,
+        by_variant_rule: log.by_variant_rule,
+    })
+}
+
 /// Play the match. `a` and `b` must be distinct objects; to play a player
 /// against itself, build it twice. Errors if no opening can be drawn.
 pub fn run_match(
@@ -235,8 +281,7 @@ pub fn run_match(
     let mut positions = HashSet::new();
 
     for pair in 0..cfg.pairs {
-        let mut rng = SplitMix64::new(crate::measure::game_seed(cfg.seed, 7, pair as u64));
-        let (start, opening) = random_opening(&cfg.rules, cfg.opening_plies, &mut rng)?;
+        let (mut rng, start, opening) = pair_start(cfg, pair)?;
         openings.insert(opening.clone());
         let mut a_results = [None; 2];
         for (game, slot) in a_results.iter_mut().enumerate() {
@@ -342,6 +387,67 @@ mod tests {
             assert_eq!(s.key(), s2.key());
             assert_eq!(moves.len(), 6);
             assert_eq!(is_terminal(&s, &RuleSet::Uncapped), None);
+        }
+    }
+
+    /// An agent that plays like `inner` and records the moves it chose.
+    struct Recording {
+        inner: Scripted,
+        moves: Vec<Move>,
+    }
+
+    impl Agent for Recording {
+        fn name(&self) -> String {
+            self.inner.name().to_string()
+        }
+        fn choose(&mut self, s: &GameState, rules: &RuleSet, rng: &mut SplitMix64) -> Move {
+            let m = Scripted::choose(self.inner, s, rules, rng);
+            self.moves.push(m);
+            m
+        }
+    }
+
+    #[test]
+    fn first_game_is_the_first_game_of_the_match() {
+        let rules = RuleSet::LC1 { repetitions: 2 };
+        for seed in [1u64, 7, 404] {
+            let cfg = ArenaConfig::new(rules, 1, 4, 1000, seed);
+            let shown = first_game(&mut Scripted::Random, &mut Scripted::Greedy, &cfg).unwrap();
+            // The match's first game, with every move recorded.
+            let (mut a, mut b) = (
+                Recording {
+                    inner: Scripted::Random,
+                    moves: vec![],
+                },
+                Recording {
+                    inner: Scripted::Greedy,
+                    moves: vec![],
+                },
+            );
+            let r = run_match(&mut a, &mut b, &cfg).unwrap();
+            let (_, start, opening) = pair_start(&cfg, 0).unwrap();
+            assert_eq!(shown.opening, opening);
+            // Replay: White (A) and Red (B) alternate from the opening.
+            let (mut ia, mut ib, mut s) = (0, 0, start);
+            for &m in &shown.moves {
+                let want = match s.to_move() {
+                    Color::White => {
+                        ia += 1;
+                        a.moves[ia - 1]
+                    }
+                    Color::Red => {
+                        ib += 1;
+                        b.moves[ib - 1]
+                    }
+                };
+                assert_eq!(m, want, "seed {seed}");
+                s = apply_move_under(&s, m, &rules).unwrap();
+            }
+            let a_result = shown.white_result;
+            let total = |x: Record| (x.wins, x.draws, x.losses, x.unfinished);
+            let mut expect = Record::default();
+            expect.add(a_result);
+            assert_eq!(total(r.a_as_white), total(expect), "seed {seed}");
         }
     }
 
