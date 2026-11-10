@@ -85,6 +85,8 @@ if (mode === 'search') {
     const firstBlunder = g.plies.findIndex((p, i) => g.plies[i + 1] && g.plies[i + 1].pick.label === 'gagne' && p.pick.label !== 'gagne');
     console.log(`seed ${seed}: ${g.plies.length} plies, winner ${g.winner}, last move by ${NAME[g.plies.at(-1).s.to_move]}, blunder at ply ${firstBlunder}`);
   }
+} else if (mode === 'moves') {
+  console.log(JSON.stringify(play(Number(a1)).plies.map(p => [p.pick.m.from_cell, p.pick.m.num_pieces, p.pick.m.to_cell])));
 } else if (mode === 'game') {
   const g = play(Number(a1));
   const [b, p] = await page();
