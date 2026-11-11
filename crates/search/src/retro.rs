@@ -223,6 +223,52 @@ impl Board {
     }
 }
 
+impl Board {
+    /// The board a [`Board::diagram`] shows (round 5 reads the puzzles of
+    /// `v3-solve/answers.json` back). `None` if the text is not a diagram.
+    pub fn from_diagram(text: &str) -> Option<Board> {
+        let lines: Vec<&str> = text.lines().collect();
+        if lines.len() != 4 {
+            return None;
+        }
+        let mut b = Board {
+            h: [0; NUM_CELLS],
+            c: [0; NUM_CELLS],
+            red_to_move: false,
+        };
+        for (r, line) in lines[..3].iter().enumerate() {
+            let mut words = line.split_whitespace();
+            if words.next()? != (r + 1).to_string() {
+                return None;
+            }
+            for c in 0..3 {
+                let w = words.next()?;
+                let i = r * 3 + c;
+                if w == "." {
+                    continue;
+                }
+                for (j, ch) in w.chars().enumerate() {
+                    match ch {
+                        'R' => b.c[i] |= 1 << j,
+                        'W' => {}
+                        _ => return None,
+                    }
+                }
+                b.h[i] = w.len() as u8;
+            }
+            if words.next().is_some() {
+                return None;
+            }
+        }
+        b.red_to_move = match lines[3].trim_end() {
+            l if l.ends_with("Red to move") => true,
+            l if l.ends_with("White to move") => false,
+            _ => return None,
+        };
+        (b.diagram() == text).then_some(b)
+    }
+}
+
 #[derive(Debug, Clone, Copy, Default)]
 struct Dests {
     n: u8,

@@ -210,3 +210,43 @@ round 4's 0.784 [0.766, 0.801]; no unfinished game. It rises at every stage, and
 The game shown does not change: the eight games of `v5/vs-random/games/` have the same
 moves, a 21-ply win for the program as White, at every stage including stage 0. Why the
 learnt values never change the program's choices in this game was not investigated.
+
+## Addendum 2: mosaics, puzzles and the race (added after the results)
+
+Asked by the owner on 2026-11-11: show learning the way game-playing videos do, many games
+at each stage, the program's errors, and what it "sees". Not pre-registered with the round;
+fixed here before these runs, except as disclosed below. Seed 1, the eight stages.
+
+**Mosaics.** For each stage, the first 50 pairs (100 games) of the bench's arena, exactly
+the games the bench played (`v5mosaic`, which replays them with the bench's generator
+streams; check: over all 1,000 pairs it returns `td-s1-p100.json`'s 1,567 wins and 433
+losses, score 0.7835, before and after the arena refactor that serves it). Players and
+opponents: the tabular learner against random and against greedy; TD, AlphaZero at 100
+simulations and AlphaZero without search against greedy. Each move of the program is judged
+by the solved uncapped table: keep, mistake, or played from a lost position; the table
+ignores repetition, so this is the uncapped game's judgment (†). Output
+`v5/mosaic/<program>-s1-p<pct>[-random].json`. The share of games won in a mosaic is a
+50-pair sample of the bench's 1,000; the caption carries the bench's score.
+
+**Puzzles.** The nine puzzles of `v3-solve/answers.json` (won positions with one winning
+move, which greedy does not play), read from their diagrams with no history; `v5puzzles`
+refuses to run unless the solved table confirms each key move as the only winning one. Per
+stage: AlphaZero's prior over the legal moves (the net alone) and the visits of its
+100-simulation search; TD's and the tabular learner's one-ply scores; for each, whether
+its choice is the key move ("solved", out of 9). The puzzles are solved in the uncapped game
+and played under `lc1-2` from an empty history; whether repetition could change a 5- or 7-ply
+solution under `lc1-2` was not checked. **The puzzle shown is puzzle 1** (the first in the
+file: win in 3, 14 legal moves, key move a1-1-a2), whatever its figures.
+
+*Disclosure.* While writing `v5puzzles`, its smoke test ran on seed 1's stages 0 % and
+100 % for AlphaZero and TD, and the solved counts were seen before this addendum (AlphaZero
+at 0 %: 0 of 9 without search, 1.75 with; at 100 %: 5 and 9; TD 1 then 4), as was puzzle 1's
+prior and visits at 100 %. The rule for the puzzle shown is fixed by file order, not by
+those figures.
+
+**Race.** No new run: the curves of `v5/curves.json` against `games_trained` on a log axis,
+with random, greedy and the table as horizontal references. Caption: the axis counts
+self-play games, not compute (an AlphaZero game runs 100 simulations per move).
+
+The tabular snapshots are retrained once more (`models/v5m-qtab-s1`) and each must match its
+recorded SHA-256 before use. Commands: `scripts/v5-video.sh`.

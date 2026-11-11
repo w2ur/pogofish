@@ -262,6 +262,62 @@ pub fn first_game(
     })
 }
 
+/// A pair's opening and its two games, each with whether A played White.
+type PairLogs = (Vec<Move>, [(bool, GameLog); 2]);
+
+/// Both games of pair `pair` of a match, played as [`run_match`] plays them
+/// (it calls this): the opening, then A as White, then A as Red on the same
+/// generator. `positions` collects the positions reached after the opening.
+fn play_pair(
+    a: &mut dyn Agent,
+    b: &mut dyn Agent,
+    cfg: &ArenaConfig,
+    pair: u32,
+    positions: &mut HashSet<StateKey>,
+) -> Result<PairLogs, String> {
+    let (mut rng, start, opening) = pair_start(cfg, pair)?;
+    let mut game = |index: usize| {
+        let a_white = index == 0 || !cfg.swap_colours;
+        let already = opening.len() as u32;
+        let log = if a_white {
+            play(&start, a, b, cfg, already, &mut rng, positions)
+        } else {
+            play(&start, b, a, cfg, already, &mut rng, positions)
+        };
+        (a_white, log)
+    };
+    let first = game(0);
+    let second = game(1);
+    Ok((opening, [first, second]))
+}
+
+/// One game of a match from A's side.
+#[derive(Debug, Clone, Serialize, PartialEq)]
+pub struct PairGame {
+    pub a_white: bool,
+    pub record: GameRecord,
+}
+
+/// The two games of pair `pair` of [`run_match`] for these players and
+/// settings, move for move (round 5, `docs/experiments/v5-video.md`).
+pub fn pair_games(
+    a: &mut dyn Agent,
+    b: &mut dyn Agent,
+    cfg: &ArenaConfig,
+    pair: u32,
+) -> Result<[PairGame; 2], String> {
+    let (opening, logs) = play_pair(a, b, cfg, pair, &mut HashSet::new())?;
+    Ok(logs.map(|(a_white, log)| PairGame {
+        a_white,
+        record: GameRecord {
+            opening: opening.clone(),
+            moves: log.moves,
+            white_result: log.white_result,
+            by_variant_rule: log.by_variant_rule,
+        },
+    }))
+}
+
 /// Play the match. `a` and `b` must be distinct objects; to play a player
 /// against itself, build it twice. Errors if no opening can be drawn.
 pub fn run_match(
@@ -281,32 +337,10 @@ pub fn run_match(
     let mut positions = HashSet::new();
 
     for pair in 0..cfg.pairs {
-        let (mut rng, start, opening) = pair_start(cfg, pair)?;
+        let (opening, logs) = play_pair(a, b, cfg, pair, &mut positions)?;
         openings.insert(opening.clone());
         let mut a_results = [None; 2];
-        for (game, slot) in a_results.iter_mut().enumerate() {
-            let a_white = game == 0 || !cfg.swap_colours;
-            let log = if a_white {
-                play(
-                    &start,
-                    a,
-                    b,
-                    cfg,
-                    opening.len() as u32,
-                    &mut rng,
-                    &mut positions,
-                )
-            } else {
-                play(
-                    &start,
-                    b,
-                    a,
-                    cfg,
-                    opening.len() as u32,
-                    &mut rng,
-                    &mut positions,
-                )
-            };
+        for (slot, (a_white, log)) in a_results.iter_mut().zip(logs) {
             let a_result = log.white_result.map(|w| if a_white { w } else { 1.0 - w });
             rec.add(a_result);
             if a_white {
@@ -449,6 +483,39 @@ mod tests {
             expect.add(a_result);
             assert_eq!(total(r.a_as_white), total(expect), "seed {seed}");
         }
+    }
+
+    #[test]
+    fn pair_games_are_the_match_games() {
+        let rules = RuleSet::LC1 { repetitions: 2 };
+        let cfg = ArenaConfig::new(rules, 30, 4, 1000, 404);
+        let r = run_match(&mut Scripted::Random, &mut Scripted::Greedy, &cfg).unwrap();
+        let (mut all, mut white, mut sequences) =
+            (Record::default(), Record::default(), HashSet::new());
+        for pair in 0..cfg.pairs {
+            let games =
+                pair_games(&mut Scripted::Random, &mut Scripted::Greedy, &cfg, pair).unwrap();
+            assert!(games[0].a_white && !games[1].a_white);
+            for g in &games {
+                let a = g
+                    .record
+                    .white_result
+                    .map(|w| if g.a_white { w } else { 1.0 - w });
+                all.add(a);
+                if g.a_white {
+                    white.add(a);
+                }
+                let mut seq = g.record.opening.clone();
+                seq.extend(g.record.moves.iter().copied());
+                sequences.insert(seq);
+            }
+        }
+        assert_eq!(all, r.a);
+        assert_eq!(white, r.a_as_white);
+        assert_eq!(sequences.len(), r.distinct_games);
+        let first = first_game(&mut Scripted::Random, &mut Scripted::Greedy, &cfg).unwrap();
+        let p0 = pair_games(&mut Scripted::Random, &mut Scripted::Greedy, &cfg, 0).unwrap();
+        assert_eq!(first, p0[0].record);
     }
 
     #[test]

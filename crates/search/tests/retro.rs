@@ -320,3 +320,20 @@ fn consistency_check_catches_a_table_solved_under_a_mutated_rule() {
     let truth = Game::new(3, 3, MoveRule::published());
     assert!(check_consistency(&truth, &t, 4, None).total() > 0);
 }
+
+/// Round 5: a diagram reads back into the same board, for every position of
+/// a sample of the published game; anything else is refused.
+#[test]
+fn diagrams_read_back() {
+    let g = Game::published();
+    let mut i = 1u64;
+    for _ in 0..2000 {
+        i = i.wrapping_mul(6364136223846793005).wrapping_add(1442695040888963407);
+        let b = g.unrank(i % g.size());
+        let back = Board::from_diagram(&b.diagram()).expect("a diagram reads back");
+        assert_eq!(g.rank(&back), g.rank(&b));
+    }
+    assert!(Board::from_diagram("not a board").is_none());
+    let d = g.unrank(5).diagram().replacen(" to move", " to play", 1);
+    assert!(Board::from_diagram(&d).is_none());
+}
