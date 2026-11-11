@@ -102,3 +102,26 @@ Budget: 10,000 self-play games.
 | 100 % | 5,000,000 | 0.783 [0.766, 0.801] | 0 | win, 21 plies |
 
 Criterion: the last stage overlaps round 4's 0.784 [0.766, 0.801] and no game is unfinished: met.
+
+## Addendum 2: mosaics (first 50 bench pairs, seed 1)
+
+Games won of 100, and the share of the program's moves that the solved uncapped table judges mistakes (repetition ignored, †).
+
+| Mosaic | 0 % | 1 % | 2 % | 5 % | 10 % | 25 % | 50 % | 100 % |
+|---|---|---|---|---|---|---|---|---|
+| Tabular learner vs random | 51 won, 62 % mistakes | 55 won, 63 % mistakes | — | — | — | — | — | — |
+| Tabular learner vs greedy | 5 won, 72 % mistakes | 5 won, 71 % mistakes | — | — | — | — | — | — |
+| TD(λ) vs greedy | 5 won, 55 % mistakes | 48 won, 25 % mistakes | 51 won, 22 % mistakes | 60 won, 19 % mistakes | 63 won, 18 % mistakes | 66 won, 15 % mistakes | 78 won, 5 % mistakes | 77 won, 8 % mistakes |
+| AlphaZero, 100 simulations, vs greedy | 19 won, 52 % mistakes | 39 won, 28 % mistakes | 36 won, 27 % mistakes | 66 won, 12 % mistakes | 79 won, 8 % mistakes | 81 won, 4 % mistakes | 84 won, 2 % mistakes | 90 won, 2 % mistakes |
+| AlphaZero, no search, vs greedy | 0 won, 69 % mistakes | 0 won, 68 % mistakes | 0 won, 68 % mistakes | 7 won, 54 % mistakes | 9 won, 43 % mistakes | 29 won, 28 % mistakes | 43 won, 20 % mistakes | 61 won, 12 % mistakes |
+
+## Addendum 2: puzzles solved (of 9, seed 1)
+
+| Player | 0 % | 1 % | 2 % | 5 % | 10 % | 25 % | 50 % | 100 % |
+|---|---|---|---|---|---|---|---|---|
+| Tabular learner | 0.56 | 0.57 | — | — | — | — | — | — |
+| TD(λ) | 1 | 1 | 2 | 1 | 0 | 1 | 2 | 4 |
+| AlphaZero, no search | 0 | 1 | 1 | 2 | 1 | 3 | 4 | 5 |
+| AlphaZero, 100 simulations | 1.75 | 2 | 2 | 4 | 6 | 9 | 9 | 9 |
+
+A fractional count: the player's tied set holds the key move among others (it would pick uniformly among them).

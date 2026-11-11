@@ -19,6 +19,9 @@ Reads the bench JSON `<program>-s<seed>-p<pct>.json` written by `v4bench`
 The addendum's tabular runs against random (`<v5 dir>/vs-random/`, seed 1) get
 their own section and `qtab_vs_random` in `curves.json`.
 
+Addendum 2's mosaics (`mosaic/`) and puzzles (`puzzles/`), seed 1, get a section
+each and `mosaics` / `puzzles` in `curves.json`.
+
 A stage not measured yet shows "—"; the criteria then read "pending".
 Exit 0 written; 2 cannot run (a JSON with a foreign table hash, an opponent
 other than greedy, a malformed file name, a game JSON whose player differs
@@ -157,6 +160,97 @@ def load_vs_random(v5: Path) -> dict:
 
 
 ROUND4_VS_RANDOM = (0.784, [0.766, 0.801])
+MOSAICS = (
+    ("qtab-random", "Tabular learner vs random"),
+    ("qtab", "Tabular learner vs greedy"),
+    ("td", "TD(λ) vs greedy"),
+    ("az100", "AlphaZero, 100 simulations, vs greedy"),
+    ("az0", "AlphaZero, no search, vs greedy"),
+)
+PUZZLES = (
+    ("qtab", "Tabular learner", "solved"),
+    ("td", "TD(λ)", "solved"),
+    ("az", "AlphaZero, no search", "solved_without_search"),
+    ("az", "AlphaZero, 100 simulations", "solved_with_search"),
+)
+
+
+def mosaic_path(v5: Path, key: str, pct: int) -> Path:
+    prog, _, opp = key.partition("-")
+    suffix = f"-{opp}" if opp else ""
+    return v5 / "mosaic" / f"{prog}-s1-p{pct:03d}{suffix}.json"
+
+
+def load_addendum2(v5: Path) -> tuple:
+    mosaics, puzzles = {}, {}
+    for key, _ in MOSAICS:
+        for pct in PCTS:
+            f = mosaic_path(v5, key, pct)
+            if f.exists():
+                j = json.loads(f.read_text())
+                mosaics[(key, pct)] = {
+                    "file": str(f.relative_to(v5)),
+                    "games": j["games"],
+                    "wins": j["wins"],
+                    "losses": j["losses"],
+                    "draws": j["draws"],
+                    "unfinished": j["unfinished"],
+                    "mistakes": j["player_moves_mistake"],
+                    "judged": j["player_moves_keep"] + j["player_moves_mistake"],
+                    "mistake_share": j["mistake_share"],
+                    "results": [g["result"] for g in j["game_list"]],
+                }
+    for prog in ("qtab", "td", "az"):
+        for pct in PCTS:
+            f = v5 / "puzzles" / f"{prog}-s1-p{pct:03d}.json"
+            if f.exists():
+                j = json.loads(f.read_text())
+                puzzles[(prog, pct)] = {
+                    k: j[k]
+                    for k in ("solved", "solved_without_search", "solved_with_search", "puzzles")
+                    if k in j
+                } | {"file": str(f.relative_to(v5))}
+    return mosaics, puzzles
+
+
+def addendum2_section(mosaics: dict, puzzles: dict) -> list:
+    out = [
+        "## Addendum 2: mosaics (first 50 bench pairs, seed 1)",
+        "",
+        "Games won of 100, and the share of the program's moves that the solved uncapped "
+        "table judges mistakes (repetition ignored, †).",
+        "",
+        "| Mosaic | " + " | ".join(f"{p} %" for p in PCTS) + " |",
+        "|---|" + "---|" * len(PCTS),
+    ]
+    for key, label in MOSAICS:
+        cells = []
+        for pct in PCTS:
+            m = mosaics.get((key, pct))
+            cells.append(
+                f"{m['wins']} won, {100 * m['mistake_share']:.0f} % mistakes" if m else "—"
+            )
+        out.append(f"| {label} | " + " | ".join(cells) + " |")
+    out += [
+        "",
+        "## Addendum 2: puzzles solved (of 9, seed 1)",
+        "",
+        "| Player | " + " | ".join(f"{p} %" for p in PCTS) + " |",
+        "|---|" + "---|" * len(PCTS),
+    ]
+    for prog, label, field in PUZZLES:
+        cells = []
+        for pct in PCTS:
+            z = puzzles.get((prog, pct))
+            cells.append(f"{round(z[field], 2):g}" if z and z.get(field) is not None else "—")
+        out.append(f"| {label} | " + " | ".join(cells) + " |")
+    out += [
+        "",
+        "A fractional count: the player's tied set holds the key move among others "
+        "(it would pick uniformly among them).",
+        "",
+    ]
+    return out
 
 
 def vs_random_section(vr: dict) -> list:
@@ -234,7 +328,7 @@ def criteria(runs: dict) -> list:
     return rows
 
 
-def table(runs: dict, vr: dict) -> str:
+def table(runs: dict, vr: dict, a2: tuple) -> str:
     out = [
         "# Round 5: scores by stage",
         "",
@@ -271,11 +365,22 @@ def table(runs: dict, vr: dict) -> str:
     out.append("")
     if vr:
         out += vs_random_section(vr)
+    if a2[0] or a2[1]:
+        out += addendum2_section(*a2)
     return "\n".join(out)
 
 
-def curves(runs: dict, vr: dict) -> dict:
+def curves(runs: dict, vr: dict, a2: tuple) -> dict:
+    mosaics, puzzles = a2
     return {
+        "mosaics": {
+            key: [{"pct": pct, **mosaics[(key, pct)]} for pct in PCTS if (key, pct) in mosaics]
+            for key, _ in MOSAICS
+        },
+        "puzzles": {
+            prog: [{"pct": pct, **puzzles[(prog, pct)]} for pct in PCTS if (prog, pct) in puzzles]
+            for prog in ("qtab", "td", "az")
+        },
         "qtab_vs_random": {
             "seed": 1,
             "opponent": "random",
@@ -308,9 +413,9 @@ def main() -> None:
     v5 = Path(sys.argv[1] if len(sys.argv) > 1 else "docs/experiments/v5")
     if not v5.is_dir():
         fail(f"{v5} is not a directory")
-    runs, vr = load(v5), load_vs_random(v5)
-    (v5 / "table.md").write_text(table(runs, vr))
-    (v5 / "curves.json").write_text(json.dumps(curves(runs, vr), indent=1) + "\n")
+    runs, vr, a2 = load(v5), load_vs_random(v5), load_addendum2(v5)
+    (v5 / "table.md").write_text(table(runs, vr, a2))
+    (v5 / "curves.json").write_text(json.dumps(curves(runs, vr, a2), indent=1) + "\n")
     print(f"{len(runs)} benches -> {v5 / 'table.md'}, {v5 / 'curves.json'}")
 
 
