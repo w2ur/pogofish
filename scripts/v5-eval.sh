@@ -86,20 +86,24 @@ case $prog in
     # Addendum of v5-video.md: the retrained run's snapshots, checked against the
     # SHA-256 recorded for the first run, benched against the bench's random player.
     run=models/v5r-qtab-s$s
-    mkdir -p "$OUT/vs-random"
+    mkdir -p "$OUT/vs-random/games"
     for p in "${PCT[@]}"; do
       g=$((5000000 * p / 100))
       name=qtab-s$s-$(label "$p")
       snap=$run/snapshots/$(printf 'g%09d' "$g")
-      [ -f "$OUT/vs-random/$name.json" ] && continue
+      if [ -f "$OUT/vs-random/$name.json" ] && [ -f "$OUT/vs-random/games/$name.json" ]; then continue; fi
       until [ -f "$snap/state.json" ]; do sleep 30; done
       sum=$(sha256sum "$snap/v.bin" 2>/dev/null || shasum -a 256 "$snap/v.bin")
       want=$(awk -v n="$name" '$2 == n {print $1}' "$OUT/qtab-snapshots.txt")
       if [ "${sum%% *}" != "$want" ]; then
         echo "$name: v.bin ${sum%% *} differs from the recorded $want" >&2; exit 2
       fi
-      ./target/release/v4bench models/v3-solve "qtab:$snap/v.bin" --opponent random \
-        --out "$OUT/vs-random/$name.json" || { echo "v4bench failed for $name" >&2; exit 2; }
+      if [ ! -f "$OUT/vs-random/$name.json" ]; then
+        ./target/release/v4bench models/v3-solve "qtab:$snap/v.bin" --opponent random \
+          --out "$OUT/vs-random/$name.json" || { echo "v4bench failed for $name" >&2; exit 2; }
+      fi
+      ./target/release/v5game "qtab:$snap/v.bin" --opponent random \
+        --out "$OUT/vs-random/games/$name.json" || { echo "v5game failed for $name" >&2; exit 2; }
       rm -rf "$snap"
     done
     ;;

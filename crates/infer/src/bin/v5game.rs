@@ -1,13 +1,15 @@
 //! Round 5: the game shown for a stage (`docs/experiments/v5-video.md`).
 //!
 //! ```text
-//! v5game <player-spec> --out <json> [--seed 404]
+//! v5game <player-spec> --out <json> [--seed 404] [--opponent greedy|random]
 //! ```
 //!
 //! Replays game 0 of `v4bench`'s arena for this player: pair 0 of arena
 //! seed 404 (its first 4-ply random opening), the player as White against
 //! greedy, `lc1-2`, 1,000-ply limit, on the bench's own generator stream
-//! (`arena::first_game`), so the moves are the ones the bench played. Player
+//! (`arena::first_game`), so the moves are the ones the bench played.
+//! `--opponent random` replays game 0 of `v4bench --opponent random` instead
+//! (the bench's `random` player: takes a win, avoids an immediate loss). Player
 //! specs as in `v4bench`, except `table` (it needs the solved table).
 //!
 //! The JSON holds the full move list from the initial position, opening
@@ -32,11 +34,11 @@ const MAX_PLIES: u32 = 1000;
 
 fn run() -> anyhow::Result<()> {
     let argv: Vec<String> = std::env::args().skip(1).collect();
-    let usage = "usage: v5game <player-spec> --out <json> [--seed 404]";
+    let usage = "usage: v5game <player-spec> --out <json> [--seed 404] [--opponent greedy|random]";
     let Some(spec) = argv.first().filter(|a| !a.starts_with("--")) else {
         bail!("{usage}");
     };
-    let (mut out, mut seed) = (None, 404u64);
+    let (mut out, mut seed, mut opponent) = (None, 404u64, "greedy".to_string());
     let mut i = 1;
     while i < argv.len() {
         let v = argv
@@ -45,6 +47,7 @@ fn run() -> anyhow::Result<()> {
         match argv[i].as_str() {
             "--out" => out = Some(v.clone()),
             "--seed" => seed = v.parse()?,
+            "--opponent" => opponent = v.clone(),
             f => bail!("unknown flag {f}\n{usage}"),
         }
         i += 2;
@@ -52,7 +55,16 @@ fn run() -> anyhow::Result<()> {
     let out = out.with_context(|| usage.to_string())?;
     let mut player = TiedAgent(player_from_spec(spec, None)?);
     let cfg = ArenaConfig::new(RULES, 1, OPENING_PLIES, MAX_PLIES, seed);
-    let g = first_game(&mut player, &mut Scripted::Greedy, &cfg).map_err(anyhow::Error::msg)?;
+    // As v4bench: greedy is the arena's scripted player, random the bench's tied one.
+    let g = match opponent.as_str() {
+        "greedy" => first_game(&mut player, &mut Scripted::Greedy, &cfg),
+        "random" => {
+            let mut them = TiedAgent(player_from_spec("random", None)?);
+            first_game(&mut player, &mut them, &cfg)
+        }
+        o => bail!("--opponent must be greedy or random, got {o}"),
+    }
+    .map_err(anyhow::Error::msg)?;
     let triples: Vec<[u8; 3]> = g
         .opening
         .iter()
@@ -68,7 +80,7 @@ fn run() -> anyhow::Result<()> {
     let doc = json!({
         "spec": spec,
         "player": pogofish_search::arena::Agent::name(&player),
-        "opponent": "greedy",
+        "opponent": opponent,
         "player_colour": format!("{:?}", Color::White),
         "rules": RULES.to_string(),
         "arena_seed": seed,

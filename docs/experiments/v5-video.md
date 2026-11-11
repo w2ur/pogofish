@@ -191,5 +191,10 @@ pre-registered** with the rest of the round; its rules are fixed here, before it
 - **Reading**: stage 0 is the `random` player itself (V = 0 everywhere), so its score is
   expected near 0.5, with no criterion on it. The last stage must reproduce round 4's
   0.784 [0.766, 0.801] by overlapping intervals; no unfinished game.
+- **Game shown** (added on 2026-11-11, before any of these games was played): game 0 of
+  the same arena, `v5game qtab:<snapshot>/v.bin --opponent random`, the program as White
+  against the bench's `random` player; in `v5/vs-random/games/`. The snapshots of stages
+  0–5 % were deleted after their bench, so they are retrained once more (stopped after the
+  250,000-game snapshot) and checked against the same SHA-256 before their games are played.
 - **Self-play is not measured**: the same program against itself scores 0.5 by the colour
   swap, and against its stage-0 self it is this measure.
