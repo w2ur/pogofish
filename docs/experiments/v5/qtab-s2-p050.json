@@ -1,0 +1,208 @@
+{
+  "arena": {
+    "a": {
+      "draws": 0,
+      "losses": 1792,
+      "unfinished": 0,
+      "wins": 208
+    },
+    "a_as_red": {
+      "draws": 0,
+      "losses": 952,
+      "unfinished": 0,
+      "wins": 48
+    },
+    "a_as_white": {
+      "draws": 0,
+      "losses": 840,
+      "unfinished": 0,
+      "wins": 160
+    },
+    "a_by_variant_rule": {
+      "draws": 0,
+      "losses": 0,
+      "unfinished": 0,
+      "wins": 0
+    },
+    "ci95": [
+      0.09118832589419361,
+      0.11681167410580638
+    ],
+    "config": {
+      "max_plies": 1000,
+      "opening_plies": 4,
+      "pairs": 1000,
+      "rules": {
+        "LC1": {
+          "repetitions": 2
+        }
+      },
+      "seed": 404
+    },
+    "distinct_games": 1971,
+    "distinct_openings": 993,
+    "distinct_positions_after_opening": 17152,
+    "games": 2000,
+    "player_a": "qtab:models/v5-qtab-s2/snapshots/g002500000/v.bin",
+    "player_b": "greedy",
+    "score": 0.104,
+    "scored_pairs": 1000,
+    "significant": true,
+    "white_score": 0.556
+  },
+  "command": [
+    "./target/release/v4bench",
+    "models/v3-solve",
+    "qtab:models/v5-qtab-s2/snapshots/g002500000/v.bin",
+    "--out",
+    "docs/experiments/v5/qtab-s2-p050.json"
+  ],
+  "controls": {
+    "anti_oracle": {
+      "expected": [
+        0.008,
+        0.0
+      ],
+      "keep": {
+        "drawn": {
+          "ci95": [
+            -0.00009600000000001644,
+            0.00029600000000001646
+          ],
+          "n": 10000,
+          "rate": 0.0001
+        },
+        "won": {
+          "ci95": [
+            0.005986655694709594,
+            0.009413344305290406
+          ],
+          "n": 10000,
+          "rate": 0.0077
+        }
+      },
+      "positions_where_every_move_keeps": [
+        0.0077,
+        0.0001
+      ]
+    },
+    "compared_with_round_3": true,
+    "oracle": {
+      "expected": [
+        1.0,
+        1.0
+      ],
+      "keep": {
+        "drawn": {
+          "ci95": [
+            1.0,
+            1.0
+          ],
+          "n": 10000,
+          "rate": 1.0
+        },
+        "won": {
+          "ci95": [
+            1.0,
+            1.0
+          ],
+          "n": 10000,
+          "rate": 1.0
+        }
+      }
+    },
+    "random": {
+      "expected": [
+        0.36,
+        0.112
+      ],
+      "keep": {
+        "drawn": {
+          "ci95": [
+            0.110582118672503,
+            0.11340264166445096
+          ],
+          "n": 10000,
+          "rate": 0.11199238016847698
+        },
+        "won": {
+          "ci95": [
+            0.3548067180635242,
+            0.3645027642794149
+          ],
+          "n": 10000,
+          "rate": 0.35965474117146956
+        }
+      }
+    }
+  },
+  "coverage": {
+    "reachable": 230015628,
+    "share_of_reachable": 0.37140714630051136,
+    "visited": 85429448,
+    "visited_reachable": 85429448
+  },
+  "git_rev": "1017a5490f14d0b8c119bcaf7acc0d0a9315166b",
+  "history": "none",
+  "keep": {
+    "drawn": {
+      "ci95": [
+        0.11756610166187242,
+        0.12100678172457588
+      ],
+      "n": 10000,
+      "rate": 0.11928644169322415
+    },
+    "won": {
+      "ci95": [
+        0.3629545663995555,
+        0.3729145463906296
+      ],
+      "n": 10000,
+      "rate": 0.36793455639509254
+    }
+  },
+  "keep_visited": {
+    "drawn": {
+      "ci95": [
+        0.116386997405934,
+        0.11980888970706777
+      ],
+      "n": 9825,
+      "rate": 0.11809794355650088
+    },
+    "won": {
+      "ci95": [
+        0.36384622388254173,
+        0.3738564479477484
+      ],
+      "n": 9926,
+      "rate": 0.3688513359151451
+    }
+  },
+  "opponent": "greedy",
+  "peak_rss_mib": 1.4262657165527344,
+  "player": "qtab:models/v5-qtab-s2/snapshots/g002500000/v.bin",
+  "rules": "lc1-2",
+  "sample": {
+    "controls_per_class": 10000,
+    "measured_per_class": 10000,
+    "sample_cap": null,
+    "seed": 31,
+    "test_per_class": 10000,
+    "train_per_class": 20000
+  },
+  "spec": "qtab:models/v5-qtab-s2/snapshots/g002500000/v.bin",
+  "table_sha256": "1690c767b68a6214eb1fb4d74d932198a13f67c744b7c6e61102eeb44c5e3704",
+  "table_tiebreak": "Moves that lose at once under the live rules (a third occurrence under lc1-2) are set aside unless every candidate does. Among the rest: from a won position, the moves to Loss(d) with the smallest d; from a drawn position, the moves whose child is not Win; from a lost position, the moves to Win(d) with the largest d. Uniform pick among them.",
+  "threads": 4,
+  "timings": {
+    "arena": 0.198756182,
+    "controls": 1.382584736,
+    "keep": 0.156233362,
+    "load": 0.289089603,
+    "sample": 1.46924699,
+    "sha256": 1.38742067,
+    "total": 5.889081429
+  }
+}

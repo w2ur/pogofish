@@ -16,8 +16,8 @@ Budget: 5,000,000 self-play games.
 | 2 % | 100,000 | 0.032 [0.024, 0.039] | 0.031 [0.024, 0.038] | 0.033 [0.025, 0.041] | 0.360 / 0.113 | loss, 10 plies |
 | 5 % | 250,000 | 0.035 [0.027, 0.043] | 0.036 [0.028, 0.045] | 0.038 [0.030, 0.047] | 0.361 / 0.114 | loss, 10 plies |
 | 10 % | 500,000 | 0.044 [0.036, 0.053] | 0.046 [0.037, 0.056] | 0.047 [0.038, 0.056] | 0.362 / 0.115 | loss, 10 plies |
-| 25 % | 1,250,000 | — | — | — | — | — |
-| 50 % | 2,500,000 | — | — | — | — | — |
+| 25 % | 1,250,000 | 0.072 [0.061, 0.083] | 0.075 [0.064, 0.087] | 0.071 [0.061, 0.082] | 0.364 / 0.117 | loss, 10 plies |
+| 50 % | 2,500,000 | 0.106 [0.093, 0.119] | 0.104 [0.091, 0.117] | 0.114 [0.101, 0.127] | 0.369 / 0.120 | loss, 14 plies |
 | 100 % | 5,000,000 | — | — | — | — | — |
 
 ## TD(λ) value net, one ply
@@ -69,8 +69,8 @@ Budget: 10,000 self-play games.
 
 | Criterion | Figures | Verdict |
 |---|---|---|
-| 1. Controls pass | 87 of 96 benches wrote a JSON (a bench whose controls fail writes none) | pending |
-| 2. No unfinished game | 0 unfinished over 87 benches | pending |
+| 1. Controls pass | 93 of 96 benches wrote a JSON (a bench whose controls fail writes none) | pending |
+| 2. No unfinished game | 0 unfinished over 93 benches | pending |
 | 3. qtab seed 1 reproduces round 4 | round 4 0.178 [0.163, 0.193] (v4-evaluation.md, exploratory 5,000,000-game run) | pending |
 | 3. td seed 1 reproduces round 4 | 0.783 [0.767, 0.800] against round 4's 0.779 [0.763, 0.796] (v4 main table row 8) | met |
 | 3. td seed 2 reproduces round 4 | 0.771 [0.754, 0.788] against round 4's 0.764 [0.747, 0.781] (v4 main table row 9) | met |

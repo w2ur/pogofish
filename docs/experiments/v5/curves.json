@@ -145,6 +145,48 @@
        "result": "loss",
        "plies": 10
       }
+     },
+     {
+      "pct": 25,
+      "file": "qtab-s1-p025.json",
+      "spec": "qtab:models/v5-qtab-s1/snapshots/g001250000/v.bin",
+      "games_trained": 1250000,
+      "score": 0.072,
+      "ci95": [
+       0.06111417220203963,
+       0.08288582779796036
+      ],
+      "scored_pairs": 1000,
+      "unfinished": 0,
+      "keep_won": 0.36446658887988326,
+      "keep_drawn": 0.11748986554562375,
+      "git_rev": "1017a5490f14d0b8c119bcaf7acc0d0a9315166b",
+      "game": {
+       "file": "games/qtab-s1-p025.json",
+       "result": "loss",
+       "plies": 10
+      }
+     },
+     {
+      "pct": 50,
+      "file": "qtab-s1-p050.json",
+      "spec": "qtab:models/v5-qtab-s1/snapshots/g002500000/v.bin",
+      "games_trained": 2500000,
+      "score": 0.106,
+      "ci95": [
+       0.09317632544747696,
+       0.11882367455252303
+      ],
+      "scored_pairs": 1000,
+      "unfinished": 0,
+      "keep_won": 0.36862083050135636,
+      "keep_drawn": 0.11980130575331241,
+      "git_rev": "1017a5490f14d0b8c119bcaf7acc0d0a9315166b",
+      "game": {
+       "file": "games/qtab-s1-p050.json",
+       "result": "loss",
+       "plies": 14
+      }
      }
     ],
     "2": [
@@ -252,6 +294,48 @@
        "result": "loss",
        "plies": 10
       }
+     },
+     {
+      "pct": 25,
+      "file": "qtab-s2-p025.json",
+      "spec": "qtab:models/v5-qtab-s2/snapshots/g001250000/v.bin",
+      "games_trained": 1250000,
+      "score": 0.0755,
+      "ci95": [
+       0.06431213658074571,
+       0.08668786341925429
+      ],
+      "scored_pairs": 1000,
+      "unfinished": 0,
+      "keep_won": 0.36428824074354127,
+      "keep_drawn": 0.1173693573907875,
+      "git_rev": "1017a5490f14d0b8c119bcaf7acc0d0a9315166b",
+      "game": {
+       "file": "games/qtab-s2-p025.json",
+       "result": "loss",
+       "plies": 14
+      }
+     },
+     {
+      "pct": 50,
+      "file": "qtab-s2-p050.json",
+      "spec": "qtab:models/v5-qtab-s2/snapshots/g002500000/v.bin",
+      "games_trained": 2500000,
+      "score": 0.104,
+      "ci95": [
+       0.09118832589419361,
+       0.11681167410580638
+      ],
+      "scored_pairs": 1000,
+      "unfinished": 0,
+      "keep_won": 0.36793455639509254,
+      "keep_drawn": 0.11928644169322415,
+      "git_rev": "1017a5490f14d0b8c119bcaf7acc0d0a9315166b",
+      "game": {
+       "file": "games/qtab-s2-p050.json",
+       "result": "loss",
+       "plies": 18
+      }
      }
     ],
     "3": [
@@ -356,6 +440,48 @@
       "git_rev": "427007ad4fb60124d7f0a235399d53f20205b355",
       "game": {
        "file": "games/qtab-s3-p010.json",
+       "result": "loss",
+       "plies": 14
+      }
+     },
+     {
+      "pct": 25,
+      "file": "qtab-s3-p025.json",
+      "spec": "qtab:models/v5-qtab-s3/snapshots/g001250000/v.bin",
+      "games_trained": 1250000,
+      "score": 0.0715,
+      "ci95": [
+       0.0606457014876043,
+       0.08235429851239569
+      ],
+      "scored_pairs": 1000,
+      "unfinished": 0,
+      "keep_won": 0.3642857489591473,
+      "keep_drawn": 0.11701413527829961,
+      "git_rev": "1017a5490f14d0b8c119bcaf7acc0d0a9315166b",
+      "game": {
+       "file": "games/qtab-s3-p025.json",
+       "result": "loss",
+       "plies": 14
+      }
+     },
+     {
+      "pct": 50,
+      "file": "qtab-s3-p050.json",
+      "spec": "qtab:models/v5-qtab-s3/snapshots/g002500000/v.bin",
+      "games_trained": 2500000,
+      "score": 0.114,
+      "ci95": [
+       0.10069940331141969,
+       0.12730059668858032
+      ],
+      "scored_pairs": 1000,
+      "unfinished": 0,
+      "keep_won": 0.36877906553289413,
+      "keep_drawn": 0.11926991114501964,
+      "git_rev": "1017a5490f14d0b8c119bcaf7acc0d0a9315166b",
+      "game": {
+       "file": "games/qtab-s3-p050.json",
        "result": "loss",
        "plies": 14
       }
