@@ -1265,6 +1265,132 @@
        "result": "loss",
        "plies": 14
       }
+     },
+     {
+      "pct": 2,
+      "file": "az100-s3-p002.json",
+      "spec": "net:models/v5-az-s3/pfw/iter_00004.pfw:100",
+      "games_trained": 200,
+      "score": 0.478,
+      "ci95": [
+       0.45804843036924836,
+       0.4979515696307516
+      ],
+      "scored_pairs": 1000,
+      "unfinished": 0,
+      "keep_won": 0.7079,
+      "keep_drawn": 0.3709333333333333,
+      "git_rev": "427007ad4fb60124d7f0a235399d53f20205b355",
+      "game": {
+       "file": "games/az100-s3-p002.json",
+       "result": "loss",
+       "plies": 28
+      }
+     },
+     {
+      "pct": 5,
+      "file": "az100-s3-p005.json",
+      "spec": "net:models/v5-az-s3/pfw/iter_00010.pfw:100",
+      "games_trained": 500,
+      "score": 0.732,
+      "ci95": [
+       0.7134300197693758,
+       0.7505699802306242
+      ],
+      "scored_pairs": 1000,
+      "unfinished": 0,
+      "keep_won": 0.8347833333333332,
+      "keep_drawn": 0.49775,
+      "git_rev": "1df73299ff8b9650d37949291a485b40a7e29abe",
+      "game": {
+       "file": "games/az100-s3-p005.json",
+       "result": "win",
+       "plies": 9
+      }
+     },
+     {
+      "pct": 10,
+      "file": "az100-s3-p010.json",
+      "spec": "net:models/v5-az-s3/pfw/iter_00020.pfw:100",
+      "games_trained": 1000,
+      "score": 0.8045,
+      "ci95": [
+       0.7884451176632512,
+       0.8205548823367488
+      ],
+      "scored_pairs": 1000,
+      "unfinished": 0,
+      "keep_won": 0.8541833333333332,
+      "keep_drawn": 0.53205,
+      "git_rev": "1df73299ff8b9650d37949291a485b40a7e29abe",
+      "game": {
+       "file": "games/az100-s3-p010.json",
+       "result": "win",
+       "plies": 9
+      }
+     },
+     {
+      "pct": 25,
+      "file": "az100-s3-p025.json",
+      "spec": "net:models/v5-az-s3/pfw/iter_00050.pfw:100",
+      "games_trained": 2500,
+      "score": 0.848,
+      "ci95": [
+       0.8333389966708067,
+       0.8626610033291933
+      ],
+      "scored_pairs": 1000,
+      "unfinished": 0,
+      "keep_won": 0.89285,
+      "keep_drawn": 0.5810166666666667,
+      "git_rev": "1df73299ff8b9650d37949291a485b40a7e29abe",
+      "game": {
+       "file": "games/az100-s3-p025.json",
+       "result": "win",
+       "plies": 9
+      }
+     },
+     {
+      "pct": 50,
+      "file": "az100-s3-p050.json",
+      "spec": "net:models/v5-az-s3/pfw/iter_00100.pfw:100",
+      "games_trained": 5000,
+      "score": 0.889,
+      "ci95": [
+       0.8761142524901002,
+       0.9018857475098998
+      ],
+      "scored_pairs": 1000,
+      "unfinished": 0,
+      "keep_won": 0.936,
+      "keep_drawn": 0.6644666666666666,
+      "git_rev": "1df73299ff8b9650d37949291a485b40a7e29abe",
+      "game": {
+       "file": "games/az100-s3-p050.json",
+       "result": "win",
+       "plies": 9
+      }
+     },
+     {
+      "pct": 100,
+      "file": "az100-s3-p100.json",
+      "spec": "net:models/v5-az-s3/pfw/iter_00200.pfw:100",
+      "games_trained": 10000,
+      "score": 0.889,
+      "ci95": [
+       0.8761142524901002,
+       0.9018857475098998
+      ],
+      "scored_pairs": 1000,
+      "unfinished": 0,
+      "keep_won": 0.95245,
+      "keep_drawn": 0.6988333333333333,
+      "git_rev": "1df73299ff8b9650d37949291a485b40a7e29abe",
+      "game": {
+       "file": "games/az100-s3-p100.json",
+       "result": "win",
+       "plies": 9
+      }
      }
     ]
    }
@@ -1654,6 +1780,132 @@
        "file": "games/az0-s3-p001.json",
        "result": "loss",
        "plies": 16
+      }
+     },
+     {
+      "pct": 2,
+      "file": "az0-s3-p002.json",
+      "spec": "net:models/v5-az-s3/pfw/iter_00004.pfw:0",
+      "games_trained": 200,
+      "score": 0.005,
+      "ci95": [
+       0.001914959080096773,
+       0.008085040919903228
+      ],
+      "scored_pairs": 1000,
+      "unfinished": 0,
+      "keep_won": 0.3828,
+      "keep_drawn": 0.1411,
+      "git_rev": "1df73299ff8b9650d37949291a485b40a7e29abe",
+      "game": {
+       "file": "games/az0-s3-p002.json",
+       "result": "loss",
+       "plies": 16
+      }
+     },
+     {
+      "pct": 5,
+      "file": "az0-s3-p005.json",
+      "spec": "net:models/v5-az-s3/pfw/iter_00010.pfw:0",
+      "games_trained": 500,
+      "score": 0.065,
+      "ci95": [
+       0.054389843761026985,
+       0.07561015623897302
+      ],
+      "scored_pairs": 1000,
+      "unfinished": 0,
+      "keep_won": 0.5948,
+      "keep_drawn": 0.2496,
+      "git_rev": "1df73299ff8b9650d37949291a485b40a7e29abe",
+      "game": {
+       "file": "games/az0-s3-p005.json",
+       "result": "loss",
+       "plies": 14
+      }
+     },
+     {
+      "pct": 10,
+      "file": "az0-s3-p010.json",
+      "spec": "net:models/v5-az-s3/pfw/iter_00020.pfw:0",
+      "games_trained": 1000,
+      "score": 0.1295,
+      "ci95": [
+       0.11522657229890663,
+       0.1437734277010934
+      ],
+      "scored_pairs": 1000,
+      "unfinished": 0,
+      "keep_won": 0.6414,
+      "keep_drawn": 0.3013,
+      "git_rev": "1df73299ff8b9650d37949291a485b40a7e29abe",
+      "game": {
+       "file": "games/az0-s3-p010.json",
+       "result": "loss",
+       "plies": 16
+      }
+     },
+     {
+      "pct": 25,
+      "file": "az0-s3-p025.json",
+      "spec": "net:models/v5-az-s3/pfw/iter_00050.pfw:0",
+      "games_trained": 2500,
+      "score": 0.277,
+      "ci95": [
+       0.2586807241008421,
+       0.29531927589915796
+      ],
+      "scored_pairs": 1000,
+      "unfinished": 0,
+      "keep_won": 0.6878,
+      "keep_drawn": 0.3549,
+      "git_rev": "1df73299ff8b9650d37949291a485b40a7e29abe",
+      "game": {
+       "file": "games/az0-s3-p025.json",
+       "result": "loss",
+       "plies": 14
+      }
+     },
+     {
+      "pct": 50,
+      "file": "az0-s3-p050.json",
+      "spec": "net:models/v5-az-s3/pfw/iter_00100.pfw:0",
+      "games_trained": 5000,
+      "score": 0.494,
+      "ci95": [
+       0.4735771599723548,
+       0.5144228400276453
+      ],
+      "scored_pairs": 1000,
+      "unfinished": 0,
+      "keep_won": 0.774,
+      "keep_drawn": 0.4414,
+      "git_rev": "1df73299ff8b9650d37949291a485b40a7e29abe",
+      "game": {
+       "file": "games/az0-s3-p050.json",
+       "result": "loss",
+       "plies": 30
+      }
+     },
+     {
+      "pct": 100,
+      "file": "az0-s3-p100.json",
+      "spec": "net:models/v5-az-s3/pfw/iter_00200.pfw:0",
+      "games_trained": 10000,
+      "score": 0.573,
+      "ci95": [
+       0.5534224773530204,
+       0.5925775226469795
+      ],
+      "scored_pairs": 1000,
+      "unfinished": 0,
+      "keep_won": 0.8239,
+      "keep_drawn": 0.4746,
+      "git_rev": "1df73299ff8b9650d37949291a485b40a7e29abe",
+      "game": {
+       "file": "games/az0-s3-p100.json",
+       "result": "win",
+       "plies": 19
       }
      }
     ]
