@@ -9,7 +9,7 @@ Pogofish is a browser-based Pogo board game with AI opponents trained via AlphaZ
 ### Rust workspace (`crates/`)
 - Rust 1.79+ (stable toolchain)
 - `pogofish-engine` — Game rules, state, legal moves, rulesets (`Uncapped`, LC1/LC2/LC3, LC1Draw; `RuleSet` parses and prints `uncapped`, `lc1-N`, `lc1d-N`, …)
-- `pogofish-infer` — Pure-Rust inference (no libtorch): input features, action indexing, MLP forward pass reading exported `.pfw` weights (and the TD value net's `.pfv`), and the neural MCTS shared with training (`Evaluator` trait), the `v4bench` binary (one protocol for every player)
+- `pogofish-infer` — Pure-Rust inference (no libtorch): input features, action indexing, MLP forward pass reading exported `.pfw` weights (and the TD value net's `.pfv`), and the neural MCTS shared with training (`Evaluator` trait), the `v4bench` binary (one protocol for every player), `v5game` (the game shown for a stage in round 5)
 - `pogofish-search` — Minimax (alpha-beta + TT), MCTS (PUCT), checkpointer, scripted `random`/`greedy` players (seeded, no dependency), the retrograde solver of the uncapped game (`retro.rs`, binary `retro`), the tabular value learner (`qtab.rs`, binary `qtrain`, no libtorch)
 - `pogofish-train` — AlphaZero training (tch-rs/libtorch, no gating, exact resume), self-play, TD(λ) value learning (`td_train`), `export_td`, `arena` evaluation binary
 - `pogofish-cli` — Terminal game (crossterm) against the bundled net: colour, level (simulations), hint, the AI's estimate, undo, saved game records; game logic in `session.rs`, key handling tested headless in `app.rs`
@@ -24,7 +24,7 @@ Pogofish is a browser-based Pogo board game with AI opponents trained via AlphaZ
 - Rust WASM engine (via `pogofish-wasm`)
 
 ### Tools (`tools/`)
-- Python 3.11+ — ONNX export sidecar (`export_onnx.py`), Elo ladder, TD curve and checkpoint-ladder plots (`plot_ladder.py`, `plot_td_curve.py`, `plot_az_ladder.py`), the repetition-outcome criteria (`repetition_outcome.py`, over the arena reports `scripts/v3-eval.sh` writes); PEP 723: `uv run`
+- Python 3.11+ — ONNX export sidecar (`export_onnx.py`), Elo ladder, TD curve and checkpoint-ladder plots (`plot_ladder.py`, `plot_td_curve.py`, `plot_az_ladder.py`), the repetition-outcome criteria (`repetition_outcome.py`, over the arena reports `scripts/v3-eval.sh` writes); round 5's tables and curve data (`v5_table.py`); PEP 723: `uv run`
 - Node.js — ONNX verification (`verify_onnx.js`)
 
 ## User-Facing Language
@@ -108,6 +108,8 @@ cargo build --release -p pogofish-search --bin qtrain
 ./target/release/qtrain models/v4-qtab-s1 --games 500000 --seed 1
 ./target/release/v4bench models/v3-solve qtab:models/v4-qtab-s1/v.bin --out qtab.json
 ```
+`--snapshot-at G1,G2,…` copies the run into `<run>/snapshots/g<games>/` (960 MB each) when it
+has played exactly that many games (0 = before the first); a write only, the run is unchanged.
 
 ### TD(λ) value learning
 ```bash
@@ -140,7 +142,22 @@ DYLD_LIBRARY_PATH=$(find target/release/build -path "*/torch-sys-*/out/libtorch/
 # resume (or raise --iterations to extend). A resumed run is bit-identical to an
 # uninterrupted one (weights, momentum, replay buffer, counters, generator).
 # No gating: every --checkpoint-every checkpoint is kept, to be rated with arena/ladder.
+# A fresh run (train or td_train) with --checkpoint-every > 0 also saves its seeded
+# initialisation as checkpoints/iter_00000.pt (the stage before any game).
 ```
+
+### Learning curves for the video (round 5)
+```bash
+# Every stage (0-100 % of each budget) of the tabular learner, TD and AlphaZero on seeds 1-3,
+# through v4bench and v5game; docs/experiments/v5-video.md (pre-registration and results).
+scripts/v5-eval.sh qtab|td|az SEED      # after the training commands of v5-video.md
+./target/release/v5game net:PFW:100 --out game.json   # game 0 of v4bench's arena, the player as White
+uv run tools/v5_table.py                # docs/experiments/v5/table.md and curves.json
+```
+`v5game` writes the moves from the initial position as `[from_cell, num_pieces, to_cell]`
+triples, the format `tools/article-visuals/sequence.mjs` replays. Where `download.pytorch.org`
+is unreachable (the cloud sessions), build against the PyPI `torch==2.4.0` wheel with
+`LIBTORCH_USE_PYTORCH=1` and its `torch/lib` on the library path.
 
 ### Solving the uncapped game (retrograde)
 ```bash
