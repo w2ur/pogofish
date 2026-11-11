@@ -87,3 +87,18 @@ Budget: 10,000 self-play games.
 | 4. az0 seed 1 at stage 0 below 0.1 | 0.005 [0.002, 0.009] | met |
 | 4. az0 seed 2 at stage 0 below 0.1 | 0.010 [0.006, 0.014] | met |
 | 4. az0 seed 3 at stage 0 below 0.1 | 0.002 [0.000, 0.004] | met |
+
+## Addendum: tabular learner against random (seed 1, not pre-registered with the round)
+
+| Stage | Games trained | Score vs random | Unfinished | Game shown |
+|---|---|---|---|---|
+| 0 % | 0 | 0.481 [0.461, 0.502] | 0 | win, 21 plies |
+| 1 % | 50,000 | 0.503 [0.483, 0.524] | 0 | win, 21 plies |
+| 2 % | 100,000 | 0.514 [0.493, 0.535] | 0 | win, 21 plies |
+| 5 % | 250,000 | 0.536 [0.515, 0.558] | 0 | win, 21 plies |
+| 10 % | 500,000 | 0.569 [0.548, 0.590] | 0 | win, 21 plies |
+| 25 % | 1,250,000 | 0.635 [0.615, 0.655] | 0 | win, 21 plies |
+| 50 % | 2,500,000 | 0.692 [0.671, 0.712] | 0 | win, 21 plies |
+| 100 % | 5,000,000 | 0.783 [0.766, 0.801] | 0 | win, 21 plies |
+
+Criterion: the last stage overlaps round 4's 0.784 [0.766, 0.801] and no game is unfinished: met.

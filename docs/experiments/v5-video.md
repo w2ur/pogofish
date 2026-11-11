@@ -198,3 +198,15 @@ pre-registered** with the rest of the round; its rules are fixed here, before it
   250,000-game snapshot) and checked against the same SHA-256 before their games are played.
 - **Self-play is not measured**: the same program against itself scores 0.5 by the colour
   swap, and against its stage-0 self it is this measure.
+
+**Addendum results.** Every retrained snapshot had the SHA-256 recorded for the first run
+(stages 0–5 % through a second replay stopped after 250,000 games). Score against random,
+seed 1: 0.481 [0.461, 0.502] at stage 0 (the random player itself), then 0.503, 0.514,
+0.536, 0.569, 0.635, 0.692 and **0.783 [0.766, 0.801] at 5,000,000 games**, which reproduces
+round 4's 0.784 [0.766, 0.801]; no unfinished game. It rises at every stage, and from 5 %
+(250,000 games) its interval lies above stage 0's. Table and curve data:
+`v5/table.md` (last section) and `qtab_vs_random` in `v5/curves.json`.
+
+The game shown does not change: the eight games of `v5/vs-random/games/` have the same
+moves, a 21-ply win for the program as White, at every stage including stage 0. Why the
+learnt values never change the program's choices in this game was not investigated.
