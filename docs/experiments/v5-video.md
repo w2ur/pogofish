@@ -123,4 +123,53 @@ No prediction is made on the shape of the curves between the first and the last 
 
 ## Results
 
-Not measured yet.
+All 96 benches ran; the full table, the keep rates and the criteria are generated in
+`v5/table.md`, the same figures as data for the video in `v5/curves.json`
+(`uv run tools/v5_table.py`). The SHA-256 of every tabular snapshot benched (then deleted)
+is in `v5/qtab-snapshots.txt`. Commands: `scripts/v5-eval.sh qtab|td|az SEED`, after the
+training commands above.
+
+**Criteria: all met.** Every bench passed its controls; no game of any bench was unfinished;
+the last stage reproduces round 4 for every seed with a reference (tabular seed 1: 0.178
+[0.163, 0.193], equal to round 4's to the third decimal of the interval; TD 0.783, 0.771,
+0.757; AlphaZero at 100 simulations 0.890, 0.894, 0.889, each interval overlapping round 4's
+for the same seed); and stage 0 scores below 0.10 for the tabular learner (0.031, the
+random player's score: with V = 0 everywhere it is that player), TD (0.050–0.070) and
+AlphaZero without search (0.002–0.010).
+
+Score against greedy, seed 1 (seeds 2 and 3 in `v5/table.md`):
+
+| Stage | Tabular | TD(λ) | AlphaZero, 100 sims | AlphaZero, no search |
+|---|---|---|---|---|
+| 0 % | 0.031 | 0.070 | 0.205 | 0.005 |
+| 1 % | 0.032 | 0.451 | 0.323 | 0.007 |
+| 2 % | 0.032 | 0.526 | 0.407 | 0.010 |
+| 5 % | 0.035 | 0.579 | 0.715 | 0.081 |
+| 10 % | 0.044 | 0.596 | 0.809 | 0.107 |
+| 25 % | 0.072 | 0.649 | 0.868 | 0.313 |
+| 50 % | 0.106 | 0.766 | 0.893 | 0.517 |
+| 100 % | 0.178 | 0.783 | 0.890 | 0.578 |
+
+Read: every program starts at or below random's level except AlphaZero with search, whose
+untrained net already scores 0.051–0.205 across seeds with 100 simulations (no prediction
+was made for it). TD rises fastest in share of its budget (0.38–0.45 after 1 %, 500 games);
+AlphaZero with search passes greedy's 0.493 between 2 % and 5 % (200 and 500 games) and is
+flat from 50 % (0.889–0.903 at 50 % and 100 %, overlapping intervals); its net alone climbs
+later and ends at 0.573–0.603. The tabular learner is still rising at the end of its 5,000,000
+games (0.106–0.114 at 50 %, 0.173–0.182 at 100 %) and stays below greedy. The stages are
+shares of different budgets: TD's 1 % is 500 games, the tabular learner's 50,000.
+
+**The game shown varies little.** Pair 0's opening leads to short games (9 to 22 plies). The
+tabular learner loses it at every stage; TD wins it at every stage, stage 0 included;
+AlphaZero with search loses it up to 2 % and wins it from 5 %; without search it loses it up
+to 10 %, wins at 25 %, loses at 50 % and wins at 100 %. For TD and the tabular learner the
+game therefore shows no change of outcome across stages; this is a fact of the
+pre-registered opening, not changed here. The captions carry the measured score, as fixed
+above.
+
+**Runtimes** (Linux x86-64 cloud machine, 4 cores, 15 GB, shared by the jobs below, so not
+comparable with round 4's M2 figures): the three tabular runs ran together, 7,291, 7,337 and
+7,300 s each, at 681–686 games per second over the run (5,000,000 games, 205.8–206.0 M plies,
+15–24 unfinished games each, 104.8–104.9 M positions visited, 45.6 % of the reachable ones,
+as round 4's exploratory run); TD 122, 120 and 111 s; the three AlphaZero runs together,
+2,332, 2,187 and 2,384 s, while the tabular runs and the benches also ran.

@@ -187,6 +187,27 @@
        "result": "loss",
        "plies": 14
       }
+     },
+     {
+      "pct": 100,
+      "file": "qtab-s1-p100.json",
+      "spec": "qtab:models/v5-qtab-s1/snapshots/g005000000/v.bin",
+      "games_trained": 5000000,
+      "score": 0.178,
+      "ci95": [
+       0.1625199231791836,
+       0.1934800768208164
+      ],
+      "scored_pairs": 1000,
+      "unfinished": 0,
+      "keep_won": 0.3762134635491123,
+      "keep_drawn": 0.12301850878763596,
+      "git_rev": "372d63e08dde0a8aab1b5722f246ae24b056315f",
+      "game": {
+       "file": "games/qtab-s1-p100.json",
+       "result": "loss",
+       "plies": 22
+      }
      }
     ],
     "2": [
@@ -336,6 +357,27 @@
        "result": "loss",
        "plies": 18
       }
+     },
+     {
+      "pct": 100,
+      "file": "qtab-s2-p100.json",
+      "spec": "qtab:models/v5-qtab-s2/snapshots/g005000000/v.bin",
+      "games_trained": 5000000,
+      "score": 0.1735,
+      "ci95": [
+       0.15797877244207453,
+       0.18902122755792544
+      ],
+      "scored_pairs": 1000,
+      "unfinished": 0,
+      "keep_won": 0.37502846604112094,
+      "keep_drawn": 0.12211507945510079,
+      "git_rev": "372d63e08dde0a8aab1b5722f246ae24b056315f",
+      "game": {
+       "file": "games/qtab-s2-p100.json",
+       "result": "loss",
+       "plies": 20
+      }
      }
     ],
     "3": [
@@ -482,6 +524,27 @@
       "git_rev": "1017a5490f14d0b8c119bcaf7acc0d0a9315166b",
       "game": {
        "file": "games/qtab-s3-p050.json",
+       "result": "loss",
+       "plies": 14
+      }
+     },
+     {
+      "pct": 100,
+      "file": "qtab-s3-p100.json",
+      "spec": "qtab:models/v5-qtab-s3/snapshots/g005000000/v.bin",
+      "games_trained": 5000000,
+      "score": 0.1825,
+      "ci95": [
+       0.16688047761679375,
+       0.19811952238320624
+      ],
+      "scored_pairs": 1000,
+      "unfinished": 0,
+      "keep_won": 0.37644099789739893,
+      "keep_drawn": 0.12218836021931438,
+      "git_rev": "372d63e08dde0a8aab1b5722f246ae24b056315f",
+      "game": {
+       "file": "games/qtab-s3-p100.json",
        "result": "loss",
        "plies": 14
       }
