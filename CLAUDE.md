@@ -152,8 +152,14 @@ DYLD_LIBRARY_PATH=$(find target/release/build -path "*/torch-sys-*/out/libtorch/
 # through v4bench and v5game; docs/experiments/v5-video.md (pre-registration and results).
 scripts/v5-eval.sh qtab|td|az SEED      # after the training commands of v5-video.md
 ./target/release/v5game net:PFW:100 --out game.json   # game 0 of v4bench's arena, the player as White
+# Addendum 2 (mosaics, puzzles), seed 1: scripts/v5-video.sh runs both binaries at every stage.
+./target/release/v5mosaic models/v3-solve net:PFW:100 --out m.json   # bench's first 50 pairs, each move judged by the table
+./target/release/v5puzzles docs/experiments/v3-solve/answers.json models/v3-solve net:PFW --out p.json
 uv run tools/v5_table.py                # docs/experiments/v5/table.md and curves.json
 ```
+`v5mosaic` replays the bench's own games (`arena::pair_games`, same generator streams);
+`--opponent random` and `--pairs N` (≤ 1,000). `v5puzzles` refuses to run unless the solved
+table confirms each puzzle's key move as the only winning one.
 `v5game` writes the moves from the initial position as `[from_cell, num_pieces, to_cell]`
 triples, the format `tools/article-visuals/sequence.mjs` replays. Where `download.pytorch.org`
 is unreachable (the cloud sessions), build against the PyPI `torch==2.4.0` wheel with

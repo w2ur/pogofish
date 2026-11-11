@@ -250,3 +250,43 @@ self-play games, not compute (an AlphaZero game runs 100 simulations per move).
 
 The tabular snapshots are retrained once more (`models/v5m-qtab-s1`) and each must match its
 recorded SHA-256 before use. Commands: `scripts/v5-video.sh`.
+
+### Addendum 2 results (2026-11-11)
+
+All runs completed; every tabular snapshot matched its recorded SHA-256. Tables:
+`v5/table.md` ("Addendum 2"); data: `v5/mosaic/`, `v5/puzzles/`, `v5/curves.json`.
+
+**Mosaics** (seed 1, 100 games each; share of the program's moves judged mistakes, †):
+
+- AlphaZero at 100 simulations: 19 games won, 52 % mistakes at 0 % → 90 won, 2 % at 100 %;
+  the largest step is between 2 % and 5 % of the budget (36 → 66 won, 27 → 12 %).
+- AlphaZero without search: 0 won, 69 % → 61 won, 12 %; nothing changes before 5 %.
+- TD: 5 won, 55 % → 77 won, 8 % (78 won, 5 % at 50 %); most of the change by 1 %.
+- Tabular learner against greedy: 5 won, 72 % → 16 won, 56 %; against random: 51 won,
+  62 % → 78 won, 51 %. Flat until 25–50 % of its 5,000,000 games.
+
+**Puzzles** (of 9, seed 1): AlphaZero with search 1.75 → 9 (9 from 25 % on); without
+search 0 → 5; TD 1 → 4, not monotone (0 at 10 %); tabular 0.56 → 0.58, fractional
+throughout: its tied sets include the key move among others, and this count barely moves.
+Puzzle 1 (the one shown): AlphaZero's search gives the key move 9 of 100 visits at 0 %,
+65 at 10 %, 87 at 100 %, and solves it from 10 % on; its prior alone picks it only at 50 %
+(0.47); at 100 % the prior prefers another move (0.50 against 0.23) and the search
+overturns it. TD never solves puzzle 1.
+
+**Race** (bench score against greedy, three seeds, `curves.json`; greedy's own score 0.493,
+random's 0.031):
+
+- AlphaZero at 100 simulations passes greedy between 200 and 500 games, all three seeds
+  (0.41–0.48 → 0.72–0.73).
+- TD reaches greedy's level at 1,000 games (0.513–0.526, the lower CI bound 0.494–0.508).
+- AlphaZero without search passes greedy between 2,500 and 5,000 games (0.494–0.538 at
+  5,000; seed 3 level with greedy, not above it) and is above it at 10,000 (0.573–0.603).
+- The tabular learner stays below greedy: 0.173–0.182 at 5,000,000 games.
+- **Worse than random:** the untrained net without search scores 0.002–0.010 at 0, 100
+  and 200 games, every seed below random's 0.031 (CI 0.024–0.038). Why was not
+  investigated (a guess: a fixed argmax over an uninformative prior repeats the same
+  moves, which `lc1-2` punishes; not checked).
+
+The axis counts self-play games, not compute: an AlphaZero game runs 100 simulations per
+move. Wall-clock here (Results, a shared machine): tabular 7,291–7,337 s for 5,000,000
+games, AlphaZero 2,187–2,384 s for 10,000, TD 111–122 s for 50,000.

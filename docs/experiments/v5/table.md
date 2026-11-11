@@ -109,8 +109,8 @@ Games won of 100, and the share of the program's moves that the solved uncapped 
 
 | Mosaic | 0 % | 1 % | 2 % | 5 % | 10 % | 25 % | 50 % | 100 % |
 |---|---|---|---|---|---|---|---|---|
-| Tabular learner vs random | 51 won, 62 % mistakes | 55 won, 63 % mistakes | — | — | — | — | — | — |
-| Tabular learner vs greedy | 5 won, 72 % mistakes | 5 won, 71 % mistakes | — | — | — | — | — | — |
+| Tabular learner vs random | 51 won, 62 % mistakes | 55 won, 63 % mistakes | 58 won, 62 % mistakes | 62 won, 61 % mistakes | 59 won, 62 % mistakes | 67 won, 60 % mistakes | 70 won, 59 % mistakes | 78 won, 51 % mistakes |
+| Tabular learner vs greedy | 5 won, 72 % mistakes | 5 won, 71 % mistakes | 5 won, 70 % mistakes | 5 won, 72 % mistakes | 7 won, 70 % mistakes | 8 won, 71 % mistakes | 11 won, 64 % mistakes | 16 won, 56 % mistakes |
 | TD(λ) vs greedy | 5 won, 55 % mistakes | 48 won, 25 % mistakes | 51 won, 22 % mistakes | 60 won, 19 % mistakes | 63 won, 18 % mistakes | 66 won, 15 % mistakes | 78 won, 5 % mistakes | 77 won, 8 % mistakes |
 | AlphaZero, 100 simulations, vs greedy | 19 won, 52 % mistakes | 39 won, 28 % mistakes | 36 won, 27 % mistakes | 66 won, 12 % mistakes | 79 won, 8 % mistakes | 81 won, 4 % mistakes | 84 won, 2 % mistakes | 90 won, 2 % mistakes |
 | AlphaZero, no search, vs greedy | 0 won, 69 % mistakes | 0 won, 68 % mistakes | 0 won, 68 % mistakes | 7 won, 54 % mistakes | 9 won, 43 % mistakes | 29 won, 28 % mistakes | 43 won, 20 % mistakes | 61 won, 12 % mistakes |
@@ -119,7 +119,7 @@ Games won of 100, and the share of the program's moves that the solved uncapped 
 
 | Player | 0 % | 1 % | 2 % | 5 % | 10 % | 25 % | 50 % | 100 % |
 |---|---|---|---|---|---|---|---|---|
-| Tabular learner | 0.56 | 0.57 | — | — | — | — | — | — |
+| Tabular learner | 0.56 | 0.57 | 0.57 | 0.57 | 0.57 | 0.57 | 0.57 | 0.58 |
 | TD(λ) | 1 | 1 | 2 | 1 | 0 | 1 | 2 | 4 |
 | AlphaZero, no search | 0 | 1 | 1 | 2 | 1 | 3 | 4 | 5 |
 | AlphaZero, 100 simulations | 1.75 | 2 | 2 | 4 | 6 | 9 | 9 | 9 |
