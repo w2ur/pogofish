@@ -173,3 +173,23 @@ comparable with round 4's M2 figures): the three tabular runs ran together, 7,29
 15–24 unfinished games each, 104.8–104.9 M positions visited, 45.6 % of the reachable ones,
 as round 4's exploratory run); TD 122, 120 and 111 s; the three AlphaZero runs together,
 2,332, 2,187 and 2,384 s, while the tabular runs and the benches also ran.
+
+## Addendum: the tabular learner against random (added after the results)
+
+Asked by the owner on 2026-11-11, after the results above: the tabular learner's curve
+against greedy stays low (0.031 → 0.178), while round 4's exploratory run beat the bench's
+`random` player clearly at 5,000,000 games (0.784 [0.766, 0.801]). This measure was **not
+pre-registered** with the rest of the round; its rules are fixed here, before it runs.
+
+- **Seed 1 only**, the same eight stages. The snapshots were deleted after the first benches,
+  so the run is retrained with the same command into `models/v5r-qtab-s1`; each snapshot's
+  `v.bin` must have the SHA-256 recorded in `v5/qtab-snapshots.txt` (the learner is
+  deterministic), else the stage is reported as failed and not benched.
+- **Measure**: `v4bench models/v3-solve qtab:<snapshot>/v.bin --opponent random`, defaults
+  otherwise (1,000 colour-swapped pairs, arena seed 404), JSON in
+  `v5/vs-random/qtab-s1-p<pct>.json`.
+- **Reading**: stage 0 is the `random` player itself (V = 0 everywhere), so its score is
+  expected near 0.5, with no criterion on it. The last stage must reproduce round 4's
+  0.784 [0.766, 0.801] by overlapping intervals; no unfinished game.
+- **Self-play is not measured**: the same program against itself scores 0.5 by the colour
+  swap, and against its stage-0 self it is this measure.
