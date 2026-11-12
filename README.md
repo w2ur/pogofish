@@ -2,8 +2,8 @@
 name: "Pogofish"
 tagline_fr: "Entraîner une IA à un jeu de plateau oublié, et mesurer ce qu'elle vaut vraiment."
 tagline_en: "Training an AI to play a forgotten board game, and measuring what it is really worth."
-facts_fr: "AlphaZero en Rust : gagne 85,5 à 88,7 % de 400 parties contre un joueur glouton, sur trois entraînements (borne basse à 95 % : 82,3 %). Inférence en Rust pur, jeu en terminal."
-facts_en: "AlphaZero in Rust: wins 85.5–88.7 % of 400 games against a greedy player, over three training runs (lowest 95 % bound: 82.3 %). Pure-Rust inference, terminal game."
+facts_fr: "AlphaZero en Rust : gagne 85,5 à 88,8 % de 400 parties contre un joueur glouton, sur trois entraînements (borne basse à 95 % : 82,3 %). Inférence en Rust pur, jeu en terminal."
+facts_en: "AlphaZero in Rust: wins 85.5–88.8 % of 400 games against a greedy player, over three training runs (lowest 95 % bound: 82.3 %). Pure-Rust inference, terminal game."
 -->
 
 **English** · [Français](README.fr.md)
@@ -32,7 +32,7 @@ The question I wanted to ask was simple, almost naive: does a machine that learn
 
 Pogo is played on nine squares: you move one, two or three pieces from the top of a stack, and a stack belongs to whoever's piece is on top. Pogofish is an AlphaZero written in Rust that learns it alone, an arena that measures it over colour-swapped random openings with 95 % confidence intervals, and a terminal game that plays the trained net with pure-Rust inference.
 
-Against a greedy player, the round-2 net scores between 0.855 and 0.887 over 400 games, depending on the training seed (three seeds). Of the four criteria fixed in advance, two are met, one is not met as pre-registered, and the fourth (ten games played by hand) was dropped by the owner: [`docs/experiments/v2-results.md`](docs/experiments/v2-results.md).
+Against a greedy player, the round-2 net scores between 0.855 and 0.888 over 400 games, depending on the training seed (three seeds). Of the four criteria fixed in advance, two are met, one is not met as pre-registered, and the fourth (ten games played by hand) was dropped by the owner: [`docs/experiments/v2-results.md`](docs/experiments/v2-results.md).
 
 The first round's evaluation did not hold. What went wrong, and which results it invalidates, is in [`docs/experiments/v1-verdict.md`](docs/experiments/v1-verdict.md).
 
