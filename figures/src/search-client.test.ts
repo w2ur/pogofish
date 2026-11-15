@@ -49,7 +49,6 @@ describe('the search client', () => {
       throw new Error('blocked by CSP');
     }],
     ['errors on load', () => new FakeWorker('broken')],
-    ['answers with a load error', () => new FakeWorker('error-reply')],
   ])('falls back to the main thread when the worker %s', async (_, createWorker) => {
     mainThread.mockClear();
     const client = new SearchClient({ createWorker: createWorker as () => WorkerLike, fallback: mainThread });
@@ -60,6 +59,44 @@ describe('the search client', () => {
     // The next search does not try the worker again.
     expect((await client.bestMove(initial(), 5, LC1_2)).via).toBe('main');
     expect(mainThread).toHaveBeenCalledTimes(2);
+  });
+
+  it('an error reply is a failure to retry, in a fresh worker, never a fall back for good', async () => {
+    mainThread.mockClear();
+    const workers: FakeWorker[] = [];
+    const modes: ('error-reply' | 'ok')[] = ['error-reply', 'ok'];
+    const client = new SearchClient({
+      createWorker: () => {
+        const w = new FakeWorker(modes[workers.length]);
+        workers.push(w);
+        return w;
+      },
+      fallback: mainThread,
+    });
+    await expect(client.bestMove(initial(), 25, LC1_2)).rejects.toThrow(/wasm 404/);
+    expect(workers[0]!.terminated).toBe(true);
+    expect(mainThread).not.toHaveBeenCalled();
+    // « Réessayer »: the next request starts a new worker, which answers.
+    const result = await client.bestMove(initial(), 25, LC1_2);
+    expect(result.via).toBe('worker');
+    expect(workers).toHaveLength(2);
+    expect(mainThread).not.toHaveBeenCalled();
+  });
+
+  it('a main-thread search that never answers fails after the timeout', async () => {
+    let seen: AbortSignal | undefined;
+    const client = new SearchClient({
+      createWorker: () => {
+        throw new Error('no worker');
+      },
+      fallback: (_req, signal) => {
+        seen = signal;
+        return new Promise(() => {});
+      },
+      timeoutMs: 20,
+    });
+    await expect(client.bestMove(initial(), 5, LC1_2)).rejects.toThrow(/^pogo-figures: .*did not answer/);
+    expect(seen!.aborted).toBe(true);
   });
 
   it('falls back when the worker never answers', async () => {

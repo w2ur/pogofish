@@ -1,7 +1,9 @@
 // The main thread's side of the search: one module worker, started on the
-// first request; when it cannot be created, or fails, the same search runs on
-// the main thread instead (it yields between batches, so the page stays
-// responsive). A new request supersedes the one in flight.
+// first request. When it cannot be created, crashes (error, messageerror) or
+// hangs, the same search runs on the main thread from then on (it yields
+// between batches, so the page stays responsive). An error the worker reports
+// is a failure the reader can retry, in a fresh worker. A new request
+// supersedes the one in flight.
 import { assetUrl, NET_FILE, WASM_FILE, workerUrl } from './assets';
 import type { Rules, State, Triple } from './engine';
 import type { SearchSnapshot } from './mcts';
@@ -28,7 +30,10 @@ export type Fallback = (req: SearchRequest, signal: AbortSignal) => Promise<Sear
 export interface ClientOptions {
   createWorker?: () => WorkerLike;
   fallback?: Fallback;
-  /** A worker that has not answered after this long is treated as failed (default 30 s). */
+  /**
+   * A worker that has not answered after this long is dropped for the main thread; a
+   * main-thread search that has not answered after this long fails (default 30 s).
+   */
   timeoutMs?: number;
 }
 
@@ -92,18 +97,41 @@ export class SearchClient {
       const worker = this.ensureWorker();
       if (worker) {
         const reply = await this.viaWorker(worker, req, controller.signal);
-        if (reply && !('error' in reply)) return { ...reply, via: 'worker' };
-        // The worker could not load or search: from now on the main thread does.
+        if (reply && 'error' in reply) {
+          // A failed fetch inside the worker may be transient, and the worker's
+          // module state caches it: the retry starts a fresh worker.
+          worker.terminate();
+          if (this.worker === worker) this.worker = undefined;
+          throw new Error(reply.error);
+        }
+        if (reply) return { ...reply, via: 'worker' };
+        // The worker could not start, crashed or hung: from now on the main thread searches.
         this.dropWorker();
       }
-      const reply = await this.fallback(req, controller.signal);
-      if (controller.signal.aborted) throw abortError();
+      const reply = await this.onMainThread(req, controller.signal);
       if ('error' in reply) throw new Error(reply.error);
       return { move: reply.move, snapshot: reply.snapshot, via: 'main' };
     } finally {
       signal?.removeEventListener('abort', onAbort);
       if (this.current === controller) this.current = undefined;
     }
+  }
+
+  /** The fallback, bounded by the same timeout as the worker: a hung fetch must not think forever. */
+  private onMainThread(req: SearchRequest, signal: AbortSignal): Promise<SearchReply> {
+    const controller = new AbortController();
+    const onAbort = (): void => controller.abort();
+    signal.addEventListener('abort', onAbort, { once: true });
+    return new Promise<SearchReply>((resolve, reject) => {
+      const timer = setTimeout(() => {
+        controller.abort();
+        reject(new Error(`pogo-figures: the search did not answer in ${this.timeoutMs} ms`));
+      }, this.timeoutMs);
+      this.fallback(req, controller.signal).then(
+        (reply) => (signal.aborted ? reject(abortError()) : resolve(reply)),
+        (error: unknown) => reject(signal.aborted ? abortError() : error),
+      ).finally(() => clearTimeout(timer));
+    }).finally(() => signal.removeEventListener('abort', onAbort));
   }
 
   /** Stops the worker; the next request starts a new one. */
