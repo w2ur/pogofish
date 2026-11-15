@@ -112,13 +112,17 @@ describe('the store', () => {
     expect(() => store.play(LOOP[0]!)).toThrow(/^pogo-figures: /);
   });
 
-  it('the reader can take the other side mid-game; it is kept for the next game', () => {
+  it('setReaderColour and setLevel during a game change only the next game', () => {
     const store = make();
     store.newGame('White', 'normal');
+    store.play(DEFAULT_GAME[0]!);
     store.setReaderColour('Red');
     store.setLevel('hard');
-    expect(store.current()).toMatchObject({ readerColour: 'Red', level: 'hard' });
+    expect(store.current()).toMatchObject({ readerColour: 'White', level: 'normal' });
     expect(store.preferences()).toEqual({ readerColour: 'Red', level: 'hard' });
+    // The finished game keeps the level it was played at.
+    for (const m of DEFAULT_GAME.slice(1)) store.play(m);
+    expect(store.lastFinished()).toMatchObject({ readerColour: 'White', level: 'normal' });
   });
 });
 

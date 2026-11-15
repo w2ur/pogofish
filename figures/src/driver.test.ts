@@ -90,7 +90,7 @@ describe('the driver', () => {
     driver.retry();
     expect(driver.status()).toBe('thinking');
     expect(calls).toHaveLength(2);
-    expect(calls[1]!.sims).toBe(400);
+    expect(calls[1]!.sims).toBe(100);
     expect(changes).toHaveBeenCalledTimes(3);
   });
 
@@ -129,11 +129,22 @@ describe('the driver', () => {
     }
   });
 
-  it('the reader switching sides hands the turn to the AI', () => {
-    const { store, calls } = setup();
+  it('the engine’s side stays the engine’s during a game', async () => {
+    const { store, calls, answer } = setup();
     store.newGame('White', 'normal');
-    expect(calls).toHaveLength(0);
+    // Choosing Red now is for the next game: the AI is not handed White's turn.
     store.setReaderColour('Red');
+    expect(calls).toHaveLength(0);
+    store.play(first(store.current()!.states[0]!));
+    expect(calls).toHaveLength(1);
+    // Choosing White while the AI thinks neither aborts its search nor gives the reader its move.
+    store.setReaderColour('White');
+    store.setLevel('hard');
+    expect(calls[0]!.signal!.aborted).toBe(false);
+    answer(0);
+    await flush();
+    expect(store.current()).toMatchObject({ readerColour: 'White', level: 'normal' });
+    expect(store.current()!.moves).toHaveLength(2);
     expect(calls).toHaveLength(1);
   });
 });

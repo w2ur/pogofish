@@ -373,3 +373,25 @@ describe('<pogo-board mode="follow">', () => {
     expect([live(inline), live(el)].filter((x) => x.includes('Rouge joue'))).toHaveLength(1);
   });
 });
+
+describe('<pogo-board> side and level during a game', () => {
+  it('pressing the AI’s colour while it thinks does not hand the reader its move', async () => {
+    mode = 'manual';
+    const el = await mount('en');
+    newGame(el);
+    const [from, n, to] = firstLegal(store.current()!.states[0]!);
+    cell(el, from).click();
+    key(cell(el, from), String(n));
+    cell(el, to).click();
+    expect($(el, '.turn').textContent).toBe('The AI is thinking…');
+    $<HTMLButtonElement>(el, '.choice[data-colour="Red"]').click();
+    expect(store.current()!.readerColour).toBe('White');
+    expect(pending).toHaveLength(1);
+    cell(el, 6).click();
+    expect(marks(el, 'picked')).toEqual([]);
+    pending[0]!.resolve();
+    await flush();
+    expect(store.current()!.moves).toHaveLength(2);
+    expect(store.preferences().readerColour).toBe('Red');
+  });
+});

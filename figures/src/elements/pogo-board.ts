@@ -414,10 +414,10 @@ export class PogoBoard extends PogoFigure {
     ui.caption.textContent = g?.label ? `${t(lang, 'resumed')}${colon(lang)} ${g.label}` : '';
     ui.caption.hidden = !g?.label;
 
-    // Setup: what the current game is played with, else what the next will be.
+    // Setup: the choices are for the next game; a game under way keeps its own sides and level.
     const prefs = st.preferences();
-    const side = g && !g.finished ? g.readerColour : prefs.readerColour;
-    const level: Level = g && !g.finished ? g.level : prefs.level;
+    const side = prefs.readerColour;
+    const level: Level = prefs.level;
     ui.sides.forEach((b) => b.setAttribute('aria-pressed', String(b.dataset.colour === side)));
     ui.levels.forEach((b) => b.setAttribute('aria-pressed', String(b.dataset.level === level)));
     if (ui.start) ui.start.hidden = g?.finished === true;

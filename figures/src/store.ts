@@ -43,8 +43,12 @@ export interface Store {
   newGame(readerColour: Colour, level: Level): void;
   /** Plays `m` in the current game; throws if there is none, it is over, or `m` is not legal. */
   play(m: Triple): void;
-  /** The reader takes the other side of the current game, and keeps it for the next. */
+  /**
+   * The side the reader takes in the NEXT game. A game under way keeps its sides:
+   * switching mid-game would let one reader play both colours.
+   */
   setReaderColour(c: Colour): void;
+  /** The level of the NEXT game; a game under way keeps its own, so `lastFinished().level` is the one played. */
   setLevel(level: Level): void;
   /** The colour and level the next new game starts with. */
   preferences(): { readerColour: Colour; level: Level };
@@ -296,15 +300,15 @@ export function createStore(o: StoreOptions): Store {
     setReaderColour(c) {
       restore();
       prefs = { ...prefs, readerColour: c };
-      if (current && !current.finished && current.readerColour !== c) current = { ...current, readerColour: c };
-      changed();
+      write();
+      emit('game');
     },
 
     setLevel(level) {
       restore();
       prefs = { ...prefs, level };
-      if (current && !current.finished && current.level !== level) current = { ...current, level };
-      changed();
+      write();
+      emit('game');
     },
   };
 
