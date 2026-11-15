@@ -19,6 +19,7 @@ use pogofish_engine::{
     apply_move_under, initial_state, is_terminal, legal_moves, GameState, Move, Outcome, RuleSet,
 };
 use pogofish_infer::mlp::Linear;
+pub use pogofish_infer::returns::lambda_returns;
 use pogofish_infer::value::ValueMlp;
 use pogofish_search::arena::{run_match, Agent, ArenaConfig};
 use pogofish_search::players::Scripted;
@@ -219,20 +220,6 @@ pub fn play_game(
         let next = apply_move_under(s, m, rules).expect("legal");
         states.push(next);
     }
-}
-
-/// λ-returns G_0..G_{T−1} from `values` = V(s_0)..V(s_T), where V(s_T) is the
-/// exact outcome for a terminated game or the net's estimate for a truncated
-/// one. Each value is from its own player-to-move's side, hence the sign flip.
-pub fn lambda_returns(values: &[f32], lambda: f32) -> Vec<f32> {
-    let t_end = values.len() - 1;
-    let mut g = vec![0.0; t_end];
-    let mut next_g = values[t_end];
-    for t in (0..t_end).rev() {
-        g[t] = -((1.0 - lambda) * values[t + 1] + lambda * next_g);
-        next_g = g[t];
-    }
-    g
 }
 
 /// Targets for one game under the current net.

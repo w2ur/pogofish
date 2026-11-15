@@ -7,4 +7,5 @@ pub mod features;
 pub mod mcts;
 pub mod mlp;
 pub mod players;
+pub mod returns;
 pub mod value;
