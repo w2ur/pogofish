@@ -1,0 +1,5 @@
+{
+  "table.json": { "gzip": 40000 },
+  "v5.json": { "gzip": 150000 },
+  "reach.json": { "gzip": 2000 }
+}

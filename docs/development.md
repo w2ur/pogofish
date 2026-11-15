@@ -51,6 +51,15 @@ cargo run --release -p pogofish-infer --example figures_fixture -- \
 
 `models/` is local, so only a machine holding the TD checkpoint can run it. It reads `figures/fixtures/lines.json` (perfect lines from the solved table, each with the `pogoq` command that printed it in `source`) and puzzle 5 of `docs/experiments/v5/puzzles/az-s1-p100.json`.
 
+The figures' numbers come from three committed files under `figures/public/data/` (Vite copies `public/` into `dist/`, the page fetches them lazily): `table.json` (the solved table's verdicts, the retrograde-analysis positions and the stored lines), `v5.json` (round-5 scores, stage games and mosaics, seed 1) and `reach.json` (positions first met at each ply). Each is generated, deterministic (two runs give the same bytes), and kept under a gzip size in `figures/budget.json`; raising one needs a one-line reason there. Types are in `figures/src/data.ts`, and `src/data.test.ts` checks the files against their sources.
+
+```bash
+# From figures/. Needs models/v3-solve/table.bin (local) and `cargo build --release -p pogoq`.
+node scripts/table-extract.mjs   # -> public/data/table.json; exit 1 = a control failed, 2 = no table or binary
+# From figures/. Needs only the committed docs/experiments/ files.
+node scripts/pack-v5.mjs         # -> public/data/v5.json and public/data/reach.json
+```
+
 ## The game itself
 
 Pogo is played on a 3×3 grid. Each player starts with 6 pieces in 3 stacks of 2. Pick 1–3 pieces from the top of a stack you own, jump them a Manhattan distance determined by the count (1→d1, 2→d2, 3→d1|d3), and land on any cell — stacking on top. The top piece owns the stack. Win by topping every remaining stack. Three rule variants resolve the infinite-game problem:
