@@ -1,5 +1,5 @@
 import { initial, type State } from '../engine';
-import { REDUCED_MOTION, intersect, observing, resetMedia, setMedia } from '../test-dom';
+import { REDUCED_MOTION, intersect, observersOf, observing, resetMedia, setMedia } from '../test-dom';
 import { PogoFigure } from './figure';
 
 class Fine extends PogoFigure {
@@ -37,6 +37,21 @@ class Flaky extends PogoFigure {
     if (++this.calls > 1) throw new Error('second render failed');
   }
 }
+/** Renders when the test resolves it, once per call; records the signal it was given. */
+class Slow extends PogoFigure {
+  calls = 0;
+  signals: AbortSignal[] = [];
+  release: Array<() => void> = [];
+  protected async render(signal: AbortSignal): Promise<void> {
+    const n = ++this.calls;
+    this.signals.push(signal);
+    await new Promise<void>((r) => this.release.push(r));
+    const p = document.createElement('p');
+    p.textContent = `render ${n}`;
+    this.stage.append(p);
+  }
+}
+customElements.define('kit-slow', Slow);
 customElements.define('kit-fine', Fine);
 customElements.define('kit-flaky', Flaky);
 customElements.define('kit-measured', Measured);
@@ -69,7 +84,10 @@ describe('PogoFigure', () => {
     expect(el.shadowRoot).not.toBeNull();
     expect(el.renders).toBe(0);
     expect(slot(el).hidden).toBe(false);
-    intersect(el);
+    // Two entries delivered before the first is handled: a browser may queue them.
+    const [observer] = observersOf(el);
+    observer!.fire(el);
+    observer!.fire(el);
     await flush();
     intersect(el);
     await flush();
@@ -114,6 +132,49 @@ describe('PogoFigure', () => {
     expect(slot(el).hidden).toBe(false);
     expect(error).toHaveBeenCalledTimes(1);
     error.mockRestore();
+  });
+
+  it('a disconnect during a pending render leaves one render on the stage and no stale state', async () => {
+    const el = mount<Slow>('kit-slow');
+    intersect(el);
+    await flush();
+    expect(el.calls).toBe(1);
+    const parent = el.parentElement!;
+    el.remove();
+    expect(el.signals[0]!.aborted).toBe(true);
+    expect(slot(el).hidden).toBe(false);
+    parent.append(el);
+    intersect(el);
+    await flush();
+    // The stale run finishes after the reconnect: it must not show or flip anything.
+    el.release[0]!();
+    await flush();
+    expect(slot(el).hidden).toBe(false);
+    expect(el.hasAttribute('data-failed')).toBe(false);
+    for (const r of el.release.slice(1)) r();
+    await flush();
+    await flush();
+    expect(el.calls).toBe(2);
+    expect([...el.shadowRoot!.querySelectorAll('.stage p')].map((p) => p.textContent)).toEqual(['render 2']);
+    expect(slot(el).hidden).toBe(true);
+  });
+
+  it('shows the fallback again at disconnect', async () => {
+    const el = mount<Fine>('kit-fine');
+    intersect(el);
+    await flush();
+    expect(slot(el).hidden).toBe(true);
+    el.remove();
+    expect(slot(el).hidden).toBe(false);
+  });
+
+  it('ignores an empty lang attribute when looking for the language', () => {
+    const el = mount<Fine>('kit-fine', 'fr');
+    const inner = document.createElement('div');
+    inner.setAttribute('lang', '');
+    el.parentElement!.append(inner);
+    inner.append(el);
+    expect(el.lang).toBe('fr');
   });
 
   it('ends with the fidelity label, in the language of the closest [lang]', () => {

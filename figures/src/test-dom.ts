@@ -83,6 +83,11 @@ export function intersect(el: Element): void {
   for (const o of [...observers]) if (o.targets.has(el)) o.fire(el);
 }
 
+/** The observers watching `el`, to fire one directly (a browser may deliver queued entries). */
+export function observersOf(el: Element): IntersectionObserverMock[] {
+  return [...observers].filter((o) => o.targets.has(el));
+}
+
 /** Live observers watching `el`; zero after a disconnect. */
 export function observing(el: Element): number {
   return [...observers].filter((o) => o.targets.has(el)).length;

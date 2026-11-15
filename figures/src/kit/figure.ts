@@ -35,15 +35,17 @@ export abstract class PogoFigure extends HTMLElement {
   private observer: IntersectionObserver | undefined;
   private controller = new AbortController();
   private rendered = false;
+  /** The run in flight, if any: a new run waits for it, so two never write the stage at once. */
+  private pending: Promise<void> = Promise.resolve();
 
   /** Aborted at disconnect: pass it to listeners and steppers. */
   protected get signal(): AbortSignal {
     return this.controller.signal;
   }
 
-  /** `fr` when the closest `[lang]` starts with it, else `en`. */
+  /** `fr` when the closest non-empty `[lang]` starts with it, else `en`. */
   override get lang(): Lang {
-    const tag = this.closest('[lang]')?.getAttribute('lang') ?? '';
+    const tag = this.closest('[lang]:not([lang=""])')?.getAttribute('lang') ?? '';
     return tag.toLowerCase().startsWith('fr') ? 'fr' : 'en';
   }
 
@@ -55,8 +57,12 @@ export abstract class PogoFigure extends HTMLElement {
     return matchMedia('(prefers-reduced-motion: reduce)').matches;
   }
 
-  /** Called once, when the figure first comes within half a viewport. May be async. */
-  protected abstract render(): void | Promise<void>;
+  /**
+   * Called once, when the figure first comes within half a viewport. May be async:
+   * `signal` aborts at disconnect, so pass it to fetches, and check it after an await
+   * before writing to the stage.
+   */
+  protected abstract render(signal: AbortSignal): void | Promise<void>;
 
   /** Hands a position to the playable board (Task 7's store listens for the event). */
   protected playFrom(state: State, label: string): void {
@@ -71,10 +77,12 @@ export abstract class PogoFigure extends HTMLElement {
     if (this.rendered) return;
     this.observer = new IntersectionObserver(
       (entries) => {
-        if (!entries.some((e) => e.isIntersecting)) return;
+        if (this.rendered || !entries.some((e) => e.isIntersecting)) return;
         this.observer?.disconnect();
         this.observer = undefined;
-        void this.run();
+        this.rendered = true;
+        const signal = this.signal;
+        this.pending = this.pending.then(() => this.run(signal));
       },
       { rootMargin: '50%' },
     );
@@ -86,8 +94,11 @@ export abstract class PogoFigure extends HTMLElement {
     this.observer = undefined;
     this.controller.abort();
     // A figure moved in the page renders afresh: its listeners went with the signal.
+    // Until then its fallback stands in, so there is no blank gap.
     this.rendered = false;
     this.stage.replaceChildren();
+    this.fallback.hidden = false;
+    this.removeAttribute('data-failed');
   }
 
   private buildFrame(): void {
@@ -119,13 +130,20 @@ export abstract class PogoFigure extends HTMLElement {
     root.append(frame, label);
   }
 
-  private async run(): Promise<void> {
-    this.rendered = true;
+  private async run(signal: AbortSignal): Promise<void> {
+    // Disconnected while an earlier run was in flight: this run is already stale.
+    if (signal.aborted) return;
     try {
-      await this.render();
+      await this.render(signal);
+      if (signal.aborted) {
+        // A stale run: what it drew belongs to no live figure.
+        this.stage.replaceChildren();
+        return;
+      }
       this.fallback.hidden = true;
       this.removeAttribute('data-failed');
     } catch (error) {
+      if (signal.aborted) return;
       console.error(`${this.localName}: render failed`, error);
       this.setAttribute('data-failed', '');
       const message = document.createElement('p');
