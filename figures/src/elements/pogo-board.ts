@@ -58,6 +58,8 @@ export class PogoBoard extends PogoFigure {
   private selection: Selection = null;
   private focusCell = 0;
   private collapsed = false;
+  /** « Nouvelle partie » was pressed once during a game: the next press abandons it. */
+  private confirming = false;
   private seen: { start: State; ply: number } | undefined;
   private drawn = '';
 
@@ -99,6 +101,11 @@ export class PogoBoard extends PogoFigure {
       side: (c) => this.deps.store.setReaderColour(c),
       level: (l) => this.deps.store.setLevel(l),
       newGame: () => this.newGame(),
+      cancelAbandon: () => {
+        if (!this.confirming) return;
+        this.confirming = false;
+        this.update();
+      },
       retry: () => this.deps.driver().retry(),
       toggle: () => {
         this.collapsed = !this.collapsed;
@@ -123,7 +130,17 @@ export class PogoBoard extends PogoFigure {
     this.update();
   }
 
+  /** With no game under way, starts one; during one, asks first (« Abandonner la partie ? »), then abandons it. */
   private newGame(): void {
+    const g = this.deps.store.current();
+    if (g && !g.finished && !this.confirming) {
+      this.confirming = true;
+      this.update();
+      // The button's name changes under focus; the live region says it too.
+      if (this.ui) this.ui.live.textContent = t(this.lang, 'abandon');
+      return;
+    }
+    this.confirming = false;
     const { readerColour, level } = this.deps.store.preferences();
     this.deps.store.newGame(readerColour, level);
   }
@@ -169,7 +186,11 @@ export class PogoBoard extends PogoFigure {
 
   /** 1/2/3 choose the count, Escape puts the stack down; anywhere in the board. */
   private onKey = (e: KeyboardEvent): void => {
-    if (e.key === 'Escape' && this.selection !== null) {
+    if (e.key === 'Escape' && this.confirming) {
+      e.preventDefault();
+      this.confirming = false;
+      this.update();
+    } else if (e.key === 'Escape' && this.selection !== null) {
       e.preventDefault();
       this.selection = null;
       this.update();
@@ -212,9 +233,10 @@ export class PogoBoard extends PogoFigure {
     ui.count.buttons.forEach((b, k) => (b.hidden = !available.includes(k + 1)));
     ui.count.set(sel ? (String(sel.count) as CountValue) : null);
 
-    // Status: the result, the AI thinking or failing, or the reader's turn.
+    // Status: the result, the AI thinking or failing, or the reader's turn, in one reserved area.
     const result = g ? resultText(lang, g) : null;
     ui.result.hidden = result === null;
+    ui.turn.parentElement!.hidden = result !== null;
     if (result) {
       ui.who.textContent = result.who;
       ui.how.textContent = result.how;
@@ -227,7 +249,6 @@ export class PogoBoard extends PogoFigure {
     else if (!readerTurn) line = t(lang, 'thinking');
     else line = `${t(lang, 'yourTurn')} · ${t(lang, colourKey(g.readerColour))}`;
     ui.turn.textContent = line;
-    ui.turn.hidden = this.mode === 'follow' || result !== null;
     ui.retry.hidden = status !== 'failed' || result !== null;
     ui.caption.textContent = g?.label ? `${t(lang, 'resumed')}${colon(lang)} ${g.label}` : '';
     ui.caption.hidden = !g?.label;
@@ -238,7 +259,16 @@ export class PogoBoard extends PogoFigure {
     const level: Level = prefs.level;
     ui.side.set(side);
     ui.level.set(level);
-    if (ui.start) ui.start.hidden = g?.finished === true;
+    // Below the board: the full setup outside a game, one line during one.
+    const underWay = g !== null && !g.finished;
+    if (!underWay) this.confirming = false;
+    ui.setup.hidden = underWay;
+    ui.summary.hidden = !underWay;
+    ui.summary.textContent = underWay ? `${t(lang, colourKey(g.readerColour))} · ${t(lang, g.level)}` : '';
+    ui.newGame.textContent = t(lang, this.confirming ? 'abandon' : 'newGame');
+    ui.newGame.classList.toggle('secondary', underWay);
+    // The follow board offers a new game only once this one is over.
+    ui.newGame.hidden = this.mode === 'follow' && !g?.finished;
 
     // Follow bar: whose turn, collapsible.
     if (ui.barStatus && ui.toggle) {

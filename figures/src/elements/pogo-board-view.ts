@@ -1,7 +1,7 @@
 // The DOM of <pogo-board>, built once per render: it holds no state and makes no
 // decision. pogo-board.ts owns the state and fills these nodes in update().
 import { NET_NAME } from '../assets';
-import { SCREEN_ORDER, formatStrength } from '../board-state';
+import { SCREEN_ORDER, formatStrength, longestResult } from '../board-state';
 import { initial, type Colour } from '../engine';
 import { boardLabels } from '../kit/board-labels';
 import { drawBoard } from '../kit/board-svg';
@@ -31,10 +31,12 @@ export interface Ui {
   count: ChoiceGroup<CountValue>;
   side: ChoiceGroup<Colour>;
   level: ChoiceGroup<Level>;
-  /** « Nouvelle partie » under the result. */
-  after: HTMLButtonElement;
-  /** « Nouvelle partie » in the setup, inline only. */
-  start?: HTMLButtonElement;
+  /** Side and level, shown when no game is under way. */
+  setup: HTMLElement;
+  /** « Blanc · Facile »: the game under way, in place of the setup. */
+  summary: HTMLElement;
+  /** The one « Nouvelle partie », below the board; asks once before abandoning a game. */
+  newGame: HTMLButtonElement;
   movesSummary: HTMLElement;
   movesList: HTMLOListElement;
   live: HTMLElement;
@@ -48,7 +50,10 @@ export interface Handlers {
   count(n: number): void;
   side(c: Colour): void;
   level(l: Level): void;
+  /** « Nouvelle partie », or its confirmation when a game is under way. */
   newGame(): void;
+  /** Focus left the confirmation: back to « Nouvelle partie ». */
+  cancelAbandon(): void;
   retry(): void;
   toggle(): void;
 }
@@ -78,14 +83,31 @@ export function buildView(lang: Lang, mode: 'inline' | 'follow', h: Handlers): U
   }
 
   const caption = el('p', 'caption');
+  // The status area: the turn line, or the result, over an invisible copy of the
+  // longest result, so it keeps one height and the board below never moves.
+  const status = el('div', 'status');
+  const turnBox = el('div', 'turn-box');
   const turn = el('p', 'turn');
   const retry = controlButton(t(lang, 'retry'), h.retry, true);
   retry.classList.add('retry');
-  const result = el('div', 'result');
-  const who = el('p', 'shout who');
-  const how = el('p', 'how');
-  const you = el('p', 'you');
-  result.append(who, how, you);
+  turnBox.append(turn, retry);
+  const resultBlock = (): { box: HTMLElement; who: HTMLElement; how: HTMLElement; you: HTMLElement } => {
+    const box = el('div', 'result');
+    const who = el('p', 'shout who');
+    const how = el('p', 'how');
+    const you = el('p', 'you');
+    box.append(who, how, you);
+    return { box, who, how, you };
+  };
+  const { box: result, who, how, you } = resultBlock();
+  const sizer = resultBlock();
+  sizer.box.className = 'result sizer';
+  sizer.box.setAttribute('aria-hidden', 'true');
+  const widest = longestResult(lang);
+  sizer.who.textContent = widest.who;
+  sizer.how.textContent = widest.how;
+  sizer.you.textContent = widest.you;
+  status.append(sizer.box, turnBox, result);
 
   const play = el('div', 'play');
   const svg = drawBoard(initial(), { labelRoom: true });
@@ -125,24 +147,19 @@ export function buildView(lang: Lang, mode: 'inline' | 'follow', h: Handlers): U
     choices: LEVELS.map((l) => ({ value: l, label: t(lang, l), ...(l === 'normal' ? { note: t(lang, 'measured') } : {}) })),
     onChoose: h.level,
   });
-  let setup: HTMLElement | undefined;
-  let start: HTMLButtonElement | undefined;
-  if (mode === 'inline') {
-    setup = el('div', 'setup');
-    start = controlButton(t(lang, 'newGame'), h.newGame);
-    start.dataset.role = 'new-game';
-    const row = el('div', 'controls');
-    row.append(start);
-    setup.append(side.element, level.element, row);
-  }
-  // At the end of a game the result is followed by its own « Nouvelle partie »;
-  // the setup's one gives way, so only one is ever shown.
-  const after = controlButton(t(lang, 'newGame'), h.newGame);
-  after.classList.add('after');
-  after.dataset.role = 'new-game';
-  const afterRow = el('div', 'controls');
-  afterRow.append(after);
-  result.append(afterRow);
+  // Below the board: the full setup when no game is under way, one summary line
+  // during one, then the one « Nouvelle partie ».
+  const setup = el('div', 'setup');
+  setup.append(side.element, level.element);
+  const summary = el('p', 'summary label');
+  const newGame = controlButton(t(lang, 'newGame'), h.newGame);
+  newGame.dataset.role = 'new-game';
+  newGame.addEventListener('blur', h.cancelAbandon);
+  const next = el('div', 'next');
+  const row = el('div', 'controls');
+  row.append(newGame);
+  if (mode === 'inline') next.append(setup, summary);
+  next.append(row);
 
   const moves = el('details', 'moves');
   const movesSummary = el('summary', 'label');
@@ -153,13 +170,11 @@ export function buildView(lang: Lang, mode: 'inline' | 'follow', h: Handlers): U
   live.setAttribute('role', 'status');
   live.setAttribute('aria-live', 'polite');
 
-  const status = el('div', 'status');
-  status.append(turn, retry);
-  body.append(caption, status, result, play, count.element);
-  if (setup) body.append(setup);
-  body.append(moves);
+  body.append(status, play, count.element, caption, next);
+  // The follow board is the compact one: no move list, no footer.
   if (mode === 'inline') {
     body.append(
+      moves,
       el('p', 'note', `${t(lang, 'net')} ${NET_NAME}. ${t(lang, 'netScore')} ${formatStrength(lang)} ${t(lang, 'netAgainst')}`),
     );
   }
@@ -184,8 +199,9 @@ export function buildView(lang: Lang, mode: 'inline' | 'follow', h: Handlers): U
     count,
     side,
     level,
-    after,
-    start,
+    setup,
+    summary,
+    newGame,
     movesSummary,
     movesList,
     live,

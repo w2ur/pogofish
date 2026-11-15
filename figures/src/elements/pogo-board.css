@@ -45,8 +45,36 @@
   color: var(--_ink-2);
 }
 
-.turn {
-  min-height: 1.55em;
+/*
+ * The status area: its children share one grid cell, and the invisible sizer
+ * holds the longest result, so the area keeps one height whatever it says.
+ */
+.status {
+  display: grid;
+}
+
+.status > * {
+  grid-area: 1 / 1;
+}
+
+.status .sizer {
+  visibility: hidden;
+}
+
+/* The turn line sits at the foot of the area, against the board it is about. */
+.turn-box {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  align-self: end;
+  gap: 8px;
+}
+
+.turn-box[hidden],
+.setup[hidden],
+.summary[hidden],
+.caption[hidden] {
+  display: none;
 }
 
 .result {
@@ -66,9 +94,26 @@
   overflow-wrap: anywhere;
 }
 
-/* The follow board's bar already names the winner. */
-.pb[data-mode='follow'] .result .who {
+/* The follow board is compact: its bar carries the turn and the result. */
+.pb[data-mode='follow'] .status .result,
+.pb[data-mode='follow'] .turn {
   display: none;
+}
+
+:host([mode='follow']) .fidelity {
+  display: none;
+}
+
+.next {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.summary {
+  margin: 0;
+  font-size: 12.8px;
+  color: var(--_ink);
 }
 
 .result .how {

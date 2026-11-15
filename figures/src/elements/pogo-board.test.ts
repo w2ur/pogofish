@@ -66,10 +66,12 @@ const live = (el: PogoBoard) => $(el, '.sr').textContent;
 /** The « Nouvelle partie » buttons the reader can see: exactly one, wherever the game stands. */
 const shownNewGame = (el: PogoBoard) =>
   [...el.shadowRoot!.querySelectorAll<HTMLButtonElement>('[data-role="new-game"]')].filter((b) => b.closest('[hidden]') === null);
+/** Starts a new game; during a game that takes the second press, as the reader's would. */
 const newGame = (el: PogoBoard) => {
   const shown = shownNewGame(el);
   expect(shown).toHaveLength(1);
   shown[0]!.click();
+  if (shown[0]!.textContent === 'Abandonner la partie\u202f?' || shown[0]!.textContent === 'Abandon this game?') shown[0]!.click();
 };
 const key = (target: Element, k: string) =>
   target.dispatchEvent(new KeyboardEvent('keydown', { key: k, bubbles: true, composed: true }));
@@ -236,19 +238,21 @@ describe('<pogo-board> inline', () => {
       await flush();
     }
     expect(store.lastFinished()).toMatchObject({ finished: true, result: 'W', endedByRepetition: false });
-    expect($(el, '.result').hidden).toBe(false);
-    expect($(el, '.result .who').textContent).toBe('Blanc gagne');
-    expect($(el, '.result .who').classList.contains('shout')).toBe(true);
-    expect($(el, '.result .how').textContent).toBe('Toutes les piles ont un sommet blanc.');
-    expect($(el, '.result .you').textContent).toBe('Vous gagnez.');
+    expect($(el, '.result:not(.sizer)').hidden).toBe(false);
+    expect($(el, '.result:not(.sizer) .who').textContent).toBe('Blanc gagne');
+    expect($(el, '.result:not(.sizer) .who').classList.contains('shout')).toBe(true);
+    expect($(el, '.result:not(.sizer) .how').textContent).toBe('Toutes les piles ont un sommet blanc.');
+    expect($(el, '.result:not(.sizer) .you').textContent).toBe('Vous gagnez.');
     expect(live(el)).toContain('Blanc gagne');
     expect(marks(el, 'target')).toEqual([]);
     expect($<HTMLDetailsElement>(el, 'details.moves').open).toBe(false);
     expect(el.shadowRoot!.querySelectorAll('details.moves li')).toHaveLength(9);
     expect($(el, 'details.moves summary').textContent).toBe('Coups joués (9)');
-    // « Nouvelle partie » follows the result, and is the only one shown.
+    // « Nouvelle partie » sits below the board, the only one shown, primary again.
     expect(shownNewGame(el)).toHaveLength(1);
-    expect(shownNewGame(el)[0]!.closest('.result')).not.toBeNull();
+    expect(shownNewGame(el)[0]!.closest('.next')).not.toBeNull();
+    expect(shownNewGame(el)[0]!.classList.contains('secondary')).toBe(false);
+    expect($(el, '.setup').hidden).toBe(false);
     expect($(el, '.counts').hidden).toBe(true);
     newGame(el);
     expect(store.current()!.moves).toHaveLength(0);
@@ -267,8 +271,8 @@ describe('<pogo-board> inline', () => {
       await flush();
     }
     expect(store.current()).toMatchObject({ finished: true, endedByRepetition: true, result: 'W' });
-    expect($(el, '.result .how').textContent).toBe('Red produced a position for the third time and loses, under the repetition rule.');
-    expect($(el, '.result .you').textContent).toBe('The AI wins.');
+    expect($(el, '.result:not(.sizer) .how').textContent).toBe('Red produced a position for the third time and loses, under the repetition rule.');
+    expect($(el, '.result:not(.sizer) .you').textContent).toBe('The AI wins.');
   });
 
   it('a figure’s playFrom shows the position on every board, with its label, the reader on the side to move', async () => {
@@ -325,6 +329,44 @@ describe('<pogo-board> inline', () => {
     expect(marks(el, 'picked')).toEqual([0]);
     newGame(el);
     expect(marks(el, 'picked')).toEqual([]);
+  });
+
+  it('during a game, the setup is one line and « Nouvelle partie » is secondary and asks once before abandoning', async () => {
+    mode = 'manual';
+    const el = await mount('fr');
+    expect($(el, '.setup').hidden).toBe(false);
+    expect(shownNewGame(el)[0]!.classList.contains('secondary')).toBe(false);
+    newGame(el);
+    expect($(el, '.setup').hidden).toBe(true);
+    expect($(el, '.summary').textContent).toBe('Blanc · Normal');
+    const button = shownNewGame(el)[0]!;
+    expect(button.classList.contains('secondary')).toBe(true);
+    const start = store.current();
+    button.focus();
+    button.click();
+    expect(store.current()).toBe(start);
+    expect(button.textContent).toBe('Abandonner la partie\u202f?');
+    expect(live(el)).toBe('Abandonner la partie\u202f?');
+    // Escape, or focus leaving, puts the question away.
+    key(button, 'Escape');
+    expect(button.textContent).toBe('Nouvelle partie');
+    button.click();
+    button.dispatchEvent(new FocusEvent('blur'));
+    expect(button.textContent).toBe('Nouvelle partie');
+    // Two presses in a row abandon the game for a new one.
+    button.click();
+    button.click();
+    expect(store.current()).not.toBe(start);
+    expect(store.lastFinished()).toBeNull();
+  });
+
+  it('the status area keeps one height: an invisible copy of the longest result holds it', async () => {
+    const el = await mount('en');
+    const sizer = $(el, '.status .sizer');
+    expect(sizer.getAttribute('aria-hidden')).toBe('true');
+    expect($(el, '.status .sizer .how').textContent).toBe('White produced a position for the third time and loses, under the repetition rule.');
+    // The visible variants share the sizer's grid cell (pogo-board.css), and the result is not inside the board's frame.
+    expect($(el, '.status').nextElementSibling).toBe($(el, '.play'));
   });
 
   it('a new game mid-way abandons the current one', async () => {
@@ -389,6 +431,25 @@ describe('<pogo-board mode="follow">', () => {
     expect(inline.shadowRoot!.querySelectorAll('details.moves li')).toHaveLength(2);
     // Announced once, by one board.
     expect([live(inline), live(el)].filter((x) => x.includes('Rouge joue'))).toHaveLength(1);
+  });
+});
+
+describe('<pogo-board mode="follow"> is compact', () => {
+  it('holds the board, the count and the bar only; « Nouvelle partie » once the game is over', async () => {
+    reply = (_s, ply) => DEFAULT_GAME[ply]!;
+    const el = await mount('fr', { mode: 'follow' });
+    store.newGame('White', 'normal');
+    await flush();
+    expect(el.shadowRoot!.querySelector('details.moves')).toBeNull();
+    expect(el.shadowRoot!.querySelector('.note')).toBeNull();
+    expect(el.shadowRoot!.querySelector('.setup')).toBeNull();
+    expect(shownNewGame(el)).toHaveLength(0);
+    for (let ply = 0; ply < DEFAULT_GAME.length; ply += 2) {
+      store.play(DEFAULT_GAME[ply]!);
+      await flush();
+    }
+    expect($(el, '.bar-status').textContent).toBe('Blanc gagne');
+    expect(shownNewGame(el)).toHaveLength(1);
   });
 });
 

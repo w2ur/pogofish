@@ -112,6 +112,25 @@ export function resultText(lang: Lang, g: GameRecord): ResultText | null {
   };
 }
 
+/**
+ * The longest result the board can show, line by line, in `lang`: the status area
+ * holds an invisible copy of it, so it keeps one height through the game and the
+ * board below never moves when the result appears.
+ */
+export function longestResult(lang: Lang): ResultText {
+  const longest = (xs: string[]): string => xs.reduce((a, b) => (b.length > a.length ? b : a));
+  const colours: Colour[] = ['White', 'Red'];
+  return {
+    who: longest(colours.map((c) => `${colourName(lang, c)} ${t(lang, 'wins')}`)),
+    how: longest([
+      t(lang, 'byStacksWhite'),
+      t(lang, 'byStacksRed'),
+      ...colours.map((c) => `${colourName(lang, c)} ${t(lang, 'byRepetition')}`),
+    ]),
+    you: longest([t(lang, 'youWin'), t(lang, 'aiWins')]),
+  };
+}
+
 /** The net's measured strength at « normal »: v2-results.md, criterion 1 (arena seed 7, 400 games). */
 export const NET_STRENGTH = { score: 0.855, ci95: [0.823, 0.887] as const };
 
