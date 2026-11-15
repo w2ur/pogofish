@@ -31,5 +31,9 @@ describe('strings', () => {
     );
     expect(fidelityLabel('en', 'measured', 'data/table.json')).toBe('Measured data · source: data/table.json');
     expect(fidelityLabel('en', 'measured')).toBe('Measured data');
+    expect(fidelityLabel('fr', 'live', undefined, 'gameLc12')).toBe('Calcul en direct · règle des répétitions (lc1-2)');
+    expect(fidelityLabel('en', 'measured', 'data/v5.json', 'gameLc12')).toBe(
+      'Measured data · repetition rule (lc1-2) · source: data/v5.json',
+    );
   });
 });

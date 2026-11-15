@@ -26,6 +26,8 @@ export abstract class PogoFigure extends HTMLElement {
   static fidelity: Fidelity = 'illustrative';
   /** File named under a `measured` label. */
   static source?: string;
+  /** The game a figure is computed in, named in its fidelity label. */
+  static game?: 'gameA' | 'gameLc12';
   /** Height the stage keeps before rendering, so the figure does not shift the page. */
   static stageMinHeight = '0px';
 
@@ -116,7 +118,7 @@ export abstract class PogoFigure extends HTMLElement {
 
     const label = document.createElement('p');
     label.className = 'fidelity';
-    const text = fidelityLabel(this.lang, ctor.fidelity, ctor.source);
+    const text = fidelityLabel(this.lang, ctor.fidelity, ctor.source, ctor.game);
     const source = ctor.fidelity === 'measured' ? ctor.source : undefined;
     if (source) {
       label.append(text.slice(0, -source.length));

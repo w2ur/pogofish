@@ -1,8 +1,10 @@
+import { PogoBoard } from './elements/pogo-board';
+
 export { manifest } from './manifest';
 
-/** Registers every `<pogo-…>` element. */
+/** Registers every `<pogo-…>` element; safe to call twice. */
 export function defineAll(): void {
-  // The registry is empty until the first figure lands.
+  if (!customElements.get('pogo-board')) customElements.define('pogo-board', PogoBoard);
 }
 
 export * from './engine';

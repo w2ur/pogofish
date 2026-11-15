@@ -1,5 +1,7 @@
 // The harness: every kit surface on the page tokens, in both themes and
 // languages. Later element tasks add their tags here.
+import { configureAssets } from '../src/assets';
+import { defineAll } from '../src/index';
 import { initial, legal, moveName, play, ready, type Move, type State } from '../src/engine';
 import { drawBoard } from '../src/kit/board-svg';
 import { controlButton, transport } from '../src/kit/controls';
@@ -90,6 +92,14 @@ function demo(kind: Fidelity, source?: string): CustomElementConstructor {
   };
 }
 
+// The dev server serves the binaries from public/ at /pogo/ and the worker from
+// its source; ?worker=broken points it at a missing file, to see the fallback.
+configureAssets({
+  base: '/pogo/',
+  worker: new URLSearchParams(location.search).get('worker') === 'broken' ? '/pogo/no-such-worker.js' : '/pogo/src/search.worker.ts',
+});
+defineAll();
+
 customElements.define('kit-demo-live', demo('live'));
 customElements.define('kit-demo-measured', demo('measured', 'data/table.json'));
 customElements.define('kit-demo-illustrative', demo('illustrative'));
@@ -150,6 +160,20 @@ async function build(): Promise<void> {
     );
   }
   app.append(kitBox(boards));
+
+  app.append(heading('<pogo-board> · inline'));
+  const board = document.createElement('pogo-board');
+  board.id = 'board-inline';
+  board.innerHTML = `<p>${l === 'fr' ? 'Sans JavaScript, le plateau ne se joue pas.' : 'Without JavaScript, the board cannot be played.'}</p>`;
+  board.style.maxWidth = '640px';
+  app.append(board);
+
+  app.append(heading('<pogo-board mode="follow"> · appears once a game is under way'));
+  const follow = document.createElement('pogo-board');
+  follow.id = 'board-follow';
+  follow.setAttribute('mode', 'follow');
+  follow.style.maxWidth = '320px';
+  app.append(follow);
 
   app.append(heading('PogoFigure + Stepper · one per fidelity'));
   for (const tag of ['kit-demo-live', 'kit-demo-measured', 'kit-demo-illustrative']) {

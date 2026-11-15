@@ -1,0 +1,215 @@
+/*
+ * <pogo-board>: the playable board. Built on the kit sheet; it adds layout only.
+ * Nothing here names a colour: every paint is a kit token.
+ */
+
+/* A follow board waits, out of the page, until a game is under way. */
+:host([data-idle]) {
+  display: none;
+}
+
+/* Collapsed to its bar, it drops its fidelity line too. */
+:host([data-collapsed]) .fidelity {
+  display: none;
+}
+
+.pb {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  max-width: 100%;
+}
+
+.pb[data-mode='follow'] {
+  max-width: 320px;
+}
+
+.body {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.body[hidden] {
+  display: none;
+}
+
+.caption,
+.turn,
+.result p,
+.note {
+  margin: 0;
+}
+
+.caption {
+  color: var(--_ink-2);
+}
+
+.turn {
+  min-height: 1.55em;
+}
+
+.result {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.result[hidden],
+.counts[hidden],
+.counts .control[hidden] {
+  display: none;
+}
+
+.result .who {
+  font-size: clamp(28px, 3.4vw, 44px);
+  overflow-wrap: anywhere;
+}
+
+/* The follow board's bar already names the winner. */
+.pb[data-mode='follow'] .result .who {
+  display: none;
+}
+
+.result .how {
+  color: var(--_ink-2);
+}
+
+/* The board: the SVG draws, nine buttons on top of it take the input. */
+.play {
+  position: relative;
+  width: min(100%, 400px);
+  aspect-ratio: 1;
+}
+
+.pb[data-mode='follow'] .play {
+  width: min(100%, 240px);
+}
+
+.play .board {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+}
+
+.cells {
+  position: absolute;
+  inset: 0;
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  grid-template-rows: repeat(3, 1fr);
+}
+
+.cell-button {
+  appearance: none;
+  margin: 0;
+  padding: 0;
+  border: 0;
+  border-radius: 0;
+  background: transparent;
+  cursor: default;
+}
+
+.cell-button[data-actionable] {
+  cursor: pointer;
+}
+
+.cell-button:focus-visible {
+  outline: 2px solid var(--_ink);
+  outline-offset: -4px;
+}
+
+/* The count chooser keeps its line when hidden, so the board never shifts. */
+.counts {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px;
+  min-height: 44px;
+}
+
+.counts[data-off] {
+  visibility: hidden;
+}
+
+.counts .control {
+  width: 44px;
+  padding: 0;
+}
+
+.counts .label,
+.group > .label {
+  font-size: 12.8px;
+  color: var(--_muted);
+}
+
+.setup {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.group {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px;
+}
+
+.group > .label {
+  flex-basis: 100%;
+}
+
+/* A chosen option keeps the outlined block and gains a heavy foot: only « Nouvelle partie » is filled. */
+.choice[aria-pressed='true'] {
+  border-bottom-width: 6px;
+  padding-top: 4px;
+}
+
+.choice .tag {
+  font-size: 12.8px;
+  color: var(--_muted);
+}
+
+.bar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+}
+
+.bar-status {
+  margin: 0;
+  font-size: 12.8px;
+}
+
+.moves summary {
+  display: flex;
+  align-items: center;
+  min-height: 44px;
+  font-size: 12.8px;
+  color: var(--_ink);
+  cursor: pointer;
+}
+
+.moves ol {
+  margin: 0;
+  padding-left: 4ch;
+  columns: 2 12ch;
+}
+
+.note {
+  font-size: 12.8px;
+  color: var(--_muted);
+}
+
+/* Read by assistive technology, not drawn. */
+.sr {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  clip-path: inset(50%);
+  white-space: nowrap;
+}

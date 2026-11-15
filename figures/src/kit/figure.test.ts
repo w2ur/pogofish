@@ -21,6 +21,12 @@ class Measured extends PogoFigure {
   static override source = 'data/table.json';
   protected async render(): Promise<void> {}
 }
+class MeasuredLc12 extends PogoFigure {
+  static override fidelity = 'measured' as const;
+  static override source = 'data/v5.json';
+  static override game = 'gameLc12' as const;
+  protected async render(): Promise<void> {}
+}
 class Broken extends PogoFigure {
   protected render(): void {
     throw new Error('no engine');
@@ -56,6 +62,7 @@ customElements.define('kit-fine', Fine);
 customElements.define('kit-flaky', Flaky);
 customElements.define('kit-measured', Measured);
 customElements.define('kit-broken', Broken);
+customElements.define('kit-measured-lc12', MeasuredLc12);
 customElements.define('kit-rejected', Rejected);
 
 const flush = () => new Promise((r) => setTimeout(r, 0));
@@ -187,6 +194,12 @@ describe('PogoFigure', () => {
     expect(fr.shadowRoot!.lastElementChild?.classList.contains('fidelity')).toBe(true);
     const m = mount<Measured>('kit-measured', 'en');
     expect(fidelity(m)).toBe('Measured data · source: data/table.json');
+  });
+
+  it('names the game in the label, and keeps the source file in its own span', () => {
+    const el = mount<MeasuredLc12>('kit-measured-lc12', 'fr');
+    expect(fidelity(el)).toBe('Données mesurées · règle des répétitions (lc1-2) · source : data/v5.json');
+    expect(el.shadowRoot!.querySelector('.fidelity .source')!.textContent).toBe('data/v5.json');
   });
 
   it('falls back to English with no [lang] ancestor', () => {

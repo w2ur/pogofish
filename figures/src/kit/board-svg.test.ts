@@ -96,4 +96,15 @@ describe('drawBoard', () => {
       expect(el.getAttribute('color')).toBeNull();
     }
   });
+
+  it('draws marks above every stack, so a destination ring is never hidden', () => {
+    const svg = drawBoard(mid, { marks: [{ cell: 4, kind: 'target' }, { cell: 2, kind: 'picked' }] });
+    const children = [...svg.children];
+    const lastStack = Math.max(...children.map((n, i) => (n.classList.contains('stack') ? i : -1)));
+    const target = svg.querySelector('.mark.target[data-cell="4"]')!;
+    const picked = svg.querySelector('.mark.picked[data-cell="2"]')!;
+    expect(children.indexOf(target)).toBeGreaterThan(lastStack);
+    expect(children.indexOf(picked)).toBeGreaterThan(lastStack);
+    expect(svg.querySelectorAll('.mark')).toHaveLength(2);
+  });
 });

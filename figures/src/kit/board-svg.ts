@@ -21,6 +21,11 @@ export interface BoardOptions {
    * 11px — do not ask for labels on a board drawn smaller than that.
    */
   labels?: boolean;
+  /**
+   * Rings drawn above the stacks, so a stack never hides one: `target` is the
+   * dashed ring of what can be tapped, `picked` the solid ink ring of a lifted stack.
+   */
+  marks?: { cell: number; kind: 'target' | 'picked' }[];
   /** Text alternative, in the figure's language. Without it the drawing is hidden from assistive tech. */
   title?: string;
 }
@@ -112,6 +117,11 @@ export function drawBoard(s: State, o: BoardOptions = {}): SVGSVGElement {
       el('circle', { class: 'ring', cx, cy, r: radius - 1 }, g);
     });
   });
+
+  for (const { cell, kind } of o.marks ?? []) {
+    const [x, y] = corner(cell);
+    el('circle', { class: `mark ${kind}`, 'data-cell': cell, cx: x + centre, cy: y + centre, r: radius + 10 }, svg);
+  }
 
   return svg;
 }

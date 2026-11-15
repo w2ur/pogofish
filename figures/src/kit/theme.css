@@ -259,12 +259,24 @@ slot[hidden],
   mix-blend-mode: multiply;
 }
 
-/* What moved: a dashed ring where it left, a solid frame where it landed. */
-.board .from {
+/*
+ * What moved: a dashed ring where it left, a solid frame where it landed.
+ * On a playable board the same dashed ring marks what can be tapped, and a
+ * solid ink ring the stack that is lifted.
+ */
+.board .from,
+.board .target {
   fill: none;
   stroke: var(--_edge);
   stroke-width: 2px;
   stroke-dasharray: 5 4;
+  vector-effect: non-scaling-stroke;
+}
+
+.board .picked {
+  fill: none;
+  stroke: var(--_ink);
+  stroke-width: 3px;
   vector-effect: non-scaling-stroke;
 }
 

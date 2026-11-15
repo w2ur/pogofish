@@ -1,2 +1,2 @@
-/** Names of the custom elements this package registers; none yet. */
-export const manifest: string[] = [];
+/** Names of the custom elements this package registers. */
+export const manifest: string[] = ['pogo-board'];
