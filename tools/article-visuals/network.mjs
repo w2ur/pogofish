@@ -2,13 +2,15 @@
 // The layer sizes are the measured net's (rounds 4 and 5: mover-relative-repetition features,
 // 9 × 14 + 1 = 127 inputs, hidden 128 and 64, one tanh output); only a sample of each layer's
 // neurons is drawn, and the caption says so.
-// Usage: node network.mjs OUT.png [MOVES_JSON]   (MOVES_JSON: moves played from the start)
+// Usage: node network.mjs OUT.png [MOVES_JSON] [--bare]   (MOVES_JSON: moves from the start; --bare: no text)
 import fs from 'node:fs';
 import * as w from '../../wasm-pkg/pogofish_wasm.js';
 import { chromium } from '../../app/node_modules/playwright-core/index.mjs';
 w.initSync({ module: fs.readFileSync(new URL('../../wasm-pkg/pogofish_wasm_bg.wasm', import.meta.url)) });
 
-const [out, movesJ = '[[2,1,1],[7,2,1],[0,1,1]]'] = process.argv.slice(2);
+const args = process.argv.slice(2);
+const bare = args.includes('--bare'); // no text at all: the article's prose carries it
+const [out, movesJ = '[[2,1,1],[7,2,1],[0,1,1]]'] = args.filter(a => a !== '--bare');
 let s = w.initial_state();
 for (const [a, n, b] of JSON.parse(movesJ)) s = w.apply_move(s, { from_cell: a, num_pieces: n, to_cell: b });
 
@@ -46,6 +48,7 @@ for (const l of layers) {
     svg += `<rect x="${l.x - 11}" y="${mid - 9}" width="22" height="18" fill="var(--page)"/>`;
     for (const d of [-5, 0, 5]) svg += `<circle cx="${l.x}" cy="${mid + d}" r="1.8" fill="var(--paper3)"/>`;
   }
+  if (bare) continue;
   svg += `<text x="${l.x}" y="${H - 8}" text-anchor="middle" class="lbl">${l.label}</text>`;
   if (l.sub) svg += `<text x="${l.x}" y="${l.n === 1 ? (top + bot) / 2 + 40 : 18}" text-anchor="middle" class="sub">${l.sub}</text>`;
 }
@@ -62,11 +65,11 @@ h1{font-size:28px;font-weight:700;margin:0 0 6px}
 .sub{font:14px system-ui,-apple-system,sans-serif;fill:var(--paper3)}
 .foot{font-size:14px;color:var(--paper3);margin-top:16px;max-width:1120px;line-height:1.45}
 </style></head><body><div class="sheet">
-<h1>Un réseau de neurones qui note une position</h1>
-<p class="lead">La position est traduite en ${INPUTS} nombres (pour chaque case, à qui appartient chaque pièce de la pile, qui est au sommet, la hauteur ; et combien de fois la position est déjà apparue). Chaque neurone fait une somme pondérée des nombres de la couche précédente, la passe dans une fonction simple, et transmet le résultat. Au bout : une note, de −1 (perdu) à +1 (gagné). Apprendre, c’est ajuster les poids, un peu après chaque partie.</p>
+${bare ? '' : `<h1>Un réseau de neurones qui note une position</h1>
+<p class="lead">La position est traduite en ${INPUTS} nombres (pour chaque case, à qui appartient chaque pièce de la pile, qui est au sommet, la hauteur ; et combien de fois la position est déjà apparue). Chaque neurone fait une somme pondérée des nombres de la couche précédente, la passe dans une fonction simple, et transmet le résultat. Au bout : une note, de −1 (perdu) à +1 (gagné). Apprendre, c’est ajuster les poids, un peu après chaque partie.</p>`}
 <div class="row"><div class="b">${board(s)}</div><div class="arrow">→</div>
 <svg width="${W}" height="${H}" viewBox="0 0 ${W} ${H}">${svg}</svg></div>
-<p class="foot">Le réseau TD(λ) de l’article : ${INPUTS} entrées, deux couches de ${HIDDEN[0]} et ${HIDDEN[1]} neurones, une sortie, soit ${fmt(params)} poids réglables. Seule une partie des neurones et des liaisons est dessinée.</p>
+${bare ? '' : `<p class="foot">Le réseau TD(λ) de l’article : ${INPUTS} entrées, deux couches de ${HIDDEN[0]} et ${HIDDEN[1]} neurones, une sortie, soit ${fmt(params)} poids réglables. Seule une partie des neurones et des liaisons est dessinée.</p>`}
 </div></body></html>`;
 
 const browser = await chromium.launch();
