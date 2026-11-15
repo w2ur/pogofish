@@ -53,6 +53,12 @@ describe('drawBoard', () => {
     }
   });
 
+  it('sizes labels in viewBox units, so they follow the rendered width rather than the size option', () => {
+    const font = (size: number) =>
+      drawBoard(initial(), { size, labels: true }).querySelector('.label')!.getAttribute('font-size');
+    expect(font(160)).toBe(font(320));
+  });
+
   it('draws no labels unless asked', () => {
     expect(drawBoard(initial()).querySelectorAll('.label')).toHaveLength(0);
   });
@@ -86,6 +92,8 @@ describe('drawBoard', () => {
     for (const el of svg.querySelectorAll('*')) {
       expect(el.getAttribute('fill')).toBeNull();
       expect(el.getAttribute('stroke')).toBeNull();
+      expect(el.getAttribute('style')).toBeNull();
+      expect(el.getAttribute('color')).toBeNull();
     }
   });
 });

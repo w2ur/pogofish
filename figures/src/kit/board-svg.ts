@@ -5,6 +5,7 @@ import type { State } from '../engine';
 const NS = 'http://www.w3.org/2000/svg';
 const CELL = 100;
 const SIDE = 3 * CELL;
+const LABEL_UNITS = 16;
 
 export interface BoardOptions {
   /** Origin of the move that led to `s`: carries the dashed ring. */
@@ -14,7 +15,11 @@ export interface BoardOptions {
   moving?: number;
   /** Width and height in CSS pixels (default 240). */
   size?: number;
-  /** Writes a1…c3 in each cell’s corner, at 12.8px: legible from a 240px board up, cramped below. */
+  /**
+   * Writes a1…c3 in each cell’s corner. The font is in viewBox units, so it follows the
+   * rendered width: 12.8px on a 240px board. Below a 208px rendered width it falls under
+   * 11px — do not ask for labels on a board drawn smaller than that.
+   */
   labels?: boolean;
   /** Text alternative, in the figure's language. Without it the drawing is hidden from assistive tech. */
   title?: string;
@@ -70,11 +75,11 @@ export function drawBoard(s: State, o: BoardOptions = {}): SVGSVGElement {
   const gap = 3;
 
   if (o.labels) {
-    // 12.8px whatever the drawn size: the viewBox scales the font with the board.
-    const fontSize = (12.8 * SIDE) / size;
+    // 16 units = 12.8px at 240px: the label scales with the board, never with `size`.
+    const fontSize = LABEL_UNITS;
     for (let i = 0; i < 9; i++) {
       const [x, y] = corner(i);
-      el('text', { class: 'label', x: x + 8, y: y + 8 + fontSize * 0.75, 'font-size': fontSize.toFixed(2) }, svg)
+      el('text', { class: 'label', x: x + 8, y: y + 8 + fontSize * 0.75, 'font-size': fontSize }, svg)
         .textContent = cellName(i);
     }
   }
