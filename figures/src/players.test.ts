@@ -2,7 +2,7 @@ import { readFileSync } from 'node:fs';
 import { resolve } from 'node:path';
 import fc from 'fast-check';
 import { describe, expect, it } from 'vitest';
-import { LC1_2, initial, play, replay, terminal, winner, type State, type Triple } from './engine';
+import { LC1_2, initial, legal, play, replay, terminal, winner, type State, type Triple } from './engine';
 import { LOSS_SCORE, WIN_SCORE, greedyMove, greedyScores, lambdaReturns, mulberry32, qTarget, qUpdate } from './players';
 
 interface Position {
@@ -42,20 +42,40 @@ describe('greedy', () => {
     expect(all.some((x) => x !== WIN_SCORE && x !== LOSS_SCORE)).toBe(true);
   });
 
-  it('a won game scores WIN_SCORE and a lost one LOSS_SCORE', () => {
+  it('a winning move scores WIN_SCORE', () => {
     const win = reference.positions.find((p) => p.greedy.includes(WIN_SCORE))!;
     const m = greedyScores(win.state).find((x) => x.score === WIN_SCORE)!.move;
     expect(winner(play(win.state, m), LC1_2)).toBe(win.state.to_move === 'White' ? 'W' : 'R');
-    // From the position before a game-ending move, the loser's own move that
-    // hands the win to the opponent would score LOSS_SCORE; none occurs in the
-    // fixture, so the sentinel is pinned against the Rust constant instead.
-    expect(LOSS_SCORE).toBe(-(2 ** 31) + 1);
-    expect(WIN_SCORE).toBe(2 ** 31 - 1);
+  });
+
+  // Mirrors greedy_avoids_a_losing_move_under_a_variant (players.rs): after
+  // seven plies of a back-and-forth loop, Red's move 3-1-6 would produce its
+  // own third occurrence, which loses under lc1-2.
+  describe('a move that repeats the mover\'s own third occurrence', () => {
+    const loop: Triple[] = [[0, 1, 1], [6, 1, 3], [1, 1, 0], [3, 1, 6]];
+    const s = replay(Array.from({ length: 7 }, (_, i) => loop[i % 4]!)).at(-1)!;
+    const losing: Triple = [3, 1, 6];
+
+    it('scores LOSS_SCORE and is never chosen by greedyMove', () => {
+      expect(s.to_move).toBe('Red');
+      const scored = greedyScores(s);
+      expect(scored.find((x) => triple(x.move).join() === losing.join())!.score).toBe(LOSS_SCORE);
+      expect(scored.length).toBeGreaterThan(1);
+      for (let seed = 0; seed < 200; seed++) {
+        expect(triple(greedyMove(s, mulberry32(seed)))).not.toEqual(losing);
+      }
+    });
+
+    it('has a qTarget of -1', () => {
+      const m = legal(s).find((x) => triple(x).join() === losing.join())!;
+      expect(qTarget(s, m, () => 0.5)).toBe(-1);
+    });
   });
 
   // The expected list is the output of
   //   node tools/article-visuals/greedy.mjs OUT moves 4
-  // (greedy.mjs seeds game 4 with its own mulberry32 and draws ties from it).
+  // (greedy.mjs seeds game 4 with its own mulberry32 and draws ties from it);
+  // it printed 8 plies.
   const GAME_4: Triple[] = [[2, 2, 8], [7, 1, 8], [0, 2, 6], [8, 3, 1], [6, 1, 7], [8, 1, 7], [6, 3, 1], [7, 2, 1]];
 
   it("greedyMove with seed 4 replays greedy.mjs's game 4", () => {
