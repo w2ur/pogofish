@@ -4,15 +4,12 @@
 // to a bar. Every board shows the store's one game; the driver plays the AI's
 // side once for the page. The choices come from board-state.ts, never from
 // the DOM.
-import { NET_NAME } from '../assets';
 import {
-  SCREEN_ORDER,
   announceMove,
   chooseCount,
   counts,
   describeCell,
   destinations,
-  formatStrength,
   neighbour,
   origins,
   resultText,
@@ -21,15 +18,14 @@ import {
   type Selection,
 } from '../board-state';
 import { createDriver, type Driver } from '../driver';
-import { initial, legal, moveName, type Colour, type Move, type State, type Triple } from '../engine';
-import { boardLabels } from '../kit/board-labels';
+import { initial, legal, moveName, type Move, type State, type Triple } from '../engine';
 import { drawBoard } from '../kit/board-svg';
-import { controlButton } from '../kit/controls';
 import { PogoFigure, kitSheet } from '../kit/figure';
-import { colon, t, type Lang, type StringKey } from '../kit/strings';
+import { colon, t, type Lang } from '../kit/strings';
 import { SearchClient } from '../search-client';
-import { LEVELS, store, type Level, type Store } from '../store';
+import { store, type Level, type Store } from '../store';
 import boardCss from './pogo-board.css?raw';
+import { buildView, colourKey, type Ui } from './pogo-board-view';
 
 let sheet: CSSStyleSheet | undefined;
 function boardSheet(): CSSStyleSheet {
@@ -46,36 +42,6 @@ const announced = new WeakMap<State, number>();
 let pageDriver: Driver | undefined;
 
 const MOVE_MS = 240;
-const COLOURS: readonly Colour[] = ['White', 'Red'];
-const colourKey = (c: Colour): StringKey => (c === 'White' ? 'white' : 'red');
-
-interface Ui {
-  root: HTMLElement;
-  body: HTMLElement;
-  barStatus?: HTMLElement;
-  toggle?: HTMLButtonElement;
-  caption: HTMLElement;
-  turn: HTMLElement;
-  retry: HTMLButtonElement;
-  result: HTMLElement;
-  who: HTMLElement;
-  how: HTMLElement;
-  you: HTMLElement;
-  play: HTMLElement;
-  svg: SVGSVGElement;
-  cells: HTMLButtonElement[];
-  counts: HTMLElement;
-  countButtons: HTMLButtonElement[];
-  sides: HTMLButtonElement[];
-  levels: HTMLButtonElement[];
-  /** « Nouvelle partie » under the result. */
-  after: HTMLButtonElement;
-  /** « Nouvelle partie » in the setup, inline only. */
-  start?: HTMLButtonElement;
-  movesSummary: HTMLElement;
-  movesList: HTMLOListElement;
-  live: HTMLElement;
-}
 
 export class PogoBoard extends PogoFigure {
   static override fidelity = 'live' as const;
@@ -125,7 +91,20 @@ export class PogoBoard extends PogoFigure {
     await s.ready();
     if (signal.aborted) return;
     const driver = this.deps.driver();
-    this.ui = this.build();
+    this.ui = buildView(this.lang, this.mode, {
+      cell: (i) => this.onCell(i),
+      arrow: (e) => this.onArrow(e),
+      key: this.onKey,
+      count: (n) => this.onCount(n),
+      side: (c) => this.deps.store.setReaderColour(c),
+      level: (l) => this.deps.store.setLevel(l),
+      newGame: () => this.newGame(),
+      retry: () => this.deps.driver().retry(),
+      toggle: () => {
+        this.collapsed = !this.collapsed;
+        this.update();
+      },
+    });
     this.stage.append(this.ui.root);
     driver.attach(signal);
     const offGame = s.on('game', () => this.update());
@@ -142,166 +121,6 @@ export class PogoBoard extends PogoFigure {
       { once: true },
     );
     this.update();
-  }
-
-  private build(): Ui {
-    const lang = this.lang;
-    const el = <K extends keyof HTMLElementTagNameMap>(tag: K, className = '', text = ''): HTMLElementTagNameMap[K] => {
-      const node = document.createElement(tag);
-      if (className) node.className = className;
-      if (text) node.textContent = text;
-      return node;
-    };
-
-    const root = el('div', 'pb');
-    root.dataset.mode = this.mode;
-    const body = el('div', 'body');
-    body.id = 'board-body';
-
-    let barStatus: HTMLElement | undefined;
-    let toggle: HTMLButtonElement | undefined;
-    if (this.mode === 'follow') {
-      const bar = el('div', 'bar');
-      barStatus = el('p', 'bar-status label');
-      toggle = controlButton(t(lang, 'collapse'), () => {
-        this.collapsed = !this.collapsed;
-        this.update();
-      }, true);
-      toggle.setAttribute('aria-controls', body.id);
-      bar.append(barStatus, toggle);
-      root.append(bar);
-    }
-
-    const caption = el('p', 'caption');
-    const turn = el('p', 'turn');
-    const retry = controlButton(t(lang, 'retry'), () => this.deps.driver().retry(), true);
-    retry.classList.add('retry');
-    const result = el('div', 'result');
-    const who = el('p', 'shout who');
-    const how = el('p', 'how');
-    const you = el('p', 'you');
-    result.append(who, how, you);
-
-    const play = el('div', 'play');
-    const svg = drawBoard(initial(), { labelRoom: true });
-    const grid = el('div', 'cells');
-    grid.setAttribute('role', 'group');
-    grid.setAttribute('aria-label', t(lang, 'board'));
-    const cells: HTMLButtonElement[] = [];
-    for (const i of SCREEN_ORDER) {
-      const b = el('button', 'cell-button');
-      b.type = 'button';
-      b.dataset.cell = String(i);
-      b.addEventListener('click', () => this.onCell(i));
-      cells[i] = b;
-      grid.append(b);
-    }
-    grid.addEventListener('keydown', (e) => this.onArrow(e));
-    play.append(svg, boardLabels(), grid);
-
-    const countsRow = el('div', 'counts');
-    countsRow.setAttribute('role', 'group');
-    const countsLabel = el('span', 'label', `${t(lang, 'pieces')}${colon(lang)}`);
-    countsLabel.id = 'counts-label';
-    countsRow.setAttribute('aria-labelledby', countsLabel.id);
-    const countButtons = [1, 2, 3].map((n) => {
-      const b = controlButton(String(n), () => this.onCount(n), true);
-      b.classList.add('choice');
-      b.setAttribute('aria-pressed', 'false');
-      return b;
-    });
-    countsRow.append(countsLabel, ...countButtons);
-
-    const sides: HTMLButtonElement[] = [];
-    const levels: HTMLButtonElement[] = [];
-    let setup: HTMLElement | undefined;
-    let start: HTMLButtonElement | undefined;
-    if (this.mode === 'inline') {
-      setup = el('div', 'setup');
-      const group = (labelKey: StringKey, id: string, buttons: HTMLButtonElement[]): HTMLElement => {
-        const g = el('div', 'group');
-        g.setAttribute('role', 'group');
-        const label = el('span', 'label', t(lang, labelKey));
-        label.id = id;
-        g.setAttribute('aria-labelledby', id);
-        g.append(label, ...buttons);
-        return g;
-      };
-      for (const c of COLOURS) {
-        const b = controlButton(t(lang, colourKey(c)), () => this.deps.store.setReaderColour(c), true);
-        b.classList.add('choice');
-        b.dataset.colour = c;
-        sides.push(b);
-      }
-      for (const level of LEVELS) {
-        const b = controlButton(t(lang, level), () => this.deps.store.setLevel(level), true);
-        b.classList.add('choice');
-        b.dataset.level = level;
-        if (level === 'normal') b.append(el('span', 'tag', ` · ${t(lang, 'measured')}`));
-        levels.push(b);
-      }
-      start = controlButton(t(lang, 'newGame'), () => this.newGame());
-      start.dataset.role = 'new-game';
-      const row = el('div', 'controls');
-      row.append(start);
-      setup.append(group('side', 'side-label', sides), group('level', 'level-label', levels), row);
-    }
-    // At the end of a game the result is followed by its own « Nouvelle partie »;
-    // the setup's one gives way, so only one is ever shown.
-    const after = controlButton(t(lang, 'newGame'), () => this.newGame());
-    after.classList.add('after');
-    after.dataset.role = 'new-game';
-    const afterRow = el('div', 'controls');
-    afterRow.append(after);
-    result.append(afterRow);
-
-    const moves = el('details', 'moves');
-    const movesSummary = el('summary', 'label');
-    const movesList = el('ol');
-    moves.append(movesSummary, movesList);
-
-    const live = el('p', 'sr');
-    live.setAttribute('role', 'status');
-    live.setAttribute('aria-live', 'polite');
-
-    const status = el('div', 'status');
-    status.append(turn, retry);
-    body.append(caption, status, result, play, countsRow);
-    if (setup) body.append(setup);
-    body.append(moves);
-    if (this.mode === 'inline') {
-      body.append(
-        el('p', 'note', `${t(lang, 'net')} ${NET_NAME}. ${t(lang, 'netScore')} ${formatStrength(lang)} ${t(lang, 'netAgainst')}`),
-      );
-    }
-    root.append(body, live);
-    root.addEventListener('keydown', this.onKey);
-
-    return {
-      root,
-      body,
-      barStatus,
-      toggle,
-      caption,
-      turn,
-      retry,
-      result,
-      who,
-      how,
-      you,
-      play,
-      svg,
-      cells,
-      counts: countsRow,
-      countButtons,
-      sides,
-      levels,
-      after,
-      start,
-      movesSummary,
-      movesList,
-      live,
-    };
   }
 
   private newGame(): void {
