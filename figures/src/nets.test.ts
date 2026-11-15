@@ -18,11 +18,12 @@ interface Position {
   az: { logits: number[]; value: number };
   td: number;
   legal: Triple[];
+  priors: number[];
 }
 
 interface Reference {
   positions: Position[];
-  openingWin: { moves: Triple[]; first: number };
+  openingWin: { first: number; outcome: number; lambda: number; returns: number[] };
 }
 
 const reference = JSON.parse(read('fixtures/reference.json').toString()) as Reference;
@@ -38,14 +39,17 @@ describe('nets against the Rust reference', () => {
     expect(labels.filter((l) => l.startsWith('playout'))).toHaveLength(40);
     expect(labels.filter((l) => l.startsWith('openingWin'))).toHaveLength(10);
     expect(labels).toContain('puzzle 5');
-    expect(reference.openingWin.moves).toEqual(lines.openingWin);
   });
 
-  it('features(state) equal the Rust features on every fixture position', () => {
+  it('no position appears twice', () => {
+    const states = reference.positions.map((p) => JSON.stringify(p.state));
+    expect(new Set(states).size).toBe(states.length);
+  });
+
+  it('features(state) equal the Rust features exactly on every fixture position', () => {
     for (const p of reference.positions) {
-      const got = features(p.state);
-      expect(got.length, p.label).toBe(p.features.length);
-      got.forEach((x, i) => expect(Math.abs(x - p.features[i]!), `${p.label} [${i}]`).toBeLessThanOrEqual(1e-6));
+      // The fixture writes each f32 in its shortest form; fround recovers it exactly.
+      expect(Array.from(features(p.state)), p.label).toEqual(p.features.map(Math.fround));
     }
   });
 
@@ -75,17 +79,17 @@ describe('nets against the Rust reference', () => {
     }
   });
 
-  it('az priors are a softmax over the legal moves, keyed by policy index', () => {
+  it('az priors equal the Rust priors within 1e-6, keyed by policy index', () => {
     for (const p of reference.positions) {
       const { priors } = az.evaluate(p.state);
       const keys = p.legal.map(([from_cell, n, to_cell]) =>
         policyIndex({ from_cell, num_pieces: n as 1 | 2 | 3, to_cell }),
       );
       expect([...priors.keys()].sort((a, b) => a - b), p.label).toEqual([...keys].sort((a, b) => a - b));
-      if (keys.length > 0) {
-        const total = [...priors.values()].reduce((a, b) => a + b, 0);
-        expect(Math.abs(total - 1), p.label).toBeLessThanOrEqual(1e-6);
-      }
+      expect(p.priors, p.label).toHaveLength(keys.length);
+      keys.forEach((k, i) =>
+        expect(Math.abs(priors.get(k)! - p.priors[i]!), `${p.label} [${i}]`).toBeLessThanOrEqual(1e-6),
+      );
     }
   });
 
@@ -131,6 +135,20 @@ describe('the openingWin line', () => {
   it('gives the same verdict under lc1-2', () => {
     states.slice(0, -1).forEach((s, i) => expect(terminal(s, LC1_2), `ply ${i}`).toBe(false));
     expect(winner(states[9]!, LC1_2)).toBe('W');
+  });
+
+  it('the Rust lambda-returns follow from the positions\' TD values and the outcome', () => {
+    const { first, outcome, lambda, returns } = reference.openingWin;
+    const values = states.map((_, i) => reference.positions[first + i]!.td);
+    values[values.length - 1] = outcome;
+    expect(outcome).toBe(-1); // Red, to move at the end, has lost.
+    expect(returns).toHaveLength(9);
+    let next = values[9]!;
+    for (let t = 8; t >= 0; t--) {
+      const g = -((1 - lambda) * values[t + 1]! + lambda * next);
+      expect(Math.abs(g - returns[t]!), `G_${t}`).toBeLessThanOrEqual(1e-6);
+      next = returns[t]!;
+    }
   });
 
   it('replays to the fixture states', () => {

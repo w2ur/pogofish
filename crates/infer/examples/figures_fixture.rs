@@ -9,10 +9,10 @@
 //! `openingWin` line of `figures/fixtures/lines.json`, and puzzle 5 of
 //! round 5, rebuilt from its diagram. For each: the state (engine JSON, so the
 //! TypeScript reads it as is), its input features, the AlphaZero logits and
-//! value, the TD value, and per legal move (engine order) the MCTS visits
+//! value, the TD value, and per legal move (engine order) the prior, the MCTS visits
 //! (100 simulations, no noise) and greedy's score, all under lc1-2. For the
-//! line: its TD values, the last replaced by the exact outcome as training
-//! does, and their λ-returns.
+//! line: its exact outcome, which replaces the last TD value as training
+//! does, and the λ-returns.
 
 use anyhow::{bail, ensure, Context};
 use pogofish_engine::notation::move_to_notation;
@@ -20,7 +20,7 @@ use pogofish_engine::{
     apply_move, apply_move_under, initial_state, is_terminal, legal_moves, GameState, Move,
     Outcome, RuleSet,
 };
-use pogofish_infer::mcts::{search, MctsConfig};
+use pogofish_infer::mcts::{search, Evaluator, MctsConfig};
 use pogofish_infer::mlp::Mlp;
 use pogofish_infer::returns::lambda_returns;
 use pogofish_infer::value::ValueMlp;
@@ -47,8 +47,9 @@ fn triple(m: &Move) -> [u8; 3] {
 }
 
 /// One position for every playout: a ply count drawn in 1..=MAX_PLIES, then
-/// uniform moves; a playout that ends first is drawn again.
-fn playouts() -> anyhow::Result<Vec<GameState>> {
+/// uniform moves; a playout that ends first, or lands on a state of `skip`
+/// (the openingWin line), is drawn again.
+fn playouts(skip: &[GameState]) -> anyhow::Result<Vec<GameState>> {
     let mut rng = SplitMix64::new(SEED);
     let mut out = Vec::new();
     while out.len() < PLAYOUTS {
@@ -61,7 +62,7 @@ fn playouts() -> anyhow::Result<Vec<GameState>> {
                 break;
             }
         }
-        if is_terminal(&s, &RULES).is_none() {
+        if is_terminal(&s, &RULES).is_none() && !skip.contains(&s) {
             out.push(s);
         }
     }
@@ -70,7 +71,7 @@ fn playouts() -> anyhow::Result<Vec<GameState>> {
 
 /// The states of the `openingWin` line, checked to be a White win in game A
 /// that no earlier position ends.
-fn opening_win(root: &Path) -> anyhow::Result<(Vec<[u8; 3]>, Vec<GameState>)> {
+fn opening_win(root: &Path) -> anyhow::Result<Vec<GameState>> {
     let path = root.join("figures/fixtures/lines.json");
     let lines: Value = serde_json::from_slice(&std::fs::read(&path)?)
         .with_context(|| format!("parsing {}", path.display()))?;
@@ -96,7 +97,7 @@ fn opening_win(root: &Path) -> anyhow::Result<(Vec<[u8; 3]>, Vec<GameState>)> {
         "openingWin must end in a White win, got {:?}",
         is_terminal(last, &RuleSet::Uncapped)
     );
-    Ok((moves, states))
+    Ok(states)
 }
 
 /// Puzzle 5's position, rebuilt from its diagram and refused unless the
@@ -138,17 +139,21 @@ struct Position<'a> {
     az: Net,
     td: f32,
     legal: Vec<[u8; 3]>,
+    /// Softmax of the logits over `legal`, as the search's evaluator computes it.
+    priors: Vec<f32>,
     visits: Vec<u32>,
     greedy: Vec<i32>,
 }
 
 #[derive(Serialize)]
 struct Line {
-    moves: Vec<[u8; 3]>,
-    /// Index in `positions` of the line's first state.
+    /// Index in `positions` of the line's first state; the moves are in
+    /// `lines.json`, the TD values in each position's `td`.
     first: usize,
+    /// The exact outcome for the player to move at the last state, which
+    /// replaces its TD value, as training does.
+    outcome: f32,
     lambda: f32,
-    values: Vec<f32>,
     returns: Vec<f32>,
 }
 
@@ -183,6 +188,11 @@ fn position<'a>(label: String, s: &'a GameState, az: &Mlp, td: &ValueMlp) -> Pos
     let features = az.features.encode(s);
     let (logits, value) = az.forward(&features);
     let moves = legal_moves(s);
+    let priors = if moves.is_empty() {
+        Vec::new()
+    } else {
+        az.evaluate(s, &moves).0
+    };
     let cfg = MctsConfig {
         num_simulations: SIMULATIONS,
         ..MctsConfig::default()
@@ -201,6 +211,7 @@ fn position<'a>(label: String, s: &'a GameState, az: &Mlp, td: &ValueMlp) -> Pos
         features,
         az: Net { logits, value },
         legal: moves.iter().map(triple).collect(),
+        priors,
         visits,
         greedy: moves.iter().map(|&m| greedy_score(s, m, &RULES)).collect(),
     }
@@ -220,8 +231,8 @@ fn main() -> anyhow::Result<()> {
         "both nets must read the same 127 features"
     );
 
-    let samples = playouts()?;
-    let (line, states) = opening_win(&root)?;
+    let states = opening_win(&root)?;
+    let samples = playouts(&states)?;
     let riddle = puzzle(&root)?;
     let mut positions: Vec<Position> = samples
         .iter()
@@ -243,7 +254,8 @@ fn main() -> anyhow::Result<()> {
     let last = states.last().expect("non-empty");
     let won =
         is_terminal(last, &RuleSet::Uncapped).and_then(|o| o.winner()) == Some(last.to_move());
-    *values.last_mut().expect("non-empty") = if won { 1.0 } else { -1.0 };
+    let outcome = if won { 1.0 } else { -1.0 };
+    *values.last_mut().expect("non-empty") = outcome;
     let returns = lambda_returns(&values, LAMBDA);
 
     let out = Out {
@@ -263,10 +275,9 @@ fn main() -> anyhow::Result<()> {
         },
         positions,
         opening_win: Line {
-            moves: line,
             first,
+            outcome,
             lambda: LAMBDA,
-            values,
             returns,
         },
     };
