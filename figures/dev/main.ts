@@ -3,6 +3,7 @@
 import { configureAssets } from '../src/assets';
 import { defineAll } from '../src/index';
 import { initial, legal, moveName, play, ready, type Move, type State } from '../src/engine';
+import { labelledBoard } from '../src/kit/board-labels';
 import { drawBoard } from '../src/kit/board-svg';
 import { controlButton, transport } from '../src/kit/controls';
 import { PogoFigure, kitSheet, type PlayFromDetail } from '../src/kit/figure';
@@ -65,12 +66,14 @@ function demo(kind: Fidelity, source?: string): CustomElementConstructor {
       const show = (i: number): void => {
         const m = moves[i - 1];
         boardSlot.replaceChildren(
-          drawBoard(states[i]!, {
-            size: 320,
-            labels: true,
-            title: m ? moveName(m) : t(l, 'newGame'),
-            ...(m ? { from: m.from_cell, to: m.to_cell, moving: m.num_pieces } : {}),
-          }),
+          labelledBoard(
+            drawBoard(states[i]!, {
+              size: 320,
+              labelRoom: true,
+              title: m ? moveName(m) : t(l, 'newGame'),
+              ...(m ? { from: m.from_cell, to: m.to_cell, moving: m.num_pieces } : {}),
+            }),
+          ),
         );
       };
       const stepper = new Stepper(states.length, show, { signal: this.signal });
@@ -148,15 +151,18 @@ async function build(): Promise<void> {
   specimen.append(transport(new Stepper(8, () => {}), { lang: l, actions: [{ label: t(l, 'playFromHere'), onClick: () => {} }] }));
   app.append(kitBox(specimen));
 
-  app.append(heading('drawBoard · initial, mid-game, a move · 160px and 320px'));
+  app.append(heading('drawBoard · initial, mid-game, a move · 160px bare, 240px and 400px with labelledBoard (labels stay 12.8px)'));
   const after = play(initial(), legal(initial())[2]!);
   const boards = document.createElement('div');
   boards.style.cssText = 'display:flex;flex-wrap:wrap;gap:24px;align-items:flex-start';
-  for (const size of [160, 320]) {
+  for (const size of [160, 240, 400]) {
+    // Labels need a board of 240px or more (board-labels.ts).
+    const labelRoom = size >= 240;
+    const wrap = (svg: SVGSVGElement): Element => (labelRoom ? labelledBoard(svg) : svg);
     boards.append(
-      drawBoard(initial(), { size, labels: size === 320, title: t(l, 'newGame') }),
-      drawBoard(MID, { size, labels: size === 320 }),
-      drawBoard(after, { size, labels: size === 320, from: 0, to: 2, moving: 2 }),
+      wrap(drawBoard(initial(), { size, labelRoom, title: t(l, 'newGame') })),
+      wrap(drawBoard(MID, { size, labelRoom })),
+      wrap(drawBoard(after, { size, labelRoom, from: 0, to: 2, moving: 2 })),
     );
   }
   app.append(kitBox(boards));

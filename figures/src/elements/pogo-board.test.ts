@@ -88,6 +88,12 @@ describe('<pogo-board> inline', () => {
     expect(order).toEqual(['6', '7', '8', '3', '4', '5', '0', '1', '2']);
   });
 
+  it('lays the kit’s fixed-size coordinates over the board, not SVG text', async () => {
+    const el = await mount('en');
+    expect(el.shadowRoot!.querySelectorAll('.play .board-labels .coord')).toHaveLength(9);
+    expect(el.shadowRoot!.querySelectorAll('.play svg text')).toHaveLength(0);
+  });
+
   it('labels itself live in lc1-2, names the net and its measured strength, and marks « normal » as measured', async () => {
     const el = await mount('fr');
     expect($(el, '.fidelity').textContent).toBe('Calcul en direct · règle des répétitions (lc1-2)');

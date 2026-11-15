@@ -229,9 +229,29 @@ slot[hidden],
   vector-effect: non-scaling-stroke;
 }
 
-.board .label {
-  fill: var(--_muted);
-  text-transform: none;
+/* The coordinates: fixed-size HTML over the board (board-labels.ts), never scaled with it. */
+.board-frame {
+  position: relative;
+  display: inline-block;
+  max-width: 100%;
+  vertical-align: top;
+}
+
+.board-labels {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+}
+
+.board-labels .coord {
+  position: absolute;
+  font-family: var(--_font);
+  font-size: 12.8px;
+  font-stretch: 125%;
+  font-weight: 800;
+  letter-spacing: 0.02em;
+  line-height: 1;
+  color: var(--_muted);
 }
 
 .board .gap {

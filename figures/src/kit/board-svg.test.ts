@@ -26,7 +26,7 @@ describe('drawBoard', () => {
   });
 
   it("puts White's back row (a1–c1, cells 0–2) at the bottom, a1 on the left", () => {
-    const svg = drawBoard(initial(), { labels: true });
+    const svg = drawBoard(initial(), { labelRoom: true });
     const cellRect = (i: number) => svg.querySelector<SVGRectElement>(`.cell[data-cell="${i}"]`)!;
     const y = (i: number) => Number(cellRect(i).getAttribute('y'));
     const x = (i: number) => Number(cellRect(i).getAttribute('x'));
@@ -34,14 +34,12 @@ describe('drawBoard', () => {
     expect(y(3)).toBeGreaterThan(y(6));
     expect(x(0)).toBeLessThan(x(1));
     expect(discsIn(svg, 0).every((d) => d.dataset.colour === 'White')).toBe(true);
-    const labels = [...svg.querySelectorAll('.label')].map((l) => l.textContent);
-    expect(labels).toEqual(['a1', 'b1', 'c1', 'a2', 'b2', 'c2', 'a3', 'b3', 'c3']);
   });
 
   it('keeps a tall stack inside its cell', () => {
     const tall: State = { ...mid, cells: [Array(12).fill('Red'), [], [], [], [], [], [], [], []] };
-    for (const labels of [false, true]) {
-      const discs = discsIn(drawBoard(tall, { labels }), 0);
+    for (const labelRoom of [false, true]) {
+      const discs = discsIn(drawBoard(tall, { labelRoom }), 0);
       expect(discs).toHaveLength(12);
       for (const d of discs) {
         const cy = Number(d.getAttribute('cy'));
@@ -53,14 +51,10 @@ describe('drawBoard', () => {
     }
   });
 
-  it('sizes labels in viewBox units, so they follow the rendered width rather than the size option', () => {
-    const font = (size: number) =>
-      drawBoard(initial(), { size, labels: true }).querySelector('.label')!.getAttribute('font-size');
-    expect(font(160)).toBe(font(320));
-  });
-
-  it('draws no labels unless asked', () => {
-    expect(drawBoard(initial()).querySelectorAll('.label')).toHaveLength(0);
+  it('draws no text: the coordinates are HTML (board-labels.ts); labelRoom only moves the stacks off the corner', () => {
+    expect(drawBoard(initial(), { labelRoom: true }).querySelectorAll('text')).toHaveLength(0);
+    const cx = (labelRoom: boolean) => Number(discsIn(drawBoard(initial(), { labelRoom }), 0)[0]!.getAttribute('cx'));
+    expect(cx(true)).toBeGreaterThan(cx(false));
   });
 
   it('marks a move: dashed ring on the origin, the moved pieces on the destination', () => {
@@ -88,7 +82,7 @@ describe('drawBoard', () => {
   });
 
   it('hard-codes no colour: every fill comes from the stylesheet', () => {
-    const svg = drawBoard(mid, { from: 1, to: 7, moving: 2, labels: true });
+    const svg = drawBoard(mid, { from: 1, to: 7, moving: 2, labelRoom: true });
     for (const el of svg.querySelectorAll('*')) {
       expect(el.getAttribute('fill')).toBeNull();
       expect(el.getAttribute('stroke')).toBeNull();

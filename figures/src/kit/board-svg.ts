@@ -5,7 +5,6 @@ import type { State } from '../engine';
 const NS = 'http://www.w3.org/2000/svg';
 const CELL = 100;
 const SIDE = 3 * CELL;
-const LABEL_UNITS = 16;
 
 export interface BoardOptions {
   /** Origin of the move that led to `s`: carries the dashed ring. */
@@ -16,11 +15,10 @@ export interface BoardOptions {
   /** Width and height in CSS pixels (default 240). */
   size?: number;
   /**
-   * Writes a1…c3 in each cell’s corner. The font is in viewBox units, so it follows the
-   * rendered width: 12.8px on a 240px board. Below a 208px rendered width it falls under
-   * 11px — do not ask for labels on a board drawn smaller than that.
+   * Leaves each cell's top-left corner free for the coordinates, which `boardLabels`
+   * (board-labels.ts) lays over the board as fixed-size HTML. Draws no text itself.
    */
-  labels?: boolean;
+  labelRoom?: boolean;
   /**
    * Rings drawn above the stacks, so a stack never hides one: `target` is the
    * dashed ring of what can be tapped, `picked` the solid ink ring of a lifted stack.
@@ -45,7 +43,6 @@ function el<K extends keyof SVGElementTagNameMap>(
 
 /** Cell `i` (row-major, a1 = 0) to its top-left corner; rank 1 is the bottom row. */
 const corner = (i: number): [number, number] => [(i % 3) * CELL, (2 - Math.floor(i / 3)) * CELL];
-const cellName = (i: number): string => `${'abc'[i % 3]}${Math.floor(i / 3) + 1}`;
 
 /**
  * Draws position `s` seen from above, White's back row (a1–c1) at the bottom.
@@ -71,23 +68,13 @@ export function drawBoard(s: State, o: BoardOptions = {}): SVGSVGElement {
     el('rect', { class: 'cell', 'data-cell': i, x, y, width: CELL, height: CELL }, svg);
   }
 
-  // With labels the stack moves down and right to clear the corner they sit in.
-  const radius = o.labels ? 22 : 26;
-  const baseStep = o.labels ? 11 : 12;
-  const centre = o.labels ? 56 : 50;
+  // With room for labels the stack moves down and right to clear the corner they sit in.
+  const radius = o.labelRoom ? 22 : 26;
+  const baseStep = o.labelRoom ? 11 : 12;
+  const centre = o.labelRoom ? 56 : 50;
   // Vertical room a stack may take, centre to centre of its end discs plus one disc.
-  const room = o.labels ? 70 : 78;
+  const room = o.labelRoom ? 70 : 78;
   const gap = 3;
-
-  if (o.labels) {
-    // 16 units = 12.8px at 240px: the label scales with the board, never with `size`.
-    const fontSize = LABEL_UNITS;
-    for (let i = 0; i < 9; i++) {
-      const [x, y] = corner(i);
-      el('text', { class: 'label', x: x + 8, y: y + 8 + fontSize * 0.75, 'font-size': fontSize }, svg)
-        .textContent = cellName(i);
-    }
-  }
 
   if (o.from !== undefined) {
     const [x, y] = corner(o.from);

@@ -22,6 +22,7 @@ import {
 } from '../board-state';
 import { createDriver, type Driver } from '../driver';
 import { initial, legal, moveName, type Colour, type Move, type State, type Triple } from '../engine';
+import { boardLabels } from '../kit/board-labels';
 import { drawBoard } from '../kit/board-svg';
 import { controlButton } from '../kit/controls';
 import { PogoFigure, kitSheet } from '../kit/figure';
@@ -182,7 +183,7 @@ export class PogoBoard extends PogoFigure {
     result.append(who, how, you);
 
     const play = el('div', 'play');
-    const svg = drawBoard(initial(), { labels: true });
+    const svg = drawBoard(initial(), { labelRoom: true });
     const grid = el('div', 'cells');
     grid.setAttribute('role', 'group');
     grid.setAttribute('aria-label', t(lang, 'board'));
@@ -196,7 +197,7 @@ export class PogoBoard extends PogoFigure {
       grid.append(b);
     }
     grid.addEventListener('keydown', (e) => this.onArrow(e));
-    play.append(svg, grid);
+    play.append(svg, boardLabels(), grid);
 
     const countsRow = el('div', 'counts');
     countsRow.setAttribute('role', 'group');
@@ -467,7 +468,7 @@ export class PogoBoard extends PogoFigure {
     if (key === this.drawn) return;
     this.drawn = key;
     const svg = drawBoard(s, {
-      labels: true,
+      labelRoom: true,
       marks,
       ...(last ? { to: last[2], moving: last[1] } : {}),
     });
