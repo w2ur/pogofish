@@ -25,7 +25,7 @@ import { colon, t, type Lang } from '../kit/strings';
 import { SearchClient } from '../search-client';
 import { store, type Level, type Store } from '../store';
 import boardCss from './pogo-board.css?raw';
-import { buildView, colourKey, type Ui } from './pogo-board-view';
+import { buildView, colourKey, type CountValue, type Ui } from './pogo-board-view';
 
 let sheet: CSSStyleSheet | undefined;
 function boardSheet(): CSSStyleSheet {
@@ -207,12 +207,10 @@ export class PogoBoard extends PogoFigure {
     const sel = this.selection;
     const available = sel ? counts(moves, sel.from) : [];
     // Kept (hidden) through the game, so lifting a stack never shifts the page; gone outside one.
-    ui.counts.toggleAttribute('data-off', sel === null);
-    ui.counts.hidden = g === null || g.finished;
-    ui.countButtons.forEach((b, k) => {
-      b.hidden = !available.includes(k + 1);
-      b.setAttribute('aria-pressed', String(sel?.count === k + 1));
-    });
+    ui.count.element.toggleAttribute('data-off', sel === null);
+    ui.count.element.hidden = g === null || g.finished;
+    ui.count.buttons.forEach((b, k) => (b.hidden = !available.includes(k + 1)));
+    ui.count.set(sel ? (String(sel.count) as CountValue) : null);
 
     // Status: the result, the AI thinking or failing, or the reader's turn.
     const result = g ? resultText(lang, g) : null;
@@ -238,8 +236,8 @@ export class PogoBoard extends PogoFigure {
     const prefs = st.preferences();
     const side = prefs.readerColour;
     const level: Level = prefs.level;
-    ui.sides.forEach((b) => b.setAttribute('aria-pressed', String(b.dataset.colour === side)));
-    ui.levels.forEach((b) => b.setAttribute('aria-pressed', String(b.dataset.level === level)));
+    ui.side.set(side);
+    ui.level.set(level);
     if (ui.start) ui.start.hidden = g?.finished === true;
 
     // Follow bar: whose turn, collapsible.

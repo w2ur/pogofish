@@ -5,10 +5,11 @@ import { SCREEN_ORDER, formatStrength } from '../board-state';
 import { initial, type Colour } from '../engine';
 import { boardLabels } from '../kit/board-labels';
 import { drawBoard } from '../kit/board-svg';
-import { controlButton } from '../kit/controls';
+import { choiceGroup, controlButton, type ChoiceGroup } from '../kit/controls';
 import { colon, t, type Lang, type StringKey } from '../kit/strings';
 import { LEVELS, type Level } from '../store';
 
+export type CountValue = '1' | '2' | '3';
 export const COLOURS: readonly Colour[] = ['White', 'Red'];
 export const colourKey = (c: Colour): StringKey => (c === 'White' ? 'white' : 'red');
 
@@ -27,10 +28,9 @@ export interface Ui {
   play: HTMLElement;
   svg: SVGSVGElement;
   cells: HTMLButtonElement[];
-  counts: HTMLElement;
-  countButtons: HTMLButtonElement[];
-  sides: HTMLButtonElement[];
-  levels: HTMLButtonElement[];
+  count: ChoiceGroup<CountValue>;
+  side: ChoiceGroup<Colour>;
+  level: ChoiceGroup<Level>;
   /** « Nouvelle partie » under the result. */
   after: HTMLButtonElement;
   /** « Nouvelle partie » in the setup, inline only. */
@@ -104,52 +104,36 @@ export function buildView(lang: Lang, mode: 'inline' | 'follow', h: Handlers): U
   grid.addEventListener('keydown', h.arrow);
   play.append(svg, boardLabels(), grid);
 
-  const countsRow = el('div', 'counts');
-  countsRow.setAttribute('role', 'group');
-  const countsLabel = el('span', 'label', `${t(lang, 'pieces')}${colon(lang)}`);
-  countsLabel.id = 'counts-label';
-  countsRow.setAttribute('aria-labelledby', countsLabel.id);
-  const countButtons = [1, 2, 3].map((n) => {
-    const b = controlButton(String(n), () => h.count(n), true);
-    b.classList.add('choice');
-    b.setAttribute('aria-pressed', 'false');
-    return b;
+  const count = choiceGroup<CountValue>({
+    label: `${t(lang, 'pieces')}${colon(lang)}`,
+    id: 'counts-label',
+    choices: (['1', '2', '3'] as const).map((n) => ({ value: n, label: n })),
+    onChoose: (n) => h.count(Number(n)),
   });
-  countsRow.append(countsLabel, ...countButtons);
+  count.element.classList.add('counts');
 
-  const sides: HTMLButtonElement[] = [];
-  const levels: HTMLButtonElement[] = [];
+  // Side and level exist in the inline board only; the follow board shows the game.
+  const side = choiceGroup<Colour>({
+    label: t(lang, 'side'),
+    id: 'side-label',
+    choices: COLOURS.map((c) => ({ value: c, label: t(lang, colourKey(c)) })),
+    onChoose: h.side,
+  });
+  const level = choiceGroup<Level>({
+    label: t(lang, 'level'),
+    id: 'level-label',
+    choices: LEVELS.map((l) => ({ value: l, label: t(lang, l), ...(l === 'normal' ? { note: t(lang, 'measured') } : {}) })),
+    onChoose: h.level,
+  });
   let setup: HTMLElement | undefined;
   let start: HTMLButtonElement | undefined;
   if (mode === 'inline') {
     setup = el('div', 'setup');
-    const group = (labelKey: StringKey, id: string, buttons: HTMLButtonElement[]): HTMLElement => {
-      const g = el('div', 'group');
-      g.setAttribute('role', 'group');
-      const label = el('span', 'label', t(lang, labelKey));
-      label.id = id;
-      g.setAttribute('aria-labelledby', id);
-      g.append(label, ...buttons);
-      return g;
-    };
-    for (const c of COLOURS) {
-      const b = controlButton(t(lang, colourKey(c)), () => h.side(c), true);
-      b.classList.add('choice');
-      b.dataset.colour = c;
-      sides.push(b);
-    }
-    for (const level of LEVELS) {
-      const b = controlButton(t(lang, level), () => h.level(level), true);
-      b.classList.add('choice');
-      b.dataset.level = level;
-      if (level === 'normal') b.append(el('span', 'tag', ` · ${t(lang, 'measured')}`));
-      levels.push(b);
-    }
     start = controlButton(t(lang, 'newGame'), h.newGame);
     start.dataset.role = 'new-game';
     const row = el('div', 'controls');
     row.append(start);
-    setup.append(group('side', 'side-label', sides), group('level', 'level-label', levels), row);
+    setup.append(side.element, level.element, row);
   }
   // At the end of a game the result is followed by its own « Nouvelle partie »;
   // the setup's one gives way, so only one is ever shown.
@@ -171,7 +155,7 @@ export function buildView(lang: Lang, mode: 'inline' | 'follow', h: Handlers): U
 
   const status = el('div', 'status');
   status.append(turn, retry);
-  body.append(caption, status, result, play, countsRow);
+  body.append(caption, status, result, play, count.element);
   if (setup) body.append(setup);
   body.append(moves);
   if (mode === 'inline') {
@@ -197,10 +181,9 @@ export function buildView(lang: Lang, mode: 'inline' | 'follow', h: Handlers): U
     play,
     svg,
     cells,
-    counts: countsRow,
-    countButtons,
-    sides,
-    levels,
+    count,
+    side,
+    level,
     after,
     start,
     movesSummary,

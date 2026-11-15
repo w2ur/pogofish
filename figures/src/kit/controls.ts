@@ -92,3 +92,79 @@ export function transport(stepper: Stepper, o: TransportOptions): HTMLElement {
   sync();
   return row;
 }
+
+export interface Choice<T extends string> {
+  value: T;
+  label: string;
+  /** A muted note after the label (« mesuré »). */
+  note?: string;
+}
+
+export interface ChoiceGroup<T extends string> {
+  element: HTMLElement;
+  buttons: HTMLButtonElement[];
+  /** Checks `value` (or nothing), keeping the group's one tab stop on it. */
+  set(value: T | null): void;
+}
+
+/**
+ * One exclusive choice: a `radiogroup` of `radio` buttons, the checked one drawn as
+ * the filled block. One tab stop; the arrow keys move and choose, skipping hidden
+ * options, as the radio pattern expects.
+ */
+export function choiceGroup<T extends string>(o: {
+  label: string;
+  /** Id of the visible label, unique within the shadow root. */
+  id: string;
+  choices: Choice<T>[];
+  onChoose: (value: T) => void;
+}): ChoiceGroup<T> {
+  const element = document.createElement('div');
+  element.className = 'group';
+  element.setAttribute('role', 'radiogroup');
+  element.setAttribute('aria-labelledby', o.id);
+  const label = document.createElement('span');
+  label.className = 'label';
+  label.id = o.id;
+  label.textContent = o.label;
+
+  const buttons = o.choices.map((c) => {
+    const b = controlButton(c.label, () => o.onChoose(c.value), true);
+    b.classList.add('choice');
+    b.setAttribute('role', 'radio');
+    b.setAttribute('aria-checked', 'false');
+    b.dataset.value = c.value;
+    if (c.note) {
+      const note = document.createElement('span');
+      note.className = 'tag';
+      note.textContent = ` · ${c.note}`;
+      b.append(note);
+    }
+    return b;
+  });
+
+  element.addEventListener('keydown', (e) => {
+    const step = { ArrowRight: 1, ArrowDown: 1, ArrowLeft: -1, ArrowUp: -1 }[e.key];
+    if (step === undefined) return;
+    const shown = buttons.filter((b) => !b.hidden);
+    const from = shown.indexOf(e.target as HTMLButtonElement);
+    if (from < 0) return;
+    e.preventDefault();
+    const next = shown[(from + step + shown.length) % shown.length]!;
+    next.focus();
+    o.onChoose(next.dataset.value as T);
+  });
+
+  const set = (value: T | null): void => {
+    const shown = buttons.filter((b) => !b.hidden);
+    const stop = shown.find((b) => b.dataset.value === value) ?? shown[0];
+    for (const b of buttons) {
+      b.setAttribute('aria-checked', String(b.dataset.value === value));
+      b.tabIndex = b === stop ? 0 : -1;
+    }
+  };
+
+  element.append(label, ...buttons);
+  set(null);
+  return { element, buttons, set };
+}

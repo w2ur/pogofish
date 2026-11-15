@@ -1,5 +1,7 @@
 import { REDUCED_MOTION, resetMedia, setMedia } from '../test-dom';
-import { transport } from './controls';
+import { readFileSync } from 'node:fs';
+import { resolve } from 'node:path';
+import { choiceGroup, transport } from './controls';
 import { Stepper } from './stepper';
 
 beforeEach(() => {
@@ -94,5 +96,60 @@ describe('transport', () => {
     setMedia(REDUCED_MOTION, true);
     const { play } = parts(transport(new Stepper(4, () => {}), { lang: 'fr' }));
     expect(play.hidden).toBe(true);
+  });
+});
+
+describe('choiceGroup', () => {
+  const make = () => {
+    const chosen: string[] = [];
+    const g = choiceGroup({
+      label: 'Niveau',
+      id: 'level-label',
+      choices: [
+        { value: 'easy', label: 'Facile' },
+        { value: 'normal', label: 'Normal', note: 'mesuré' },
+        { value: 'hard', label: 'Difficile' },
+      ],
+      onChoose: (v) => {
+        chosen.push(v);
+        g.set(v);
+      },
+    });
+    document.body.replaceChildren(g.element);
+    return { g, chosen };
+  };
+  const key = (el: Element, k: string) => el.dispatchEvent(new KeyboardEvent('keydown', { key: k, bubbles: true }));
+
+  it('is a labelled radiogroup of radios, the checked one the only tab stop', () => {
+    const { g } = make();
+    expect(g.element.getAttribute('role')).toBe('radiogroup');
+    expect(g.element.getAttribute('aria-labelledby')).toBe('level-label');
+    expect(g.buttons.map((b) => b.getAttribute('role'))).toEqual(['radio', 'radio', 'radio']);
+    expect(g.buttons[1]!.textContent).toBe('Normal · mesuré');
+    g.set('normal');
+    expect(g.buttons.map((b) => b.getAttribute('aria-checked'))).toEqual(['false', 'true', 'false']);
+    expect(g.buttons.map((b) => b.tabIndex)).toEqual([-1, 0, -1]);
+  });
+
+  it('a click chooses; the arrows move, choose and wrap, skipping hidden options', () => {
+    const { g, chosen } = make();
+    g.buttons[0]!.click();
+    expect(chosen).toEqual(['easy']);
+    g.buttons[1]!.hidden = true;
+    g.buttons[0]!.focus();
+    key(g.buttons[0]!, 'ArrowRight');
+    expect(chosen.at(-1)).toBe('hard');
+    expect(document.activeElement).toBe(g.buttons[2]);
+    key(g.buttons[2]!, 'ArrowRight');
+    expect(chosen.at(-1)).toBe('easy');
+    key(g.buttons[0]!, 'ArrowLeft');
+    expect(chosen.at(-1)).toBe('hard');
+  });
+
+  it('the theme draws a checked choice as the filled block', () => {
+    const css = readFileSync(resolve(process.cwd(), 'src/kit/theme.css'), 'utf8');
+    const rule = /\.choice\[aria-checked='true'\] \{([^}]*)\}/.exec(css)![1]!;
+    expect(rule).toContain('background: var(--_action)');
+    expect(rule).toContain('color: var(--_ground)');
   });
 });

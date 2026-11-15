@@ -312,3 +312,38 @@ slot[hidden],
     transition: none;
   }
 }
+
+/* An exclusive choice (choiceGroup): outlined, and the checked one filled, the primary block used as a state. */
+.group {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px;
+}
+
+.group > .label {
+  flex-basis: 100%;
+  font-size: 12.8px;
+  color: var(--_muted);
+}
+
+.choice .tag {
+  font-size: 12.8px;
+  color: var(--_muted);
+}
+
+.choice[aria-checked='true'] {
+  background: var(--_action);
+  border-color: var(--_action);
+  color: var(--_ground);
+}
+
+.choice[aria-checked='true'] .tag {
+  color: inherit;
+}
+
+.choice[aria-checked='true']:hover:enabled {
+  background: var(--_ink-2);
+  border-color: var(--_ink-2);
+  color: var(--_ground);
+}

@@ -88,6 +88,19 @@ describe('<pogo-board> inline', () => {
     expect(order).toEqual(['6', '7', '8', '3', '4', '5', '0', '1', '2']);
   });
 
+  it('side and level are radio groups: one tab stop, arrows choose, the choice is for the next game', async () => {
+    const el = await mount('en');
+    const side = $(el, '.setup [role="radiogroup"][aria-labelledby="side-label"]');
+    const radios = [...side.querySelectorAll<HTMLButtonElement>('[role="radio"]')];
+    expect(radios.map((b) => b.getAttribute('aria-checked'))).toEqual(['true', 'false']);
+    expect(radios.map((b) => b.tabIndex)).toEqual([0, -1]);
+    radios[0]!.focus();
+    key(radios[0]!, 'ArrowRight');
+    expect(store.preferences().readerColour).toBe('Red');
+    expect(radios.map((b) => b.getAttribute('aria-checked'))).toEqual(['false', 'true']);
+    expect(el.shadowRoot!.activeElement).toBe(radios[1]);
+  });
+
   it('lays the kit’s fixed-size coordinates over the board, not SVG text', async () => {
     const el = await mount('en');
     expect(el.shadowRoot!.querySelectorAll('.play .board-labels .coord')).toHaveLength(9);
@@ -99,8 +112,8 @@ describe('<pogo-board> inline', () => {
     expect($(el, '.fidelity').textContent).toBe('Calcul en direct · règle des répétitions (lc1-2)');
     expect($(el, '.note').textContent).toContain('az-lc1-s1');
     expect($(el, '.note').textContent).toContain('0,855 [0,823 ; 0,887]');
-    expect($(el, '[data-level="normal"]').textContent).toBe('Normal · mesuré');
-    expect($(el, '[data-level="easy"]').textContent).toBe('Facile');
+    expect($(el, '.choice[data-value="normal"]').textContent).toBe('Normal · mesuré');
+    expect($(el, '.choice[data-value="easy"]').textContent).toBe('Facile');
     const en = await mount('en');
     expect($(en, '.note').textContent).toContain('0.855 [0.823, 0.887]');
     expect($(el, 'slot').hidden).toBe(true);
@@ -170,9 +183,8 @@ describe('<pogo-board> inline', () => {
     const s0 = store.current()!.states[0]!;
     const twos = legal(s0).filter((m) => m.from_cell === 0 && m.num_pieces === 2).map((m) => m.to_cell).sort();
     key(cell(el, 0), '2');
-    expect($(el, '.counts .control[aria-pressed="true"]').textContent).toBe('2');
-    // The chosen count is drawn as chosen: it carries the choice style.
-    expect($(el, '.counts .control[aria-pressed="true"]').classList.contains('choice')).toBe(true);
+    expect($(el, '.counts [role="radio"][aria-checked="true"]').textContent).toBe('2');
+    expect($(el, '.counts').getAttribute('role')).toBe('radiogroup');
     expect(marks(el, 'target')).toEqual(twos);
   });
 
@@ -268,7 +280,7 @@ describe('<pogo-board> inline', () => {
     await flush();
     expect($(el, '.caption').textContent).toBe('Position reprise : coup 3');
     expect(store.current()!.readerColour).toBe('Red');
-    expect($(el, '.choice[data-colour="Red"]').getAttribute('aria-pressed')).toBe('true');
+    expect($(el, '.choice[data-value="Red"]').getAttribute('aria-checked')).toBe('true');
     for (let i = 0; i < 9; i++) {
       const mark = legal(s).some((m) => m.from_cell === i) ? 'can-lift' : null;
       expect(cell(el, i).getAttribute('aria-label')).toBe(describeCell('fr', s, i, mark));
@@ -390,7 +402,7 @@ describe('<pogo-board> side and level during a game', () => {
     key(cell(el, from), String(n));
     cell(el, to).click();
     expect($(el, '.turn').textContent).toBe('The AI is thinking…');
-    $<HTMLButtonElement>(el, '.choice[data-colour="Red"]').click();
+    $<HTMLButtonElement>(el, '.choice[data-value="Red"]').click();
     expect(store.current()!.readerColour).toBe('White');
     expect(pending).toHaveLength(1);
     cell(el, 6).click();
