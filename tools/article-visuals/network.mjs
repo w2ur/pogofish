@@ -9,7 +9,7 @@ import { chromium } from '../../app/node_modules/playwright-core/index.mjs';
 w.initSync({ module: fs.readFileSync(new URL('../../wasm-pkg/pogofish_wasm_bg.wasm', import.meta.url)) });
 
 const args = process.argv.slice(2);
-const bare = args.includes('--bare'); // no text at all: the article's prose carries it
+const bare = args.includes("--bare"); // only the layer sizes: the article's prose carries the rest
 const [out, movesJ = '[[2,1,1],[7,2,1],[0,1,1]]'] = args.filter(a => a !== '--bare');
 let s = w.initial_state();
 for (const [a, n, b] of JSON.parse(movesJ)) s = w.apply_move(s, { from_cell: a, num_pieces: n, to_cell: b });
@@ -48,9 +48,8 @@ for (const l of layers) {
     svg += `<rect x="${l.x - 11}" y="${mid - 9}" width="22" height="18" fill="var(--page)"/>`;
     for (const d of [-5, 0, 5]) svg += `<circle cx="${l.x}" cy="${mid + d}" r="1.8" fill="var(--paper3)"/>`;
   }
-  if (bare) continue;
   svg += `<text x="${l.x}" y="${H - 8}" text-anchor="middle" class="lbl">${l.label}</text>`;
-  if (l.sub) svg += `<text x="${l.x}" y="${l.n === 1 ? (top + bot) / 2 + 40 : 18}" text-anchor="middle" class="sub">${l.sub}</text>`;
+  if (l.sub && !bare) svg += `<text x="${l.x}" y="${l.n === 1 ? (top + bot) / 2 + 40 : 18}" text-anchor="middle" class="sub">${l.sub}</text>`;
 }
 
 const css = fs.readFileSync(new URL('board.css', import.meta.url), 'utf8');
