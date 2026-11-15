@@ -29,3 +29,6 @@ jobs:
       - name: Build
         working-directory: figures
         run: npm run build
+      - name: Build assertions (worker entry, nothing inlined, no dist/assets/)
+        working-directory: figures
+        run: ./scripts/check-dist.sh
