@@ -147,6 +147,31 @@ describe('persistence', () => {
     expect(second.preferences()).toEqual({ readerColour: 'Red', level: 'hard' });
   });
 
+  it('hasSaved is true only for a saved game under way, not for saved preferences alone', () => {
+    const storage = memory();
+    const store = make(storage);
+    store.setLevel('hard');
+    expect(storage.data.has(STORAGE_KEY)).toBe(true);
+    expect(make(storage).hasSaved()).toBe(false);
+    store.newGame('White', 'hard');
+    expect(make(storage).hasSaved()).toBe(true);
+    storage.setItem(STORAGE_KEY, 'not json');
+    expect(make(storage).hasSaved()).toBe(false);
+  });
+
+  it('lastFinished before ready() is null, without throwing, and a restore announces itself on game', async () => {
+    const storage = memory();
+    const first = make(storage);
+    first.newGame('White', 'normal');
+    for (const m of DEFAULT_GAME) first.play(m);
+    const second = make(storage);
+    expect(second.lastFinished()).toBeNull();
+    const game = vi.fn(() => expect(second.lastFinished()).not.toBeNull());
+    second.on('game', game);
+    await second.ready();
+    expect(game).toHaveBeenCalledTimes(1);
+  });
+
   it('an invalid record is dropped silently', async () => {
     const cases: unknown[] = [
       'not json',

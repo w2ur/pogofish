@@ -31,7 +31,11 @@ export type StoreEvent = 'game' | 'playfrom';
 
 export interface Store {
   current(): GameRecord | null;
-  /** `null` → figures use `DEFAULT_GAME`. */
+  /**
+   * `null` → figures use `DEFAULT_GAME`. Safe to call at any time, but a saved game is
+   * only there once `ready()` has restored it: await `ready()`, or subscribe to 'game',
+   * which fires when a restore finds one.
+   */
   lastFinished(): GameRecord | null;
   readonly DEFAULT_GAME: readonly Triple[];
   /** Opens the board on `s` (the reader plays the side to move), emits 'game' then 'playfrom'. A finished position is ignored. */
@@ -52,7 +56,10 @@ export interface Store {
   setLevel(level: Level): void;
   /** The colour and level the next new game starts with. */
   preferences(): { readerColour: Colour; level: Level };
-  /** Whether storage holds a game, without reading it through the engine. */
+  /**
+   * Whether storage holds a game (finished or not) to restore, without the engine.
+   * Saved preferences alone do not count, so a follow board does not load the engine for them.
+   */
   hasSaved(): boolean;
 }
 
@@ -258,7 +265,16 @@ export function createStore(o: StoreOptions): Store {
     current: () => current,
     lastFinished: () => last,
     preferences: () => ({ ...prefs }),
-    hasSaved: () => read() !== null,
+    hasSaved() {
+      const raw = read();
+      if (raw === null) return false;
+      try {
+        const file = JSON.parse(raw) as Partial<SavedFile> | null;
+        return file?.v === 1 && file.current !== null && typeof file.current === 'object';
+      } catch {
+        return false;
+      }
+    },
 
     on(ev, fn) {
       listeners[ev].add(fn);
