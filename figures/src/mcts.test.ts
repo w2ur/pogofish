@@ -1,8 +1,8 @@
 import { readFileSync } from 'node:fs';
 import { resolve } from 'node:path';
 import { describe, expect, it } from 'vitest';
-import { legal, type State, type Triple } from './engine';
-import { search, type SearchSnapshot } from './mcts';
+import { legal, play, terminal, winner, type State, type Triple } from './engine';
+import { bestMove, search, type SearchSnapshot } from './mcts';
 import { parseAz, policyIndex, type AzNet } from './nets';
 
 // Paths anchor on the working directory (figures/), as in test-setup.ts.
@@ -120,7 +120,49 @@ describe('search as a process', () => {
     expect(ranAt).toBe(10);
   });
 
-  it('aborting stops before the next batch', async () => {
+  it('a signal aborted before the search rejects without simulating', async () => {
+    const controller = new AbortController();
+    controller.abort();
+    let calls = 0;
+    const run = search(puzzle.state, az, { signal: controller.signal, onSnapshot: () => calls++ });
+    await expect(run).rejects.toMatchObject({ name: 'AbortError' });
+    expect(calls).toBe(0);
+  });
+});
+
+// The Flat evaluator of crates/infer/src/mcts.rs's tests: uniform priors, value 0.
+const flatNet: AzNet = {
+  header: az.header,
+  evaluate: (s) => {
+    const keys = legal(s).map(policyIndex);
+    return {
+      logits: new Float32Array(243),
+      priors: new Map(keys.map((k) => [k, Math.fround(1 / keys.length)])),
+      value: 0,
+    };
+  },
+};
+
+describe('search hardening', () => {
+  it('finds a one-move win and rates it close to +1 for the player to move', async () => {
+    // the_search_finds_a_one_move_win_and_rates_it, crates/infer/src/mcts.rs.
+    const s: State = {
+      cells: [['White'], ['Red'], [], ['White', 'White'], [], [], [], [], []],
+      to_move: 'White',
+      move_count: 0,
+      history: [],
+    };
+    const snap = await search(s, flatNet, { sims: 200, rules: null });
+    const best = bestMove(snap);
+    const next = play(s, best);
+    expect(terminal(next, null)).toBe(true);
+    expect(winner(next, null)).toBe('W');
+    const row = snap.root.find((r) => r.move === best)!;
+    expect(row.meanValue).toBeGreaterThan(0.99);
+    expect(snap.root.reduce((a, r) => a + r.visits, 0)).toBe(200);
+  });
+
+  it('after an abort, onSnapshot never fires again', async () => {
     const controller = new AbortController();
     const seen: number[] = [];
     const run = search(puzzle.state, az, {
@@ -132,15 +174,43 @@ describe('search as a process', () => {
       },
     });
     await expect(run).rejects.toMatchObject({ name: 'AbortError' });
-    expect(seen.at(-1)).toBe(10);
+    expect(seen).toEqual([1, 2, 3]);
   });
 
-  it('a signal aborted before the search rejects without simulating', async () => {
-    const controller = new AbortController();
-    controller.abort();
-    let calls = 0;
-    const run = search(puzzle.state, az, { signal: controller.signal, onSnapshot: () => calls++ });
-    await expect(run).rejects.toMatchObject({ name: 'AbortError' });
-    expect(calls).toBe(0);
+  it.each([Number.NaN, 0, -5, 0.5, Number.POSITIVE_INFINITY])('a batch of %s is clamped and the search ends', async (batch) => {
+    const snap = await search(puzzle.state, az, { sims: 12, batch });
+    expect(snap.sim).toBe(12);
   });
+
+  it('a legal move the net gives no prior is refused, never NaN', async () => {
+    const holey: AzNet = {
+      header: az.header,
+      evaluate: (s) => {
+        const keys = legal(s).map(policyIndex);
+        return { logits: new Float32Array(243), priors: new Map(keys.slice(1).map((k) => [k, 0.5])), value: 0 };
+      },
+    };
+    await expect(search(puzzle.state, holey, { sims: 3 })).rejects.toThrow(/^pogo-figures: .*prior/);
+  });
+});
+
+describe('bestMove', () => {
+  it('is the most visited move, ties to the lower index', () => {
+    const m = (i: number) => ({ from_cell: i, num_pieces: 1 as const, to_cell: i });
+    const row = (i: number, visits: number) => ({ move: m(i), prior: 0, visits, meanValue: 0 });
+    expect(bestMove({ sim: 13, root: [row(0, 3), row(1, 5), row(2, 5)] })).toEqual(m(1));
+    expect(bestMove({ sim: 0, root: [row(0, 0), row(1, 0)] })).toEqual(m(0));
+  });
+
+  it('an empty root has no best move', () => {
+    expect(() => bestMove({ sim: 0, root: [] })).toThrow(/^pogo-figures: /);
+  });
+
+  it('equals the Rust rule (visits, Reverse(i)) on every fixture position', async () => {
+    for (const p of reference.positions.filter((q) => q.visits.length > 0)) {
+      const max = Math.max(...p.visits);
+      const expected = p.legal[p.visits.indexOf(max)]!;
+      expect(triple(bestMove(await search(p.state, az))), p.label).toEqual(expected);
+    }
+  }, 60_000);
 });

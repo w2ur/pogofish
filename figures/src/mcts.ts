@@ -4,7 +4,7 @@
 // is q + cPuct·prior·√(N+1)/(1+n), first index among equal scores, and every
 // sum, quotient and product is rounded to f32 in the Rust order, so the
 // visits equal the Rust's exactly, not approximately.
-import { LC1_2, key, legal, play, terminal, winner, type Move, type Rules, type State } from './engine';
+import { LC1_2, key, legal, moveName, play, terminal, winner, type Move, type Rules, type State } from './engine';
 import { policyIndex, type AzNet } from './nets';
 
 export interface RootRow {
@@ -29,11 +29,11 @@ export interface SearchOptions {
   cPuct?: number;
   /** Default lc1-2. */
   rules?: Rules;
-  /** Simulations between two yields to the event loop (default 10). */
+  /** Simulations between two yields to the event loop (default 10; a non-finite or < 1 value counts as 1). */
   batch?: number;
   /** Called after every simulation. */
   onSnapshot?: (s: SearchSnapshot) => void;
-  /** Aborting rejects the search with an `AbortError` once the current batch ends. */
+  /** Aborting rejects the search with an `AbortError` before the next simulation; `onSnapshot` does not fire again. */
   signal?: AbortSignal;
 }
 
@@ -90,7 +90,13 @@ class Tree {
     const { priors, value } = this.net.evaluate(s);
     this.nodes.set(
       k,
-      moves.map((move) => ({ move, visits: 0, valueSum: 0, prior: priors.get(policyIndex(move))! })),
+      moves.map((move) => {
+        const prior = priors.get(policyIndex(move));
+        if (prior === undefined || !Number.isFinite(prior)) {
+          throw new Error(`pogo-figures: the net gives no prior for the legal move ${moveName(move)}`);
+        }
+        return { move, visits: 0, valueSum: 0, prior };
+      }),
     );
     return value;
   }
@@ -146,26 +152,46 @@ class Tree {
 }
 
 /**
- * Searches `s` and resolves with the final snapshot; the move to play is the
- * most visited (the first in `root` order among equals). Yields to the event
- * loop after every `batch` simulations; an aborted search rejects with an
- * `AbortError` and never resolves with a partial result.
+ * The move to play: the most visited, the first in `root` order among equals
+ * (the `(visits, Reverse(i))` rule of `visit_distribution` at tau 0, mcts.rs).
+ * A position with no legal move has none, and is refused.
+ */
+export function bestMove(snapshot: SearchSnapshot): Move {
+  let best: RootRow | undefined;
+  for (const row of snapshot.root) if (best === undefined || row.visits > best.visits) best = row;
+  if (best === undefined) throw new Error('pogo-figures: no best move in a search with no legal move');
+  return best.move;
+}
+
+/**
+ * Searches `s` and resolves with the final snapshot; `bestMove` picks the move
+ * to play from it. Yields to the event loop after every `batch` simulations; an
+ * aborted search rejects with an `AbortError` before its next simulation and
+ * never resolves with a partial result.
+ *
+ * Under game A (`rules: null`) the caller's root must carry no history. The
+ * search drops history below the root, as `apply_move_under` does, but the net's
+ * repetition input reads the root as given, so a root with history would be
+ * valued as no game-A position ever is.
  */
 export async function search(s: State, net: AzNet, o: SearchOptions = {}): Promise<SearchSnapshot> {
   const { sims = 100, cPuct = 1.5, rules = LC1_2, batch = 10, onSnapshot, signal } = o;
   if (signal?.aborted) throw abortError();
+  // NaN would make every batch empty and the loop endless; Infinity never yields.
+  const step = Number.isFinite(batch) && batch >= 1 ? Math.floor(batch) : 1;
   const tree = new Tree(net, rules, f(cPuct));
   tree.expandIfNeeded(s);
   let sim = 0;
   while (sim < sims) {
-    const end = Math.min(sims, sim + Math.max(1, batch));
+    const end = Math.min(sims, sim + step);
     while (sim < end) {
+      if (signal?.aborted) throw abortError();
       tree.simulate(s, new Set());
       sim += 1;
       onSnapshot?.(tree.snapshot(s, sim));
     }
     if (sim < sims) await yieldToEventLoop();
-    if (signal?.aborted) throw abortError();
   }
+  if (signal?.aborted) throw abortError();
   return tree.snapshot(s, sim);
 }
