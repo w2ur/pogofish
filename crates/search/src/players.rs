@@ -59,24 +59,25 @@ pub fn top_difference(state: &GameState, color: Color) -> i32 {
         .sum()
 }
 
-fn greedy(
-    state: &GameState,
-    moves: &[Move],
-    rules: &RuleSet,
-    rng: &mut SplitMix64,
-) -> Move {
+/// What greedy maximises for `mv`: `i32::MAX` for a move that wins,
+/// `i32::MIN + 1` for one that loses, 0 for an earned draw, otherwise the
+/// mover's [`top_difference`] after the move. Panics if `mv` is illegal.
+pub fn greedy_score(state: &GameState, mv: Move, rules: &RuleSet) -> i32 {
     let mover = state.to_move();
+    let next = apply_move(state, mv).expect("legal move");
+    match is_terminal(&next, rules) {
+        Some(Outcome::DrawEarned) => 0,
+        Some(o) if o.winner() == Some(mover) => i32::MAX,
+        Some(_) => i32::MIN + 1,
+        None => top_difference(&next, mover),
+    }
+}
+
+fn greedy(state: &GameState, moves: &[Move], rules: &RuleSet, rng: &mut SplitMix64) -> Move {
     let mut best = i32::MIN;
     let mut tied: Vec<Move> = Vec::new();
     for &m in moves {
-        let next = apply_move(state, m).expect("legal move");
-        let outcome = is_terminal(&next, rules);
-        let score = match outcome {
-            Some(Outcome::DrawEarned) => 0,
-            Some(o) if o.winner() == Some(mover) => i32::MAX,
-            Some(_) => i32::MIN + 1,
-            None => top_difference(&next, mover),
-        };
+        let score = greedy_score(state, m, rules);
         if score > best {
             best = score;
             tied.clear();
@@ -200,6 +201,30 @@ mod tests {
             // 4 White tops against 3 Red.
             assert_eq!(top_difference(&next, W), 1, "{m:?}");
         }
+    }
+
+    /// The score greedy maximises: the sentinels for a won and a lost game,
+    /// 0 for an earned draw, else the top difference after the move.
+    #[test]
+    fn greedy_score_is_the_sentinel_or_the_top_difference() {
+        let mut cells = empty();
+        cells[0] = vec![W];
+        cells[1] = vec![R];
+        cells[3] = vec![W, W];
+        let s = position(cells, W, 0);
+        let mv = |from_cell, num_pieces, to_cell| Move {
+            from_cell,
+            num_pieces,
+            to_cell,
+        };
+        assert_eq!(greedy_score(&s, mv(0, 1, 1), &RuleSet::Uncapped), i32::MAX);
+        assert_eq!(greedy_score(&s, mv(3, 1, 6), &RuleSet::Uncapped), 2);
+
+        let rules = RuleSet::LC1 { repetitions: 1 };
+        let s = [mv(0, 1, 3), mv(6, 1, 7), mv(3, 1, 0)]
+            .iter()
+            .fold(initial_state(), |s, &m| apply_move(&s, m).unwrap());
+        assert_eq!(greedy_score(&s, mv(7, 1, 6), &rules), i32::MIN + 1);
     }
 
     #[test]
