@@ -29,6 +29,19 @@ It ships `index.html`, the engine wasm, `models/lc1-2/az-lc1-s1.onnx` and the no
 
 LC1-2 (Sudden Death) and LC3-29 (Classic) AlphaZero models ship as ONNX under `app/public/models/`. The LC1-2 opponent is the round-2 net the terminal game plays (`lc1-2/az-lc1-s1.onnx`, input encoded by the WASM engine; `app/src/ai/parity.test.ts` checks it against the Rust net on 100 positions within 1e-5). The LC3-29 net is round 1.
 
+### `figures/` — article figures
+
+A TypeScript package that will hold the `<pogo-…>` custom elements of the article page, built with Vite library mode into `figures/dist/` (`pogo-figures.js`, `manifest.json`, the engine `.wasm`), base `/pogo/`. `src/engine.ts` wraps the committed `wasm-pkg/` build (`pogofish-wasm`, a `file:` dependency); every other module goes through it.
+
+```bash
+cd figures
+npm ci
+npm test             # vitest + happy-dom
+npm run build        # tsc, then vite build -> dist/
+```
+
+Binaries are never imported (Vite would inline them as base64): they live in `figures/public/` and are fetched by URL. `npm run build` first copies `wasm-pkg/pogofish_wasm_bg.wasm` there (`scripts/copy-wasm.mjs`, git-ignored copy). CI: `.github/workflows/figures.yml`.
+
 ## The game itself
 
 Pogo is played on a 3×3 grid. Each player starts with 6 pieces in 3 stacks of 2. Pick 1–3 pieces from the top of a stack you own, jump them a Manhattan distance determined by the count (1→d1, 2→d2, 3→d1|d3), and land on any cell — stacking on top. The top piece owns the stack. Win by topping every remaining stack. Three rule variants resolve the infinite-game problem:

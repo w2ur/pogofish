@@ -1,0 +1,22 @@
+{
+  "name": "pogo-figures",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "prebuild": "node scripts/copy-wasm.mjs",
+    "build": "tsc --noEmit && vite build",
+    "test": "vitest run"
+  },
+  "dependencies": {
+    "pogofish-wasm": "file:../wasm-pkg"
+  },
+  "devDependencies": {
+    "@types/node": "^24.19.2",
+    "fast-check": "^4.0.0",
+    "happy-dom": "^20.0.0",
+    "typescript": "^5.9.0",
+    "vite": "^7.0.0",
+    "vitest": "^4.0.0"
+  }
+}

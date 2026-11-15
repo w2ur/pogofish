@@ -1,0 +1,31 @@
+name: figures
+
+on:
+  push:
+    paths: ["figures/**", "wasm-pkg/**", "crates/**", ".github/workflows/figures.yml"]
+  pull_request:
+    paths: ["figures/**", "wasm-pkg/**", "crates/**", ".github/workflows/figures.yml"]
+
+jobs:
+  figures:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: dtolnay/rust-toolchain@stable
+      # No pogofish-train: it downloads libtorch, which release-cli.yml also avoids.
+      - name: Rust tests
+        run: cargo test --release -p pogofish-engine -p pogofish-search -p pogofish-infer -p pogofish-wasm
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 24
+          cache: npm
+          cache-dependency-path: figures/package-lock.json
+      - name: Install
+        working-directory: figures
+        run: npm ci
+      - name: Test
+        working-directory: figures
+        run: npm test
+      - name: Build
+        working-directory: figures
+        run: npm run build

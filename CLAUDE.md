@@ -15,6 +15,9 @@ Pogofish is a browser-based Pogo board game with AI opponents trained via AlphaZ
 - `pogofish-cli` — Terminal game (crossterm) against the bundled net: colour, level (simulations), hint, the AI's estimate, undo, saved game records; game logic in `session.rs`, key handling tested headless in `app.rs`
 - `pogofish-wasm` — wasm-bindgen wrappers for browser use
 
+### Figures (`figures/`)
+- TypeScript + Vite library mode: the `<pogo-…>` custom elements of an article page; `src/engine.ts` is the only module that talks to the committed `wasm-pkg/` build, and it maps game A (a `null` rule set) to the WASM's `"Uncapped"` because passing null poisons the instance
+
 ### Web app (`app/`)
 - Vite
 - React 19
@@ -255,6 +258,7 @@ code, reference only: never import from it.
 
 - Rust workspace: `cargo test --workspace` (engine, search, train)
 - Web app: `cd app && npx vitest run` (the board entry's tests are `src/board/embed.test.ts` and `src/ai/assets.test.ts`)
+- Figures package: `cd figures && npm test && npm run build` (engine wrapper tests; the build must write a separate `.wasm`, never base64); `.github/workflows/figures.yml` runs it with the Rust engine tests on every push or PR touching `figures/`, `wasm-pkg/` or `crates/`
 - Property tests: engine invariants via proptest (piece conservation, no stalemate, legal moves apply)
 
 ## Build Warning Exceptions

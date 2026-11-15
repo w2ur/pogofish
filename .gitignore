@@ -102,3 +102,8 @@ Cargo.lock.bak
 /tools/article-visuals/**/*.jpeg
 /tools/article-visuals/**/*.mp4
 /tools/article-visuals/**/list.txt
+
+# figures/ package
+figures/dist/
+figures/node_modules/
+figures/public/pogofish_wasm_bg.wasm
