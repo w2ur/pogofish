@@ -53,7 +53,7 @@ async function render(html) {
 }
 
 if (mode === 'mosaic') {
-  const cols = [['az100', 'AlphaZero', '100 simulations par coup', '#b54a33'], ['td', 'Réseau TD(λ)', 'un coup d’avance', '#1f6fa0'], ['qtab', 'Q-learning tabulaire', 'un coup d’avance', '#a07a12']];
+  const cols = [['az100', 'AlphaZero', '100 simulations par coup', '#b54a33'], ['td', 'Réseau TD(λ)', 'au réflexe, sans recherche', '#1f6fa0'], ['qtab', 'Q-learning tabulaire', 'au réflexe, sans recherche', '#a07a12']];
   const stages = curves.stages_pct;
   let g = '<div></div>' + cols.map(([k, n, sub]) => `<div class="colh">${n}<span>${sub} · budget ${int(curves.programs[k].budget_games)} parties</span></div>`).join('');
   for (const [i, pc] of stages.entries()) {
@@ -115,7 +115,7 @@ if (mode === 'mosaic') {
       <td class="mv">${bar(q.visits[ki] / total, '#b54a33')}${q.visits[ki]} / ${total}</td><td class="mv">${pick(vBest, vTies, q.solved_with_search)}</td></tr>`;
   }
   await render(`<div class="sheet"><h1>Ce que voit AlphaZero : un problème, à chaque étape</h1>
-    <p class="sub">Les blancs jouent et gagnent en ${pz.win_in_plies} demi-coups, par un seul coup sur ${pz.moves.length} : <b style="color:var(--paper)">${pz.key_move}</b> (une pièce de ${kf} vers ${kt}, marquée sur le plateau). Le glouton jouerait ${pz.greedy_would_play_one_of.join(' ou ')}. L’intuition, c’est le réseau seul : la part qu’il donne à chaque coup. La recherche, ce sont ses 100 simulations : combien vont au bon coup.</p>
+    <p class="sub">Les Blancs jouent et gagnent en ${pz.win_in_plies} coups, par un seul coup sur ${pz.moves.length} : <b style="color:var(--paper)">${pz.key_move}</b> (une pièce de ${kf} vers ${kt}, marquée sur le plateau). Le glouton jouerait ${pz.greedy_would_play_one_of.join(' ou ')}. L’intuition, c’est le réseau seul : la part qu’il donne à chaque coup. La recherche, ce sont ses 100 simulations : combien vont au bon coup.</p>
     <div class="pz"><div>${board}</div>
     <table><tr><th>Étape</th><th>Intuition :<br>part du bon coup</th><th>Elle choisit</th><th>Recherche :<br>visites du bon coup</th><th>Elle choisit</th></tr>${rows}</table></div>
     <p class="note">Position résolue dans le jeu sans répétition et jouée sans historique ; la table confirme ${pz.key_move} comme seul coup gagnant. Un problème montre comment le programme choisit, pas sa force : celle-ci se mesure sur les 2 000 parties contre le glouton.</p></div>`);

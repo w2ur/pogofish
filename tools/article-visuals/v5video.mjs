@@ -123,7 +123,7 @@ if (prog in NAME && prog !== 'az0') {
     add(frame(g.plies[0].s, null, `Étape ${k + 1} sur ${stages.length}. Score mesuré : <b>${pct(st.score)}</b>. Voici une de ses parties.`), 2.6);
     for (const [i, pl] of g.plies.entries()) {
       const opening = i < game.opening_plies;
-      const mover = pl.s.to_move === 'White' ? `${nm.short} (blancs)` : 'le glouton (rouges)';
+      const mover = pl.s.to_move === 'White' ? `${nm.short} (Blancs)` : 'le glouton (Rouges)';
       const cap = opening
         ? `Coup ${i + 1} : ouverture tirée au hasard, la même à chaque étape.`
         : `Coup ${i + 1} : ${mover} déplace ${pieces(pl.m.num_pieces)}.`;
@@ -174,7 +174,7 @@ if (prog in NAME && prog !== 'az0') {
     <div style="font-size:30px;font-weight:650;margin-bottom:6px">Score contre le glouton, au fil de l’entraînement</div>${svg}
     <div style="font-size:21px;line-height:1.4;margin-top:6px">${cap}</div></div>`;
   add(`<div class="card"><h1>La course</h1><p>Trois programmes apprennent le même jeu en jouant contre eux-mêmes. À intervalles fixés, on mesure leur score contre le glouton sur 2 000 parties.</p><p>L’axe compte les parties d’entraînement, pas le calcul : une partie d’AlphaZero fait 100 simulations par coup.</p></div>`, 6);
-  const cap = 'Trait plein : AlphaZero avec recherche (100 simulations), les deux autres à un coup d’avance. Pointillé : AlphaZero sans recherche.';
+  const cap = 'Trait plein : AlphaZero avec recherche (100 simulations), les deux autres au réflexe, sans recherche. Pointillé : AlphaZero sans recherche.';
   for (let u = lo - 0.2; u <= hi + 1e-9; u += 0.05) add(page(chart(u), cap), 0.1);
   // First stage whose whole 95 % interval lies above greedy's score, derived, never typed.
   const passes = s => s.st.find(p => p.ci95[0] > REF.greedy.score);
