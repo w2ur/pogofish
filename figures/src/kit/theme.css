@@ -122,13 +122,17 @@ slot[hidden],
   font-variant-numeric: tabular-nums;
 }
 
-/* A control is the flyer's stamp: an inverted block, never red. */
+/*
+ * Controls are never red. Primary = the flyer's stamp, a filled inverted block,
+ * at most one per row. Secondary = the same block outlined. Same corners, same
+ * press, same focus ring.
+ */
 .control {
   appearance: none;
   margin: 0;
   min-height: 44px;
   padding: 0 16px;
-  border: 1px solid var(--_action);
+  border: 2px solid var(--_action);
   border-radius: 0;
   background: var(--_action);
   color: var(--_ground);
@@ -143,13 +147,44 @@ slot[hidden],
   transition: transform 80ms linear;
 }
 
-.control:hover {
+.control:hover:enabled {
   background: var(--_ink-2);
   border-color: var(--_ink-2);
 }
 
 .control:active {
   transform: translate(2px, 2px);
+}
+
+.control.secondary {
+  background: transparent;
+  border-color: var(--_action);
+  color: var(--_ink);
+}
+
+.control.secondary:hover:enabled {
+  background: transparent;
+  border-color: var(--_ink-2);
+  color: var(--_ink-2);
+}
+
+/* Square icon button: a 44px touch target at any width. */
+.control.icon {
+  display: inline-grid;
+  place-items: center;
+  width: 44px;
+  padding: 0;
+}
+
+.control .chevron {
+  fill: none;
+  stroke: currentColor;
+  stroke-width: 2.5px;
+  stroke-linecap: square;
+}
+
+.control[hidden] {
+  display: none;
 }
 
 .control:disabled {
@@ -169,7 +204,15 @@ slot[hidden],
 .controls {
   display: flex;
   flex-wrap: wrap;
+  align-items: center;
   gap: 8px;
+}
+
+.counter {
+  min-width: 5ch;
+  font-size: 12.8px;
+  text-align: center;
+  color: var(--_ink);
 }
 
 /* The board. Pieces are the only round thing; their colour is their side. */

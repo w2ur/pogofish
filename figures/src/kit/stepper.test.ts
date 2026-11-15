@@ -92,6 +92,36 @@ describe('Stepper', () => {
     expect(s.auto).toBe(true);
   });
 
+  it('tells its subscribers when auto flips, when play starts or stops, and when the step moves', () => {
+    const s = new Stepper(5, () => {});
+    const seen: string[] = [];
+    s.onChange(() => seen.push(`${s.index}:${s.playing ? 'play' : 'stop'}:${s.auto ? 'auto' : 'manual'}`));
+    s.play();
+    vi.advanceTimersByTime(900);
+    setMedia(REDUCED_MOTION, true);
+    setMedia(REDUCED_MOTION, false);
+    s.next();
+    expect(seen).toEqual(['0:play:auto', '1:play:auto', '1:stop:manual', '1:stop:auto', '2:stop:auto']);
+  });
+
+  it('onChange returns an unsubscribe', () => {
+    const s = new Stepper(5, () => {});
+    const fn = vi.fn();
+    const off = s.onChange(fn);
+    off();
+    s.next();
+    expect(fn).not.toHaveBeenCalled();
+  });
+
+  it('a stepper built with an already-aborted signal attaches no media listener', () => {
+    const controller = new AbortController();
+    controller.abort();
+    const s = new Stepper(10, () => {}, { signal: controller.signal });
+    expect(mediaListeners(REDUCED_MOTION)).toBe(0);
+    s.play();
+    expect(vi.getTimerCount()).toBe(0);
+  });
+
   it('destroy() and an aborted signal clear the timer and the media listener', () => {
     const a = new Stepper(10, () => {});
     a.play();

@@ -2,6 +2,7 @@
 // languages. Later element tasks add their tags here.
 import { initial, legal, moveName, play, ready, type Move, type State } from '../src/engine';
 import { drawBoard } from '../src/kit/board-svg';
+import { controlButton, transport } from '../src/kit/controls';
 import { PogoFigure, kitSheet, type PlayFromDetail } from '../src/kit/figure';
 import { Stepper } from '../src/kit/stepper';
 import { t, type Fidelity, type Lang } from '../src/kit/strings';
@@ -48,15 +49,6 @@ function game(plies: number): { states: State[]; moves: Move[] } {
   return { states, moves };
 }
 
-function button(label: string, onClick: () => void): HTMLButtonElement {
-  const b = document.createElement('button');
-  b.type = 'button';
-  b.className = 'control';
-  b.textContent = label;
-  b.addEventListener('click', onClick);
-  return b;
-}
-
 function demo(kind: Fidelity, source?: string): CustomElementConstructor {
   return class extends PogoFigure {
     static override fidelity = kind;
@@ -68,8 +60,6 @@ function demo(kind: Fidelity, source?: string): CustomElementConstructor {
       const l = this.lang;
       const { states, moves } = game(8);
       const boardSlot = document.createElement('div');
-      const counter = document.createElement('p');
-      counter.className = 'label num';
       const show = (i: number): void => {
         const m = moves[i - 1];
         boardSlot.replaceChildren(
@@ -80,29 +70,22 @@ function demo(kind: Fidelity, source?: string): CustomElementConstructor {
             ...(m ? { from: m.from_cell, to: m.to_cell, moving: m.num_pieces } : {}),
           }),
         );
-        counter.textContent = `${i} / ${states.length - 1}${m ? ` · ${moveName(m)}` : ''}`;
       };
-      const toggle = button(t(l, 'play'), () => {
-        if (stepper.playing) stepper.pause();
-        else stepper.play();
-        toggle.textContent = t(l, stepper.playing ? 'pause' : 'play');
+      const stepper = new Stepper(states.length, show, { signal: this.signal });
+      const controls = transport(stepper, {
+        lang: l,
+        counter: (i, n) => `${i} / ${n - 1}`,
+        actions: [
+          { label: t(l, 'restart'), onClick: () => stepper.go(0) },
+          {
+            label: t(l, 'playFromHere'),
+            onClick: () => this.playFrom(states[stepper.index]!, `demo-${stepper.index}`),
+            primary: true,
+          },
+        ],
       });
-      const stepper = new Stepper(states.length, show, {
-        signal: this.signal,
-        onEnd: () => (toggle.textContent = t(l, 'play')),
-      });
-      toggle.hidden = !stepper.auto;
-      const controls = document.createElement('div');
-      controls.className = 'controls';
-      controls.append(
-        button(t(l, 'previous'), () => stepper.prev()),
-        toggle,
-        button(t(l, 'next'), () => stepper.next()),
-        button(t(l, 'restart'), () => stepper.go(0)),
-        button(t(l, 'playFromHere'), () => this.playFrom(states[stepper.index]!, `demo-${stepper.index}`)),
-      );
       show(0);
-      this.stage.append(boardSlot, counter, controls);
+      this.stage.append(boardSlot, controls);
     }
   };
 }
@@ -130,18 +113,30 @@ async function build(): Promise<void> {
     ),
   );
 
-  app.append(heading('Controls: default · hover · pressed · focus · disabled'));
-  const states = ['default', 'hover', 'pressed', 'focus'].map((s) => {
-    const b = button(t(l, s === 'default' ? 'play' : s === 'hover' ? 'next' : s === 'pressed' ? 'restart' : 'playFromHere'), () => {});
-    b.dataset.demo = s;
-    return b;
-  });
-  const disabled = button(t(l, 'newGame'), () => {});
-  disabled.disabled = true;
-  const row = document.createElement('div');
-  row.className = 'controls';
-  row.append(...states, disabled);
-  app.append(kitBox(row));
+  app.append(heading('Controls · primary, secondary, icon · default, hover, pressed, focus, disabled'));
+  const specimen = document.createElement('div');
+  specimen.style.cssText = 'display:grid;gap:12px';
+  const STATES = ['default', 'hover', 'pressed', 'focus', 'disabled'] as const;
+  for (const style of ['primary', 'secondary', 'icon'] as const) {
+    const row = document.createElement('div');
+    row.className = 'controls';
+    for (const state of STATES) {
+      let b: HTMLButtonElement;
+      if (style === 'icon') {
+        // An icon button is the transport's own: take one from a throwaway row.
+        const r = transport(new Stepper(3, () => {}), { lang: l });
+        b = r.querySelector<HTMLButtonElement>('[data-role="next"]')!;
+      } else {
+        b = controlButton(t(l, style === 'primary' ? 'play' : 'restart'), () => {}, style === 'secondary');
+      }
+      b.disabled = state === 'disabled';
+      b.dataset.demo = state;
+      row.append(b);
+    }
+    specimen.append(row);
+  }
+  specimen.append(transport(new Stepper(8, () => {}), { lang: l, actions: [{ label: t(l, 'playFromHere'), onClick: () => {} }] }));
+  app.append(kitBox(specimen));
 
   app.append(heading('drawBoard · initial, mid-game, a move · 160px and 320px'));
   const after = play(initial(), legal(initial())[2]!);
@@ -151,7 +146,7 @@ async function build(): Promise<void> {
     boards.append(
       drawBoard(initial(), { size, labels: size === 320, title: t(l, 'newGame') }),
       drawBoard(MID, { size, labels: size === 320 }),
-      drawBoard(after, { size, labels: true, from: 0, to: 2, moving: 2 }),
+      drawBoard(after, { size, labels: size === 320, from: 0, to: 2, moving: 2 }),
     );
   }
   app.append(kitBox(boards));

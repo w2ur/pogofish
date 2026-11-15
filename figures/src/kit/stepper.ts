@@ -1,6 +1,7 @@
 // Steps a figure through `steps` frames, by hand or on a timer. Under reduced
 // motion there is no timer at all: `auto` is false, `play()` does nothing, and
-// the figure shows its step buttons. The media query is followed live.
+// the figure shows its step buttons. The media query is followed live, and
+// `onChange` subscribers hear every change of step, of play state and of `auto`.
 
 const REDUCED_MOTION = '(prefers-reduced-motion: reduce)';
 
@@ -19,8 +20,11 @@ export class Stepper {
   private readonly media: MediaQueryList;
   private readonly interval: number;
   private readonly onEnd: (() => void) | undefined;
+  private readonly listeners = new Set<() => void>();
+  private destroyed = false;
   private readonly onMedia = (): void => {
-    if (!this.auto) this.pause();
+    if (!this.auto) this.halt();
+    this.emit();
   };
 
   constructor(
@@ -31,6 +35,10 @@ export class Stepper {
     this.interval = options.interval ?? 900;
     this.onEnd = options.onEnd;
     this.media = matchMedia(REDUCED_MOTION);
+    if (options.signal?.aborted) {
+      this.destroyed = true;
+      return;
+    }
     this.media.addEventListener('change', this.onMedia);
     options.signal?.addEventListener('abort', () => this.destroy(), { once: true });
   }
@@ -48,8 +56,14 @@ export class Stepper {
     return this.i;
   }
 
+  /** Subscribes to every change; returns the unsubscribe. */
+  onChange(fn: () => void): () => void {
+    this.listeners.add(fn);
+    return () => this.listeners.delete(fn);
+  }
+
   play(): void {
-    if (!this.auto || this.playing || this.steps < 2) return;
+    if (this.destroyed || !this.auto || this.playing || this.steps < 2) return;
     if (this.i === this.steps - 1) this.go(0);
     this.timer = setInterval(() => {
       this.go(this.i + 1);
@@ -58,11 +72,11 @@ export class Stepper {
         this.onEnd?.();
       }
     }, this.interval);
+    this.emit();
   }
 
   pause(): void {
-    clearInterval(this.timer);
-    this.timer = undefined;
+    if (this.halt()) this.emit();
   }
 
   next(): void {
@@ -79,10 +93,25 @@ export class Stepper {
     if (target === this.i) return;
     this.i = target;
     this.onStep(target);
+    this.emit();
   }
 
   destroy(): void {
-    this.pause();
+    this.destroyed = true;
+    this.halt();
     this.media.removeEventListener('change', this.onMedia);
+    this.listeners.clear();
+  }
+
+  /** Stops the timer; true when one was running. */
+  private halt(): boolean {
+    if (this.timer === undefined) return false;
+    clearInterval(this.timer);
+    this.timer = undefined;
+    return true;
+  }
+
+  private emit(): void {
+    for (const fn of [...this.listeners]) fn();
   }
 }
