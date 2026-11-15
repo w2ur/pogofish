@@ -1,0 +1,106 @@
+import { REDUCED_MOTION, mediaListeners, resetMedia, setMedia } from '../test-dom';
+import { Stepper } from './stepper';
+
+beforeEach(() => {
+  resetMedia();
+  vi.useFakeTimers();
+});
+afterEach(() => {
+  vi.useRealTimers();
+});
+
+describe('Stepper', () => {
+  it('plays one step per interval and calls onEnd at the last step', () => {
+    const seen: number[] = [];
+    const onEnd = vi.fn();
+    const s = new Stepper(3, (i) => seen.push(i), { onEnd });
+    expect(s.auto).toBe(true);
+    s.play();
+    expect(s.playing).toBe(true);
+    vi.advanceTimersByTime(900);
+    expect(seen).toEqual([1]);
+    vi.advanceTimersByTime(900);
+    expect(seen).toEqual([1, 2]);
+    expect(onEnd).toHaveBeenCalledTimes(1);
+    expect(s.playing).toBe(false);
+    expect(vi.getTimerCount()).toBe(0);
+  });
+
+  it('honours the interval option', () => {
+    const seen: number[] = [];
+    const s = new Stepper(5, (i) => seen.push(i), { interval: 100 });
+    s.play();
+    vi.advanceTimersByTime(250);
+    expect(seen).toEqual([1, 2]);
+    s.pause();
+  });
+
+  it('leaves no timer running after pause()', () => {
+    const s = new Stepper(10, () => {});
+    s.play();
+    s.pause();
+    expect(vi.getTimerCount()).toBe(0);
+    expect(s.playing).toBe(false);
+  });
+
+  it('steps by hand, clamped to the ends', () => {
+    const seen: number[] = [];
+    const s = new Stepper(2, (i) => seen.push(i));
+    s.prev();
+    s.next();
+    s.next();
+    s.prev();
+    expect(seen).toEqual([1, 0]);
+    s.go(1);
+    expect(s.index).toBe(1);
+  });
+
+  it('play() from the last step starts again at the first', () => {
+    const seen: number[] = [];
+    const s = new Stepper(2, (i) => seen.push(i), { interval: 10 });
+    s.go(1);
+    s.play();
+    expect(seen).toEqual([1, 0]);
+    s.pause();
+  });
+
+  it('does not auto-play under reduced motion', () => {
+    setMedia(REDUCED_MOTION, true);
+    const onStep = vi.fn();
+    const s = new Stepper(5, onStep);
+    expect(s.auto).toBe(false);
+    s.play();
+    vi.advanceTimersByTime(5000);
+    expect(onStep).not.toHaveBeenCalled();
+    expect(vi.getTimerCount()).toBe(0);
+    s.next();
+    expect(onStep).toHaveBeenCalledWith(1);
+  });
+
+  it('follows the media query: switching it mid-run stops auto', () => {
+    const seen: number[] = [];
+    const s = new Stepper(10, (i) => seen.push(i));
+    s.play();
+    vi.advanceTimersByTime(900);
+    setMedia(REDUCED_MOTION, true);
+    expect(s.auto).toBe(false);
+    expect(s.playing).toBe(false);
+    vi.advanceTimersByTime(5000);
+    expect(seen).toEqual([1]);
+    expect(vi.getTimerCount()).toBe(0);
+    setMedia(REDUCED_MOTION, false);
+    expect(s.auto).toBe(true);
+  });
+
+  it('destroy() and an aborted signal clear the timer and the media listener', () => {
+    const a = new Stepper(10, () => {});
+    a.play();
+    a.destroy();
+    const controller = new AbortController();
+    const b = new Stepper(10, () => {}, { signal: controller.signal });
+    b.play();
+    controller.abort();
+    expect(vi.getTimerCount()).toBe(0);
+    expect(mediaListeners(REDUCED_MOTION)).toBe(0);
+  });
+});

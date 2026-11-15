@@ -4,6 +4,8 @@
   "private": true,
   "type": "module",
   "scripts": {
+    "predev": "node scripts/copy-wasm.mjs",
+    "dev": "vite --open /pogo/dev/",
     "prebuild": "node scripts/copy-wasm.mjs",
     "build": "tsc --noEmit && vite build",
     "test": "vitest run"

@@ -1,0 +1,100 @@
+<!doctype html>
+<html lang="fr" data-theme="dark">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>pogo-figures · harness</title>
+    <!--
+      Dev harness only (npm run dev); never part of dist/. Archivo comes from
+      Google Fonts here for convenience: the real page self-hosts it.
+    -->
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      rel="stylesheet"
+      href="https://fonts.googleapis.com/css2?family=Archivo:ital,wdth,wght@0,62..125,100..900;1,62..125,100..900&display=swap"
+    />
+    <style>
+      /* The host page's half of the contract: the DESIGN.md token table. */
+      :root[data-theme='dark'] {
+        --pogo-ground: #0a0a0a;
+        --pogo-ink: #f2f2ee;
+        --pogo-ink-2: #cfcfc9;
+        --pogo-muted: #a3a39d;
+        --pogo-rule: #3b3b39;
+        --pogo-edge: #7a7a75;
+        --pogo-red: #ff3b1f;
+        --pogo-red-text: #ff3b1f;
+        --pogo-white: #f2f2ee;
+        --pogo-on-red: #0a0a0a;
+        --pogo-action: #f2f2ee;
+      }
+      :root[data-theme='light'] {
+        --pogo-ground: #eff1f2;
+        --pogo-ink: #0a0a0a;
+        --pogo-ink-2: #34373a;
+        --pogo-muted: #565a5e;
+        --pogo-rule: #c3c7ca;
+        --pogo-edge: #7e8388;
+        --pogo-red: #ff3b1f;
+        --pogo-red-text: #c4200a;
+        --pogo-white: #ffffff;
+        --pogo-on-red: #0a0a0a;
+        --pogo-action: #0a0a0a;
+      }
+      :root {
+        --pogo-font: Archivo, system-ui, sans-serif;
+        --pogo-font-display: Archivo, system-ui, sans-serif;
+        background: var(--pogo-ground);
+        color: var(--pogo-ink);
+        font-family: var(--pogo-font);
+      }
+      body {
+        margin: 0;
+        padding: 24px;
+      }
+      header {
+        display: flex;
+        gap: 16px;
+        align-items: center;
+        padding-bottom: 16px;
+        border-bottom: 3px solid var(--pogo-ink);
+        font-stretch: 125%;
+        font-weight: 800;
+        text-transform: uppercase;
+        font-size: 12.8px;
+      }
+      header button {
+        border: 0;
+        border-radius: 0;
+        padding: 8px 12px;
+        background: var(--pogo-action);
+        color: var(--pogo-ground);
+        font: inherit;
+        cursor: pointer;
+      }
+      h2 {
+        margin: 32px 0 8px;
+        font-size: 12.8px;
+        font-stretch: 125%;
+        font-weight: 800;
+        text-transform: uppercase;
+        color: var(--pogo-muted);
+      }
+      #played {
+        font-size: 12.8px;
+        color: var(--pogo-muted);
+      }
+    </style>
+  </head>
+  <body>
+    <header>
+      <span>pogo-figures · kit</span>
+      <button type="button" id="theme">theme</button>
+      <button type="button" id="lang">FR / EN</button>
+      <span id="played"></span>
+    </header>
+    <main id="app"></main>
+    <script type="module" src="./main.ts"></script>
+  </body>
+</html>

@@ -1,0 +1,239 @@
+/*
+ * The figures' theme contract. A <pogo-…> element reads only these tokens,
+ * which the host page declares (the hub: src/styles/pogo.css, following its
+ * data-theme, else the OS):
+ *
+ *   --pogo-ground  --pogo-ink  --pogo-ink-2  --pogo-muted  --pogo-rule
+ *   --pogo-edge  --pogo-red  --pogo-red-text  --pogo-white  --pogo-on-red
+ *   --pogo-action  --pogo-font  --pogo-font-display
+ *
+ * When the page declares none, the fallbacks below are the dark values, and
+ * the light ones under prefers-color-scheme: light. The private --_ aliases
+ * resolve each token once; nothing below names a colour.
+ *
+ * Archivo cuts: shout = width 62 / 900, label = width 125 / 800, read = 100 / 400.
+ * Radius 0 everywhere but a piece. No shadow, gradient, glow or blur.
+ */
+
+:host {
+  --_ground: var(--pogo-ground, #0a0a0a);
+  --_ink: var(--pogo-ink, #f2f2ee);
+  --_ink-2: var(--pogo-ink-2, #cfcfc9);
+  --_muted: var(--pogo-muted, #a3a39d);
+  --_rule: var(--pogo-rule, #3b3b39);
+  --_edge: var(--pogo-edge, #7a7a75);
+  --_red: var(--pogo-red, #ff3b1f);
+  --_red-text: var(--pogo-red-text, #ff3b1f);
+  --_white: var(--pogo-white, #f2f2ee);
+  --_on-red: var(--pogo-on-red, #0a0a0a);
+  --_action: var(--pogo-action, #f2f2ee);
+  --_font: var(--pogo-font, Archivo, system-ui, sans-serif);
+  --_font-display: var(--pogo-font-display, Archivo, system-ui, sans-serif);
+
+  display: block;
+  background: var(--_ground);
+  color: var(--_ink);
+  font-family: var(--_font);
+  font-size: 15px;
+  font-stretch: 100%;
+  font-weight: 400;
+  line-height: 1.55;
+}
+
+@media (prefers-color-scheme: light) {
+  :host {
+    --_ground: var(--pogo-ground, #eff1f2);
+    --_ink: var(--pogo-ink, #0a0a0a);
+    --_ink-2: var(--pogo-ink-2, #34373a);
+    --_muted: var(--pogo-muted, #565a5e);
+    --_rule: var(--pogo-rule, #c3c7ca);
+    --_edge: var(--pogo-edge, #7e8388);
+    --_red: var(--pogo-red, #ff3b1f);
+    --_red-text: var(--pogo-red-text, #c4200a);
+    --_white: var(--pogo-white, #ffffff);
+    --_on-red: var(--pogo-on-red, #0a0a0a);
+    --_action: var(--pogo-action, #0a0a0a);
+  }
+}
+
+::selection {
+  background: var(--_ink);
+  color: var(--_ground);
+}
+
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+}
+
+/* The frame exists from connect: the stage keeps its height, so nothing shifts on render. */
+.frame {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.stage {
+  min-height: var(--_stage-min, 0);
+}
+
+slot[hidden],
+.stage[hidden] {
+  display: none;
+}
+
+.failed {
+  margin: 0;
+  color: var(--_ink-2);
+}
+
+/* Type cuts. */
+.shout {
+  font-family: var(--_font-display);
+  font-stretch: 62%;
+  font-weight: 900;
+  line-height: 0.82;
+  text-transform: uppercase;
+}
+
+.label,
+.fidelity {
+  font-family: var(--_font);
+  font-stretch: 125%;
+  font-weight: 800;
+  letter-spacing: 0.02em;
+  text-transform: uppercase;
+}
+
+.fidelity {
+  margin: 8px 0 0;
+  font-size: 12.8px;
+  line-height: 1.3;
+  color: var(--_muted);
+}
+
+/* A file name keeps its case. */
+.fidelity .source {
+  text-transform: none;
+}
+
+.num {
+  font-variant-numeric: tabular-nums;
+}
+
+/* A control is the flyer's stamp: an inverted block, never red. */
+.control {
+  appearance: none;
+  margin: 0;
+  min-height: 44px;
+  padding: 0 16px;
+  border: 1px solid var(--_action);
+  border-radius: 0;
+  background: var(--_action);
+  color: var(--_ground);
+  font-family: var(--_font);
+  font-size: 15px;
+  font-stretch: 125%;
+  font-weight: 800;
+  letter-spacing: 0.02em;
+  line-height: 1;
+  text-transform: uppercase;
+  cursor: pointer;
+  transition: transform 80ms linear;
+}
+
+.control:hover {
+  background: var(--_ink-2);
+  border-color: var(--_ink-2);
+}
+
+.control:active {
+  transform: translate(2px, 2px);
+}
+
+.control:disabled {
+  background: transparent;
+  border-color: var(--_edge);
+  border-style: dashed;
+  color: var(--_muted);
+  cursor: default;
+  transform: none;
+}
+
+:focus-visible {
+  outline: 2px solid var(--_ink);
+  outline-offset: 2px;
+}
+
+.controls {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+/* The board. Pieces are the only round thing; their colour is their side. */
+.board {
+  display: block;
+  max-width: 100%;
+  height: auto;
+}
+
+.board .cell {
+  fill: none;
+  stroke: var(--_rule);
+  stroke-width: 1px;
+  vector-effect: non-scaling-stroke;
+}
+
+.board .label {
+  fill: var(--_muted);
+  text-transform: none;
+}
+
+.board .gap {
+  fill: var(--_ground);
+}
+
+.board .disc.white {
+  fill: var(--_white);
+}
+
+.board .disc.red {
+  fill: var(--_red);
+}
+
+/*
+ * Every piece outlined in ink. Multiplied onto the disc, the ink ring is black
+ * on the light ground (where a white disc on paper would vanish) and all but
+ * invisible on the dark one, where the ink is near-white — one rule, both themes.
+ */
+.board .ring {
+  fill: none;
+  stroke: var(--_ink);
+  stroke-width: 1.5px;
+  vector-effect: non-scaling-stroke;
+  mix-blend-mode: multiply;
+}
+
+/* What moved: a dashed ring where it left, a solid frame where it landed. */
+.board .from {
+  fill: none;
+  stroke: var(--_edge);
+  stroke-width: 2px;
+  stroke-dasharray: 5 4;
+  vector-effect: non-scaling-stroke;
+}
+
+.board .to {
+  fill: none;
+  stroke: var(--_ink);
+  stroke-width: 2px;
+  vector-effect: non-scaling-stroke;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .control {
+    transition: none;
+  }
+}
