@@ -21,7 +21,9 @@ const json = <T>(path: string): T => JSON.parse(read(path).toString()) as T;
 const table = json<TableData>('public/data/table.json');
 const v5 = json<V5Data>('public/data/v5.json');
 const reach = json<ReachData>('public/data/reach.json');
-const budget = json<Record<string, { gzip: number }>>('budget.json');
+const budget = Object.fromEntries(
+  Object.entries(json<Record<string, unknown>>('budget.json')).filter(([k]) => !k.startsWith('_')),
+) as Record<string, { gzip: number; raw?: number }>;
 
 const triples = (moves: { move: Triple }[]): Triple[] => moves.map((m) => m.move);
 const verdictOf = (moves: { move: Triple; verdict: Verdict }[], name: string): Verdict => {
@@ -67,6 +69,20 @@ describe('the solved-table extract', () => {
     expect(verdictOf(table.openings, 'a1-2-b2')).toEqual({ kind: 'loses-in', plies: 12 });
     expect(verdictOf(table.openings, 'c1-2-b2')).toEqual({ kind: 'loses-in', plies: 12 });
     expect(verdictOf(table.openings, 'b1-1-b2')).toEqual({ kind: 'loses-in', plies: 16 });
+  });
+
+  it('all 16 opening verdicts equal the committed solve answers', () => {
+    const answers = json<{
+      first_moves: { move: string; for_white: { value: 'draw' | 'loss' | 'win'; plies?: number } }[];
+    }>('../docs/experiments/v3-solve/answers.json').first_moves;
+    expect(answers).toHaveLength(16);
+    for (const a of answers) {
+      const expected: Verdict =
+        a.for_white.value === 'draw'
+          ? { kind: 'keeps-draw' }
+          : { kind: a.for_white.value === 'loss' ? 'loses-in' : 'wins-in', plies: a.for_white.plies! };
+      expect(verdictOf(table.openings, a.move), a.move).toEqual(expected);
+    }
   });
 
   it('keys its replies by every opening and each reply list is the engine\'s legal list', () => {
@@ -249,6 +265,8 @@ describe('the budgets', () => {
     for (const f of files) {
       const size = gzipSync(read(`public/data/${f}`)).length;
       expect(size, `${f}: ${size} gzip bytes`).toBeLessThanOrEqual(budget[f]!.gzip);
+      const raw = budget[f]!.raw;
+      if (raw !== undefined) expect(read(`public/data/${f}`).length, `${f} raw bytes`).toBeLessThanOrEqual(raw);
     }
   });
 });

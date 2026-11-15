@@ -1,5 +1,6 @@
 {
-  "table.json": { "gzip": 40000 },
-  "v5.json": { "gzip": 150000 },
-  "reach.json": { "gzip": 2000 }
+  "_note": "Gzip bytes per file, about twice the size at the time of writing; raw is an optional second cap. Raising one needs a one-line reason in this file.",
+  "table.json": { "gzip": 4000 },
+  "v5.json": { "gzip": 12000, "raw": 200000 },
+  "reach.json": { "gzip": 500 }
 }

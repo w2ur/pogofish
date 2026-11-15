@@ -60,6 +60,7 @@ export interface V5Data {
   seed: 1;
   source: string;
   stagesPct: number[];
+  /** Each entry is that player's score against the greedy player under lc1-2; `table` is the perfect-play player's measured score, not the game-A solved value. */
   references: Record<'random' | 'greedy' | 'table', Score>;
   programs: Record<Program, { label: string; stages: V5Stage[] }>;
   mosaics: Record<'qtab' | 'td' | 'az100', V5Mosaic[]>;
