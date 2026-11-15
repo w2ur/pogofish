@@ -96,7 +96,9 @@ Cargo.lock.bak
 /mobile-*.png
 /mobile-*.jpeg
 
-# Article visuals: generated frames, sheets and GIFs
+# Article visuals: generated frames, sheets, GIFs and videos
 /tools/article-visuals/**/*.png
 /tools/article-visuals/**/*.gif
 /tools/article-visuals/**/*.jpeg
+/tools/article-visuals/**/*.mp4
+/tools/article-visuals/**/list.txt
