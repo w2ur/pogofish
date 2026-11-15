@@ -1,0 +1,226 @@
+import { readFileSync } from 'node:fs';
+import { resolve } from 'node:path';
+import { describe, expect, it, vi } from 'vitest';
+import { DEFAULT_GAME } from './default-game';
+import { initial, legal, replay, type State, type Triple } from './engine';
+import { STORAGE_KEY, createStore, rebuild, sessionStorageOrNull, type StorageLike } from './store';
+
+const read = (path: string): string => readFileSync(resolve(process.cwd(), path), 'utf8');
+const LOOP: Triple[] = [
+  [0, 1, 1],
+  [6, 1, 3],
+  [1, 1, 0],
+  [3, 1, 6],
+];
+
+function memory(): StorageLike & { data: Map<string, string> } {
+  const data = new Map<string, string>();
+  return { data, getItem: (k) => data.get(k) ?? null, setItem: (k, v) => void data.set(k, v) };
+}
+
+const make = (storage: StorageLike | null = memory(), target?: EventTarget) =>
+  createStore({ storage, target, loadEngine: () => Promise.resolve() });
+
+describe('the store', () => {
+  it('a finished game becomes lastFinished', () => {
+    const store = make();
+    store.newGame('White', 'normal');
+    for (const m of DEFAULT_GAME) store.play(m);
+    const g = store.current()!;
+    expect(g).toMatchObject({ finished: true, result: 'W', endedByRepetition: false });
+    expect(g.states).toHaveLength(10);
+    expect(store.lastFinished()).toBe(g);
+  });
+
+  it('a repetition loss is a finished game, with the winner and the rule named', () => {
+    const store = make();
+    store.newGame('Red', 'easy');
+    // The initial position a third time, produced by Red's eighth-ply move: Red loses.
+    for (const m of [...LOOP, ...LOOP]) store.play(m);
+    expect(store.lastFinished()).toMatchObject({ finished: true, result: 'W', endedByRepetition: true });
+  });
+
+  it('an abandoned game (new game mid-way) does not become lastFinished', () => {
+    const store = make();
+    store.newGame('White', 'normal');
+    store.play(DEFAULT_GAME[0]!);
+    store.newGame('Red', 'hard');
+    expect(store.lastFinished()).toBeNull();
+    expect(store.current()).toMatchObject({ moves: [], readerColour: 'Red', level: 'hard', finished: false });
+
+    for (const m of DEFAULT_GAME) store.play(m);
+    const finished = store.lastFinished();
+    store.newGame('White', 'normal');
+    store.play(DEFAULT_GAME[0]!);
+    store.newGame('White', 'normal');
+    expect(store.lastFinished()).toBe(finished);
+  });
+
+  it('with no game, figures get DEFAULT_GAME, part 1’s openingWin', () => {
+    const store = make();
+    expect(store.current()).toBeNull();
+    expect(store.lastFinished()).toBeNull();
+    const fixture = JSON.parse(read('fixtures/lines.json')) as { openingWin: Triple[] };
+    const table = JSON.parse(read('public/data/table.json')) as { lines: { openingWin: Triple[] } };
+    expect(store.DEFAULT_GAME).toEqual(fixture.openingWin);
+    expect(store.DEFAULT_GAME).toEqual(table.lines.openingWin);
+    expect(store.DEFAULT_GAME).toBe(DEFAULT_GAME);
+  });
+
+  it('playFrom emits once with the state, and the reader plays the side to move', () => {
+    const store = make();
+    const s = replay(DEFAULT_GAME.slice(0, 3) as Triple[])[3]!;
+    const playfrom = vi.fn();
+    const game = vi.fn();
+    store.on('playfrom', playfrom);
+    store.on('game', game);
+    store.playFrom(s, 'ply 3');
+    expect(playfrom).toHaveBeenCalledTimes(1);
+    expect(game).toHaveBeenCalledTimes(1);
+    expect(store.current()).toMatchObject({ start: s, moves: [], readerColour: 'Red', label: 'ply 3' });
+    expect(store.current()!.start).not.toBe(s);
+  });
+
+  it('turns a figure’s pogo:playfrom event into playFrom', () => {
+    const target = new EventTarget();
+    const store = make(memory(), target);
+    const playfrom = vi.fn();
+    store.on('playfrom', playfrom);
+    const s = play1();
+    target.dispatchEvent(new CustomEvent('pogo:playfrom', { detail: { state: s, label: 'from a figure' } }));
+    expect(playfrom).toHaveBeenCalledTimes(1);
+    expect(store.current()!.label).toBe('from a figure');
+  });
+
+  it('playFrom ignores a finished position and a malformed one', () => {
+    const store = make();
+    const end = replay(DEFAULT_GAME as Triple[])[9]!;
+    const playfrom = vi.fn();
+    store.on('playfrom', playfrom);
+    store.playFrom(end, 'over');
+    store.playFrom({ ...initial(), cells: [] } as State, 'broken');
+    expect(playfrom).not.toHaveBeenCalled();
+    expect(store.current()).toBeNull();
+  });
+
+  it('play refuses an illegal move, and a move after the end', () => {
+    const store = make();
+    expect(() => store.play([0, 1, 1])).toThrow(/^pogo-figures: /);
+    store.newGame('White', 'normal');
+    expect(() => store.play([0, 2, 1])).toThrow(/^pogo-figures: illegal/);
+    for (const m of DEFAULT_GAME) store.play(m);
+    expect(() => store.play(LOOP[0]!)).toThrow(/^pogo-figures: /);
+  });
+
+  it('the reader can take the other side mid-game; it is kept for the next game', () => {
+    const store = make();
+    store.newGame('White', 'normal');
+    store.setReaderColour('Red');
+    store.setLevel('hard');
+    expect(store.current()).toMatchObject({ readerColour: 'Red', level: 'hard' });
+    expect(store.preferences()).toEqual({ readerColour: 'Red', level: 'hard' });
+  });
+});
+
+describe('persistence', () => {
+  it('the current and the last finished game survive a reload, under one key', async () => {
+    const storage = memory();
+    const first = make(storage);
+    first.newGame('White', 'normal');
+    for (const m of DEFAULT_GAME) first.play(m);
+    first.newGame('Red', 'hard');
+    first.play(DEFAULT_GAME[0]!);
+    expect([...storage.data.keys()]).toEqual([STORAGE_KEY]);
+
+    const second = make(storage);
+    expect(second.hasSaved()).toBe(true);
+    const game = vi.fn();
+    second.on('game', game);
+    await second.ready();
+    expect(game).toHaveBeenCalledTimes(1);
+    expect(second.lastFinished()).toMatchObject({ result: 'W', finished: true, moves: DEFAULT_GAME });
+    expect(second.current()).toMatchObject({ readerColour: 'Red', level: 'hard', moves: [DEFAULT_GAME[0]] });
+    expect(second.preferences()).toEqual({ readerColour: 'Red', level: 'hard' });
+  });
+
+  it('an invalid record is dropped silently', async () => {
+    const cases: unknown[] = [
+      'not json',
+      { v: 2 },
+      { v: 1, current: { start: initial(), moves: [[0, 2, 1]], readerColour: 'White', level: 'normal' }, lastFinished: null },
+      { v: 1, current: { start: { ...initial(), cells: [['Blue']] }, moves: [], readerColour: 'White', level: 'normal' }, lastFinished: null },
+      { v: 1, current: { start: initial(), moves: [], readerColour: 'Green', level: 'normal' }, lastFinished: null },
+      { v: 1, current: null, lastFinished: { start: initial(), moves: DEFAULT_GAME.slice(0, 4), readerColour: 'White', level: 'normal' } },
+      { v: 1, current: null, lastFinished: { start: initial(), moves: [...LOOP, ...LOOP, afterTheEnd()], readerColour: 'White', level: 'normal' } },
+    ];
+    for (const c of cases) {
+      const storage = memory();
+      storage.setItem(STORAGE_KEY, typeof c === 'string' ? c : JSON.stringify(c));
+      const store = make(storage);
+      await store.ready();
+      expect(store.current(), JSON.stringify(c)).toBeNull();
+      expect(store.lastFinished(), JSON.stringify(c)).toBeNull();
+    }
+  });
+
+  it('rebuild recomputes the states and the result rather than trusting them', () => {
+    const r = rebuild({ start: initial(), moves: DEFAULT_GAME, readerColour: 'White', level: 'normal', states: [], result: 'R' });
+    expect(r).toMatchObject({ result: 'W', finished: true });
+    expect(r!.states).toEqual(replay(DEFAULT_GAME as Triple[]));
+  });
+
+  it('a game in memory wins over the saved one', async () => {
+    const storage = memory();
+    const first = make(storage);
+    first.newGame('Red', 'easy');
+    const second = make(storage);
+    second.newGame('White', 'hard');
+    await second.ready();
+    expect(second.current()).toMatchObject({ readerColour: 'White', level: 'hard' });
+    expect(second.preferences()).toEqual({ readerColour: 'White', level: 'hard' });
+  });
+
+  it('store survives a sessionStorage that throws', async () => {
+    const throwing: StorageLike = {
+      getItem: () => {
+        throw new DOMException('denied', 'SecurityError');
+      },
+      setItem: () => {
+        throw new DOMException('full', 'QuotaExceededError');
+      },
+    };
+    const store = make(throwing);
+    await store.ready();
+    expect(store.hasSaved()).toBe(false);
+    store.newGame('White', 'normal');
+    for (const m of DEFAULT_GAME) store.play(m);
+    expect(store.lastFinished()).toMatchObject({ finished: true });
+  });
+
+  it('a sessionStorage whose very access throws reads as none', () => {
+    const descriptor = Object.getOwnPropertyDescriptor(globalThis, 'sessionStorage');
+    Object.defineProperty(globalThis, 'sessionStorage', {
+      configurable: true,
+      get: () => {
+        throw new DOMException('denied', 'SecurityError');
+      },
+    });
+    try {
+      expect(sessionStorageOrNull()).toBeNull();
+    } finally {
+      if (descriptor) Object.defineProperty(globalThis, 'sessionStorage', descriptor);
+    }
+    expect(make(null).hasSaved()).toBe(false);
+  });
+});
+
+function play1(): State {
+  const s = initial();
+  return replay([[legal(s)[0]!.from_cell, legal(s)[0]!.num_pieces, legal(s)[0]!.to_cell]])[1]!;
+}
+
+/** A move the engine still lists after a repetition loss, where the game is already over. */
+function afterTheEnd(): Triple {
+  const m = legal(replay([...LOOP, ...LOOP])[8]!)[0]!;
+  return [m.from_cell, m.num_pieces, m.to_cell];
+}

@@ -24,9 +24,11 @@ export default defineConfig({
     // Binaries live in public/ and are fetched by URL; never inlined.
     assetsInlineLimit: 0,
     lib: {
-      entry: 'src/index.ts',
+      // Two entries: the elements, and the search worker they start by URL.
+      // A worker built as its own entry is never inlined as a data: URL.
+      entry: { 'pogo-figures': 'src/index.ts', 'search-worker': 'src/search.worker.ts' },
       formats: ['es'],
-      fileName: () => 'pogo-figures.js',
+      fileName: (_format, name) => `${name}.js`,
     },
   },
   test: {
