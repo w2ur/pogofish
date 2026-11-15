@@ -82,6 +82,9 @@ function parse(bytes: ArrayBuffer, magic: string): { header: NetHeader; layers: 
   if (json.features !== FEATURES) {
     throw new Error(`pogo-figures: features "${json.features}", expected "${FEATURES}"`);
   }
+  if (!Array.isArray(json.layers)) {
+    throw new Error(`pogo-figures: ${magic.trim()} header has no layers array`);
+  }
   const view = new DataView(bytes);
   let offset = nl + 1;
   let weights = 0;

@@ -107,6 +107,13 @@ describe('nets against the Rust reference', () => {
     expect(() => parseAz(pfw.slice(0, pfw.byteLength - 10))).toThrow(/value_fc2.*10 bytes missing/);
   });
 
+  it('a header without a layers array is refused', () => {
+    const header = (magic: string): ArrayBuffer =>
+      new TextEncoder().encode(`${magic}\n{"features":"mover-relative-repetition"}\n`).buffer as ArrayBuffer;
+    expect(() => parseAz(header('PFW1'))).toThrow(/^pogo-figures: .*layers/);
+    expect(() => parseTd(header('PFV1'))).toThrow(/^pogo-figures: .*layers/);
+  });
+
   it('a file of the other kind, or with trailing bytes, is refused', () => {
     const pfw = bytes('public/nets/az-lc1-s1.pfw');
     expect(() => parseTd(pfw)).toThrow(/PFV1/);
