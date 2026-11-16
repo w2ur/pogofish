@@ -1,7 +1,7 @@
 import { readFileSync } from 'node:fs';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import type { V5Data } from '../data';
-import { REDUCED_MOTION, intersect, resetMedia, setMedia } from '../test-dom';
+import { REDUCED_MOTION, intersect, resetMedia, setMedia, shownText } from '../test-dom';
 import { PogoStages } from './pogo-stages';
 import { formatScore } from '../kit/score';
 
@@ -130,6 +130,9 @@ describe('<pogo-stages>', () => {
     expect(said(el)).toContain('Ouverture tirée au sort');
     role(el, 'next').click();
     expect(said(el)).toMatch(/^Blanc \(le programme\) joue/);
+    expect(el.shadowRoot!.querySelector('.said:not([data-off]):not(.sizer) .move-name [role="tooltip"]')!.textContent).toMatch(
+      /^De [abc][123], [123] pièces?, vers [abc][123]\.$/,
+    );
     while (!role(el, 'next').disabled) role(el, 'next').click();
     expect(said(el)).toContain('Rouge gagne');
   });

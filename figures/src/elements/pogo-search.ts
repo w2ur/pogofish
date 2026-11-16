@@ -9,13 +9,14 @@
 // on the main thread, on the page's one copy of the net. position="reader" is
 // the position <pogo-net> and <pogo-encoding> show, and follows the store.
 import { NET_NAME } from '../assets';
-import { LC1_2, key, legal, moveName, type State } from '../engine';
+import { LC1_2, key, legal, moveName, type Move, type State, type Triple } from '../engine';
 import { labelledBoard } from '../kit/board-labels';
 import { drawBoard } from '../kit/board-svg';
 import { controlButton, transport } from '../kit/controls';
 import { PogoFigure } from '../kit/figure';
 import { formatShare } from '../kit/score';
 import { Stepper } from '../kit/stepper';
+import { asTriple, moveText, moveTip, type TipHooks } from '../kit/move-tip';
 import { colon, t, type Lang } from '../kit/strings';
 import type { SearchSnapshot } from '../mcts';
 import type { AzNet } from '../nets';
@@ -50,13 +51,6 @@ async function preferences(s: State, net: AzNet): Promise<SearchSnapshot> {
 }
 
 /** Text with each move name in a span that keeps it on one line. */
-function withMoves(text: string): (string | HTMLElement)[] {
-  return text
-    .split(/([abc][123]-[123]-[abc][123])/)
-    .filter((part) => part !== '')
-    .map((part) => (/^[abc][123]-/.test(part) ? el('span', 'move-name', part) : part));
-}
-
 const sims = (lang: Lang, n: number): string => `${formatCount(lang, n)} ${t(lang, n === 1 ? 'searchSim' : 'searchSims')}`;
 
 /** The most visited move, the first in root order among equals (mcts.ts `bestMove`), or none before the search. */
@@ -132,7 +126,13 @@ export class PogoSearch extends PogoFigure {
     const order = rowOrder(before);
     const words = el('p', 'where-from', where);
     const boardSlot = el('div', 'board-slot');
-    boardSlot.append(labelledBoard(drawBoard(s, { labelRoom: true, title: where })));
+    // A move name explained (the words or the table) marks its stack and its landing on this board, the position searched.
+    const drawPosition = (m?: Triple): void => {
+      const marks = m ? [{ cell: m[0], kind: 'picked' as const }, { cell: m[2], kind: 'target' as const }] : [];
+      boardSlot.replaceChildren(labelledBoard(drawBoard(s, { labelRoom: true, title: where, marks })));
+    };
+    const hooks = (m: Triple | Move): TipHooks => ({ show: () => drawPosition(asTriple(m)), hide: () => drawPosition() });
+    drawPosition();
 
     // The words of every step, written into one grid cell: the area keeps the room of the longest.
     const status = el('div', 'status');
@@ -159,7 +159,9 @@ export class PogoSearch extends PogoFigure {
     const table = ranked.element;
 
     const show = (snap: SearchSnapshot, final: boolean): void => {
-      said.replaceChildren(...withMoves(snapshotWords(lang, snap, final)));
+      // The words and rows are rebuilt: a mark left by an explanation they held goes with them.
+      drawPosition();
+      said.replaceChildren(...moveText(lang, snapshotWords(lang, snap, final), hooks));
       ranked.caption.textContent = `${t(lang, 'searchMoves')} ${sims(lang, snap.sim)}`;
       const best = played(snap);
       ranked.update(
@@ -171,7 +173,7 @@ export class PogoSearch extends PogoFigure {
           tr.dataset.move = moveName(r.move);
           const th = el('th', 'move num');
           th.scope = 'row';
-          th.append(moveName(r.move));
+          th.append(moveTip(lang, r.move, hooks(r.move)));
           if (i === best) {
             tr.classList.add('played');
             th.append(' ', el('span', 'label tag', t(lang, final ? 'searchPlayed' : 'searchLeading')));

@@ -95,6 +95,7 @@ export class PogoLine extends PogoFigure {
     const root = document.createElement('div');
     root.className = 'line-figure';
     const view = replayView({
+      lang,
       steps: frames,
       spoken,
       // A step forward, or the loop wrapping from its last frame to its first move, which is one too.

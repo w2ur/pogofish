@@ -11,6 +11,7 @@ import { boardLabels, labelledBoard } from '../kit/board-labels';
 import { animateMove, drawBoard } from '../kit/board-svg';
 import { choiceGroup, controlButton, type ChoiceGroup } from '../kit/controls';
 import { PogoFigure } from '../kit/figure';
+import { moveText } from '../kit/move-tip';
 import { colon, t, type Lang } from '../kit/strings';
 import { reach, reachText } from './moves-reach';
 import movesCss from './pogo-moves.css?raw';
@@ -226,7 +227,8 @@ export class PogoMoves extends PogoFigure {
     if (sel) text = reachText(lang, sel.from, sel.count, land);
     else if (moves.length > 0) text = `${this.said}${t(lang, this.s.to_move === 'White' ? 'liftWhite' : 'liftRed')}`;
     else text = `${this.said}${t(lang, winner(this.s, null) === 'R' ? 'byStacksRed' : 'byStacksWhite')}`;
-    ui.line.textContent = text;
+    // The move just played names itself with its explanation; the board already shows it, so it marks nothing.
+    ui.line.replaceChildren(...moveText(lang, text));
   }
 }
 

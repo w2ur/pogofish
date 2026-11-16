@@ -15,6 +15,7 @@ import { boardLabels } from '../kit/board-labels';
 import { drawBoard } from '../kit/board-svg';
 import { choiceGroup, controlButton, type ChoiceGroup } from '../kit/controls';
 import { PogoFigure } from '../kit/figure';
+import { moveText, tipControl } from '../kit/move-tip';
 import { colon, t, type Lang } from '../kit/strings';
 import { sharedTable, TABLE_SOURCE } from '../table';
 import { reach, reachText } from './moves-reach';
@@ -65,6 +66,8 @@ export class PogoOpenings extends PogoFigure {
   /** The move chosen in the list shown: an opening, or a reply. */
   private chosen: Triple | null = null;
   private selection: Selection = null;
+  /** The move whose explanation is shown in the list: its stack and landing are marked on the board. */
+  private preview: Triple | null = null;
 
   protected async render(signal: AbortSignal): Promise<void> {
     const deps = (this.constructor as typeof PogoOpenings).deps;
@@ -210,7 +213,21 @@ export class PogoOpenings extends PogoFigure {
       verdict.textContent = verdictText(lang, v);
       verdict.toggleAttribute('data-holds', v.kind !== 'loses-in');
       b.replaceChildren(move, comma, verdict);
+      // The row is the control: it carries the move's explanation; nothing in it is focusable.
+      const m = c.moves[k]!.move;
+      tipControl(b, lang, m, {
+        show: () => {
+          this.preview = m;
+          this.update();
+        },
+        hide: () => {
+          if (this.preview !== m) return;
+          this.preview = null;
+          this.update();
+        },
+      });
     });
+    this.preview = null;
     ui.listSlot.replaceChildren(list.element);
     ui.list = list;
   }
@@ -266,13 +283,14 @@ export class PogoOpenings extends PogoFigure {
 
     let marks: { cell: number; kind: 'target' | 'picked' }[];
     if (sel) marks = [{ cell: sel.from, kind: 'picked' }, ...land.map((cell) => ({ cell, kind: 'target' as const }))];
+    else if (this.preview) marks = [{ cell: this.preview[0], kind: 'picked' }, { cell: this.preview[2], kind: 'target' }];
     else if (chosen) marks = [{ cell: chosen[0], kind: 'picked' }];
     else marks = lift.map((cell) => ({ cell, kind: 'target' as const }));
     const svg = drawBoard(c.position, {
       labelRoom: true,
       marks,
       // The chosen move's destination is framed; its pieces have not moved yet.
-      ...(chosen && !sel ? { to: chosen[2], moving: 0 } : {}),
+      ...(chosen && !sel && !this.preview ? { to: chosen[2], moving: 0 } : {}),
     });
     ui.svg.replaceWith(svg);
     ui.svg = svg;
@@ -295,7 +313,7 @@ export class PogoOpenings extends PogoFigure {
     ui.head.textContent = headLine(lang, this.table!, this.opening);
 
     if (sel) ui.readout.textContent = reachText(lang, sel.from, sel.count, land);
-    else if (chosen) ui.readout.textContent = verdictLine(lang, c, chosen);
+    else if (chosen) ui.readout.replaceChildren(...moveText(lang, verdictLine(lang, c, chosen)));
     else ui.readout.textContent = t(lang, 'openingsPick');
 
     const first = this.opening === null;

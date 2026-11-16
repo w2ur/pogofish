@@ -20,9 +20,10 @@ import {
 } from '../board-state';
 import { createDriver, type Driver } from '../driver';
 import { escapeAction, followShown, watchInlineBoards, type ObserverCtor } from '../follow-panel';
-import { initial, legal, moveName, type Move, type State, type Triple } from '../engine';
+import { initial, legal, type Move, type State, type Triple } from '../engine';
 import { animateMove, drawBoard } from '../kit/board-svg';
 import { PogoFigure, kitSheet } from '../kit/figure';
+import { moveText, moveTip } from '../kit/move-tip';
 import { colon, t, type Lang } from '../kit/strings';
 import { SearchClient } from '../search-client';
 import { store, type Level, type Store } from '../store';
@@ -309,7 +310,7 @@ export class PogoBoard extends PogoFigure {
     else line = `${t(lang, 'yourTurn')} · ${t(lang, colourKey(g.readerColour))}`;
     ui.turn.textContent = line;
     ui.retry.hidden = status !== 'failed' || result !== null;
-    ui.caption.textContent = g?.label ? `${t(lang, 'resumed')}${colon(lang)} ${g.label}` : '';
+    ui.caption.replaceChildren(...moveText(lang, g?.label ? `${t(lang, 'resumed')}${colon(lang)} ${g.label}` : ''));
     // The follow board is compact: the inline board and the live region say where the position came from.
     ui.caption.hidden = !g?.label || this.mode === 'follow';
 
@@ -352,7 +353,7 @@ export class PogoBoard extends PogoFigure {
     ui.movesList.replaceChildren(
       ...list.map((m, i) => {
         const li = document.createElement('li');
-        li.textContent = `${t(lang, colourKey(g!.states[i]!.to_move))} ${moveName(m)}`;
+        li.append(`${t(lang, colourKey(g!.states[i]!.to_move))} `, moveTip(lang, m));
         return li;
       }),
     );

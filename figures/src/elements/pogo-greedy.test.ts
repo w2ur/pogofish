@@ -1,4 +1,5 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
+import { shownText } from '../test-dom';
 import { REDUCED_MOTION, intersect, resetMedia, setMedia } from '../test-dom';
 import { greedyGame, nextSeed } from './greedy-game';
 import { PogoGreedy } from './pogo-greedy';
@@ -23,7 +24,8 @@ async function mount(lang = 'fr', seed?: string): Promise<PogoGreedy> {
 
 const $ = (el: PogoGreedy, s: string) => el.shadowRoot!.querySelector<HTMLElement>(s)!;
 const role = (el: PogoGreedy, r: string) => $(el, `[data-role="${r}"]`) as HTMLButtonElement;
-const current = (el: PogoGreedy) => el.shadowRoot!.querySelector('.said:not([data-off]):not(.sizer)')!.textContent;
+const currentBlock = (el: PogoGreedy) => el.shadowRoot!.querySelector('.said:not([data-off]):not(.sizer)')!;
+const current = (el: PogoGreedy) => shownText(currentBlock(el));
 const counter = (el: PogoGreedy) => role(el, 'counter').textContent;
 const toEnd = (el: PogoGreedy) => {
   while (!role(el, 'next').disabled) role(el, 'next').click();
@@ -47,6 +49,7 @@ describe('<pogo-greedy>', () => {
     expect(counter(el)).toBe(`0 / ${plies}`);
     expect(current(el)).toBe('Position de départ');
     role(el, 'next').click();
+    expect(currentBlock(el).querySelector('.move-name [role="tooltip"]')!.textContent).toMatch(/^De [abc][123], [123] pièces?, vers [abc][123]\.$/);
     expect(current(el)).toMatch(/^Blanc joue [abc][123]-[123]-[abc][123]Score du coup : [+−]?\d+, le meilleur des 16 coups/);
   });
 

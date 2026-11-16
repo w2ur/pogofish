@@ -438,3 +438,43 @@ slot[hidden],
 .keep-case {
   text-transform: none;
 }
+
+/*
+ * A move's name and its explanation (move-tip.ts). The name keeps its line and
+ * says, by a dotted underline, that it explains itself. The tooltip is the
+ * kit's inverted block at the label cut's small size, placed once on show
+ * (position: fixed, in the top layer where there is one), never animated.
+ */
+.move-name {
+  white-space: nowrap;
+  text-decoration: underline dotted 1px;
+  text-underline-offset: 0.2em;
+  cursor: help;
+}
+
+.move-tip {
+  position: fixed;
+  inset: auto;
+  z-index: 1000;
+  margin: 0;
+  padding: 6px 8px;
+  width: max-content;
+  border: 0;
+  border-radius: 0;
+  background: var(--_ink);
+  color: var(--_ground);
+  font-family: var(--_font);
+  font-size: 12.8px;
+  font-stretch: 125%;
+  font-weight: 800;
+  letter-spacing: 0.02em;
+  line-height: 1.3;
+  text-align: left;
+  text-transform: uppercase;
+  white-space: normal;
+  pointer-events: none;
+}
+
+.move-tip:not([data-open]) {
+  display: none;
+}

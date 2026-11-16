@@ -3,7 +3,7 @@ import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import type { TableData } from '../data';
 import { initial, key, play } from '../engine';
 import type { PlayFromDetail } from '../kit/figure';
-import { intersect, resetMedia } from '../test-dom';
+import { intersect, resetMedia, shownText } from '../test-dom';
 import { PogoOpenings } from './pogo-openings';
 
 if (!customElements.get('pogo-openings')) customElements.define('pogo-openings', PogoOpenings);
@@ -27,7 +27,7 @@ const $ = (el: PogoOpenings, s: string) => el.shadowRoot!.querySelector<HTMLElem
 const $$ = (el: PogoOpenings, s: string) => [...el.shadowRoot!.querySelectorAll<HTMLElement>(s)];
 const cell = (el: PogoOpenings, i: number) => $(el, `.cell-button[data-cell="${i}"]`) as HTMLButtonElement;
 const item = (el: PogoOpenings, name: string) => $(el, `.list .choice[data-value="${name}"]`) as HTMLButtonElement;
-const readout = (el: PogoOpenings) => $(el, '.readout .line').textContent;
+const readout = (el: PogoOpenings) => shownText($(el, '.readout .line'));
 const head = (el: PogoOpenings) => $(el, '.head .line').textContent;
 const level = (el: PogoOpenings) => $(el, '[data-role="level"]') as HTMLButtonElement;
 
@@ -44,11 +44,28 @@ describe('<pogo-openings>', () => {
     expect(head(el)).toBe('Premiers coups des Blancs · 6 gardent la nulle, 10 perdent');
     const items = $$(el, '.list .choice');
     expect(items).toHaveLength(16);
-    expect(item(el, 'a1-1-b1').textContent).toBe('a1-1-b1, garde la nulle');
-    expect(item(el, 'a1-2-b2').textContent).toBe('a1-2-b2, perd en 12');
+    expect(shownText(item(el, 'a1-1-b1'))).toBe('a1-1-b1, garde la nulle');
+    expect(shownText(item(el, 'a1-2-b2'))).toBe('a1-2-b2, perd en 12');
     expect($$(el, '.list .verdict[data-holds]')).toHaveLength(6);
     expect(level(el).disabled).toBe(true);
     expect(readout(el)).toBe('Touchez une pile, ou choisissez un coup dans la liste.');
+  });
+
+  it('each row carries its move’s explanation as its own tooltip, nothing focusable nested; hovering marks the move on the board', async () => {
+    const el = await mount();
+    const row = item(el, 'b1-2-b3');
+    const tip = el.shadowRoot!.getElementById(row.getAttribute('aria-describedby')!.split(' ').at(-1)!)!;
+    expect(tip.getAttribute('role')).toBe('tooltip');
+    expect(tip.textContent).toBe('De b1, 2 pièces, vers b3.');
+    expect(row.contains(tip)).toBe(true);
+    expect(row.querySelectorAll('[tabindex], button')).toHaveLength(0);
+    row.dispatchEvent(new PointerEvent('pointerenter'));
+    expect(tip.hasAttribute('data-open')).toBe(true);
+    expect($(el, '.board .mark.picked').getAttribute('data-cell')).toBe('1');
+    expect($$(el, '.board .mark.target').map((m) => m.getAttribute('data-cell'))).toEqual(['7']);
+    row.dispatchEvent(new PointerEvent('pointerleave'));
+    expect(tip.hasAttribute('data-open')).toBe(false);
+    expect(el.shadowRoot!.querySelector('.board .mark.picked')).toBeNull();
   });
 
   it('a move chosen in the list is read out and marked on the board', async () => {

@@ -5,7 +5,7 @@ import { DEFAULT_GAME } from '../default-game';
 import { describeCell } from '../board-state';
 import { createDriver, type Searcher } from '../driver';
 import { LC1_2, legal, moveName, play, replay, terminal, type State, type Triple } from '../engine';
-import { REDUCED_MOTION, intersect, observersOf, resetMedia, setMedia } from '../test-dom';
+import { REDUCED_MOTION, intersect, observersOf, resetMedia, setMedia, shownText } from '../test-dom';
 import { createStore, type Store } from '../store';
 import { PogoBoard } from './pogo-board';
 
@@ -249,6 +249,10 @@ describe('<pogo-board> inline', () => {
     expect(marks(el, 'target')).toEqual([]);
     expect($<HTMLDetailsElement>(el, 'details.moves').open).toBe(false);
     expect(el.shadowRoot!.querySelectorAll('details.moves li')).toHaveLength(9);
+    // Each played move names itself with its explanation.
+    const first = $(el, 'details.moves li');
+    expect(shownText(first)).toBe(`Blanc ${moveName(DEFAULT_GAME[0]!)}`);
+    expect(first.querySelector('.move-name [role="tooltip"]')!.textContent).toMatch(/^De [abc][123], [123] pièces?, vers [abc][123]\.$/);
     expect($(el, 'details.moves summary').textContent).toBe('Coups joués (9)');
     // « Nouvelle partie » sits below the board, the only one shown, primary again.
     expect(shownNewGame(el)).toHaveLength(1);

@@ -4,10 +4,14 @@
 // the height of its longest words and the board below never moves; the board
 // redrawn at each step with the move that led there, its moved pieces
 // travelling on a step forward; and a polite live region that reads the step.
+// Every move name in the words carries its explanation (kit/move-tip.ts), so
+// the words are not aria-hidden: only the current step is visible, and the
+// hidden ones and the sizers are out of the reading and the tab order.
 // What a step says is the figure's; this module only lays it out. Its CSS is
 // replay.css, which each figure adopts before its own.
 import type { Colour, State, Triple } from '../engine';
 import { labelledBoard } from '../kit/board-labels';
+import { moveText } from '../kit/move-tip';
 import { animateMove, drawBoard } from '../kit/board-svg';
 import { t, type Lang, type StringKey } from '../kit/strings';
 
@@ -32,6 +36,8 @@ export interface Spoken {
 }
 
 export interface ReplayOptions {
+  /** The language of the move names' explanations. */
+  lang: Lang;
   steps: readonly ReplayStep[];
   /** One per step. */
   spoken: readonly Spoken[];
@@ -46,7 +52,7 @@ export interface ReplayOptions {
 }
 
 export interface ReplayView {
-  /** The stacked words; hidden from assistive tech, which hears `live`. */
+  /** The stacked words, the current step's alone visible; assistive tech also hears `live`. */
   status: HTMLElement;
   /** Where the board is drawn. */
   slot: HTMLElement;
@@ -62,17 +68,27 @@ function el<K extends keyof HTMLElementTagNameMap>(tag: K, className: string, te
   return node;
 }
 
-function block(lines: readonly Line[], extra = ''): HTMLElement {
+function block(lang: Lang, lines: readonly Line[], extra = ''): HTMLElement {
   const b = el('div', extra ? `said ${extra}` : 'said');
-  for (const l of lines) b.append(el('p', l.className, l.text));
+  for (const l of lines) {
+    const p = el('p', l.className);
+    p.append(...moveText(lang, l.text));
+    b.append(p);
+  }
   return b;
 }
 
 export function replayView(o: ReplayOptions): ReplayView {
   const status = el('div', 'status');
-  status.setAttribute('aria-hidden', 'true');
-  const blocks = o.spoken.map((s) => block(s.lines));
-  status.append(...(o.sizers ?? []).map((lines) => block(lines, 'sizer')), ...blocks);
+  const blocks = o.spoken.map((s) => block(o.lang, s.lines));
+  // A sizer only holds room: plain text, never a tab stop.
+  const sizer = (lines: readonly Line[]): HTMLElement => {
+    const b = el('div', 'said sizer');
+    b.setAttribute('aria-hidden', 'true');
+    for (const l of lines) b.append(el('p', l.className, l.text));
+    return b;
+  };
+  status.append(...(o.sizers ?? []).map(sizer), ...blocks);
   const live = el('p', 'sr');
   live.setAttribute('role', 'status');
   live.setAttribute('aria-live', 'polite');

@@ -6,7 +6,7 @@ import { key, type State } from '../engine';
 import { formatShare } from '../kit/score';
 import { parseAz, parseTd, type TdNet } from '../nets';
 import { createStore } from '../store';
-import { intersect, resetMedia } from '../test-dom';
+import { intersect, resetMedia, shownText } from '../test-dom';
 import { PogoNet } from './pogo-net';
 import { signedNote } from './q-steps';
 
@@ -99,6 +99,17 @@ describe('<pogo-net>', () => {
       expect(shown.get(`${cell(a!)}-${n}-${cell(b!)}`)).toBe(formatShare('fr', DEFAULT.priors[i]!));
     });
     expect($(el, '.value-number').textContent).toBe(signedNote('fr', DEFAULT.az.value));
+    // Each move name explains itself and, explained, marks its stack and landing on the board.
+    const name = rows[0]!.querySelector<HTMLElement>('th .move-name')!;
+    // The row's move, read from its name: « a3-1-b3 ».
+    const [from, n, to] = rows[0]!.dataset.move!.split('-');
+    expect(name.querySelector('[role="tooltip"]')!.textContent).toBe(`De ${from}, ${n} ${n === '1' ? 'pièce' : 'pièces'}, vers ${to}.`);
+    name.dispatchEvent(new PointerEvent('pointerenter'));
+    const cellIndex = (c: string): string => String('abc'.indexOf(c[0]!) + 3 * (Number(c[1]) - 1));
+    expect([...el.shadowRoot!.querySelectorAll('.board-slot .mark.picked')].map((m) => m.getAttribute('data-cell'))).toEqual([cellIndex(from!)]);
+    expect([...el.shadowRoot!.querySelectorAll('.board-slot .mark.target')].map((m) => m.getAttribute('data-cell'))).toEqual([cellIndex(to!)]);
+    name.dispatchEvent(new PointerEvent('pointerleave'));
+    expect(el.shadowRoot!.querySelectorAll('.board-slot .mark')).toHaveLength(0);
     expect($(el, '.policy .note').textContent).toBe(
       `Les ${DEFAULT.legal.length} coups légaux se partagent 100 % ; les ${243 - DEFAULT.legal.length} autres sorties, des coups illégaux ici, comptent pour 0.`,
     );

@@ -1,5 +1,5 @@
 import { afterEach, describe, expect, it } from 'vitest';
-import { intersect, resetMedia } from '../test-dom';
+import { intersect, resetMedia, shownText } from '../test-dom';
 import { PogoMoves } from './pogo-moves';
 
 if (!customElements.get('pogo-moves')) customElements.define('pogo-moves', PogoMoves);
@@ -63,7 +63,8 @@ describe('<pogo-moves view="moves">', () => {
     const el = await mount('moves', 'en');
     cell(el, 0).click();
     cell(el, 1).click();
-    expect($(el, '.line').textContent).toBe('White plays a1-1-b1. Tap a stack with Red on top.');
+    expect(shownText($(el, '.line'))).toBe('White plays a1-1-b1. Tap a stack with Red on top.');
+    expect($(el, '.line .move-name [role="tooltip"]').textContent).toBe('From a1, 1 piece, to b1.');
     expect(marks(el, 'target')).toEqual([6, 7, 8]);
     cell(el, 6).click();
     cell(el, 3).click();

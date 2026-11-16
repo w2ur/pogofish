@@ -168,6 +168,7 @@ export class PogoStages extends PogoFigure {
       announce.textContent = [w.where, w.score, w.shown].join('. ');
       picker.set(String(stage.pct));
       const view = replayView({
+        lang,
         steps: frames,
         spoken: frames.map((f) => say(lang, f, stage.playerColour, stage.openingPlies)),
         sizers: held,

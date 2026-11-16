@@ -4,12 +4,14 @@
 // from the end of the game; the bands still to come keep their room, so
 // nothing moves on the page. A move is drawn on its board (the lifted stack
 // ringed, its destinations dashed) and named under it, with the letter of the
-// position it leads to.
+// position it leads to; the name carries its explanation (kit/move-tip.ts), so
+// the caption is read, and the board's title names only the position.
 import { announceMove } from '../board-state';
 import { WASM_FILE, assetUrl } from '../assets';
 import type { TableData } from '../data';
 import { moveName, ready } from '../engine';
 import { drawBoard } from '../kit/board-svg';
+import { moveTip } from '../kit/move-tip';
 import { transport } from '../kit/controls';
 import { PogoFigure } from '../kit/figure';
 import { Stepper } from '../kit/stepper';
@@ -61,12 +63,8 @@ export class PogoRetrograde extends PogoFigure {
       const boards = el('div', 'boards');
       for (const b of s.boards) {
         const pos = el('figure', 'pos');
-        const said = b.moves.map((m) => `${announceMove(lang, b.state.to_move, m.move)} → ${m.toLetter}`);
-        const spoken = b.moves.map(
-          (m) => `${announceMove(lang, b.state.to_move, m.move)}, ${t(lang, 'leadsTo')} ${t(lang, 'position').toLowerCase()} ${m.toLetter}`,
-        );
         const svg = drawBoard(b.state, {
-          title: `${t(lang, 'position')} ${b.letter}, ${name.toLowerCase()}${colon(lang)} ${side(b.state.to_move)}. ${spoken.join('. ')}`.trim(),
+          title: `${t(lang, 'position')} ${b.letter}, ${name.toLowerCase()}${colon(lang)} ${side(b.state.to_move)}.`,
           marks: b.moves.length
             ? [
                 { cell: b.moves[0]!.move[0], kind: 'picked' as const },
@@ -75,14 +73,16 @@ export class PogoRetrograde extends PogoFigure {
             : [],
         });
         const caption = el('figcaption', 'caption');
-        caption.setAttribute('aria-hidden', 'true');
         caption.append(el('span', 'label letter', `${b.letter} · ${side(b.state.to_move)}`));
-        // A move's name keeps its line: « b2-3-b1 » must not break at a hyphen.
-        b.moves.forEach((m, k) => {
+        // « Blanc joue b2-3-b1 → C »: the arrow drawn, « mène à la position C » read. The name keeps its line.
+        b.moves.forEach((m) => {
           const line = el('span', 'move');
+          const played = announceMove(lang, b.state.to_move, m.move);
           const named = moveName(m.move);
-          const [head, tail] = said[k]!.split(named);
-          line.append(head!, el('span', 'nowrap', named), tail!);
+          const arrow = el('span', '', ` → ${m.toLetter}`);
+          arrow.setAttribute('aria-hidden', 'true');
+          const read = el('span', 'sr', `, ${t(lang, 'leadsTo')} ${t(lang, 'position').toLowerCase()} ${m.toLetter}`);
+          line.append(played.slice(0, played.length - named.length), moveTip(lang, m.move), arrow, read);
           caption.append(line);
         });
         pos.append(svg, caption);

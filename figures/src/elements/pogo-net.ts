@@ -111,14 +111,22 @@ export class PogoNet extends PogoFigure {
     const body = el('div', 'net-body');
     body.append(boardSlot, diagramView(lang, diagram, kind));
     const value = valueView(lang, t(lang, 'netValue'));
-    const policy = kind === 'az' ? policyView(lang) : null;
+    // A move name explained in the table marks its stack and its landing on the board: the position the net reads.
+    let shown: ReturnType<typeof netPosition> | undefined;
+    const drawPosition = (move?: { from_cell: number; to_cell: number }): void => {
+      if (!shown) return;
+      const marks = move ? [{ cell: move.from_cell, kind: 'picked' as const }, { cell: move.to_cell, kind: 'target' as const }] : [];
+      boardSlot.replaceChildren(labelledBoard(drawBoard(shown.state, { labelRoom: true, title: positionWords(lang, shown), marks })));
+    };
+    const policy = kind === 'az' ? policyView(lang, (m) => ({ show: () => drawPosition(m), hide: () => drawPosition() })) : null;
     root.append(where.element, body, value.element, ...(policy ? [policy.element] : []), netLine(lang, kind === 'az' ? NET_NAME : TD_NAME, diagram.weights));
 
     const update = (): void => {
       const p = netPosition(deps.store);
       where.update(p);
       root.dataset.position = key(p.state);
-      boardSlot.replaceChildren(labelledBoard(drawBoard(p.state, { labelRoom: true, title: positionWords(lang, p) })));
+      shown = p;
+      drawPosition();
       if (kind === 'az') {
         const r = azReadout(net as AzNet, p.state, policyIndex);
         value.update(r.value, p.state);

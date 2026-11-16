@@ -6,7 +6,7 @@ import { key, moveName, type State } from '../engine';
 import { bestMove, search, type SearchSnapshot } from '../mcts';
 import { parseAz, type AzNet } from '../nets';
 import { createStore, type Store } from '../store';
-import { REDUCED_MOTION, intersect, resetMedia, setMedia } from '../test-dom';
+import { REDUCED_MOTION, intersect, resetMedia, setMedia, shownText } from '../test-dom';
 import { PogoSearch } from './pogo-search';
 import { PUZZLE5, STOPS } from './search-steps';
 import { formatShare } from '../kit/score';
@@ -78,7 +78,16 @@ describe('<pogo-search>', () => {
     expect($(el, '.search').dataset.position).toBe(key(PUZZLE5));
     expect($(el, '.where-from').textContent).toBe('Position: puzzle 5 of AlphaZero’s bench, Red to move.');
     expect([...visits(el).values()].every((v) => v === 0)).toBe(true);
-    expect($(el, '.said-now').textContent).toBe('Before the search: the net’s preferences alone. The net alone prefers b2-2-a3.');
+    expect(shownText($(el, '.said-now'))).toBe('Before the search: the net’s preferences alone. The net alone prefers b2-2-a3.');
+    // Every move name explains itself, in the words and in the table, and marks itself on the board.
+    expect($(el, '.said-now .move-name [role="tooltip"]').textContent).toBe('From b2, 2 pieces, to a3.');
+    const rowName = $(el, '.search-table tbody th .move-name');
+    expect(rowName.querySelector('[role="tooltip"]')!.textContent).toMatch(/^From [abc][123], [123] pieces?, to [abc][123]\.$/);
+    rowName.focus();
+    expect(el.shadowRoot!.querySelectorAll('.board-slot .mark.picked')).toHaveLength(1);
+    expect(el.shadowRoot!.querySelectorAll('.board-slot .mark.target')).toHaveLength(1);
+    rowName.blur();
+    expect(el.shadowRoot!.querySelectorAll('.board-slot .mark')).toHaveLength(0);
     expect($(el, '.net-name').textContent).toBe('Net az-lc1-s1 · 100 simulations.');
   });
 

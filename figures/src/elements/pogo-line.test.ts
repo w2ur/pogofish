@@ -1,5 +1,6 @@
 import { readFileSync } from 'node:fs';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
+import { shownText } from '../test-dom';
 import type { TableData } from '../data';
 import { key, replay } from '../engine';
 import type { PlayFromDetail } from '../kit/figure';
@@ -28,7 +29,7 @@ async function mount(line: string, rules: string, lang = 'fr'): Promise<PogoLine
 
 const $ = (el: PogoLine, s: string) => el.shadowRoot!.querySelector<HTMLElement>(s)!;
 const role = (el: PogoLine, r: string) => $(el, `[data-role="${r}"]`) as HTMLButtonElement;
-const current = (el: PogoLine) => el.shadowRoot!.querySelector('.said:not([data-off])')!.textContent;
+const current = (el: PogoLine) => shownText(el.shadowRoot!.querySelector('.said:not([data-off])')!);
 const counter = (el: PogoLine) => role(el, 'counter').textContent;
 
 beforeEach(() => resetMedia());
@@ -68,6 +69,7 @@ describe('<pogo-line>', () => {
     expect(counter(el)).toBe('0 / 12');
     role(el, 'next').click();
     expect(current(el)).toBe('Blanc joue a1-2-b2');
+    expect(el.shadowRoot!.querySelector('.said:not([data-off]) .move-name [role="tooltip"]')!.textContent).toBe('De a1, 2 pièces, vers b2.');
     for (let i = 0; i < 11; i++) role(el, 'next').click();
     expect(current(el)).toContain('Rouge gagne');
     expect(current(el)).toContain('Toutes les piles ont un sommet rouge.');

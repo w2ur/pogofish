@@ -92,3 +92,10 @@ export function observersOf(el: Element): IntersectionObserverMock[] {
 export function observing(el: Element): number {
   return [...observers].filter((o) => o.targets.has(el)).length;
 }
+
+/** An element's words as drawn, without the move names' explanations (kit/move-tip.ts). */
+export function shownText(el: Element): string {
+  const copy = el.cloneNode(true) as Element;
+  copy.querySelectorAll('.move-tip').forEach((x) => x.remove());
+  return copy.textContent ?? '';
+}

@@ -99,6 +99,7 @@ export class PogoGreedy extends PogoFigure {
       const { frames, finished } = greedyGame(seed);
       const last = frames.length - 1;
       const view = replayView({
+        lang,
         steps: frames,
         spoken: frames.map((f, i) => say(lang, f, !finished && i === last)),
         sizers: held,

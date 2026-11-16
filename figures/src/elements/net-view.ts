@@ -4,6 +4,7 @@
 // a quantity is a length on a scale the figure states, and its number.
 import type { Colour, State } from '../engine';
 import { formatShare } from '../kit/score';
+import { moveTip, type TipHooks } from '../kit/move-tip';
 import { colon, t, type Lang } from '../kit/strings';
 import { countNodes } from './count-steps';
 import { positionWords, type NetPosition } from './net-position';
@@ -144,7 +145,7 @@ export function blankRow(cells: number): HTMLTableRowElement {
 }
 
 /** The net's preference for each legal move, on one 0–100 % scale, the strongest first; ten shown at most. */
-export function policyView(lang: Lang): { element: HTMLElement; update(rows: PolicyRow[], actions: number): void } {
+export function policyView(lang: Lang, hooks?: (m: PolicyRow['move']) => TipHooks): { element: HTMLElement; update(rows: PolicyRow[], actions: number): void } {
   const element = el('div', 'policy');
   const lede = el('p', 'note');
   const ranked = rankedTable(lang, 'policy', [
@@ -167,7 +168,8 @@ export function policyView(lang: Lang): { element: HTMLElement; update(rows: Pol
           const r = rows[i]!;
           const tr = el('tr');
           tr.dataset.move = r.name;
-          const th = el('th', 'move num', r.name);
+          const th = el('th', 'move num');
+          th.append(moveTip(lang, r.move, hooks?.(r.move)));
           th.scope = 'row';
           tr.append(th, barCell(formatShare(lang, r.prior), r.prior));
           return tr;
