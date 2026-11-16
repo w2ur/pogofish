@@ -1,27 +1,98 @@
 /*
- * <pogo-encoding>: the board above the table, at every width: beside it in a 640px
- * stage the 12 slots shrank to 14px and their « +1 » touched. The
- * table is one row per cell; its 12 slots sit on the row's line when the table
- * has 400px, else on a line of their own under the cell's name, top and
- * height. A slot holding a piece takes that piece's colour (the Red pieces'
- * red, the White pieces' white, outlined in ink); an empty slot is a hairline.
+ * <pogo-encoding>: the board the reader plays on, and the 127 numbers that
+ * follow it. Narrow: the board, its controls, then the grid under it. From
+ * 860px the board stands at the left and the grid at the right.
+ *
+ * The grid is one row per cell: its name, the 12 slots of its stack, the top's
+ * owner, the height. A slot holding a piece takes that piece's colour (the Red
+ * pieces' red, the White pieces' white, outlined in ink) whoever is to move; an
+ * empty slot is a hairline. Its type follows the grid's width, so the fifteen
+ * columns hold at 320px without scrolling.
+ *
+ * Two marks show what a move did. `changed` (the input says something new
+ * about the board): an ink frame that fades. `flipped` (the same piece, seen
+ * from the other side now that the turn has passed): the cell turns over, row
+ * by row in one wave. Under reduced motion nothing moves: the frame stays
+ * until the next move, and a turned cell keeps a dotted one.
  */
-.board-box .play {
-  width: min(100%, 240px);
+:host {
+  container-type: inline-size;
+}
+
+/* The room the figure takes, kept before it renders (measured 2026-11-16 on the harness, by width). */
+:host .stage {
+  min-height: 875px;
+}
+
+@container (min-width: 480px) {
+  :host .stage {
+    min-height: 916px;
+  }
+}
+
+@container (min-width: 860px) {
+  :host .stage {
+    min-height: 543px;
+  }
+}
+
+p {
+  margin: 0;
+}
+
+.encoding {
+  display: flex;
+  flex-direction: column;
 }
 
 .enc-body {
   display: grid;
-  gap: 16px;
-  align-items: start;
+  gap: 20px;
+  justify-items: center;
 }
 
-
-.enc-table-side {
+.enc-side {
   display: flex;
   flex-direction: column;
-  gap: 8px;
+  align-items: center;
+  gap: 10px;
+  width: min(100%, 340px);
+}
+
+.enc-side .play {
+  width: min(100%, 300px);
+}
+
+.enc-side .controls {
+  justify-content: center;
+}
+
+.enc-side .actions .control {
+  font-size: 12.8px;
+}
+
+.enc-main {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  width: 100%;
+  max-width: 640px;
   min-width: 0;
+}
+
+/* Whose turn, and what +1 means now. Two lines' room, so the grid never moves when the sentence changes. */
+.key {
+  min-height: 2.8em;
+  font-size: 15px;
+  line-height: 1.4;
+  color: var(--_ink-2);
+}
+
+.turn {
+  padding: 1px 4px;
+  margin-left: -4px;
+  color: var(--_ink);
+  font-weight: 800;
 }
 
 .enc-wrap {
@@ -31,166 +102,264 @@
 .enc-table {
   display: flex;
   flex-direction: column;
+  gap: 2px;
+  font-size: clamp(9.5px, 3.3cqi, 13px);
 }
 
 .enc-row {
   display: grid;
-  grid-template-columns: 48px minmax(0, 1fr) minmax(0, 1fr);
-  grid-template-areas:
-    'name top height'
-    'slots slots slots';
-  gap: 2px 8px;
-  align-items: center;
-  padding: 4px 0;
-  border-bottom: 1px solid var(--_rule);
+  grid-template-columns: 2.1em repeat(12, minmax(0, 1fr)) 0.3em minmax(0, 1.5fr) minmax(0, 1.9fr);
+  gap: 2px;
+  align-items: stretch;
 }
 
-@container (min-width: 400px) {
-  .enc-row {
-    grid-template-columns: 48px minmax(0, 1fr) 3.6em 6.4em;
-    grid-template-areas: 'name slots top height';
-  }
+/* The top and the height stand apart from the stack. */
+.enc-row > .top {
+  grid-column: 15;
 }
 
 .enc-head {
-  font-size: 12.8px;
+  align-items: end;
+  padding-bottom: 2px;
+  font-size: max(1em, 11px);
+  line-height: 1.15;
   color: var(--_muted);
-  border-bottom-color: var(--_ink);
 }
 
-/* The headers in the reading cut: the label cut's width would not hold « hauteur ÷ 12 » over its column. */
-.enc-head .label {
-  font-size: 12.8px;
-  font-stretch: 100%;
-  font-weight: 600;
-  letter-spacing: 0;
-  text-transform: none;
+.enc-head .c-slots {
+  grid-column: 2 / span 12;
 }
 
-.c-name {
-  grid-area: name;
+.enc-head .c-top {
+  grid-column: 15;
 }
 
-.c-slots {
-  grid-area: slots;
+/* A heading wider than its column runs to the left, over the stack's own. */
+.enc-head .c-top {
+  justify-self: end;
+  white-space: nowrap;
 }
 
-.c-top {
-  grid-area: top;
-}
-
-.c-height {
-  grid-area: height;
-}
-
-.c-top,
-.c-height {
-  font-size: 12.8px;
+/* « hauteur ÷ 12 » on two lines where its column is narrow. */
+.enc-head .c-height {
+  justify-self: end;
   text-align: right;
 }
 
-.slots {
-  display: grid;
-  grid-template-columns: repeat(12, minmax(0, 1fr));
-  gap: 2px;
+.c-name {
+  align-self: center;
+  color: var(--_ink);
+  font-stretch: 125%;
+  font-weight: 800;
+  letter-spacing: 0.02em;
 }
 
-.slot {
+.enc-row.on .c-name {
+  text-decoration: underline 2px;
+  text-underline-offset: 3px;
+}
+
+.v {
   display: grid;
   place-items: center;
-  min-height: 22px;
-  font-size: 12px;
+  min-height: 2em;
   line-height: 1;
-}
-
-.slot.none {
   color: var(--_muted);
   box-shadow: inset 0 0 0 1px var(--_rule);
 }
 
-.slot.red {
+.v[data-piece='red'] {
   background: var(--_red);
   color: var(--_on-red);
   font-weight: 800;
+  box-shadow: none;
 }
 
-.slot.white {
+.v[data-piece='white'] {
   background: var(--_white);
   color: var(--_on-red);
   font-weight: 800;
   box-shadow: inset 0 0 0 1px var(--_ink);
 }
 
-/* A row's name is the button that marks it, on the board too. */
-.cell-name {
-  appearance: none;
-  min-width: 44px;
-  min-height: 32px;
-  margin: 0;
-  padding: 0 4px;
-  border: 0;
-  border-radius: 0;
-  background: transparent;
+.v.height,
+.v.rep-value {
   color: var(--_ink);
-  font-family: var(--_font);
-  font-size: 12.8px;
-  font-stretch: 125%;
-  font-weight: 800;
-  letter-spacing: 0.02em;
-  text-align: left;
-  cursor: pointer;
-  text-decoration: underline;
-  text-decoration-color: var(--_edge);
-  text-underline-offset: 3px;
-}
-
-.enc-row.on {
-  background: var(--_rule);
-}
-
-/* On the band an empty slot keeps an outline that can be seen. */
-.enc-row.on .slot.none {
-  box-shadow: inset 0 0 0 1px var(--_edge);
-}
-
-.enc-row.on .cell-name {
-  text-decoration-color: var(--_ink);
-  text-decoration-thickness: 2px;
-}
-
-.cell-button[aria-pressed='true'] {
-  cursor: pointer;
-}
-
-.cell-button {
-  cursor: pointer;
 }
 
 /* The 127th input, under the nine rows. */
 .enc-rep {
   display: flex;
-  flex-wrap: wrap;
-  align-items: baseline;
-  gap: 4px 8px;
-  padding-top: 6px;
-  border-top: 3px solid var(--_ink);
-  font-size: 15px;
-}
-
-.rep-name {
+  align-items: center;
+  gap: 8px;
+  padding-top: 8px;
+  border-top: 1px solid var(--_rule);
   font-size: 12.8px;
-}
-
-.rep-value {
-  font-weight: 800;
-}
-
-.rep-what {
-  flex-basis: 100%;
+  line-height: 1.3;
   color: var(--_ink-2);
 }
 
-.total {
-  font-size: 12.8px;
-  color: var(--_muted);
+.rep-name {
+  color: var(--_ink);
+  font-weight: 800;
+  white-space: nowrap;
+}
+
+.rep-value {
+  flex: none;
+  min-width: 2.6em;
+  min-height: 2em;
+}
+
+/* What the move changed: a frame in ink, which fades. Two keyframes of one drawing, so each move restarts it. */
+.encoding[data-tick='0'] .v[data-change='changed'] {
+  animation: enc-mark-a 2200ms linear both;
+}
+
+.encoding[data-tick='1'] .v[data-change='changed'] {
+  animation: enc-mark-b 2200ms linear both;
+}
+
+/* The same piece from the other side: the cell turns over, the wave running along its row. */
+.encoding[data-tick='0'] .v[data-change='flipped'] {
+  animation: enc-flip-a 420ms ease-out both;
+  animation-delay: calc(var(--k) * 24ms);
+}
+
+.encoding[data-tick='1'] .v[data-change='flipped'] {
+  animation: enc-flip-b 420ms ease-out both;
+  animation-delay: calc(var(--k) * 24ms);
+}
+
+.encoding[data-tick='0'] .key[data-turned] .turn {
+  animation: enc-turn-a 1800ms linear both;
+}
+
+.encoding[data-tick='1'] .key[data-turned] .turn {
+  animation: enc-turn-b 1800ms linear both;
+}
+
+@keyframes enc-mark-a {
+  0%,
+  55% {
+    outline: 3px solid var(--_ink);
+    outline-offset: 1px;
+  }
+
+  100% {
+    outline: 3px solid transparent;
+    outline-offset: 1px;
+  }
+}
+
+@keyframes enc-mark-b {
+  0%,
+  55% {
+    outline: 3px solid var(--_ink);
+    outline-offset: 1px;
+  }
+
+  100% {
+    outline: 3px solid transparent;
+    outline-offset: 1px;
+  }
+}
+
+@keyframes enc-flip-a {
+  0% {
+    transform: scaleY(-1);
+  }
+
+  50% {
+    transform: scaleY(0);
+  }
+
+  100% {
+    transform: scaleY(1);
+  }
+}
+
+@keyframes enc-flip-b {
+  0% {
+    transform: scaleY(-1);
+  }
+
+  50% {
+    transform: scaleY(0);
+  }
+
+  100% {
+    transform: scaleY(1);
+  }
+}
+
+/* The turn passes: the kit's inverted block, for a moment. */
+@keyframes enc-turn-a {
+  0%,
+  60% {
+    background: var(--_ink);
+    color: var(--_ground);
+  }
+
+  100% {
+    background: transparent;
+    color: var(--_ink);
+  }
+}
+
+@keyframes enc-turn-b {
+  0%,
+  60% {
+    background: var(--_ink);
+    color: var(--_ground);
+  }
+
+  100% {
+    background: transparent;
+    color: var(--_ink);
+  }
+}
+
+.sr {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  clip-path: inset(50%);
+  white-space: nowrap;
+}
+
+@container (min-width: 860px) {
+  .enc-body {
+    grid-template-columns: 300px minmax(0, 640px);
+    gap: 40px;
+    justify-content: center;
+    align-items: start;
+  }
+
+  .enc-side {
+    width: 300px;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .encoding .v[data-change],
+  .encoding .key[data-turned] .turn {
+    animation: none;
+  }
+
+  .encoding .v[data-change='changed'] {
+    outline: 3px solid var(--_ink);
+    outline-offset: 1px;
+  }
+
+  .encoding .v[data-change='flipped'] {
+    outline: 1px dotted var(--_ink);
+    outline-offset: 1px;
+  }
+
+  .encoding .key[data-turned] .turn {
+    background: var(--_ink);
+    color: var(--_ground);
+  }
 }

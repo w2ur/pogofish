@@ -21,6 +21,11 @@ export interface NetPosition {
   beforeEnd: boolean;
 }
 
+/** The essay's own position, whatever the reader plays: the default game after DEFAULT_PLY moves. */
+export function defaultPosition(): State {
+  return replay(DEFAULT_GAME.slice(0, DEFAULT_PLY) as Triple[])[DEFAULT_PLY]!;
+}
+
 export function netPosition(store: Pick<Store, 'current'>): NetPosition {
   const g = store.current();
   if (g && g.states.length > 0) {

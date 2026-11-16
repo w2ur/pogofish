@@ -38,6 +38,29 @@ export interface TdNet {
   value(s: State): number;
 }
 
+/** One layer as the file holds it: `outputs` rows of `inputs` weights, then one bias per output. */
+export interface LayerWeights {
+  name: string;
+  inputs: number;
+  outputs: number;
+  weight: Float32Array;
+  bias: Float32Array;
+}
+
+/**
+ * A net that shows its work (<pogo-net> draws it): its weights, and every layer's
+ * output for a position, by the same arithmetic as its answer.
+ */
+export interface Anatomy {
+  /** The layers in the file's order (`header.layers`). */
+  layers: LayerWeights[];
+  /**
+   * The inputs, then each layer's output in the file's order: after its ReLU for a
+   * hidden layer, raw for the policy's outputs, after tanh for a value output.
+   */
+  forward(s: State): Float32Array[];
+}
+
 const FEATURES = 'mover-relative-repetition';
 const FEATURE_SIZE = 127;
 const ACTION_SIZE = 243;
@@ -45,13 +68,7 @@ const AZ_HEADS = ['policy_fc1', 'policy_fc2', 'value_fc1', 'value_fc2'];
 
 const f = Math.fround;
 
-export interface Linear {
-  inputs: number;
-  outputs: number;
-  /** `outputs` rows of `inputs` values. */
-  weight: Float32Array;
-  bias: Float32Array;
-}
+export type Linear = LayerWeights;
 
 /** from_cell * 27 + (num_pieces - 1) * 9 + to_cell, as crates/infer/src/actions.rs. */
 export function policyIndex(m: Move): number {
@@ -107,7 +124,7 @@ function parse(bytes: ArrayBuffer, magic: string): { header: NetHeader; layers: 
     for (let i = 0; i < n; i++) values[i] = view.getFloat32(offset + 4 * i, true);
     offset += need;
     weights += n;
-    return { inputs, outputs, weight: values.subarray(0, inputs * outputs), bias: values.subarray(inputs * outputs) };
+    return { name, inputs, outputs, weight: values.subarray(0, inputs * outputs), bias: values.subarray(inputs * outputs) };
   });
   if (offset !== bytes.byteLength) {
     throw new Error(`pogo-figures: ${bytes.byteLength - offset} unexpected bytes after the last layer`);
@@ -124,7 +141,7 @@ function chain(layers: Linear[], from: number, what: string): number {
   return width;
 }
 
-export function parseAz(bytes: ArrayBuffer): AzNet {
+export function parseAz(bytes: ArrayBuffer): AzNet & Anatomy {
   const { header, layers } = parse(bytes, 'PFW1\n');
   const names = header.layers.map((l) => l.name);
   if (layers.length < 5 || names.slice(-4).join() !== AZ_HEADS.join()) {
@@ -141,6 +158,16 @@ export function parseAz(bytes: ArrayBuffer): AzNet {
   }
   return {
     header,
+    layers,
+    forward(s) {
+      const out = [input(s)];
+      let h = out[0]!;
+      for (const l of trunk) out.push((h = relu(apply(l, h))));
+      const p = relu(apply(policy1, h));
+      const v = relu(apply(value1, h));
+      out.push(p, apply(policy2, p), v, Float32Array.of(f(Math.tanh(apply(value2, v)[0]!))));
+      return out;
+    },
     evaluate(s) {
       let h = input(s);
       for (const l of trunk) h = relu(apply(l, h));
@@ -158,7 +185,7 @@ export function parseAz(bytes: ArrayBuffer): AzNet {
   };
 }
 
-export function parseTd(bytes: ArrayBuffer): TdNet {
+export function parseTd(bytes: ArrayBuffer): TdNet & Anatomy {
   const { header, layers } = parse(bytes, 'PFV1\n');
   const names = header.layers.map((l) => l.name);
   const expected = layers.map((_, i) => (i === layers.length - 1 ? 'td_out' : `td_fc${i}`));
@@ -172,6 +199,15 @@ export function parseTd(bytes: ArrayBuffer): TdNet {
   return {
     header,
     layers,
+    forward(s) {
+      const out = [input(s)];
+      let h = out[0]!;
+      layers.forEach((l, i) => {
+        h = i < last ? relu(apply(l, h)) : Float32Array.of(f(Math.tanh(apply(l, h)[0]!)));
+        out.push(h);
+      });
+      return out;
+    },
     value(s) {
       let h = input(s);
       layers.forEach((l, i) => {
@@ -188,10 +224,10 @@ async function fetchBytes(url: string): Promise<ArrayBuffer> {
   return response.arrayBuffer();
 }
 
-export async function loadAz(url: string): Promise<AzNet> {
+export async function loadAz(url: string): Promise<AzNet & Anatomy> {
   return parseAz(await fetchBytes(url));
 }
 
-export async function loadTd(url: string): Promise<TdNet> {
+export async function loadTd(url: string): Promise<TdNet & Anatomy> {
   return parseTd(await fetchBytes(url));
 }

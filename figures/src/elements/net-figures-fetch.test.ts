@@ -58,7 +58,7 @@ describe('the nets on one page', () => {
     intersect(net!);
     intersect(search!);
     for (let i = 0; i < 20 && !search!.shadowRoot!.querySelector('.search-table'); i++) await flush();
-    expect(net!.shadowRoot!.querySelector('.policy tbody tr')).not.toBeNull();
+    expect(net!.shadowRoot!.querySelector('.move-row')).not.toBeNull();
     expect(search!.shadowRoot!.querySelector('.search-table tbody tr')).not.toBeNull();
     // The board's first search: its worker gets the same bytes, without a fetch of its own.
     const sent: WorkerMessage[] = [];
@@ -78,7 +78,7 @@ describe('the nets on one page', () => {
     intersect(a);
     intersect(b);
     for (let i = 0; i < 20 && !b.shadowRoot!.querySelector('.td-chart'); i++) await flush();
-    expect(a.shadowRoot!.querySelector('.value-number')!.textContent).not.toBe('');
+    expect(a.shadowRoot!.querySelector('.note-number')!.textContent).not.toBe('');
     expect(requests('nets/td-s1.pfv')).toBe(1);
     expect(requests('nets/az-lc1-s1.pfw')).toBe(1);
   });

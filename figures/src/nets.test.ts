@@ -162,3 +162,41 @@ describe('the openingWin line', () => {
     states.forEach((s, i) => expect(s, `ply ${i}`).toEqual(reference.positions[reference.openingWin.first + i]!.state));
   });
 });
+
+describe('a net shows its work', () => {
+  it('forward() gives the inputs, then every layer’s output, ending on the very value the net answers', () => {
+    for (const p of reference.positions) {
+      const s = p.state;
+      const t = td.forward(s);
+      expect(t.map((a) => a.length)).toEqual([127, ...td.header.layers.map((l) => l.outputs)]);
+      expect(Array.from(t[0]!)).toEqual(Array.from(features(s)));
+      expect(t.at(-1)![0]).toBe(td.value(s));
+      const a = az.forward(s);
+      expect(a.map((x) => x.length)).toEqual([127, ...az.header.layers.map((l) => l.outputs)]);
+      const out = az.evaluate(s);
+      expect(a.at(-1)![0]).toBe(out.value);
+      // The policy's outputs sit before the value head's two layers.
+      expect(Array.from(a.at(-3)!)).toEqual(Array.from(out.logits));
+    }
+  });
+
+  it('a hidden layer’s output is its ReLU: never negative; and the weights are the file’s, layer by layer', () => {
+    const s = reference.positions[0]!.state;
+    for (const acts of td.forward(s).slice(1, -1)) expect(Math.min(...acts)).toBeGreaterThanOrEqual(0);
+    expect(td.layers.map((l) => [l.name, l.inputs, l.outputs])).toEqual(td.header.layers.map((l) => [l.name, l.inputs, l.outputs]));
+    for (const l of [...td.layers, ...az.layers]) {
+      expect(l.weight).toHaveLength(l.inputs * l.outputs);
+      expect(l.bias).toHaveLength(l.outputs);
+    }
+    expect(td.layers.reduce((n, l) => n + l.weight.length + l.bias.length, 0)).toBe(td.header.weights);
+  });
+
+  it('a layer’s output is its weights applied to the layer before (the first hidden neuron, by hand)', () => {
+    const s = reference.positions[0]!.state;
+    const [x, h1] = td.forward(s);
+    const l = td.layers[0]!;
+    let sum = 0;
+    for (let i = 0; i < l.inputs; i++) sum = Math.fround(sum + Math.fround(l.weight[i]! * x![i]!));
+    expect(h1![0]).toBe(Math.max(0, Math.fround(l.bias[0]! + sum)));
+  });
+});

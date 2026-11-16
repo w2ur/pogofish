@@ -2,19 +2,25 @@ import { readFileSync } from 'node:fs';
 import { resolve } from 'node:path';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { DEFAULT_GAME } from '../default-game';
-import { key, type State } from '../engine';
+import { key, legal, replay, type State, type Triple } from '../engine';
 import { formatShare } from '../kit/score';
-import { parseAz, parseTd, type TdNet } from '../nets';
-import { createStore } from '../store';
-import { intersect, resetMedia, shownText } from '../test-dom';
-import { PogoNet } from './pogo-net';
-import { signedNote } from './q-steps';
+import { t } from '../kit/strings';
+import { parseAz, parseTd, policyIndex } from '../nets';
+import { createStore, type Store } from '../store';
+import { REDUCED_MOTION, intersect, leave, playState, resetMedia, setMedia } from '../test-dom';
+import { flowEnd } from './net-canvas';
+import { netGraph, signal } from './net-graph';
+import { DEFAULT_PLY, defaultPosition } from './net-position';
+import { PER_NODE, PogoNet, STEP_MS, TOP_MOVES, drawnWords, inputWords, netNumber, outputMove, positionMs, probeWords } from './pogo-net';
+import { PogoEncoding } from './pogo-encoding';
 
 if (!customElements.get('pogo-net')) customElements.define('pogo-net', PogoNet);
+if (!customElements.get('pogo-encoding')) customElements.define('pogo-encoding', PogoEncoding);
 
 const fixture = JSON.parse(readFileSync(resolve(process.cwd(), 'fixtures/reference.json'), 'utf8')) as {
-  positions: { label: string; state: State; az: { value: number }; td: number; legal: number[][]; priors: number[] }[];
+  positions: { label: string; state: State; az: { value: number }; td: number }[];
 };
+const sheet = readFileSync(resolve(process.cwd(), 'src/elements/pogo-net.css'), 'utf8').replace(/\/\*[\s\S]*?\*\//g, '');
 const bytes = (name: string): ArrayBuffer => {
   const b = readFileSync(resolve(process.cwd(), 'public/nets', name));
   return b.buffer.slice(b.byteOffset, b.byteOffset + b.byteLength) as ArrayBuffer;
@@ -23,11 +29,11 @@ const az = parseAz(bytes('az-lc1-s1.pfw'));
 const td = parseTd(bytes('td-s1.pfv'));
 const flush = () => new Promise((r) => setTimeout(r, 0));
 const makeStore = () => createStore({ storage: null, loadEngine: () => Promise.resolve() });
-/** The default position: DEFAULT_GAME after three moves, in the fixture as « openingWin ply 3 ». */
+/** The essay's position: DEFAULT_GAME after three moves, in the Rust fixture as « openingWin ply 3 ». */
 const DEFAULT = fixture.positions.find((p) => p.label === 'openingWin ply 3')!;
-const cell = (i: number) => `${'abc'[i % 3]}${Math.floor(i / 3) + 1}`;
+const GAME = replay(DEFAULT_GAME as Triple[]);
 
-async function mount(kind: string, lang = 'fr'): Promise<PogoNet> {
+function mountSync(kind: string, lang = 'fr'): PogoNet {
   const section = document.createElement('section');
   section.setAttribute('lang', lang);
   const el = document.createElement('pogo-net') as PogoNet;
@@ -36,175 +42,309 @@ async function mount(kind: string, lang = 'fr'): Promise<PogoNet> {
   section.append(el);
   document.body.append(section);
   intersect(el);
+  return el;
+}
+
+async function mount(kind: string, lang = 'fr'): Promise<PogoNet> {
+  const el = mountSync(kind, lang);
   await flush();
   return el;
 }
 
 const $ = (el: Element, s: string) => el.shadowRoot!.querySelector<HTMLElement>(s)!;
 const $$ = (el: Element, s: string) => [...el.shadowRoot!.querySelectorAll<HTMLElement>(s)];
-const units = (el: Element) => $$(el, '.layer').map((l) => Number(l.dataset.units));
+const net = (el: Element) => $(el, '.net');
+const press = (el: Element, k: string) => $(el, '.canvas-wrap').dispatchEvent(new KeyboardEvent('keydown', { key: k, bubbles: true }));
 
+/** A canvas context that draws nothing and counts its strokes: happy-dom has none. */
+function fakeCanvas(): { strokes: () => number; restore: () => void } {
+  let strokes = 0;
+  const ctx = new Proxy({} as Record<string, unknown>, {
+    get: (target, prop) => (prop in target ? target[prop as string] : prop === 'stroke' ? () => void strokes++ : () => {}),
+    set: (target, prop, value) => ((target[prop as string] = value), true),
+  });
+  const proto = HTMLCanvasElement.prototype as unknown as { getContext: unknown };
+  const before = proto.getContext;
+  proto.getContext = () => ctx;
+  // happy-dom lays nothing out: the canvas is told its box at once, as a browser's ResizeObserver does.
+  const g = globalThis as { ResizeObserver?: unknown };
+  const observerBefore = g.ResizeObserver;
+  g.ResizeObserver = class {
+    constructor(private readonly cb: (entries: { contentRect: { width: number; height: number } }[]) => void) {}
+    observe(): void {
+      this.cb([{ contentRect: { width: 600, height: 440 } }]);
+    }
+    disconnect(): void {}
+  };
+  return {
+    strokes: () => strokes,
+    restore: () => {
+      proto.getContext = before;
+      g.ResizeObserver = observerBefore;
+    },
+  };
+}
+
+let st: Store;
 beforeEach(() => {
   resetMedia();
-  PogoNet.deps = { store: makeStore(), az: () => Promise.resolve(az), td: () => Promise.resolve(td) };
+  st = makeStore();
+  PogoNet.deps = { store: st, az: () => Promise.resolve(az), td: () => Promise.resolve(td) };
+  PogoEncoding.deps = { store: st };
 });
 afterEach(() => {
+  vi.useRealTimers();
   document.body.innerHTML = '';
 });
 
 describe('<pogo-net>', () => {
-  it('says the preference bars’ scale under their table, in its own text, and never names a net by its code name', async () => {
-    const td1 = await mount('td', 'en');
-    expect(td1.shadowRoot!.textContent).not.toContain('v4-td-lc1-s1');
-    expect(td1.shadowRoot!.querySelector('.policy')).toBeNull();
-    const az1 = await mount('az', 'fr');
-    const scale = $(az1, '.policy .scale-note');
-    expect(scale.textContent).toBe('Chaque barre va de 0 à 100\u202f%.');
-    expect(scale.previousElementSibling!.classList.contains('ranked')).toBe(true);
-    expect(az1.shadowRoot!.textContent).not.toContain('az-lc1-s1');
-  });
-
-  it('layer sizes come from the header: TD 127 → 128 → 64 → 1, AZ 127 → 256 → 128 then 128 → 243 and 128 → 1', async () => {
-    expect(units(await mount('td'))).toEqual([127, 128, 64, 1]);
-    const a = await mount('az', 'en');
-    expect(units(a)).toEqual([127, 256, 128, 128, 243, 128, 1]);
-    expect($$(a, '.link').map((l) => l.textContent)).toContain('128 × 243 connections, each with its weight');
-  });
-
-  it('a doctored header changes the diagram', async () => {
-    const doctored: TdNet = {
-      value: () => 0.25,
-      header: {
-        features: 'mover-relative-repetition',
-        layers: [
-          { name: 'td_fc0', inputs: 127, outputs: 200 },
-          { name: 'td_fc1', inputs: 200, outputs: 32 },
-          { name: 'td_out', inputs: 32, outputs: 1 },
-        ],
-        weights: 31_891,
-      },
-    };
-    PogoNet.deps = { ...PogoNet.deps, td: () => Promise.resolve(doctored) };
-    const el = await mount('td', 'en');
-    expect(units(el)).toEqual([127, 200, 32, 1]);
-    // One scale: the widest layer fills its track.
-    expect($$(el, '.layer .bar').map((b) => b.style.width)).toEqual(['63.500%', '100.000%', '16.000%', '0.500%']);
-    expect($(el, '.value-number').textContent).toBe('+0.25');
-  });
-
-  it('pogo-net kind="az" shows the fixture’s priors and value for a fixture position', async () => {
-    const el = await mount('az');
-    expect($(el, '.net').dataset.position).toBe(key(DEFAULT.state));
-    const rows = $$(el, '.policy tbody tr');
-    expect(rows).toHaveLength(DEFAULT.legal.length);
-    const shown = new Map(rows.map((r) => [r.dataset.move, r.querySelector('.value')!.textContent]));
-    DEFAULT.legal.forEach(([a, n, b], i) => {
-      expect(shown.get(`${cell(a!)}-${n}-${cell(b!)}`)).toBe(formatShare('fr', DEFAULT.priors[i]!));
-    });
-    expect($(el, '.value-number').textContent).toBe(signedNote('fr', DEFAULT.az.value));
-    // Each move name explains itself and, explained, marks its stack and landing on the board.
-    const name = rows[0]!.querySelector<HTMLElement>('th .move-name')!;
-    // The row's move, read from its name: « a3-1-b3 ».
-    const [from, n, to] = rows[0]!.dataset.move!.split('-');
-    expect(name.querySelector('[role="tooltip"]')!.textContent).toBe(`De ${from}, ${n} ${n === '1' ? 'pièce' : 'pièces'}, vers ${to}.`);
-    name.dispatchEvent(new PointerEvent('pointerenter'));
-    const cellIndex = (c: string): string => String('abc'.indexOf(c[0]!) + 3 * (Number(c[1]) - 1));
-    expect([...el.shadowRoot!.querySelectorAll('.board-slot .mark.picked')].map((m) => m.getAttribute('data-cell'))).toEqual([cellIndex(from!)]);
-    expect([...el.shadowRoot!.querySelectorAll('.board-slot .mark.target')].map((m) => m.getAttribute('data-cell'))).toEqual([cellIndex(to!)]);
-    name.dispatchEvent(new PointerEvent('pointerleave'));
-    expect(el.shadowRoot!.querySelectorAll('.board-slot .mark')).toHaveLength(0);
-    expect($(el, '.policy .note').textContent).toBe(
-      `Les ${DEFAULT.legal.length} coups légaux se partagent 100 % ; les ${243 - DEFAULT.legal.length} autres sorties, des coups illégaux ici, comptent pour 0.`,
-    );
-  });
-
-  it('pogo-net kind="td" shows the TD net’s value for the position, on its scale, never as a share of games', async () => {
+  it('draws every layer as a column of nodes, its size read from the header: TD 127 → 128 → 64 → 1', async () => {
     const el = await mount('td');
-    expect($(el, '.value-number').textContent).toBe(signedNote('fr', DEFAULT.td));
-    const words = $(el, '.value-view .note').textContent!;
-    expect(words).toContain('De −1, la défaite, à +1, la victoire, pour le joueur au trait (Rouge).');
-    expect($(el, '.value-view').textContent).not.toMatch(/%/);
-    expect($(el, '.where-from').textContent).toBe('Position : l’erreur d’ouverture, après 3 coups.');
+    expect($$(el, '.col-label').map((l) => l.textContent)).toEqual(['127entrées', '128neurones', '64neurones', '1note']);
+    expect($$(el, '.col-label').map((l) => l.dataset.units)).toEqual(['127', '128', '64', '1']);
+    // No head: no labels above the canvas.
+    expect($(el, '.col-labels.top')).toBeNull();
+    expect($(el, 'canvas')).not.toBeNull();
   });
 
-  it('follows the store: a move on the board changes the position, the value and the words', async () => {
-    const s = makeStore();
-    PogoNet.deps = { ...PogoNet.deps, store: s };
-    const el = await mount('td', 'en');
-    const before = $(el, '.net').dataset.position;
-    s.newGame('White', 'normal');
-    s.play(DEFAULT_GAME[0]!);
-    expect($(el, '.net').dataset.position).not.toBe(before);
-    expect($(el, '.where-from').textContent).toBe('Position: the game on the board, after 1 move.');
-    expect($(el, '.value-number').textContent).toBe(signedNote('en', td.value(s.current()!.states[1]!)));
-    expect($(el, '.hint').hasAttribute('data-off')).toBe(true);
+  it('AlphaZero: the trunk, then the preference head above (128 → 243) and the value head below (128 → 1)', async () => {
+    const el = await mount('az', 'en');
+    expect($$(el, '.col-labels.top .col-label').map((l) => l.textContent)).toEqual(['128neurons', '243preferences']);
+    expect($$(el, '.col-labels.bottom .col-label').map((l) => l.textContent)).toEqual(['127inputs', '256neurons', '128neurons', '128neurons', '1value']);
   });
 
-  it('kind="az" with a net that fails reserves no room: one line and its fallback', async () => {
-    const error = vi.spyOn(console, 'error').mockImplementation(() => {});
+  it('a doctored header draws other sizes', async () => {
+    const doctored = {
+      ...td,
+      header: { features: td.header.features, weights: 0, layers: [{ name: 'td_fc0', inputs: 127, outputs: 128 }, { name: 'td_fc1', inputs: 128, outputs: 64 }, { name: 'td_out', inputs: 64, outputs: 1 }].slice(0, 3) },
+    };
+    doctored.header.layers[1] = { name: 'td_fc1', inputs: 128, outputs: 64 };
+    PogoNet.deps = { ...PogoNet.deps, td: () => Promise.resolve({ ...doctored, header: { ...doctored.header, layers: [{ name: 'td_fc0', inputs: 127, outputs: 128 }, { name: 'td_out', inputs: 128, outputs: 1 }] }, layers: [td.layers[0]!, { ...td.layers[2]!, inputs: 128, weight: new Float32Array(128) }], forward: (s: State) => [td.forward(s)[0]!, td.forward(s)[1]!, Float32Array.of(0.25)] }) };
+    const el = await mount('td');
+    expect($$(el, '.col-label').map((l) => l.dataset.units)).toEqual(['127', '128', '1']);
+    expect($(el, '.note-number').textContent).toBe('+0,25');
+  });
+
+  it('opens on the essay’s position, the one <pogo-encoding> opens on, and shows the net’s own value for it (the Rust fixture’s)', async () => {
+    const el = await mount('td');
+    const enc = document.createElement('pogo-encoding');
+    document.body.append(enc);
+    intersect(enc);
+    await flush();
+    expect(net(el).dataset.position).toBe(key(defaultPosition()));
+    expect(net(el).dataset.position).toBe($(enc, '.encoding').dataset.position);
+    expect(Number(net(el).dataset.value)).toBeCloseTo(DEFAULT.td, 5);
+    expect($(el, '.note-number').textContent).toBe(netNumber('fr', DEFAULT.td, true));
+    expect($(el, '.note-for').textContent).toBe('pour Rouge, à qui c’est le tour');
+    expect($(el, '.scale-ends').textContent).toBe('−1 défaite+1 victoire');
+    expect($(el, '.marker').style.left).toBe(`${(((DEFAULT.td + 1) / 2) * 100).toFixed(3)}%`);
+    expect($(el, '[data-role="counter"]').textContent).toBe(`coup ${DEFAULT_PLY} sur 8`);
+    const a = await mount('az');
+    expect(Number(net(a).dataset.value)).toBeCloseTo(DEFAULT.az.value, 5);
+  });
+
+  it('says how many of all the links it draws, counted from the signal', async () => {
+    const el = await mount('td');
+    const g = netGraph(td.header);
+    const sig = signal(td, g, td.forward(defaultPosition()), PER_NODE);
+    expect($(el, '.drawn').textContent).toBe(drawnWords('fr', sig.drawn, g.links));
+    expect(drawnWords('fr', 1158, 24512)).toBe('1 158 liaisons dessinées sur 24 512 : les 6 plus fortes de chaque neurone, pour cette position.');
+    expect(g.links).toBe(24512);
+    expect($(el, '.legend').textContent).toContain('positif');
+    expect($(el, '.legend').textContent).toContain('négatif');
+  });
+
+  it('AlphaZero lists its preferred moves with their shares, the rest summed: all the legal moves share 100 %', async () => {
+    const el = await mount('az');
+    const s = defaultPosition();
+    const out = az.evaluate(s);
+    const ranked = legal(s)
+      .map((m) => ({ m, p: out.priors.get(policyIndex(m))! }))
+      .sort((a, b) => b.p - a.p);
+    const rows = $$(el, '.move-row');
+    expect(rows).toHaveLength(TOP_MOVES);
+    rows.forEach((row, i) => {
+      expect(row.querySelector('.share')!.textContent).toBe(formatShare('fr', ranked[i]!.p));
+      expect(Number((row.querySelector('.bar') as HTMLElement).style.getPropertyValue('--share'))).toBeCloseTo(ranked[i]!.p, 3);
+    });
+    const rest = ranked.slice(TOP_MOVES);
+    expect($(el, '.others').textContent).toBe(`${rest.length} autres coups : ${formatShare('fr', rest.reduce((a, r) => a + r.p, 0))}`);
+    expect($(await mount('td'), '.moves')).toBeNull();
+  });
+
+  it('walks through the essay’s game by itself once on screen, position after position, and loops', async () => {
+    vi.useFakeTimers();
+    const el = mountSync('td');
+    await vi.advanceTimersByTimeAsync(0);
+    const every = positionMs(netGraph(td.header));
+    expect(playState(el)).toBe('play');
+    intersect(el);
+    expect(playState(el)).toBe('pause');
+    const seen = [net(el).dataset.position];
+    for (let i = 0; i < 9; i++) {
+      await vi.advanceTimersByTimeAsync(every);
+      seen.push(net(el).dataset.position);
+    }
+    // From move 3 to move 8, then again from the start: the nine positions that have a move to play.
+    expect(seen).toEqual([3, 4, 5, 6, 7, 8, 0, 1, 2, 3].map((i) => key(GAME[i]!)));
+    // Another position, another value.
+    expect(new Set(seen.map((k) => td.value(GAME.find((s) => key(s) === k)!))).size).toBeGreaterThan(5);
+  });
+
+  it('pauses off screen, resumes on screen, and a reader’s pause holds', async () => {
+    vi.useFakeTimers();
+    const el = mountSync('td');
+    await vi.advanceTimersByTimeAsync(0);
+    const every = positionMs(netGraph(td.header));
+    intersect(el);
+    leave(el);
+    await vi.advanceTimersByTimeAsync(every * 2);
+    expect(net(el).dataset.position).toBe(key(GAME[3]!));
+    intersect(el);
+    await vi.advanceTimersByTimeAsync(every);
+    expect(net(el).dataset.position).toBe(key(GAME[4]!));
+    $(el, '[data-role="play"]').click();
+    leave(el);
+    intersect(el);
+    await vi.advanceTimersByTimeAsync(every * 2);
+    expect(net(el).dataset.position).toBe(key(GAME[4]!));
+    // By hand: the previous and the next position.
+    $(el, '[data-role="previous"]').click();
+    expect(net(el).dataset.position).toBe(key(GAME[3]!));
+  });
+
+  it('the signal crosses the net in time: the output is held back until it arrives, and one canvas is drawn per frame', async () => {
+    const canvas = fakeCanvas();
+    vi.useFakeTimers({ toFake: ['setTimeout', 'clearTimeout', 'requestAnimationFrame', 'cancelAnimationFrame', 'performance', 'Date'] });
     try {
-      PogoNet.deps = { ...PogoNet.deps, az: () => Promise.reject(new Error('pogo-figures: nets/az-lc1-s1.pfw did not load in 30000 ms')) };
-      const el = await mount('az', 'en');
-      expect(el.hasAttribute('data-failed')).toBe(true);
-      const stage = $(el, '.stage');
-      expect(stage.textContent).toBe('This figure could not be computed.');
-      expect(stage.style.getPropertyValue('--_stage-min')).toBe('0px');
-      // net.css's own reserve for kind="az" is a :host rule on .stage, which the kit overrides when failed.
-      const css = readFileSync(resolve(process.cwd(), 'src/elements/net.css'), 'utf8');
-      expect(css).toMatch(/:host\(pogo-net\[kind='az'\]\) \.stage \{\s*min-height: \d+px;/);
-      expect(css).not.toMatch(/min-height: \d+px !important/);
+      const el = mountSync('td');
+      await vi.advanceTimersByTimeAsync(0);
+      // Drawn lit before it is seen.
+      expect(net(el).dataset.flow).toBe('arrived');
+      intersect(el);
+      expect(net(el).dataset.flow).toBe('running');
+      const crossing = flowEnd(netGraph(td.header).ranks) * STEP_MS;
+      await vi.advanceTimersByTimeAsync(crossing / 2);
+      expect(net(el).dataset.flow).toBe('running');
+      const midway = canvas.strokes();
+      expect(midway).toBeGreaterThan(0);
+      await vi.advanceTimersByTimeAsync(crossing / 2 + 50);
+      expect(net(el).dataset.flow).toBe('arrived');
+      const done = canvas.strokes();
+      // Nothing is drawn once the signal has arrived: no loop keeps running.
+      await vi.advanceTimersByTimeAsync(1000);
+      expect(canvas.strokes()).toBe(done);
+      expect(sheet).toMatch(/\.net\[data-flow='running'\] \.late \{\s*visibility: hidden/);
+      expect($(el, '.note-number').classList.contains('late')).toBe(true);
     } finally {
-      error.mockRestore();
+      canvas.restore();
     }
   });
 
-  it('stops following the store once disconnected', async () => {
-    const s = makeStore();
-    const on = vi.spyOn(s, 'on');
-    PogoNet.deps = { ...PogoNet.deps, store: s };
+  it('under reduced motion nothing moves: each position is drawn lit, and nothing plays by itself', async () => {
+    const canvas = fakeCanvas();
+    setMedia(REDUCED_MOTION, true);
+    vi.useFakeTimers({ toFake: ['setTimeout', 'clearTimeout', 'requestAnimationFrame', 'cancelAnimationFrame', 'performance', 'Date'] });
+    try {
+      const el = mountSync('az');
+      await vi.advanceTimersByTimeAsync(0);
+      intersect(el);
+      expect(net(el).dataset.flow).toBe('arrived');
+      await vi.advanceTimersByTimeAsync(positionMs(netGraph(az.header)) * 2);
+      expect(net(el).dataset.position).toBe(key(GAME[3]!));
+      expect(playState(el)).toBe('play');
+      $(el, '[data-role="next"]').click();
+      expect(net(el).dataset.position).toBe(key(GAME[4]!));
+      expect(net(el).dataset.flow).toBe('arrived');
+    } finally {
+      canvas.restore();
+    }
+  });
+
+  it('takes the reader’s game when there is one: its latest position, and each move after it', async () => {
     const el = await mount('td');
-    const off = on.mock.results[0]!.value as () => boolean;
-    el.parentElement!.removeChild(el);
-    // Already unsubscribed by the figure: a second unsubscribe finds nothing.
-    expect(off()).toBe(false);
-  });
-});
-
-describe('<pogo-net kind="az">, ten moves at most', () => {
-  /** A position with three legal moves, Red to move. */
-  const FEW: State = {
-    cells: [[], ['Red'], [], ['White', 'White', 'Red', 'White', 'Red', 'Red', 'White', 'White', 'Red', 'Red', 'White'], [], [], [], [], []],
-    to_move: 'Red',
-    move_count: 0,
-    history: [],
-  };
-  const shown = (el: Element) => $$(el, '.ranked > table > tbody > tr');
-
-  it('16 legal moves: ten rows, the six others behind « Les 6 autres coups » with their share', async () => {
-    const s = makeStore();
-    PogoNet.deps = { ...PogoNet.deps, store: s };
-    s.newGame('White', 'normal');
-    const el = await mount('az');
-    expect(shown(el)).toHaveLength(10);
-    expect(shown(el).every((r) => !r.classList.contains('blank'))).toBe(true);
-    expect($$(el, '.others tbody tr')).toHaveLength(6);
-    // The hidden moves' share, from the net itself.
-    const { priors } = az.evaluate(s.current()!.states[0]!);
-    const sorted = [...priors.values()].sort((a, b) => b - a);
-    const share = sorted.slice(10).reduce((a, b) => a + b, 0);
-    expect($(el, '.others-summary').textContent).toBe(`Les 6 autres coups, ${formatShare('fr', share)} de la préférence du réseau`);
-    expect(($(el, '.others') as HTMLDetailsElement).open).toBe(false);
+    expect(net(el).dataset.game).toBe('default');
+    st.newGame('White', 'normal');
+    expect(net(el).dataset.game).toBe('reader');
+    expect(net(el).dataset.position).toBe(key(st.current()!.states[0]!));
+    expect($(el, '[data-role="counter"]').textContent).toBe('position 1 sur 1');
+    st.play([0, 1, 3]);
+    expect(net(el).dataset.position).toBe(key(st.current()!.states[1]!));
+    expect(Number(net(el).dataset.value)).toBe(td.value(st.current()!.states[1]!));
+    expect($(el, '[data-role="counter"]').textContent).toBe('coup 1 sur 1');
+    // Its earlier positions stay within reach.
+    $(el, '[data-role="previous"]').click();
+    expect(net(el).dataset.position).toBe(key(st.current()!.states[0]!));
+    st.abandon();
+    expect(net(el).dataset.game).toBe('default');
+    expect(net(el).dataset.position).toBe(key(defaultPosition()));
   });
 
-  it('3 legal moves: three rows and seven blank ones, the disclosure kept but unseen', async () => {
-    const s = makeStore();
-    PogoNet.deps = { ...PogoNet.deps, store: s };
-    s.playFrom(FEW, 'test');
+  it('hands the position shown to the board', async () => {
+    const el = await mount('td');
+    const heard: string[] = [];
+    el.addEventListener('pogo:playfrom', (e) => heard.push(key((e as CustomEvent<{ state: State }>).detail.state)));
+    const action = $(el, '[data-role="action"]');
+    expect(action.textContent).toBe('Jouer cette position contre l’ordinateur');
+    action.click();
+    expect(heard).toEqual([key(defaultPosition())]);
+  });
+
+  it('a node says what it is and what it holds: with the arrow keys, column by column', async () => {
+    const el = await mount('td');
+    const probe = () => $(el, '.probe').textContent;
+    expect(probe()).toBe('Pointez un neurone pour lire sa valeur.');
+    const s = defaultPosition();
+    const acts = td.forward(s);
+    press(el, 'ArrowDown');
+    expect(probe()).toBe(`Entrée 1 sur 127 (a1, étage 1) : ${acts[0]![0] === -1 ? '−1' : acts[0]![0] === 1 ? '+1' : '0'}`);
+    press(el, 'ArrowDown');
+    expect(probe()).toContain('Entrée 2 sur 127 (a1, étage 2)');
+    press(el, 'ArrowRight');
+    expect(probe()).toBe(`Couche 1, neurone 2 sur 128 : ${netNumber('fr', acts[1]![1]!)}`);
+    press(el, 'ArrowRight');
+    press(el, 'ArrowRight');
+    expect(probe()).toBe(`Note : ${netNumber('fr', td.value(s), true)}`);
+    press(el, 'Escape');
+    expect(probe()).toBe('Pointez un neurone pour lire sa valeur.');
+    expect($(el, '.canvas-wrap').tabIndex).toBe(0);
+  });
+
+  it('names the inputs as the encoding does, and a preference by its move', () => {
+    expect([0, 11, 12, 13, 14 + 1, 126].map((i) => inputWords('fr', i))).toEqual(['a1, étage 1', 'a1, étage 12', 'a1, sommet', `a1, ${t('fr', 'encHeight')}`, 'b1, étage 2', 'répétitions ÷ 2']);
+    for (const m of legal(defaultPosition())) expect(outputMove(policyIndex(m))).toEqual([m.from_cell, m.num_pieces, m.to_cell]);
+    const s = defaultPosition();
+    const g = netGraph(az.header);
+    const out = az.evaluate(s);
+    const sig = signal(az, g, az.forward(s), PER_NODE, out.priors);
+    const legalMove = legal(s)[0]!;
+    const index = policyIndex(legalMove);
+    expect(probeWords('fr', g, sig, { column: 4, node: index })).toBe(`Préférence pour ${'abc'[legalMove.from_cell % 3]}${Math.floor(legalMove.from_cell / 3) + 1}-${legalMove.num_pieces}-${'abc'[legalMove.to_cell % 3]}${Math.floor(legalMove.to_cell / 3) + 1} : ${formatShare('fr', out.priors.get(index)!)}`);
+    const illegal = Array.from({ length: 243 }, (_, i) => i).find((i) => !out.priors.has(i))!;
+    expect(probeWords('fr', g, sig, { column: 4, node: illegal })).toMatch(/: coup illégal ici, 0$/);
+    expect(probeWords('fr', g, sig, { column: 3, node: 0 })).toMatch(/^Couche des préférences, neurone 1 sur 128/);
+    expect(probeWords('fr', g, sig, { column: 5, node: 0 })).toMatch(/^Couche de la note, neurone 1 sur 128/);
+  });
+
+  it('writes the net’s numbers with two decimals, a real minus, and the language’s decimal mark', () => {
+    expect([0.4321, -0.255, 0, -0.001, 1].map((x) => netNumber('fr', x, true))).toEqual(['+0,43', '−0,26', '0,00', '0,00', '+1,00']);
+    expect(netNumber('en', 0.82)).toBe('0.82');
+  });
+
+  it('never names a net by its code name, and refuses a kind it does not know', async () => {
     const el = await mount('az');
-    expect(shown(el)).toHaveLength(10);
-    expect(shown(el).filter((r) => r.classList.contains('blank'))).toHaveLength(7);
-    // A blank row holds no move name and no number, should its stylesheet not load.
-    for (const r of shown(el).filter((x) => x.classList.contains('blank'))) expect(r.textContent!.trim()).toBe('');
-    expect($(el, '.others').hasAttribute('data-none')).toBe(true);
+    expect(el.shadowRoot!.textContent).not.toMatch(/az-lc1|v4-td|td-s1/);
+    const error = vi.spyOn(console, 'error').mockImplementation(() => {});
+    const bad = await mount('dqn');
+    expect(bad.hasAttribute('data-failed')).toBe(true);
+    error.mockRestore();
+  });
+
+  it('wide: the position, the net, then the output where the signal arrives; stacked in that order when narrow', async () => {
+    const el = await mount('td');
+    expect([...$(el, '.net-body').children].map((c) => c.className)).toEqual(['board-slot', 'net-draw', 'net-out']);
+    expect($(el, '.net-body').nextElementSibling!.classList.contains('controls-slot')).toBe(true);
+    const wide = sheet.slice(sheet.indexOf('@container (min-width: 900px)'));
+    expect(wide).toMatch(/\.net-body \{[^}]*grid-template-columns: 220px minmax\(0, 1fr\) 210px/);
   });
 });

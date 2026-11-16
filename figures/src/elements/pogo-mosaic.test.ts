@@ -1,22 +1,20 @@
 import { readFileSync } from 'node:fs';
+import { resolve } from 'node:path';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import type { V5Data } from '../data';
-import { intersect, resetMedia, leave, playState } from '../test-dom';
-import { MOSAIC_PROGRAMS, mosaicStages } from './mosaic-grid';
-import { SWEEP_STEP_MS } from './mosaic-sweep';
-import { formatShare } from '../kit/score';
-import { REDUCED_MOTION, setMedia } from '../test-dom';
-import { PogoMosaic } from './pogo-mosaic';
+import { REDUCED_MOTION, intersect, leave, playState, resetMedia, setMedia } from '../test-dom';
+import { MOSAIC_PROGRAMS } from './mosaic-grid';
+import { SWEEP_MS, SWEEP_STEP_MS } from './mosaic-sweep';
+import { PogoMosaic, SWEEP_INTERVAL } from './pogo-mosaic';
 
 if (!customElements.get('pogo-mosaic')) customElements.define('pogo-mosaic', PogoMosaic);
 const v5 = JSON.parse(readFileSync('public/data/v5.json', 'utf8')) as V5Data;
+const sheet = readFileSync(resolve(process.cwd(), 'src/elements/pogo-mosaic.css'), 'utf8').replace(/\/\*[\s\S]*?\*\//g, '');
 
 const flush = () => new Promise((r) => setTimeout(r, 0));
-const PROGRAMS = MOSAIC_PROGRAMS;
 
 /** Mounts and brings it into view; the caller flushes (fake timers or not). */
-function mountSync(lang: string): PogoMosaic {
-  resetMedia();
+function mountSync(lang = 'fr'): PogoMosaic {
   const section = document.createElement('section');
   section.setAttribute('lang', lang);
   const el = document.createElement('pogo-mosaic') as PogoMosaic;
@@ -27,265 +25,165 @@ function mountSync(lang: string): PogoMosaic {
   return el;
 }
 
-const sweptGrids = (el: PogoMosaic) => [...el.shadowRoot!.querySelectorAll<SVGSVGElement>('.sweep .swept')];
-/** Each square's state as its class says it: "win mistake", "loss none-judged"… */
-const stateOf = (svg: SVGSVGElement) => [...svg.children].map((g) => g.getAttribute('class')!.replace(/^sq /, '').replace('m-', ''));
-const expected = (program: (typeof PROGRAMS)[number], k: number) => v5.mosaics[program][k]!.games.map((g) =>
-  `${g.result} ${g.mistakes > 0 ? 'mistake' : g.judged > 0 ? 'clean' : 'none-judged'}`,
-);
-
 async function mount(lang = 'fr'): Promise<PogoMosaic> {
-  resetMedia();
-  const section = document.createElement('section');
-  section.setAttribute('lang', lang);
-  const el = document.createElement('pogo-mosaic') as PogoMosaic;
-  el.innerHTML = '<p>fallback</p>';
-  section.append(el);
-  document.body.append(section);
-  intersect(el);
+  const el = mountSync(lang);
   await flush();
   return el;
 }
 
 const $ = (el: PogoMosaic, s: string) => el.shadowRoot!.querySelector<HTMLElement>(s)!;
 const $$ = (el: PogoMosaic, s: string) => [...el.shadowRoot!.querySelectorAll<HTMLElement>(s)];
-const choices = (el: PogoMosaic) => $$(el, '[role="radio"]') as HTMLButtonElement[];
-/** Squares drawn in one path: one `M` per square. */
-const count = (d: string | null) => (d ?? '').split('M').length - 1;
+const rows = (el: PogoMosaic) => $$(el, '.stage-row');
+const shown = (el: PogoMosaic) => rows(el).map((r) => r.hasAttribute('data-on'));
+const upTo = (k: number) => v5.stagesPct.map((_, i) => i <= k);
+const wins = (program: 'az100' | 'td' | 'qtab', k: number) => v5.mosaics[program][k]!.games.filter((g) => g.result === 'win').length;
 
 beforeEach(() => {
+  resetMedia();
   PogoMosaic.deps = { v5: () => Promise.resolve(v5) };
 });
 afterEach(() => {
+  vi.useRealTimers();
   document.body.innerHTML = '';
 });
 
 describe('<pogo-mosaic>', () => {
-  it('starts by itself once half of it is on screen, pauses when it leaves, and resumes when it comes back', async () => {
-    const el = await mount('fr');
-    expect(playState(el)).toBe('play');
-    intersect(el);
-    expect(playState(el)).toBe('pause');
-    leave(el);
-    expect(playState(el)).toBe('play');
-    intersect(el);
-    expect(playState(el)).toBe('pause');
-    el.remove();
-  });
-
-  it('a reader’s pause holds when it comes back on screen', async () => {
-    const el = await mount('fr');
-    intersect(el);
-    el.shadowRoot!.querySelector<HTMLButtonElement>('[data-role="play"]')!.click();
-    leave(el);
-    intersect(el);
-    expect(playState(el)).toBe('play');
-    el.remove();
-  });
-
-  it('puts the transport right under the three grids it steps', async () => {
-    const el = await mount('fr');
-    const items = [...el.shadowRoot!.querySelectorAll('.sweep > .sweep-item')];
-    expect(items).toHaveLength(3);
-    expect(items[2]!.nextElementSibling!.classList.contains('controls')).toBe(true);
-  });
-
-  it('mosaic has 100 squares per stage, won and lost as the data says, for each program picked', async () => {
-    const el = await mount('fr');
-    expect(choices(el).map((b) => b.dataset.value)).toEqual(['az100', 'td', 'qtab']);
-    for (const [k, program] of (['az100', 'td', 'qtab'] as const).entries()) {
-      choices(el)[k]!.click();
-      expect(choices(el)[k]!.getAttribute('aria-checked')).toBe('true');
-      const svgs = $$(el, '.stage-list .mosaic');
-      expect(svgs).toHaveLength(v5.stagesPct.length);
-      svgs.forEach((svg, i) => {
-        const games = v5.mosaics[program][i]!.games;
-        const won = count(svg.querySelector('.won')!.getAttribute('d'));
-        const lost = count(svg.querySelector('.lost')!.getAttribute('d'));
-        expect(won + lost, `${program} ${i}`).toBe(100);
-        expect(won).toBe(games.filter((g) => g.result === 'win').length);
-        const marks = count(svg.querySelector('.on-won')!.getAttribute('d')) + count(svg.querySelector('.on-lost')!.getAttribute('d'));
-        expect(marks).toBe(games.filter((g) => g.mistakes > 0 || g.judged === 0).length);
-        // One image per stage, its totals said; no focusable node per game.
-        expect(svg.getAttribute('role')).toBe('img');
-        expect(svg.querySelectorAll('[tabindex]')).toHaveLength(0);
+  it('draws the three programs side by side, one row per stage: 100 squares each, a filled one per game won, in the data’s order', async () => {
+    const el = await mount();
+    expect(rows(el)).toHaveLength(v5.stagesPct.length);
+    rows(el).forEach((row, k) => {
+      const cells = [...row.querySelectorAll<HTMLElement>('.cell')];
+      expect(cells.map((c) => c.dataset.program)).toEqual([...MOSAIC_PROGRAMS]);
+      cells.forEach((cell, p) => {
+        const games = v5.mosaics[MOSAIC_PROGRAMS[p]!][k]!.games;
+        // Every game has its hairline square; a game won has a filled one over it, at its own place.
+        expect((cell.querySelector('.lost')!.getAttribute('d') ?? '').split('M').length - 1).toBe(100);
+        const won = [...cell.querySelectorAll<SVGRectElement>('.won')];
+        expect(won.map((r) => Number(r.dataset.game))).toEqual(games.flatMap((g, i) => (g.result === 'win' ? [i] : [])));
+        for (const r of won) {
+          const i = Number(r.dataset.game);
+          expect([Number(r.getAttribute('x')), Number(r.getAttribute('y'))]).toEqual([(i % 20) * 10 + 1, Math.floor(i / 20) * 10 + 1]);
+        }
       });
-    }
+    });
   });
 
-  it('writes each stage’s totals in words and in a table, summed from its games', async () => {
-    const el = await mount('fr');
-    const stages = mosaicStages(v5, 'az100');
-    const items = $$(el, '.stage-item');
-    expect(items[0]!.querySelector('.totals')!.textContent).toBe(
-      '19 gagnées sur 100 · erreurs : 52,2 % des coups jugés (97 sur 186)',
+  it('writes under each mosaic how far the program has trained and its games won, counted from the games', async () => {
+    const el = await mount();
+    const cell = (k: number, program: string) => rows(el)[k]!.querySelector<HTMLElement>(`.cell[data-program="${program}"]`)!;
+    expect(cell(0, 'az100').querySelector('.count')!.textContent).toBe(`avant tout entraînement · ${wins('az100', 0)} gagnées sur 100`);
+    expect(cell(4, 'az100').querySelector('.count')!.textContent).toBe(`après 1 000 parties · ${wins('az100', 4)} gagnées sur 100`);
+    expect(cell(7, 'qtab').querySelector('.count')!.textContent).toBe(`après 5 000 000 parties · ${wins('qtab', 7)} gagnées sur 100`);
+    expect(cell(7, 'td').querySelector('.count strong')!.textContent).toBe(`${wins('td', 7)} gagnées sur 100`);
+    // The drawing says the same to a reader who cannot see it.
+    expect(cell(7, 'td').querySelector('svg')!.getAttribute('aria-label')).toBe(`TD(λ), après 50 000 parties : ${wins('td', 7)} gagnées sur 100.`);
+    const en = await mount('en');
+    expect(rows(en)[4]!.querySelector('.cell[data-program="az100"] .count')!.textContent).toBe(`after 1,000 games · ${wins('az100', 4)} won of 100`);
+  });
+
+  it('heads each column with its program and each row with its share of the training', async () => {
+    const el = await mount();
+    expect($$(el, '.head .program').map((h) => h.textContent)).toEqual(['AlphaZero, 100 simulations', 'TD(λ)', 'Q-learning']);
+    expect($$(el, '.stage-label .pct').map((h) => h.textContent)).toEqual(v5.stagesPct.map((p) => `${p} %`));
+    expect($(el, '.stage-label .of').textContent).toBe('de l’entraînement');
+  });
+
+  it('says what a square is in one line, and nothing else: no note, no disclosure, no table of values', async () => {
+    const el = await mount();
+    expect($(el, '.key').textContent).toBe('Une case par partie : rouge si le programme gagne, vide s’il perd.');
+    expect(el.shadowRoot!.querySelector('details')).toBeNull();
+    expect(el.shadowRoot!.querySelector('table')).toBeNull();
+    expect($$(el, '.mosaics > p').map((p) => p.className)).toEqual(['say title', 'key', 'sr']);
+  });
+
+  it('a won square is the kit’s red, a lost one a hairline: no other colour', () => {
+    expect(sheet).toMatch(/\.mosaic \.won \{[^}]*fill: var\(--_red\)/);
+    expect(sheet).toMatch(/\.mosaic \.lost \{[^}]*fill: none;[^}]*stroke: var\(--_edge\)/);
+    expect(sheet).not.toMatch(/#[0-9a-f]{3,6}\b|rgb\(|hsl\(/i);
+  });
+
+  it('rests on the first stage, then fills stage after stage once half of it is on screen, and stops on the whole mosaic', async () => {
+    vi.useFakeTimers();
+    const el = mountSync();
+    await vi.advanceTimersByTimeAsync(0);
+    expect(shown(el)).toEqual(upTo(0));
+    expect(playState(el)).toBe('play');
+    // The figure is drawn: now half of it comes on screen.
+    intersect(el);
+    expect(playState(el)).toBe('pause');
+    await vi.advanceTimersByTimeAsync(SWEEP_INTERVAL);
+    expect(shown(el)).toEqual(upTo(1));
+    expect($(el, '[data-role="counter"]').textContent).toBe('étape 2 sur 8 · 1 %');
+    await vi.advanceTimersByTimeAsync(SWEEP_INTERVAL * 10);
+    expect(shown(el)).toEqual(upTo(7));
+    expect(playState(el)).toBe('replay');
+  });
+
+  it('pauses when it leaves the screen and resumes when it comes back, unless the reader paused it', async () => {
+    vi.useFakeTimers();
+    const el = mountSync();
+    await vi.advanceTimersByTimeAsync(0);
+    intersect(el);
+    await vi.advanceTimersByTimeAsync(SWEEP_INTERVAL);
+    leave(el);
+    await vi.advanceTimersByTimeAsync(SWEEP_INTERVAL * 3);
+    expect(shown(el)).toEqual(upTo(1));
+    intersect(el);
+    await vi.advanceTimersByTimeAsync(SWEEP_INTERVAL);
+    expect(shown(el)).toEqual(upTo(2));
+    $(el, '[data-role="play"]').click();
+    leave(el);
+    intersect(el);
+    await vi.advanceTimersByTimeAsync(SWEEP_INTERVAL * 3);
+    expect(shown(el)).toEqual(upTo(2));
+  });
+
+  it('a stage fills square by square in the order of the games, and its count comes once the last has filled', async () => {
+    const el = await mount();
+    const cell = rows(el)[3]!.querySelector<HTMLElement>('.cell[data-program="az100"]')!;
+    for (const r of cell.querySelectorAll<SVGRectElement>('.won')) expect(r.style.getPropertyValue('--d')).toBe(`${Number(r.dataset.game) * SWEEP_STEP_MS}ms`);
+    expect(sheet).toMatch(/\.stage-row\[data-on\] \.won \{[^}]*opacity: 1;[^}]*transition: opacity 0s linear var\(--d\)/);
+    expect($(el, '.table').style.getPropertyValue('--sweep')).toBe(`${SWEEP_MS}ms`);
+    expect(sheet).toMatch(/\.stage-row\[data-on\] \.count \{[^}]*visibility: visible;[^}]*transition: visibility 0s linear var\(--sweep\)/);
+    // The interval leaves the sweep time to end and the stage time to be read.
+    expect(SWEEP_INTERVAL).toBeGreaterThan(2 * SWEEP_MS);
+  });
+
+  it('under reduced motion nothing starts by itself: the whole mosaic at once, and the play control', async () => {
+    setMedia(REDUCED_MOTION, true);
+    vi.useFakeTimers();
+    const el = mountSync();
+    await vi.advanceTimersByTimeAsync(0);
+    intersect(el);
+    await vi.advanceTimersByTimeAsync(SWEEP_INTERVAL * 3);
+    expect(shown(el)).toEqual(upTo(7));
+    expect(playState(el)).toBe('play');
+    expect(sheet).toMatch(/@media \(prefers-reduced-motion: reduce\) \{[^@]*\.won,[^@]*\.count \{\s*transition: none/);
+  });
+
+  it('puts the transport right under the mosaics, and says each stage once to a screen reader', async () => {
+    const el = await mount();
+    expect($(el, '.table').nextElementSibling!.classList.contains('controls')).toBe(true);
+    $(el, '[data-role="play"]').click();
+    $(el, '[data-role="next"]').click();
+    expect($(el, '.sr').textContent).toBe(
+      `1 % : AlphaZero, 100 simulations, ${wins('az100', 1)} gagnées sur 100 ; TD(λ), ${wins('td', 1)} gagnées sur 100 ; Q-learning, ${wins('qtab', 1)} gagnées sur 100.`,
     );
-    expect(items[7]!.querySelector('.totals')!.textContent).toBe('90 gagnées sur 100 · erreurs : 1,5 % des coups jugés (7 sur 465)');
-    expect(items[7]!.querySelector('.bench')!.textContent).toBe(`score sur toute la série\u202f: ${formatShare('fr', stages[7]!.score)}`);
-    const az7 = v5.mosaics.az100[7]!.games;
-    const mistaken = az7.filter((g) => g.mistakes > 0).length;
-    const none = az7.filter((g) => g.judged === 0).length;
-    const games = `${mistaken} parties avec au moins une erreur · ${none} sans coup jugé`;
-    expect(items[7]!.querySelector('.games-count')!.textContent).toBe(games);
-    expect(items[7]!.querySelector('svg')!.getAttribute('aria-label')).toContain(games);
-    expect(items[1]!.querySelector('.where')!.textContent).toBe('1 % · après 100 parties');
-    expect(items[0]!.querySelector('.where')!.textContent).toBe('0\u202f% · avant tout entraînement');
-    const rows = $$(el, '.table tbody tr').map((r) => [...r.children].map((c) => c.textContent));
-    expect(rows).toHaveLength(8);
-    expect(rows[7]).toEqual(['100 %', '10 000', '90', '1,5 % (7 / 465)']);
   });
 
-  it('says what each state of a square is, in words', async () => {
-    const el = await mount('en');
-    expect($$(el, '.legend li').map((li) => li.textContent)).toEqual([
-      'won',
-      'lost',
-      'at least one mistake by the program',
-      'no move by the program judged',
-    ]);
+  it('the three columns stay side by side at every width: the stage heads its row when the box is narrow', () => {
+    expect(sheet).toMatch(/\.table \{[^}]*grid-template-columns: repeat\(3, minmax\(0, 1fr\)\)/);
+    const wide = sheet.slice(sheet.indexOf('@container (min-width: 560px)'));
+    expect(wide).toMatch(/\.table \{[^}]*grid-template-columns: max-content repeat\(3, minmax\(0, 280px\)\)/);
   });
 
-  it('main view: three grids at stage 0, at rest, every square in its game’s state', async () => {
-    vi.useFakeTimers();
-    try {
-      const el = mountSync('fr');
-      await vi.advanceTimersByTimeAsync(0);
-      const grids = sweptGrids(el);
-      expect(grids).toHaveLength(3);
-      expect($(el, '[data-role="counter"]').textContent).toBe('étape 1 sur 8 · 0\u202f%');
-      expect($(el, '[data-role="play"]').hidden).toBe(false);
-      expect(vi.getTimerCount()).toBe(0);
-      expect(grids.map((g) => g.closest('.sweep-item')!.querySelector('.cell .where:not([data-off])')!.textContent)).toEqual([
-        'AlphaZero, 100 simulations · avant tout entraînement',
-        'TD(λ) · avant tout entraînement',
-        'Q-learning · avant tout entraînement',
-      ]);
-      PROGRAMS.forEach((program, i) => expect(stateOf(grids[i]!)).toEqual(expected(program, 0)));
-      // Every stage's heading and totals are there already, one seen: a step never changes the height.
-      for (const item of $$(el, '.sweep-item')) {
-        expect(item.querySelectorAll('.cell .where')).toHaveLength(8);
-        expect(item.querySelectorAll('.cell .totals')).toHaveLength(8);
-        expect(item.querySelectorAll('.cell > :not([data-off])')).toHaveLength(2);
-      }
-    } finally {
-      vi.useRealTimers();
-    }
-  });
-
-  it('a step sweeps the squares in game order, and the totals change in one go at the end', async () => {
-    vi.useFakeTimers();
-    try {
-      const el = mountSync('fr');
-      await vi.advanceTimersByTimeAsync(0);
-      const grids = sweptGrids(el);
-      const before = grids.map((g) => g.closest('.sweep-item')!.querySelector('.cell .totals:not([data-off])')!.textContent);
-      ($(el, '[data-role="next"]') as HTMLButtonElement).click();
-      PROGRAMS.forEach((program, i) => {
-        expect(stateOf(grids[i]!)).toEqual(expected(program, 1));
-        // Each changed square waits for its place in the order of the games.
-        const squares = [...grids[i]!.children] as SVGGElement[];
-        const from = expected(program, 0);
-        const to = expected(program, 1);
-        to.forEach((s, k) => {
-          if (s !== from[k]) expect(squares[k]!.style.getPropertyValue('--d')).toBe(`${k * SWEEP_STEP_MS}ms`);
-        });
-      });
-      expect(grids[0]!.closest('.sweep-item')!.querySelector('.cell .where:not([data-off])')!.textContent).toBe('AlphaZero, 100 simulations · après 100 parties');
-      await vi.advanceTimersByTimeAsync(SWEEP_STEP_MS * 50);
-      expect(grids.map((g) => g.closest('.sweep-item')!.querySelector('.cell .totals:not([data-off])')!.textContent)).toEqual(before);
-      await vi.advanceTimersByTimeAsync(SWEEP_STEP_MS * 50);
-      const s1 = mosaicStages(v5, 'az100')[1]!;
-      expect(grids[0]!.closest('.sweep-item')!.querySelector('.cell .totals:not([data-off])')!.textContent).toBe(
-        `${s1.wins} gagnées sur 100 · erreurs\u202f: ${formatShare('fr', s1.share)} des coups jugés (${s1.mistakes} sur ${s1.judged})`,
-      );
-      // The sweep is over: no square keeps its delay, so a later theme change recolours at once.
-      for (const g of grids) for (const sq of [...g.children] as SVGGElement[]) expect(sq.style.getPropertyValue('--d')).toBe('');
-      expect(vi.getTimerCount()).toBe(0);
-    } finally {
-      vi.useRealTimers();
-    }
-  });
-
-  it('a step during a sweep cancels it: the target stage exactly, one totals timer', async () => {
-    vi.useFakeTimers();
-    try {
-      const el = mountSync('en');
-      await vi.advanceTimersByTimeAsync(0);
-      const next = $(el, '[data-role="next"]') as HTMLButtonElement;
-      next.click();
-      await vi.advanceTimersByTimeAsync(100);
-      next.click();
-      expect(vi.getTimerCount()).toBe(1);
-      await vi.advanceTimersByTimeAsync(1000);
-      const grids = sweptGrids(el);
-      PROGRAMS.forEach((program, i) => {
-        expect(stateOf(grids[i]!)).toEqual(expected(program, 2));
-        const s = mosaicStages(v5, program)[2]!;
-        expect(grids[i]!.closest('.sweep-item')!.querySelector('.cell .totals:not([data-off]) strong')!.textContent).toBe(`${s.wins} won of 100`);
-      });
-    } finally {
-      vi.useRealTimers();
-    }
-  });
-
-  it('plays the eight stages to the end, then stops; disconnecting stops it', async () => {
-    vi.useFakeTimers();
-    try {
-      const el = mountSync('en');
-      await vi.advanceTimersByTimeAsync(0);
-      ($(el, '[data-role="play"]') as HTMLButtonElement).click();
-      await vi.advanceTimersByTimeAsync(1100 * 3 + 10);
-      const counter = $(el, '[data-role="counter"]');
-      expect(counter.textContent).toBe('step 4 of 8 · 5%');
-      el.remove();
-      await vi.advanceTimersByTimeAsync(10000);
-      expect(counter.textContent).toBe('step 4 of 8 · 5%');
-      expect(vi.getTimerCount()).toBe(0);
-      const again = mountSync('en');
-      await vi.advanceTimersByTimeAsync(0);
-      ($(again, '[data-role="play"]') as HTMLButtonElement).click();
-      await vi.advanceTimersByTimeAsync(1100 * 8);
-      expect($(again, '[data-role="counter"]').textContent).toBe('step 8 of 8 · 100%');
-      expect(vi.getTimerCount()).toBe(0);
-    } finally {
-      vi.useRealTimers();
-    }
-  });
-
-  it('under reduced motion nothing plays and a step changes every square at once, totals included', async () => {
-    vi.useFakeTimers();
-    try {
-      const el = mountSync('fr');
-      await vi.advanceTimersByTimeAsync(0);
-      setMedia(REDUCED_MOTION, true);
-      expect(playState(el)).toBe('play');
-      ($(el, '[data-role="next"]') as HTMLButtonElement).click();
-      const grids = sweptGrids(el);
-      for (const g of grids) for (const sq of [...g.children] as SVGGElement[]) expect(['', '0ms']).toContain(sq.style.getPropertyValue('--d'));
-      const s1 = mosaicStages(v5, 'td')[1]!;
-      expect(grids[1]!.closest('.sweep-item')!.querySelector('.cell .totals:not([data-off]) strong')!.textContent).toBe(`${s1.wins} gagnées sur 100`);
-      expect(vi.getTimerCount()).toBe(0);
-    } finally {
-      vi.useRealTimers();
-    }
-  });
-
-  it('names each grid by its current stage and says each stage once, with the three win counts', async () => {
-    const el = await mount('en');
-    const grids = sweptGrids(el);
-    expect(grids[2]!.getAttribute('aria-label')).toContain('Q-learning, before any training');
-    const live = $(el, '.sweep [role="status"]');
-    expect(live.textContent).toBe('');
-    ($(el, '[data-role="next"]') as HTMLButtonElement).click();
-    const wins = PROGRAMS.map((p) => mosaicStages(v5, p)[1]!.wins);
-    expect(live.textContent).toBe(`1%: AlphaZero, 100 simulations: ${wins[0]} won of 100; TD(λ): ${wins[1]} won of 100; Q-learning: ${wins[2]} won of 100.`);
-    expect(grids[1]!.getAttribute('aria-label')).toContain('TD(λ), after 500 games');
-  });
-
-  it('the motion is a cut, not a fade: zero-length transitions, no animation, still under reduced motion', () => {
-    const css = readFileSync('src/elements/pogo-mosaic.css', 'utf8');
-    expect(css).not.toMatch(/animation|@keyframes|opacity/);
-    expect(css.match(/transition-duration: ([^;]+);/g)).toEqual(['transition-duration: 0s;']);
-    expect(css).toMatch(/@media \(prefers-reduced-motion: reduce\) \{\s*\.swept \.sq > \* \{\s*transition: none;/);
+  it('refuses data that does not add up, before drawing anything', async () => {
+    const broken = structuredClone(v5);
+    broken.mosaics.td[2]!.games.pop();
+    PogoMosaic.deps = { v5: () => Promise.resolve(broken) };
+    const error = vi.spyOn(console, 'error').mockImplementation(() => {});
+    const el = await mount();
+    expect(el.hasAttribute('data-failed')).toBe(true);
+    error.mockRestore();
   });
 });
