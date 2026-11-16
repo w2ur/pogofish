@@ -6,27 +6,64 @@
  * 0–100 simulations. The move played is marked in ink, never in red.
  */
 /*
- * The room the figure keeps before it renders, per position and width, measured
- * on the harness (2026-11-16): the table holds ten rows whatever the position,
- * so this room does not change as the reader plays.
+ * The room the figure keeps before it renders, per width, measured on the harness
+ * once the search has run (2026-11-16, with the scales under the table): the table
+ * holds ten rows whatever the position, so this room does not change as the reader
+ * plays. From 720px the board stands beside the table, and the figure is shorter.
  */
 :host {
   container-type: inline-size;
 }
 
-:host([position='puzzle5']) .stage {
-  min-height: 992px;
-}
-
-:host([position='reader']) .stage {
-  min-height: 968px;
+.stage {
+  min-height: 1152px;
 }
 
 @container (min-width: 560px) {
-  :host([position='puzzle5']) .stage,
-  :host([position='reader']) .stage {
-    min-height: 915px;
+  .stage {
+    min-height: 1045px;
   }
+}
+
+@container (min-width: 720px) {
+  .stage {
+    min-height: 805px;
+  }
+}
+
+/*
+ * From 720px the board stands beside what the search says of it, the words of the
+ * position over both; below, they stack. Each is centred in its column.
+ */
+@container (min-width: 720px) {
+  .stage > .search {
+    display: grid;
+    grid-template-columns: 240px minmax(0, 1fr);
+    column-gap: 32px;
+    align-items: start;
+  }
+
+  .stage > .search > .where-from {
+    grid-column: 1 / -1;
+  }
+
+  .stage > .search > .board-slot {
+    grid-column: 1;
+    grid-row: 2 / span 6;
+  }
+
+  .stage > .search > :not(.where-from, .board-slot) {
+    grid-column: 2;
+  }
+}
+
+.board-slot {
+  display: flex;
+  justify-content: center;
+}
+
+.search-controls > .controls {
+  justify-content: center;
 }
 
 .status {

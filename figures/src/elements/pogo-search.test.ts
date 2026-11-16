@@ -99,7 +99,7 @@ describe('<pogo-search>', () => {
 
   it('shows puzzle 5 before any simulation, the bars’ and the mean value’s scales under the table', async () => {
     const el = await mount('puzzle5', 'en');
-    expect([...el.shadowRoot!.querySelectorAll('.search .scale')].map((p) => p.textContent)).toEqual([
+    expect([...el.shadowRoot!.querySelectorAll('.search .scale-note')].map((p) => p.textContent)).toEqual([
       'Bars: the preference from 0 to 100%, the visits from 0 to 100.',
       'Mean value: from −1, a loss, to +1, a win, for the player to move (Red).',
     ]);

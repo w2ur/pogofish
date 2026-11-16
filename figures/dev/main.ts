@@ -224,12 +224,15 @@ async function build(): Promise<void> {
 
   // The essay's figures in page order, as the page sets them: the paragraph the reader has
   // just read, then the figure, then the author's caption (dev/essay.ts).
-  app.append(heading('The essay’s figures · each under its paragraph, its caption after it, in a 640px column'));
+  // ?box=1100 lays the figures in a box that wide, as the page's .pogo-band does.
+  const box = Number(new URLSearchParams(location.search).get('box')) || 640;
+  app.append(heading(`The essay’s figures · each under its paragraph, its caption after it, in a ${box}px column`));
   const ids = new Map<string, number>();
   for (const f of ESSAY) {
     const words = f[l];
     const col = document.createElement('section');
     col.className = 'essay';
+    col.style.maxWidth = `${box}px`;
     const para = document.createElement('p');
     para.className = 'essay-para';
     para.textContent = words.para;

@@ -58,7 +58,7 @@ describe('<pogo-net>', () => {
     expect(td1.shadowRoot!.textContent).not.toContain('v4-td-lc1-s1');
     expect(td1.shadowRoot!.querySelector('.policy')).toBeNull();
     const az1 = await mount('az', 'fr');
-    const scale = $(az1, '.policy .scale');
+    const scale = $(az1, '.policy .scale-note');
     expect(scale.textContent).toBe('Chaque barre va de 0 à 100\u202f%.');
     expect(scale.previousElementSibling!.classList.contains('ranked')).toBe(true);
     expect(az1.shadowRoot!.textContent).not.toContain('az-lc1-s1');

@@ -145,7 +145,7 @@ export function policyView(lang: Lang, hooks?: (m: PolicyRow['move']) => TipHook
   ]);
   ranked.caption.textContent = t(lang, 'netPrefsTitle');
   // The bars' scale, under them: a length means nothing without it.
-  element.append(lede, ranked.element, el('p', 'note scale', t(lang, 'netPrefScale')));
+  element.append(lede, ranked.element, el('p', 'note scale-note', t(lang, 'netPrefScale')));
   return {
     element,
     update(rows, actions) {

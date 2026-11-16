@@ -1,9 +1,16 @@
 /*
- * <pogo-line>: what the step says, over the board, over the transport. The
+ * <pogo-line>: what the step says, over the board, over the transport, one
+ * column of the board's width centred in the figure, however wide the box. The
  * status and the board are the shared replay's (replay.css).
  */
 .line-figure {
   display: flex;
   flex-direction: column;
   gap: 12px;
+  width: min(100%, 400px);
+  margin-inline: auto;
+}
+
+.line-figure > .controls {
+  justify-content: center;
 }

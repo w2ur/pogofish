@@ -269,7 +269,7 @@ export class PogoSearch extends PogoFigure {
     const scales = [
       `${t(lang, 'searchBars')} ${formatCount(lang, SEARCH_SIMS)}.`,
       `${t(lang, 'searchMean')}${colon(lang)} ${lower(t(lang, 'netScaleFrom'))} (${colourName(lang, s.to_move)}).`,
-    ].map((text) => el('p', 'note scale', text));
+    ].map((text) => el('p', 'note scale-note', text));
     return [words, boardSlot, status, table, controls, ...scales];
   }
 }

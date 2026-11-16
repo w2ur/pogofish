@@ -22,6 +22,43 @@
 }
 
 /*
+ * The inline board: one column of the board's width, centred in the figure;
+ * from 720px the setup and the moves played stand beside it.
+ */
+.pb[data-mode='inline'] {
+  container-type: inline-size;
+}
+
+.pb[data-mode='inline'] > .body {
+  display: grid;
+  grid-template-columns: minmax(0, 400px);
+  justify-content: center;
+  gap: 12px;
+}
+
+@container (min-width: 720px) {
+  .pb[data-mode='inline'] > .body {
+    grid-template-columns: minmax(0, 400px) minmax(240px, 320px);
+    column-gap: 32px;
+    align-items: start;
+  }
+
+  .pb[data-mode='inline'] > .body > :is(.status, .play, .counts, .caption) {
+    grid-column: 1;
+  }
+
+  .pb[data-mode='inline'] > .body > .next {
+    grid-column: 2;
+    grid-row: 2;
+  }
+
+  .pb[data-mode='inline'] > .body > .moves {
+    grid-column: 2;
+    grid-row: 3 / span 2;
+  }
+}
+
+/*
  * The follow board is a panel the page fixes over its text: opaque and framed,
  * bar included, folded or open, so nothing of the page shows through it. The
  * flyer's rule (3px of ink) around the kit's 12px. It never animates: it
@@ -164,6 +201,7 @@
  * outline, on the page's ground so no text shows through it.
  */
 .pb[data-size='dot'] {
+  align-items: flex-end;
   padding: 0;
   border: 0;
   background: none;

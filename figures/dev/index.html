@@ -116,6 +116,11 @@
       .follow-demo:not(:defined) {
         display: none;
       }
+      /* Shrunk to its dot, the board takes no more of the page than the dot. */
+      .follow-demo[data-size='dot'] {
+        width: auto;
+        background: none;
+      }
       /* The essay as the page sets it: a reading column, the figure under its paragraph, the caption after it. */
       .essay {
         max-width: 640px;
