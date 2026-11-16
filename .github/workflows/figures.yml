@@ -1,10 +1,12 @@
 name: figures
 
+# docs/experiments/v5 and v3-solve are the committed sources figures/scripts/pack-v5.mjs and
+# table-extract.mjs read, and that figures/src/data.test.ts checks the packed files against.
 on:
   push:
-    paths: ["figures/**", "wasm-pkg/**", "crates/**", ".github/workflows/figures.yml"]
+    paths: ["figures/**", "wasm-pkg/**", "crates/**", "docs/experiments/v5/**", "docs/experiments/v3-solve/**", ".github/workflows/figures.yml"]
   pull_request:
-    paths: ["figures/**", "wasm-pkg/**", "crates/**", ".github/workflows/figures.yml"]
+    paths: ["figures/**", "wasm-pkg/**", "crates/**", "docs/experiments/v5/**", "docs/experiments/v3-solve/**", ".github/workflows/figures.yml"]
 
 jobs:
   figures:
