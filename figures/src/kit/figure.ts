@@ -1,6 +1,12 @@
 // The base of every <pogo-…> element. It owns what all figures share: the
 // shadow frame, the theme sheet, rendering once on first approach, the
 // no-JavaScript fallback, the fidelity label, and clean-up at disconnect.
+//
+// Every figure ends with its fidelity label. One exception, deliberate:
+// <pogo-board mode="follow"> hides it (pogo-board.css), because it is a
+// compact second view of the game the inline board shows, and the inline
+// board carries the label. A new figure does not drop the label: only a
+// second view of a figure already labelled on the same page may.
 import type { State } from '../engine';
 import { fidelityLabel, t, type Fidelity, type Lang } from './strings';
 import themeCss from './theme.css?raw';

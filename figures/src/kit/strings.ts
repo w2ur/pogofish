@@ -139,7 +139,11 @@ const FIDELITY_KEY: Record<Fidelity, StringKey> = {
   illustrative: 'fidelityIllustrative',
 };
 
-/** The line that ends every figure: the kind, the game it is computed in if named, then a `measured` one's source file. */
+/**
+ * The line that ends every figure: the kind, the game it is computed in if named, then a
+ * `measured` one's source file. The one figure without it is the follow board, a second view
+ * of the inline board's game (see the header of figure.ts).
+ */
 export function fidelityLabel(lang: Lang, kind: Fidelity, source?: string, game?: 'gameA' | 'gameLc12'): string {
   const label = game ? `${t(lang, FIDELITY_KEY[kind])} · ${t(lang, game)}` : t(lang, FIDELITY_KEY[kind]);
   return kind === 'measured' && source ? `${label} · ${t(lang, 'source')}${colon(lang)} ${source}` : label;

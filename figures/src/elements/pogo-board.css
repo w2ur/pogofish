@@ -100,6 +100,7 @@
   display: none;
 }
 
+/* The kit's one exception to "every figure ends with its fidelity label" (kit/figure.ts): the inline board carries it. */
 :host([mode='follow']) .fidelity {
   display: none;
 }
