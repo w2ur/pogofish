@@ -213,6 +213,17 @@ async function build(): Promise<void> {
   app.append(heading('<pogo-moves view="moves"> · 640px stage'));
   app.append(figure('pogo-moves', { view: 'moves' }, l === 'fr' ? 'Les coups possibles depuis une pile.' : 'The possible moves from a stack.', '640px'));
 
+  for (const [line, rules] of [
+    ['shortestWin', 'A'],
+    ['loop', 'A'],
+    ['loop', 'lc1-2'],
+    ['centreLoss', 'A'],
+    ['openingWin', 'A'],
+  ] as const) {
+    app.append(heading(`<pogo-line line="${line}" rules="${rules}"> · 52ch column`));
+    app.append(figure('pogo-line', { line, rules }, l === 'fr' ? 'Une partie, coup par coup.' : 'A game, move by move.', '52ch'));
+  }
+
   app.append(heading('<pogo-count> · full band'));
   app.append(figure('pogo-count', {}, l === 'fr' ? 'Le décompte des positions du Pogo, étape par étape.' : 'The count of Pogo positions, step by step.'));
 

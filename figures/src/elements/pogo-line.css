@@ -1,0 +1,62 @@
+/*
+ * <pogo-line>: what the step says, over the board, over the transport. The
+ * words of every step share one grid cell, so the board keeps its place.
+ */
+.line-figure {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.status {
+  display: grid;
+  align-items: end;
+}
+
+.said {
+  grid-area: 1 / 1;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.said[data-off] {
+  visibility: hidden;
+}
+
+.said p {
+  margin: 0;
+}
+
+.move {
+  color: var(--_ink);
+}
+
+.note,
+.how {
+  color: var(--_ink-2);
+}
+
+.who {
+  font-size: clamp(28px, 3.4vw, 44px);
+  overflow-wrap: anywhere;
+}
+
+.board-slot .board-frame {
+  width: min(100%, 400px);
+}
+
+.board-slot .board {
+  width: 100%;
+  height: auto;
+}
+
+/* Read by assistive technology, not drawn. */
+.sr {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  clip-path: inset(50%);
+  white-space: nowrap;
+}

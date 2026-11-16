@@ -1,5 +1,6 @@
 import { PogoBoard } from './elements/pogo-board';
 import { PogoCount } from './elements/pogo-count';
+import { PogoLine } from './elements/pogo-line';
 import { PogoMoves } from './elements/pogo-moves';
 import { PogoTitle } from './elements/pogo-title';
 
@@ -9,6 +10,7 @@ const ELEMENTS: [string, CustomElementConstructor][] = [
   ['pogo-board', PogoBoard],
   ['pogo-title', PogoTitle],
   ['pogo-moves', PogoMoves],
+  ['pogo-line', PogoLine],
   ['pogo-count', PogoCount],
 ];
 

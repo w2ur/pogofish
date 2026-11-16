@@ -113,9 +113,10 @@ slot[hidden],
   color: var(--_muted);
 }
 
-/* A file name keeps its case. */
+/* A file name keeps its case and its line. */
 .fidelity .source {
   text-transform: none;
+  white-space: nowrap;
 }
 
 .num {
