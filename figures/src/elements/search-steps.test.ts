@@ -2,10 +2,10 @@ import { readFileSync } from 'node:fs';
 import { resolve } from 'node:path';
 import { describe, expect, it, vi } from 'vitest';
 import { key, type State } from '../engine';
-import { search, type SearchSnapshot } from '../mcts';
+import { search, type SearchSnapshot, type SimulationTrace } from '../mcts';
 import { parseAz } from '../nets';
 import { C_PUCT } from '../search-handler';
-import { PUZZLE5, SEARCH_SIMS, STOPS, recordSearch, rowOrder } from './search-steps';
+import { PUZZLE5, SEARCH_SIMS, STOPS, recordFull, rowOrder } from './search-steps';
 
 const fixture = JSON.parse(readFileSync(resolve(process.cwd(), 'fixtures/reference.json'), 'utf8')) as {
   simulations: number;
@@ -28,22 +28,24 @@ describe('the search, step by step', () => {
     expect(SEARCH_SIMS).toBe(fixture.simulations);
   });
 
-  it('the snapshots kept are the ones search() emits at the stops, and puzzle 5 ends on the fixture’s visits', async () => {
+  it('every snapshot search() emits is kept, with its simulation’s trace, and puzzle 5 ends on the fixture’s visits', async () => {
     const emitted: SearchSnapshot[] = [];
-    const run = (o: { onSnapshot: (s: SearchSnapshot) => void; signal: AbortSignal }) =>
+    const run = (o: { onSnapshot: (s: SearchSnapshot) => void; onTrace?: (t: SimulationTrace) => void; signal: AbortSignal }) =>
       search(PUZZLE5, az, {
         sims: SEARCH_SIMS,
         cPuct: C_PUCT,
         signal: o.signal,
+        onTrace: o.onTrace,
         onSnapshot: (s) => {
           emitted.push(s);
           o.onSnapshot(s);
         },
       });
-    const kept = await recordSearch(run, new AbortController().signal);
-    expect(kept.map((s) => s.sim)).toEqual([...STOPS]);
-    kept.forEach((s) => expect(s).toEqual(emitted[s.sim - 1]));
-    expect(kept.at(-1)!.root.map((r) => r.visits)).toEqual(puzzle.visits);
+    const { snaps, traces } = await recordFull(run, new AbortController().signal);
+    expect(snaps).toEqual(emitted);
+    expect(traces.map((t) => t.sim)).toEqual(snaps.map((s) => s.sim));
+    for (const n of STOPS) expect(snaps[n - 1]!.sim).toBe(n);
+    expect(snaps.at(-1)!.root.map((r) => r.visits)).toEqual(puzzle.visits);
   });
 
   it('an aborted signal stops a running search', async () => {
@@ -51,7 +53,7 @@ describe('the search, step by step', () => {
     const seen = vi.fn();
     const run = (o: { onSnapshot: (s: SearchSnapshot) => void; signal: AbortSignal }) =>
       search(PUZZLE5, az, { sims: SEARCH_SIMS, batch: 1, signal: o.signal, onSnapshot: (s) => (seen(s.sim), o.onSnapshot(s)) });
-    const pending = recordSearch(run, controller.signal);
+    const pending = recordFull(run, controller.signal);
     await new Promise((r) => setTimeout(r, 0));
     controller.abort();
     await expect(pending).rejects.toMatchObject({ name: 'AbortError' });
