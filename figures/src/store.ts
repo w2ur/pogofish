@@ -6,6 +6,7 @@ import { DEFAULT_GAME } from './default-game';
 import { assetUrl, WASM_FILE } from './assets';
 import { LC1_2, initial, legal, play, ready, terminal, winner, type Colour, type State, type Triple } from './engine';
 import type { PlayFromDetail } from './kit/figure';
+import { holdsGame, STORAGE_KEY } from './saved';
 
 export type Level = 'easy' | 'normal' | 'hard';
 export const LEVELS: readonly Level[] = ['easy', 'normal', 'hard'];
@@ -69,7 +70,7 @@ export interface StorageLike {
   setItem(key: string, value: string): void;
 }
 
-export const STORAGE_KEY = 'pogo-figures:game';
+export { STORAGE_KEY };
 
 interface Saved {
   start: State;
@@ -266,14 +267,7 @@ export function createStore(o: StoreOptions): Store {
     lastFinished: () => last,
     preferences: () => ({ ...prefs }),
     hasSaved() {
-      const raw = read();
-      if (raw === null) return false;
-      try {
-        const file = JSON.parse(raw) as Partial<SavedFile> | null;
-        return file?.v === 1 && file.current !== null && typeof file.current === 'object';
-      } catch {
-        return false;
-      }
+      return holdsGame(read());
     },
 
     on(ev, fn) {

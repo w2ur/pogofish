@@ -36,7 +36,9 @@ export default defineConfig({
         // the search load on demand in another. Left alone, Rollup folds the parser into
         // the engine chunk, which the page loads eagerly.
         manualChunks: (id) => {
-          if (/\/src\/engine\.ts$/.test(id) || /pogofish[-_]wasm/.test(id)) return 'engine';
+          // saved.ts is read by the entry and by the store: in the eager engine chunk, it does not
+          // pull the entry's own code into a shared chunk of its own.
+          if (/\/src\/(engine|saved)\.ts$/.test(id) || /pogofish[-_]wasm/.test(id)) return 'engine';
           if (/\/src\/(nets|mcts)\.ts$/.test(id)) return 'search';
           return undefined;
         },

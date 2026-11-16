@@ -10,8 +10,11 @@ export interface LazyOptions {
   loaders: Readonly<Record<string, Loader>>;
   /** Where instances are looked for: the document by default. */
   root?: Document;
-  /** An instance whose tag is imported at once, without waiting for the viewport. */
-  immediate?: (el: Element) => boolean;
+  /**
+   * When an instance's tag is imported: `now`, without waiting for the viewport;
+   * `approach` (the default), when it nears the screen; `wait`, only on `wake()`.
+   */
+  when?: (el: Element) => When;
   /**
    * How far ahead of the viewport a tag is imported. Twice the kit's own render
    * margin (figure.ts, 50%): the class is in place before the figure would render.
@@ -21,7 +24,11 @@ export interface LazyOptions {
   onError?: (tag: string, error: unknown) => void;
 }
 
+export type When = 'now' | 'approach' | 'wait';
+
 export interface LazyHandle {
+  /** Imports `tag` now if an instance of it is in the document and its module was never requested. */
+  wake(tag: string): void;
   /** Resolves when every import started so far has settled; for tests and the harness. */
   settled(): Promise<void>;
   stop(): void;
@@ -74,7 +81,9 @@ export function lazyDefine(o: LazyOptions): LazyHandle {
   function consider(el: Element): void {
     const tag = el.localName;
     if (!plan.waiting(tag)) return;
-    if (!io || o.immediate?.(el)) {
+    const when = o.when?.(el) ?? 'approach';
+    if (when === 'wait') return;
+    if (!io || when === 'now') {
       load([tag]);
       return;
     }
@@ -102,6 +111,9 @@ export function lazyDefine(o: LazyOptions): LazyHandle {
   scan(root.documentElement);
 
   return {
+    wake(tag) {
+      if (plan.waiting(tag) && root.querySelector(tag)) load([tag]);
+    },
     async settled() {
       while (inFlight.size) await Promise.all([...inFlight]);
     },

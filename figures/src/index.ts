@@ -2,7 +2,7 @@
 // list of tags, one loader per tag, and the lazy-definition logic. Each element
 // is its own chunk, imported when the first instance of its tag nears the screen.
 import { lazyDefine, type LazyHandle } from './lazy-define';
-import { immediate, LOADERS } from './registry';
+import { LOADERS, when } from './registry';
 
 export { manifest } from './manifest';
 
@@ -15,7 +15,10 @@ let handle: LazyHandle | undefined;
  */
 export function defineAll(): void {
   if (handle || typeof document === 'undefined') return;
-  handle = lazyDefine({ loaders: LOADERS, immediate });
+  const h = (handle = lazyDefine({ loaders: LOADERS, when }));
+  // A figure hands the board a position: the store (in the kit) takes the game, and a
+  // follow board waiting for its first game is defined to show it.
+  document.addEventListener('pogo:playfrom', () => h.wake('pogo-board'));
 }
 
 /** Imports and defines every element now, whatever the page holds: the eager path, for tests and tools. */

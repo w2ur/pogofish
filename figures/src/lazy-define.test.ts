@@ -121,9 +121,28 @@ describe('lazyDefine', () => {
     const tag = fresh();
     const a = counted();
     add(tag);
-    handle = lazyDefine({ loaders: { [tag]: a.load }, immediate: (el) => el.localName === tag });
+    handle = lazyDefine({ loaders: { [tag]: a.load }, when: (el) => (el.localName === tag ? 'now' : 'approach') });
     await handle.settled();
     expect(a.calls()).toBe(1);
+    expect(customElements.get(tag)).toBeDefined();
+  });
+
+  it('a waiting instance is neither observed nor imported until wake(), which imports once', async () => {
+    const tag = fresh();
+    const absent = fresh();
+    const a = counted();
+    const b = counted();
+    const el = add(tag);
+    handle = lazyDefine({ loaders: { [tag]: a.load, [absent]: b.load }, when: () => 'wait' });
+    expect(observing(el)).toBe(0);
+    await handle.settled();
+    expect(a.calls()).toBe(0);
+    handle.wake(absent);
+    handle.wake(tag);
+    handle.wake(tag);
+    await handle.settled();
+    expect(a.calls()).toBe(1);
+    expect(b.calls()).toBe(0);
     expect(customElements.get(tag)).toBeDefined();
   });
 

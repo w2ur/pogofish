@@ -2,7 +2,9 @@
 // own chunk, fetched when the first instance of its tag nears the screen
 // (lazy-define.ts). The Record over `Tag` makes a tag without a loader, or a
 // loader without a tag, a `tsc` error.
+import type { When } from './lazy-define';
 import type { Tag } from './manifest';
+import { sessionHoldsGame } from './saved';
 
 export type Loader = () => Promise<CustomElementConstructor>;
 
@@ -27,11 +29,15 @@ export const LOADERS: Record<Tag, Loader> = {
 };
 
 /**
- * Instances defined without waiting for the viewport. `<pogo-title>` is the page's
- * h1, already on screen: no observer round trip before it upgrades. A follow board
- * waits out of the page (display: none) until a game is under way, so it never
- * approaches; it must be defined to see the game start and appear.
+ * When an instance's tag is imported. `<pogo-title>` is the page's h1, already on
+ * screen: no observer round trip before it upgrades. A follow board shows nothing
+ * until a game is under way, so nearing the screen says nothing about it: it is
+ * imported at once when a game is saved (it restores and shows it), and otherwise
+ * waits for the first game, which index.ts wakes it for (a figure's
+ * `pogo:playfrom`; an inline board starting one has already defined the tag).
  */
-export function immediate(el: Element): boolean {
-  return el.localName === 'pogo-title' || (el.localName === 'pogo-board' && el.getAttribute('mode') === 'follow');
+export function when(el: Element): When {
+  if (el.localName === 'pogo-title') return 'now';
+  if (el.localName === 'pogo-board' && el.getAttribute('mode') === 'follow') return sessionHoldsGame() ? 'now' : 'wait';
+  return 'approach';
 }
