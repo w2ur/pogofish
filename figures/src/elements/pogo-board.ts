@@ -113,6 +113,13 @@ export class PogoBoard extends PogoFigure {
       },
     });
     this.stage.append(this.ui.root);
+    const ui = this.ui;
+    // A press anywhere else in the board puts the abandon question away.
+    ui.root.addEventListener('pointerdown', (e) => {
+      if (!this.confirming || e.composedPath().includes(ui.newGame)) return;
+      this.confirming = false;
+      this.update();
+    });
     driver.attach(signal);
     const offGame = s.on('game', () => this.update());
     const offDriver = driver.on(() => this.update());
@@ -214,10 +221,14 @@ export class PogoBoard extends PogoFigure {
     const status = driver.status();
     const { s, moves, readerTurn } = this.view();
 
-    // A new position puts down whatever was lifted.
     const ply = g?.moves.length ?? 0;
     const moved = g !== null && this.seen?.start === g.start && ply === this.seen.ply + 1;
-    if (!g || this.seen?.start !== g.start || this.seen.ply !== ply) this.selection = null;
+    // A new position puts down whatever was lifted, and the abandon question with it:
+    // blur alone cannot clear it where a click does not focus a button (Safari, Firefox on Mac).
+    if (!g || this.seen?.start !== g.start || this.seen.ply !== ply) {
+      this.selection = null;
+      this.confirming = false;
+    }
     if (this.selection && !origins(moves).includes(this.selection.from)) this.selection = null;
     this.seen = g ? { start: g.start, ply } : undefined;
 

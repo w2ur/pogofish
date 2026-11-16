@@ -360,6 +360,41 @@ describe('<pogo-board> inline', () => {
     expect(store.lastFinished()).toBeNull();
   });
 
+  it('the abandon question goes away when the game moves on, with no blur (Safari and Firefox do not focus a clicked button)', async () => {
+    const el = await mount('en');
+    newGame(el);
+    const button = shownNewGame(el)[0]!;
+    const start = store.current();
+    button.click();
+    expect(button.textContent).toBe('Abandon this game?');
+    // The reader keeps playing: no blur event is fired.
+    const [from, n, to] = firstLegal(store.current()!.states[0]!);
+    cell(el, from).click();
+    key(cell(el, from), String(n));
+    cell(el, to).click();
+    await flush();
+    expect(store.current()!.moves).toHaveLength(2);
+    expect(button.textContent).toBe('New game');
+    // One press now only asks again: the game is the same one, two plies in.
+    button.click();
+    expect(store.current()!.start).toBe(start!.start);
+    expect(store.current()!.moves).toHaveLength(2);
+    expect(button.textContent).toBe('Abandon this game?');
+  });
+
+  it('a press elsewhere in the board puts the abandon question away', async () => {
+    const el = await mount('en');
+    newGame(el);
+    const button = shownNewGame(el)[0]!;
+    button.click();
+    cell(el, 4).dispatchEvent(new PointerEvent('pointerdown', { bubbles: true, composed: true }));
+    expect(button.textContent).toBe('New game');
+    // A press on the button itself keeps the question for its second press.
+    button.click();
+    button.dispatchEvent(new PointerEvent('pointerdown', { bubbles: true, composed: true }));
+    expect(button.textContent).toBe('Abandon this game?');
+  });
+
   it('the status area keeps one height: an invisible copy of the longest result holds it', async () => {
     const el = await mount('en');
     const sizer = $(el, '.status .sizer');
