@@ -209,3 +209,85 @@
   font-size: 12.8px;
   color: var(--_muted);
 }
+
+/*
+ * The main view: the stepper, then the three programs' grids stacked, swept
+ * together. A square's class is its state; its change waits for its own delay
+ * (--d, set per square by paintSwept) through a zero-length transition, so it
+ * is in one state or the other, never between: no fade, no easing.
+ */
+.sweep {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.sweep-item {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+/* Every stage's heading (and totals) in one cell, only the current one seen: the cell keeps the longest's room. */
+.cell {
+  display: grid;
+}
+
+.cell > * {
+  grid-area: 1 / 1;
+}
+
+.cell > [data-off] {
+  visibility: hidden;
+}
+
+.mosaic.swept {
+  max-width: 400px;
+}
+
+.swept .sq .box {
+  fill: var(--_ground);
+  stroke: var(--_ink);
+  stroke-width: 1px;
+}
+
+.swept .sq.win .box {
+  fill: var(--_ink);
+}
+
+.swept .sq .slash,
+.swept .sq .bar {
+  fill: none;
+  stroke: var(--_ink);
+  stroke-width: 1.5px;
+  stroke-linecap: square;
+  visibility: hidden;
+}
+
+.swept .sq.win .slash,
+.swept .sq.win .bar {
+  stroke: var(--_ground);
+}
+
+.swept .sq.m-mistake .slash,
+.swept .sq.m-none-judged .bar {
+  visibility: visible;
+}
+
+.swept .sq > * {
+  transition-property: fill, stroke, visibility;
+  transition-duration: 0s;
+  transition-delay: var(--d, 0ms);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .swept .sq > * {
+    transition: none;
+  }
+}
+
+.all-stages[open] .all-body {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}

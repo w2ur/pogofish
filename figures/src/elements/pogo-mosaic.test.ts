@@ -3,13 +3,37 @@ import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import type { V5Data } from '../data';
 import { formatScore } from '../kit/score';
 import { intersect, resetMedia } from '../test-dom';
-import { mosaicStages } from './mosaic-grid';
+import { MOSAIC_PROGRAMS, mosaicStages } from './mosaic-grid';
+import { SWEEP_STEP_MS } from './mosaic-sweep';
+import { formatShare } from '../kit/score';
+import { REDUCED_MOTION, setMedia } from '../test-dom';
 import { PogoMosaic } from './pogo-mosaic';
 
 if (!customElements.get('pogo-mosaic')) customElements.define('pogo-mosaic', PogoMosaic);
 const v5 = JSON.parse(readFileSync('public/data/v5.json', 'utf8')) as V5Data;
 
 const flush = () => new Promise((r) => setTimeout(r, 0));
+const PROGRAMS = MOSAIC_PROGRAMS;
+
+/** Mounts and brings it into view; the caller flushes (fake timers or not). */
+function mountSync(lang: string): PogoMosaic {
+  resetMedia();
+  const section = document.createElement('section');
+  section.setAttribute('lang', lang);
+  const el = document.createElement('pogo-mosaic') as PogoMosaic;
+  el.innerHTML = '<p>fallback</p>';
+  section.append(el);
+  document.body.append(section);
+  intersect(el);
+  return el;
+}
+
+const sweptGrids = (el: PogoMosaic) => [...el.shadowRoot!.querySelectorAll<SVGSVGElement>('.sweep .swept')];
+/** Each square's state as its class says it: "win mistake", "loss none-judged"… */
+const stateOf = (svg: SVGSVGElement) => [...svg.children].map((g) => g.getAttribute('class')!.replace(/^sq /, '').replace('m-', ''));
+const expected = (program: (typeof PROGRAMS)[number], k: number) => v5.mosaics[program][k]!.games.map((g) =>
+  `${g.result} ${g.mistakes > 0 ? 'mistake' : g.judged > 0 ? 'clean' : 'none-judged'}`,
+);
 
 async function mount(lang = 'fr'): Promise<PogoMosaic> {
   resetMedia();
@@ -118,16 +142,150 @@ describe('<pogo-mosaic>', () => {
     ]);
   });
 
-  it('nothing moves: no animation, no transition, no timer', async () => {
+  it('says each stage is a hundred new games', async () => {
+    const el = await mount('fr');
+    expect($(el, '.mosaics > .note').textContent).toContain('cent nouvelles parties');
+  });
+
+  it('main view: three grids at stage 0, at rest, every square in its game’s state', async () => {
     vi.useFakeTimers();
     try {
-      const pending = mount('en');
-      await vi.runAllTimersAsync();
-      await pending;
+      const el = mountSync('fr');
+      await vi.advanceTimersByTimeAsync(0);
+      const grids = sweptGrids(el);
+      expect(grids).toHaveLength(3);
+      expect($(el, '[data-role="counter"]').textContent).toBe('0\u202f%');
+      expect($(el, '[data-role="play"]').hidden).toBe(false);
+      expect(vi.getTimerCount()).toBe(0);
+      expect(grids.map((g) => g.closest('.sweep-item')!.querySelector('.cell .where:not([data-off])')!.textContent)).toEqual([
+        'AlphaZero, 100 simulations · avant tout entraînement',
+        'TD(λ) · avant tout entraînement',
+        'Q-learning · avant tout entraînement',
+      ]);
+      PROGRAMS.forEach((program, i) => expect(stateOf(grids[i]!)).toEqual(expected(program, 0)));
+      // Every stage's heading and totals are there already, one seen: a step never changes the height.
+      for (const item of $$(el, '.sweep-item')) {
+        expect(item.querySelectorAll('.cell .where')).toHaveLength(8);
+        expect(item.querySelectorAll('.cell .totals')).toHaveLength(8);
+        expect(item.querySelectorAll('.cell > :not([data-off])')).toHaveLength(2);
+      }
+    } finally {
+      vi.useRealTimers();
+    }
+  });
+
+  it('a step sweeps the squares in game order, and the totals change in one go at the end', async () => {
+    vi.useFakeTimers();
+    try {
+      const el = mountSync('fr');
+      await vi.advanceTimersByTimeAsync(0);
+      const grids = sweptGrids(el);
+      const before = grids.map((g) => g.closest('.sweep-item')!.querySelector('.cell .totals:not([data-off])')!.textContent);
+      ($(el, '[data-role="next"]') as HTMLButtonElement).click();
+      PROGRAMS.forEach((program, i) => {
+        expect(stateOf(grids[i]!)).toEqual(expected(program, 1));
+        // Each changed square waits for its place in the order of the games.
+        const squares = [...grids[i]!.children] as SVGGElement[];
+        const from = expected(program, 0);
+        const to = expected(program, 1);
+        to.forEach((s, k) => {
+          if (s !== from[k]) expect(squares[k]!.style.getPropertyValue('--d')).toBe(`${k * SWEEP_STEP_MS}ms`);
+        });
+      });
+      expect(grids[0]!.closest('.sweep-item')!.querySelector('.cell .where:not([data-off])')!.textContent).toBe('AlphaZero, 100 simulations · après 100 parties');
+      await vi.advanceTimersByTimeAsync(SWEEP_STEP_MS * 50);
+      expect(grids.map((g) => g.closest('.sweep-item')!.querySelector('.cell .totals:not([data-off])')!.textContent)).toEqual(before);
+      await vi.advanceTimersByTimeAsync(SWEEP_STEP_MS * 50);
+      const s1 = mosaicStages(v5, 'az100')[1]!;
+      expect(grids[0]!.closest('.sweep-item')!.querySelector('.cell .totals:not([data-off])')!.textContent).toBe(
+        `${s1.wins} gagnées sur 100 · erreurs\u202f: ${formatShare('fr', s1.share)} des coups jugés (${s1.mistakes} sur ${s1.judged})`,
+      );
       expect(vi.getTimerCount()).toBe(0);
     } finally {
       vi.useRealTimers();
     }
-    expect(readFileSync('src/elements/pogo-mosaic.css', 'utf8')).not.toMatch(/animation|transition|@keyframes/);
+  });
+
+  it('a step during a sweep cancels it: the target stage exactly, one totals timer', async () => {
+    vi.useFakeTimers();
+    try {
+      const el = mountSync('en');
+      await vi.advanceTimersByTimeAsync(0);
+      const next = $(el, '[data-role="next"]') as HTMLButtonElement;
+      next.click();
+      await vi.advanceTimersByTimeAsync(100);
+      next.click();
+      expect(vi.getTimerCount()).toBe(1);
+      await vi.advanceTimersByTimeAsync(1000);
+      const grids = sweptGrids(el);
+      PROGRAMS.forEach((program, i) => {
+        expect(stateOf(grids[i]!)).toEqual(expected(program, 2));
+        const s = mosaicStages(v5, program)[2]!;
+        expect(grids[i]!.closest('.sweep-item')!.querySelector('.cell .totals:not([data-off]) strong')!.textContent).toBe(`${s.wins} won of 100`);
+      });
+    } finally {
+      vi.useRealTimers();
+    }
+  });
+
+  it('plays the eight stages to the end, then stops; disconnecting stops it', async () => {
+    vi.useFakeTimers();
+    try {
+      const el = mountSync('en');
+      await vi.advanceTimersByTimeAsync(0);
+      ($(el, '[data-role="play"]') as HTMLButtonElement).click();
+      await vi.advanceTimersByTimeAsync(1100 * 3 + 10);
+      const counter = $(el, '[data-role="counter"]');
+      expect(counter.textContent).toBe('5%');
+      el.remove();
+      await vi.advanceTimersByTimeAsync(10000);
+      expect(counter.textContent).toBe('5%');
+      expect(vi.getTimerCount()).toBe(0);
+      const again = mountSync('en');
+      await vi.advanceTimersByTimeAsync(0);
+      ($(again, '[data-role="play"]') as HTMLButtonElement).click();
+      await vi.advanceTimersByTimeAsync(1100 * 8);
+      expect($(again, '[data-role="counter"]').textContent).toBe('100%');
+      expect(vi.getTimerCount()).toBe(0);
+    } finally {
+      vi.useRealTimers();
+    }
+  });
+
+  it('under reduced motion nothing plays and a step changes every square at once, totals included', async () => {
+    vi.useFakeTimers();
+    try {
+      const el = mountSync('fr');
+      await vi.advanceTimersByTimeAsync(0);
+      setMedia(REDUCED_MOTION, true);
+      expect($(el, '[data-role="play"]').hidden).toBe(true);
+      ($(el, '[data-role="next"]') as HTMLButtonElement).click();
+      const grids = sweptGrids(el);
+      for (const g of grids) for (const sq of [...g.children] as SVGGElement[]) expect(['', '0ms']).toContain(sq.style.getPropertyValue('--d'));
+      const s1 = mosaicStages(v5, 'td')[1]!;
+      expect(grids[1]!.closest('.sweep-item')!.querySelector('.cell .totals:not([data-off]) strong')!.textContent).toBe(`${s1.wins} gagnées sur 100`);
+      expect(vi.getTimerCount()).toBe(0);
+    } finally {
+      vi.useRealTimers();
+    }
+  });
+
+  it('names each grid by its current stage and says each stage once, with the three win counts', async () => {
+    const el = await mount('en');
+    const grids = sweptGrids(el);
+    expect(grids[2]!.getAttribute('aria-label')).toContain('Q-learning, before any training');
+    const live = $(el, '.sweep [role="status"]');
+    expect(live.textContent).toBe('');
+    ($(el, '[data-role="next"]') as HTMLButtonElement).click();
+    const wins = PROGRAMS.map((p) => mosaicStages(v5, p)[1]!.wins);
+    expect(live.textContent).toBe(`1%: AlphaZero, 100 simulations: ${wins[0]} won of 100; TD(λ): ${wins[1]} won of 100; Q-learning: ${wins[2]} won of 100.`);
+    expect(grids[1]!.getAttribute('aria-label')).toContain('TD(λ), after 500 games');
+  });
+
+  it('the motion is a cut, not a fade: zero-length transitions, no animation, still under reduced motion', () => {
+    const css = readFileSync('src/elements/pogo-mosaic.css', 'utf8');
+    expect(css).not.toMatch(/animation|@keyframes|opacity/);
+    expect(css.match(/transition-duration: ([^;]+);/g)).toEqual(['transition-duration: 0s;']);
+    expect(css).toMatch(/@media \(prefers-reduced-motion: reduce\) \{\s*\.swept \.sq > \* \{\s*transition: none;/);
   });
 });

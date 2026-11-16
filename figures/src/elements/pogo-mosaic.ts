@@ -1,24 +1,33 @@
-// <pogo-mosaic>: the mosaics (fig. 24). For the program the reader picks, each
-// of the eight stages of its training as 100 squares, one per game of its
-// bench against greedy under lc1-2 (the first 50 pairs, public/data/v5.json,
-// seed 1; mosaic-grid.ts), in the order they were played. Ink only: a won game
-// is a filled square, a lost one an outlined square; a slash inside marks a
-// game in which at least one of the program's moves was a mistake, a short
-// bar one in which none of its moves could be judged (it played none, or all
-// from a position already lost). Beside each mosaic, its totals in words, the
-// stage's bench score, and under them all the same totals as a table.
+// <pogo-mosaic>: the mosaics (fig. 24). Each stage of training is the first
+// 100 games of a program's bench against greedy under lc1-2 (the first 50
+// pairs, public/data/v5.json, seed 1; mosaic-grid.ts), one square per game in
+// the order they were played. Ink only: a won game is a filled square, a lost
+// one an outlined square; a slash inside marks a game in which at least one of
+// the program's moves was a mistake, a short bar one in which none of its moves
+// could be judged (it played none, or all from a position already lost).
 //
-// Each stage is one SVG of four paths (won squares, lost squares, and the marks
-// on each), scaled as a whole: no text inside it, and no node per game.
+// The main view shows the three programs at once, at one stage, driven by one
+// stepper. A step sweeps the three grids together: square k changes at
+// k × SWEEP_STEP_MS (mosaic-sweep.ts), crisply, through a zero-length CSS
+// transition delayed by a per-square custom property; the totals under each
+// grid change in one go once the sweep is over. Each stage is a hundred new
+// games, and the figure says so. Under reduced motion nothing moves by itself
+// and a step changes every square at once. The view rests at stage 0 until the
+// reader presses play.
+//
+// The second view, behind « Toutes les étapes », is one program at a time with
+// its eight stages stacked, each one SVG of four paths: no node per game.
 import type { V5Data } from '../data';
-import { choiceGroup } from '../kit/controls';
+import { choiceGroup, transport } from '../kit/controls';
 import { formatDate } from '../kit/date';
 import { PogoFigure } from '../kit/figure';
+import { Stepper } from '../kit/stepper';
 import { formatScore, formatShare } from '../kit/score';
 import { colon, t, type Lang, type StringKey } from '../kit/strings';
 import { V5_FILE, sharedV5 } from '../v5';
-import { countNodes } from './count-steps';
+import { countNodes, formatCount } from './count-steps';
 import { MOSAIC_COLUMNS, MOSAIC_PROGRAMS, mosaicSource, mosaicStages, type GameMark, type MosaicProgram, type MosaicSquare, type MosaicStage } from './mosaic-grid';
+import { sweepPlan, type SquareState } from './mosaic-sweep';
 import mosaicCss from './pogo-mosaic.css?raw';
 import { pctText } from './stage-view';
 
@@ -28,6 +37,8 @@ const NAME: Record<MosaicProgram, StringKey> = { az100: 'progAz100', td: 'progTd
 const CELL = 10;
 const INSET = 1;
 const SIDE = CELL - 2 * INSET;
+/** A sweep takes up to 495 ms; the stage then holds until the next step. */
+const SWEEP_INTERVAL = 1100;
 
 function el<K extends keyof HTMLElementTagNameMap>(tag: K, className = '', text = ''): HTMLElementTagNameMap[K] {
   const node = document.createElement(tag);
@@ -76,6 +87,43 @@ export function mosaicSvg(squares: readonly Pick<MosaicSquare, 'result' | 'mark'
 }
 
 /**
+ * A grid the main view sweeps: one group per square (its square, its slash, its
+ * bar), whose class is its state and whose `--d` is its delay. CSS draws the
+ * state and times the change; nothing here runs per square on a timer.
+ */
+export function sweptSvg(squares = 100, columns = MOSAIC_COLUMNS): SVGSVGElement {
+  const rows = Math.ceil(squares / columns);
+  const svg = document.createElementNS(NS, 'svg');
+  svg.setAttribute('viewBox', `0 0 ${columns * CELL} ${rows * CELL}`);
+  svg.setAttribute('class', 'mosaic swept');
+  svg.setAttribute('focusable', 'false');
+  for (let k = 0; k < squares; k++) {
+    const x = (k % columns) * CELL;
+    const y = Math.floor(k / columns) * CELL;
+    const g = document.createElementNS(NS, 'g');
+    g.setAttribute('class', 'sq');
+    g.append(path('box', squareD(x, y)), path('slash', markD('mistake', x, y)), path('bar', markD('none-judged', x, y)));
+    svg.append(g);
+  }
+  return svg;
+}
+
+/** Moves a swept grid to `to`: each changed square gets its delay, then its new state, in one style change. */
+export function paintSwept(svg: SVGSVGElement, from: readonly SquareState[] | null, to: readonly SquareState[], reduced: boolean): number {
+  const plan = sweepPlan(from, to, reduced);
+  const squares = svg.children;
+  for (const c of plan.changes) {
+    const g = squares[c.index] as SVGGElement;
+    g.style.setProperty('--d', `${c.delay}ms`);
+    g.setAttribute('class', `sq ${c.to.result} m-${c.to.mark}`);
+  }
+  return plan.duration;
+}
+
+/** The state of each square of a stage. */
+const stateOf = (s: MosaicStage): SquareState[] => s.squares.map(({ result, mark }) => ({ result, mark }));
+
+/**
  * The stage's totals in words: « 90 gagnées sur 100 », « erreurs : 1,5 % des coups jugés (7 sur 465) »,
  * « 7 parties avec au moins une erreur · 10 sans coup jugé ».
  */
@@ -89,6 +137,11 @@ export function totalsWords(lang: Lang, s: MosaicStage): { wins: string; mistake
   };
 }
 
+/** « après 500 parties », or « avant tout entraînement » for stage 0, as text. */
+export function whenText(lang: Lang, gamesTrained: number): string {
+  return gamesTrained === 0 ? t(lang, 'beforeTraining') : `${t(lang, 'mosaicAfter')} ${formatCount(lang, gamesTrained)} ${t(lang, 'stagesGames')}`;
+}
+
 /** « après 500 parties », or « avant tout entraînement » for stage 0, as nodes (the count's digit groups get room). */
 export function whenNodes(lang: Lang, gamesTrained: number): (string | HTMLElement)[] {
   if (gamesTrained === 0) return [t(lang, 'beforeTraining')];
@@ -99,7 +152,8 @@ export class PogoMosaic extends PogoFigure {
   static override fidelity = 'measured' as const;
   static override game = 'gameLc12' as const;
   static override styles = mosaicCss;
-  static override stageMinHeight = '1200px';
+  /** The main view and its notes at 640px, closed disclosures: about 800px (measured). */
+  static override stageMinHeight = '800px';
 
   /** The data; a test swaps it. */
   static deps: { v5: () => Promise<V5Data> } = { v5: sharedV5 };
@@ -122,46 +176,130 @@ export class PogoMosaic extends PogoFigure {
     const lang = this.lang;
 
     const root = el('div', 'mosaics');
+    root.append(
+      el('p', 'label title', t(lang, 'mosaicTitle')),
+      el('p', 'note', t(lang, 'mosaicNewGames')),
+      this.legend(lang),
+      this.sweep(lang, data, all, signal),
+      // The table follows the program the second view shows, so it is built first.
+      ...(() => {
+        const values = this.valuesBox(lang, all);
+        return [this.allStages(lang, all), el('p', 'note', t(lang, 'mosaicSample')), el('p', 'note', t(lang, 'mosaicMistakeRule')), values];
+      })(),
+      el('p', 'label as-of num', `${t(lang, 'asOf')} ${date}`),
+    );
+    this.stage.append(root);
+  }
+
+  /**
+   * The main view: one stepper over the eight stages, three grids swept together, each with its
+   * program, how far it has trained, and its totals, which change once its sweep is over.
+   */
+  private sweep(lang: Lang, data: V5Data, all: Record<MosaicProgram, MosaicStage[]>, signal: AbortSignal): HTMLElement {
+    const box = el('div', 'sweep');
+    const live = el('p', 'sr');
+    live.setAttribute('role', 'status');
+    live.setAttribute('aria-live', 'polite');
+    // Every stage's heading and totals are written once, stacked in one grid cell, only the
+    // current one seen: each cell keeps the room of its longest, so a step never moves the page.
+    const stacked = (nodes: HTMLElement[]): HTMLElement => {
+      const cell = el('div', 'cell');
+      cell.append(...nodes);
+      return cell;
+    };
+    const grids = MOSAIC_PROGRAMS.map((program) => {
+      const item = el('div', 'sweep-item');
+      const heads = all[program].map((s) => {
+        const head = el('p', 'label where num');
+        head.append(`${t(lang, NAME[program])} · `, ...whenNodes(lang, s.gamesTrained));
+        return head;
+      });
+      const totals = all[program].map((s) => {
+        const w = totalsWords(lang, s);
+        const p = el('p', 'totals num');
+        p.append(el('strong', '', w.wins), ` · ${w.mistakes}`);
+        return p;
+      });
+      const svg = sweptSvg();
+      svg.setAttribute('role', 'img');
+      item.append(stacked(heads), svg, stacked(totals));
+      return { program, item, heads, svg, totals, shown: null as SquareState[] | null };
+    });
+    const only = (nodes: HTMLElement[], k: number): void => nodes.forEach((n, i) => n.toggleAttribute('data-off', i !== k));
+
+    let pending: AbortController | undefined;
+    signal.addEventListener('abort', () => pending?.abort(), { once: true });
+
+    /** `first`: the view's first drawing, at once and unannounced; it never plays by itself. */
+    const show = (k: number, first: boolean): void => {
+      // A step mid-sweep cancels the last one's totals; the squares re-target by themselves.
+      pending?.abort();
+      const current = new AbortController();
+      pending = current;
+      const reduced = first || this.reducedMotion();
+      let longest = 0;
+      const said: string[] = [];
+      for (const g of grids) {
+        const stage = all[g.program][k]!;
+        const w = totalsWords(lang, stage);
+        const to = stateOf(stage);
+        longest = Math.max(longest, paintSwept(g.svg, g.shown, to, reduced));
+        g.shown = to;
+        only(g.heads, k);
+        g.svg.setAttribute('aria-label', `${t(lang, NAME[g.program])}, ${whenText(lang, stage.gamesTrained)}. ${w.wins}. ${w.mistakes}. ${w.games}.`);
+        said.push(`${t(lang, NAME[g.program])}${colon(lang)} ${w.wins}`);
+      }
+      const writeTotals = (): void => {
+        for (const g of grids) only(g.totals, k);
+      };
+      if (longest === 0) writeTotals();
+      else {
+        const timer = setTimeout(writeTotals, longest);
+        current.signal.addEventListener('abort', () => clearTimeout(timer), { once: true });
+      }
+      if (!first) live.textContent = `${pctText(lang, data.stagesPct[k]!)}${colon(lang)} ${said.join(lang === 'fr' ? '\u202f; ' : '; ')}.`;
+    };
+
+    const stepper = new Stepper(data.stagesPct.length, (k) => show(k, false), { signal, interval: SWEEP_INTERVAL });
+    const row = transport(stepper, { lang, counter: (i) => pctText(lang, data.stagesPct[i]!) });
+    show(0, true);
+    box.append(row, ...grids.map((g) => g.item), live);
+    return box;
+  }
+
+  /** The second view, as it was built first: one program at a time, its eight stages stacked. */
+  private allStages(lang: Lang, all: Record<MosaicProgram, MosaicStage[]>): HTMLElement {
+    const details = el('details', 'values all-stages');
+    details.append(el('summary', 'label', t(lang, 'mosaicAllStages')));
     const picker = choiceGroup<MosaicProgram>({
       label: t(lang, 'mosaicPick'),
       id: 'mosaic-pick',
       choices: MOSAIC_PROGRAMS.map((p) => ({ value: p, label: t(lang, NAME[p]) })),
       onChoose: (p) => choose(p),
     });
-    const announce = el('p', 'sr');
-    announce.setAttribute('role', 'status');
-    announce.setAttribute('aria-live', 'polite');
     const list = el('ol', 'stage-list');
-    const values = el('details', 'values');
-    const summary = el('summary', 'label', t(lang, 'raceValues'));
-    const tableSlot = el('div');
-    values.append(summary, tableSlot);
-
     const choose = (program: MosaicProgram): void => {
       picker.set(program);
-      const stages = all[program];
-      list.replaceChildren(...stages.map((s) => this.stageItem(lang, s)));
-      tableSlot.replaceChildren(this.table(lang, program, stages));
-      const first = totalsWords(lang, stages[0]!);
-      const last = totalsWords(lang, stages.at(-1)!);
-      announce.textContent = `${t(lang, NAME[program])}. ${pctText(lang, stages[0]!.pct)}${colon(lang)} ${first.wins}, ${first.mistakes}. ${pctText(lang, stages.at(-1)!.pct)}${colon(lang)} ${last.wins}, ${last.mistakes}.`;
+      list.replaceChildren(...all[program].map((s) => this.stageItem(lang, s)));
+      this.valuesFor?.(program);
     };
-
-    root.append(
-      el('p', 'label title', t(lang, 'mosaicTitle')),
-      picker.element,
-      this.legend(lang),
-      announce,
-      list,
-      el('p', 'note', t(lang, 'mosaicSample')),
-      el('p', 'note', t(lang, 'mosaicMistakeRule')),
-      values,
-      el('p', 'label as-of num', `${t(lang, 'asOf')} ${date}`),
-    );
+    const body = el('div', 'all-body');
+    body.append(picker.element, list);
+    details.append(body);
     choose('az100');
-    // The announcement is for a reader's choice, not the first drawing.
-    announce.textContent = '';
-    this.stage.append(root);
+    return details;
+  }
+
+  /** Re-draws the table for the program the second view shows. */
+  private valuesFor: ((program: MosaicProgram) => void) | undefined;
+
+  private valuesBox(lang: Lang, all: Record<MosaicProgram, MosaicStage[]>): HTMLElement {
+    const values = el('details', 'values');
+    const slot = el('div');
+    values.append(el('summary', 'label', t(lang, 'raceValues')), slot);
+    this.valuesFor = (program) => slot.replaceChildren(this.table(lang, program, all[program]));
+    this.valuesFor('az100');
+    return values;
   }
 
   /** What each state of a square is, in words, beside a square drawn like the mosaic's. */
