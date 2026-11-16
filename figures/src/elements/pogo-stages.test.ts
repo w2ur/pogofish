@@ -44,6 +44,25 @@ describe('<pogo-stages>', () => {
     );
   });
 
+  it('names the file it asks for until the data loads, and for good when the load fails', async () => {
+    const deps = PogoStages.deps;
+    let fail!: (e: Error) => void;
+    PogoStages.deps = { engine: () => Promise.resolve(), v5: () => new Promise((_, reject) => (fail = reject)) };
+    const error = vi.spyOn(console, 'error').mockImplementation(() => {});
+    try {
+      const el = await mount('qtab', 'en');
+      const label = 'Measured data · repetition rule (lc1-2) · source: data/v5.json';
+      expect($(el, '.fidelity').textContent).toBe(label);
+      fail(new Error('503'));
+      await flush();
+      expect(el.hasAttribute('data-failed')).toBe(true);
+      expect($(el, '.fidelity').textContent).toBe(label);
+    } finally {
+      PogoStages.deps = deps;
+      error.mockRestore();
+    }
+  });
+
   it('offers the data’s stages, the first chosen', async () => {
     const el = await mount('qtab');
     expect(choices(el).map((b) => b.textContent)).toEqual(v5.stagesPct.map((p) => `${p} %`));

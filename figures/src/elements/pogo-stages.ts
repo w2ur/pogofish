@@ -5,8 +5,8 @@
 // in the game shown and how that game ended, and replays it move by move
 // through the shared replay view. The game's first moves are the bench's
 // random opening (`openingPlies`, from the game file) and say so. Choosing a stage plays its game; under reduced
-// motion nothing plays by itself. The label names the data's own source and
-// the directory of its games.
+// motion nothing plays by itself. The label names the file asked for, then the
+// data's own source and the directory of its games.
 import { announceMove } from '../board-state';
 import { WASM_FILE, assetUrl } from '../assets';
 import type { V5Data, V5Stage } from '../data';
@@ -16,7 +16,7 @@ import { formatScore } from '../kit/score';
 import { PogoFigure } from '../kit/figure';
 import { Stepper } from '../kit/stepper';
 import { colon, t, type Lang, type StringKey } from '../kit/strings';
-import { sharedV5 } from '../v5';
+import { V5_FILE, sharedV5 } from '../v5';
 import { countNodes, formatCount } from './count-steps';
 import { seenText, type Frame } from './line-frames';
 import stagesCss from './pogo-stages.css?raw';
@@ -101,9 +101,9 @@ export class PogoStages extends PogoFigure {
 
   private source: string | undefined;
 
-  /** The data's own sources, once loaded; until then the label names none. */
-  protected override sourceFile(): string | undefined {
-    return this.source;
+  /** The file the figure asks for until its data is loaded (and for good if that fails), then the data's own sources. */
+  protected override sourceFile(): string {
+    return this.source ?? V5_FILE;
   }
 
   protected async render(signal: AbortSignal): Promise<void> {
