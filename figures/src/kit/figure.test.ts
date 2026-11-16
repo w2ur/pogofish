@@ -42,6 +42,20 @@ class ByAttribute extends PogoFigure {
   }
   protected render(): void {}
 }
+/** Its source is a string of its data, known once render() has loaded it. */
+class SourcedByData extends PogoFigure {
+  static override fidelity = 'measured' as const;
+  static override game = 'gameLc12' as const;
+  private source: string | undefined;
+  protected override sourceFile() {
+    return this.source;
+  }
+  protected async render(): Promise<void> {
+    await Promise.resolve();
+    this.source = 'docs/experiments/v5/curves.json, seed 1';
+    this.refreshLabel();
+  }
+}
 class Broken extends PogoFigure {
   protected render(): void {
     throw new Error('no engine');
@@ -80,6 +94,7 @@ customElements.define('kit-broken', Broken);
 customElements.define('kit-measured-lc12', MeasuredLc12);
 customElements.define('kit-rejected', Rejected);
 customElements.define('kit-by-attribute', ByAttribute);
+customElements.define('kit-sourced-by-data', SourcedByData);
 
 const flush = () => new Promise((r) => setTimeout(r, 0));
 
@@ -239,6 +254,15 @@ describe('PogoFigure', () => {
     wrapper.append(c);
     expect(fidelity(c as PogoFigure)).toBe('Measured data · game with no stopping rule · source: data/x.json');
     expect(c.shadowRoot!.querySelector('.fidelity .source')!.textContent).toBe('data/x.json');
+  });
+
+  it('refreshLabel rewrites the label once the data names its source', async () => {
+    const el = mount<SourcedByData>('kit-sourced-by-data', 'en');
+    expect(fidelity(el)).toBe('Measured data · repetition rule (lc1-2)');
+    intersect(el);
+    await flush();
+    expect(fidelity(el)).toBe('Measured data · repetition rule (lc1-2) · source: docs/experiments/v5/curves.json, seed 1');
+    expect(el.shadowRoot!.querySelectorAll('.fidelity .source .segment')).toHaveLength(4);
   });
 
   it('falls back to English with no [lang] ancestor', () => {

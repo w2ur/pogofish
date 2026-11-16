@@ -57,6 +57,7 @@ export abstract class PogoFigure extends HTMLElement {
   /** Where `render()` draws. */
   protected stage!: HTMLDivElement;
   private fallback!: HTMLSlotElement;
+  private label!: HTMLParagraphElement;
   private observer: IntersectionObserver | undefined;
   private controller = new AbortController();
   private rendered = false;
@@ -80,7 +81,7 @@ export abstract class PogoFigure extends HTMLElement {
 
   /**
    * The game the fidelity label names: the class's by default. A figure whose game
-   * depends on an attribute overrides it; it is read once, when the frame is built.
+   * depends on an attribute overrides it; it is read when the frame is built, and again by refreshLabel().
    */
   protected game(): 'gameA' | 'gameLc12' | undefined {
     return (this.constructor as typeof PogoFigure).game;
@@ -89,7 +90,7 @@ export abstract class PogoFigure extends HTMLElement {
   /**
    * What the label says the figure is, and its source file when measured: the class's
    * by default. A figure whose kind depends on an attribute overrides both; they are
-   * read once, with game(), when the frame is built.
+   * read with game() when the frame is built, and again by refreshLabel().
    */
   protected fidelityKind(): Fidelity {
     return (this.constructor as typeof PogoFigure).fidelity;
@@ -160,11 +161,27 @@ export abstract class PogoFigure extends HTMLElement {
     this.fallback = document.createElement('slot');
     frame.append(this.stage, this.fallback);
 
-    const label = document.createElement('p');
-    label.className = 'fidelity';
+    this.label = document.createElement('p');
+    this.label.className = 'fidelity';
+    this.writeLabel();
+    root.append(frame, this.label);
+  }
+
+  /**
+   * Rewrites the fidelity label from fidelityKind(), sourceFile() and game(). For a
+   * figure whose source is a string of its data, known only once the data is loaded:
+   * call it from render() after the load.
+   */
+  protected refreshLabel(): void {
+    this.writeLabel();
+  }
+
+  private writeLabel(): void {
+    const label = this.label;
     const kind = this.fidelityKind();
     const text = fidelityLabel(this.lang, kind, this.sourceFile(), this.game());
     const source = kind === 'measured' ? this.sourceFile() : undefined;
+    label.replaceChildren();
     if (source) {
       label.append(text.slice(0, -source.length));
       const file = document.createElement('span');
@@ -180,7 +197,6 @@ export abstract class PogoFigure extends HTMLElement {
     } else {
       label.textContent = text;
     }
-    root.append(frame, label);
   }
 
   private async run(signal: AbortSignal): Promise<void> {
