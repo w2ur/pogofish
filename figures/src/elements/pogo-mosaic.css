@@ -1,13 +1,46 @@
 /*
- * <pogo-mosaic>: the program picker, the key, then one block per stage: where
- * in training, 100 squares, the totals in words. Ink only: a won game is a
- * filled square, a lost one an outlined square; a mark inside is ground on a
- * filled square and ink on an outlined one. The SVG scales as a whole; it
- * holds no text, and its strokes keep their width.
+ * <pogo-mosaic>: three programs side by side, a row per stage of training, in
+ * each cell a hundred squares. A game won is a full square in the page's one
+ * red; a game lost is an empty square with a hairline. The programs are told
+ * apart by their columns and headings, never by hue. The SVG scales as a whole;
+ * it holds no text, and its hairlines keep their width.
+ *
+ * Narrow (the default): the stage heads its row across the three columns, and
+ * each mosaic keeps only its games won under it. From 560px the stages stand
+ * in a column of their own at the left, and each mosaic also says how far the
+ * program has trained.
  */
+:host {
+  container-type: inline-size;
+}
+
+/* The room the figure takes, kept before it renders (measured 2026-11-16 on the harness, by width). */
+:host .stage {
+  min-height: 1120px;
+}
+
+@container (min-width: 560px) {
+  :host .stage {
+    min-height: 895px;
+  }
+}
+
+@container (min-width: 640px) {
+  :host .stage {
+    min-height: 944px;
+  }
+}
+
+@container (min-width: 900px) {
+  :host .stage {
+    min-height: 1017px;
+  }
+}
+
 .mosaics {
   display: flex;
   flex-direction: column;
+  align-items: center;
   gap: 12px;
 }
 
@@ -15,111 +48,137 @@
   margin: 0;
 }
 
+.title,
+.key {
+  text-align: center;
+}
 
-.note {
-  font-size: 12.8px;
+.key {
+  font-size: 15px;
   color: var(--_ink-2);
+}
+
+.table {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 6px 10px;
+  width: 100%;
+  margin-top: 4px;
+}
+
+.head,
+.stage-row {
+  display: contents;
+}
+
+.corner {
+  display: none;
+}
+
+.program {
+  align-self: end;
+  padding-bottom: 6px;
+  border-bottom: 2px solid var(--_ink);
+  font-size: 12.8px;
+  line-height: 1.25;
+  overflow-wrap: anywhere;
+}
+
+/* The stage, across its row: the number in the shout cut, what it is a share of beside it. */
+.stage-label {
+  grid-column: 1 / -1;
+  display: flex;
+  align-items: baseline;
+  gap: 8px;
+  margin-top: 10px;
+}
+
+.pct {
+  font-size: 24px;
+  line-height: 1;
+  white-space: nowrap;
+}
+
+.of {
+  font-size: 12.8px;
+  color: var(--_muted);
+}
+
+.cell {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  min-width: 0;
 }
 
 .mosaic {
   display: block;
   width: 100%;
-  max-width: 420px;
   height: auto;
-}
-
-.mosaic path {
-  vector-effect: non-scaling-stroke;
-}
-
-.mosaic .won {
-  fill: var(--_ink);
 }
 
 .mosaic .lost {
   fill: none;
-  stroke: var(--_ink);
-  stroke-width: 1px;
+  stroke: var(--_edge);
+  vector-effect: non-scaling-stroke;
 }
 
-.mosaic .mark {
-  fill: none;
-  stroke-width: 1.5px;
-  stroke-linecap: square;
+/* A game won: filled at its own delay, at once; emptied at once when its stage is taken back. */
+.mosaic .won {
+  fill: var(--_red);
+  opacity: 0;
 }
 
-.mosaic .on-won {
-  stroke: var(--_ground);
+.stage-row[data-on] .won {
+  opacity: 1;
+  transition: opacity 0s linear var(--d);
 }
 
-.mosaic .on-lost {
-  stroke: var(--_ink);
-}
-
-.key {
-  display: flex;
-  flex-direction: column;
-  gap: 6px;
-}
-
-.legend {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 6px 16px;
-  margin: 0;
-  padding: 0;
-  list-style: none;
+.count {
   font-size: 12.8px;
+  line-height: 1.3;
+  color: var(--_ink-2);
+  visibility: hidden;
+}
+
+.count strong {
   color: var(--_ink);
+  font-weight: 800;
 }
 
-.legend li {
-  display: flex;
-  align-items: center;
-  gap: 6px;
+/* The count comes once its stage's last square has filled. */
+.stage-row[data-on] .count {
+  visibility: visible;
+  transition: visibility 0s linear var(--sweep);
 }
 
-/* A key square is the size of a square in a 420px mosaic. */
-.legend .mosaic {
-  width: auto;
-  height: 21px;
-  flex: none;
+/* A stage not reached yet: its squares stand, fainter, so the page never moves as they fill. */
+.stage-row:not([data-on]) .lost {
+  stroke: var(--_rule);
 }
 
-.stage-list {
-  display: flex;
-  flex-direction: column;
-  gap: 16px;
-  margin: 0;
-  padding: 0;
-  list-style: none;
+.stage-row:not([data-on]) .stage-label {
+  color: var(--_muted);
 }
 
-.stage-item {
-  display: flex;
-  flex-direction: column;
-  gap: 4px;
-  padding-top: 8px;
-  border-top: 1px solid var(--_rule);
+/* Narrow: the count is the games won; how far the program has trained is in the drawing's name. */
+.when,
+.dot {
+  display: none;
+}
+
+.mosaic .lost {
+  stroke-width: 0.75px;
 }
 
 /* The narrow space all but closes at reading size: the count keeps its digits apart. */
-.where .sep {
+.when .sep {
   padding-inline: 0.12em;
 }
 
-.totals {
-  color: var(--_ink);
-}
-
-.totals strong {
-  font-weight: 700;
-}
-
-.games-count,
-.bench {
-  font-size: 12.8px;
-  color: var(--_ink-2);
+.mosaics > .controls {
+  justify-content: center;
+  margin-top: 8px;
 }
 
 .sr {
@@ -131,155 +190,75 @@
   white-space: nowrap;
 }
 
-.values summary {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  min-height: 44px;
-  font-size: 12.8px;
-  color: var(--_ink);
-  cursor: pointer;
-  list-style: none;
-}
+@container (min-width: 560px) {
+  .table {
+    grid-template-columns: max-content repeat(3, minmax(0, 280px));
+    gap: 14px 20px;
+    justify-content: center;
+  }
 
-.values summary::-webkit-details-marker {
-  display: none;
-}
+  /* The stages' column is as wide as its widest stage: its heading comes with the wide box. */
+  .corner {
+    display: block;
+    align-self: end;
+    width: 0;
+    padding-bottom: 6px;
+    border-bottom: 2px solid var(--_ink);
+    font-size: 12.8px;
+    color: var(--_muted);
+    visibility: hidden;
+  }
 
-/* The disclosure's own sign, a plus that turns to a minus: the marker the flex summary drops. */
-.values summary::before {
-  content: '+';
-  display: inline-grid;
-  place-items: center;
-  width: 20px;
-  height: 20px;
-  border: 2px solid var(--_action);
-  font-size: 15px;
-  line-height: 1;
-}
+  .mosaic .lost {
+    stroke-width: 1px;
+  }
 
-.values[open] summary::before {
-  content: '−';
-}
+  .program {
+    font-size: 15px;
+  }
 
-.table {
-  width: 100%;
-  margin: 8px 0 0;
-  border-collapse: collapse;
-  font-size: 15px;
-}
+  .stage-label {
+    grid-column: auto;
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 2px;
+    margin-top: 0;
+  }
 
-.table caption {
-  padding-bottom: 4px;
-  font-size: 12.8px;
-  text-align: left;
-}
+  /* Said once, by the column's heading. */
+  .of {
+    display: none;
+  }
 
-.table th,
-.table td {
-  padding: 2px 0 2px 8px;
-  text-align: right;
-  font-weight: 400;
-}
-
-.table th:first-child {
-  padding-left: 0;
-  text-align: left;
-}
-
-.table thead th {
-  font-size: 12.8px;
-  color: var(--_muted);
-  border-bottom: 1px solid var(--_rule);
-}
-
-.table tbody th {
-  color: var(--_ink-2);
-}
-
-.as-of {
-  font-size: 12.8px;
-  color: var(--_muted);
-}
-
-/*
- * The main view: the stepper, then the three programs' grids stacked, swept
- * together. A square's class is its state; its change waits for its own delay
- * (--d, set per square by paintSwept) through a zero-length transition, so it
- * is in one state or the other, never between: no fade, no easing.
- */
-.sweep {
-  display: flex;
-  flex-direction: column;
-  gap: 12px;
-}
-
-.sweep-item {
-  display: flex;
-  flex-direction: column;
-  gap: 4px;
-}
-
-/* Every stage's heading (and totals) in one cell, only the current one seen: the cell keeps the longest's room. */
-.cell {
-  display: grid;
-}
-
-.cell > * {
-  grid-area: 1 / 1;
-}
-
-.cell > [data-off] {
-  visibility: hidden;
-}
-
-.mosaic.swept {
-  max-width: 400px;
-}
-
-.swept .sq .box {
-  fill: var(--_ground);
-  stroke: var(--_ink);
-  stroke-width: 1px;
-}
-
-.swept .sq.win .box {
-  fill: var(--_ink);
-}
-
-.swept .sq .slash,
-.swept .sq .bar {
-  fill: none;
-  stroke: var(--_ink);
-  stroke-width: 1.5px;
-  stroke-linecap: square;
-  visibility: hidden;
-}
-
-.swept .sq.win .slash,
-.swept .sq.win .bar {
-  stroke: var(--_ground);
-}
-
-.swept .sq.m-mistake .slash,
-.swept .sq.m-none-judged .bar {
-  visibility: visible;
-}
-
-.swept .sq > * {
-  transition-property: fill, stroke, visibility;
-  transition-duration: 0s;
-  transition-delay: var(--d, 0ms);
-}
-
-@media (prefers-reduced-motion: reduce) {
-  .swept .sq > * {
-    transition: none;
+  /* How far the program has trained on one line, its games won on the next. */
+  .when {
+    display: block;
   }
 }
 
-.all-stages[open] .all-body {
-  display: flex;
-  flex-direction: column;
-  gap: 12px;
+@container (min-width: 900px) {
+  .table {
+    gap: 16px 32px;
+  }
+
+  .pct {
+    font-size: 32px;
+  }
+
+  .corner {
+    width: auto;
+    visibility: visible;
+  }
+
+  .when,
+  .dot {
+    display: inline;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .stage-row[data-on] .won,
+  .stage-row[data-on] .count {
+    transition: none;
+  }
 }
