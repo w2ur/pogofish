@@ -293,7 +293,7 @@ export class PogoStages extends PogoFigure {
     signal.addEventListener('abort', () => drawing?.(), { once: true });
     const counter = (i: number): string => {
       const s = script.steps[i]!;
-      return `${t(lang, 'progressStep')} ${s.stage + 1} ${of} ${n} · ${t(lang, 'ply')} ${s.ply} ${of} ${games[s.stage]!.length - 1}`;
+      return `${t(lang, 'progressStep')} ${s.stage + 1} ${of} ${n}\u00a0· ${t(lang, 'ply')} ${s.ply} ${of} ${games[s.stage]!.length - 1}`;
     };
     const row = transport(stepper, { lang, counter });
 

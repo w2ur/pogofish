@@ -69,7 +69,7 @@ describe('qWords', () => {
     ]);
     expect(words('fr', i).game).toBe('Partie 1 sur 5');
     expect(words('fr', i).path).toEqual(['A', 'B', 'C1']);
-    expect(words('fr', i).counter).toBe('partie 1 sur 5 · étape 3 sur 8');
+    expect(words('fr', i).counter).toBe('partie 1 sur 5 · étape 3 sur 8');
     expect(words('en', i + 4).text).toBe('It writes the new value in the notebook: C1 goes from 0.00 to 0.10. It then plays a move, usually the best one.');
   });
 
@@ -164,7 +164,7 @@ describe('<pogo-qsteps>', () => {
     expect(el.shadowRoot!.querySelector('.flyer')).toBeNull();
     expect(notebook(el)[2]).toBe('C1 0,00 *0,10 · · · ·');
     expect($(el, '.name.here').textContent).toBe('C1');
-    expect(role(el, 'counter').textContent).toBe('partie 1 sur 5 · étape 7 sur 8');
+    expect(role(el, 'counter').textContent).toBe('partie 1 sur 5 · étape 7 sur 8');
   });
 
   it('the step that values the moves marks the note it reads in the notebook, and the move gets its opposite', async () => {
@@ -206,7 +206,7 @@ describe('<pogo-qsteps>', () => {
     vi.advanceTimersByTime(SLOW_MS - 1);
     expect(counter.textContent).toBe('avant la première partie');
     vi.advanceTimersByTime(1);
-    expect(counter.textContent).toBe('partie 1 sur 5 · étape 1 sur 8');
+    expect(counter.textContent).toBe('partie 1 sur 5 · étape 1 sur 8');
     expect(SLOW_MS).toBeGreaterThanOrEqual(2500);
     expect(FAST_MS).toBeLessThan(SLOW_MS);
     expect(script.filter((s) => s.phase !== null).every((s) => s.slow)).toBe(true);
@@ -218,10 +218,10 @@ describe('<pogo-qsteps>', () => {
     role(el, 'play').click();
     vi.advanceTimersByTime(SLOW_MS);
     const shown = role(el, 'counter');
-    expect(shown.textContent).toBe('partie 1 sur 5 · étape 1 sur 8');
+    expect(shown.textContent).toBe('partie 1 sur 5 · étape 1 sur 8');
     el.parentElement!.removeChild(el);
     vi.advanceTimersByTime(SLOW_MS * 10);
-    expect(shown.textContent).toBe('partie 1 sur 5 · étape 1 sur 8');
+    expect(shown.textContent).toBe('partie 1 sur 5 · étape 1 sur 8');
     expect(vi.getTimerCount()).toBe(0);
   });
 });

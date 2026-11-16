@@ -63,7 +63,7 @@ export function qWords(lang: Lang, walk: QWalk, step: QStep, last: boolean): QWo
   const of = t(lang, 'outOf');
   const gameOf = `${t(lang, 'qGame')} ${f.game} ${of} ${QSTEPS_GAMES}`;
   const game = f.game === 0 ? capital(t(lang, 'qBefore')) : capital(gameOf);
-  const counter = f.game === 0 ? t(lang, 'qBefore') : `${gameOf} · ${t(lang, 'progressStep')} ${step.at} ${of} ${step.of}`;
+  const counter = f.game === 0 ? t(lang, 'qBefore') : `${gameOf}\u00a0· ${t(lang, 'progressStep')} ${step.at} ${of} ${step.of}`;
   const path = f.path.map((p) => (p === 'end' ? t(lang, 'qEnd') : p));
   const say = (text: string): QWords => ({ game, path, text, counter });
   if (f.kind === 'blank') return say(t(lang, 'qBlank'));

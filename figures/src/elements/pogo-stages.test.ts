@@ -171,7 +171,7 @@ describe('<pogo-stages>', () => {
     choices(el)[7]!.click();
     role(el, 'play').click();
     const stage = v5.programs.qtab.stages[7]!;
-    expect(role(el, 'counter').textContent).toBe(`étape 8 sur 8 · coup 0 sur ${stage.game.length}`);
+    expect(role(el, 'counter').textContent).toBe(`étape 8 sur 8 · coup 0 sur ${stage.game.length}`);
     role(el, 'next').click();
     expect(said(el)).toContain('Ouverture tirée au sort');
     for (let i = 1; i < stage.openingPlies; i++) role(el, 'next').click();
@@ -183,7 +183,7 @@ describe('<pogo-stages>', () => {
     );
     while (!role(el, 'next').disabled) role(el, 'next').click();
     expect(said(el)).toContain('Rouge gagne');
-    expect(role(el, 'counter').textContent).toBe(`étape 8 sur 8 · coup ${stage.game.length} sur ${stage.game.length}`);
+    expect(role(el, 'counter').textContent).toBe(`étape 8 sur 8 · coup ${stage.game.length} sur ${stage.game.length}`);
   });
 
   it('the stages advance by themselves: a game ends, rests, and the next stage starts with its own score', async () => {
@@ -192,12 +192,12 @@ describe('<pogo-stages>', () => {
     role(el, 'play').click();
     const moves = v5.programs.td.stages[0]!.game.length;
     vi.advanceTimersByTime(MOVE_MS * moves);
-    expect(role(el, 'counter').textContent).toBe(`étape 1 sur 8 · coup ${moves} sur ${moves}`);
+    expect(role(el, 'counter').textContent).toBe(`étape 1 sur 8 · coup ${moves} sur ${moves}`);
     expect($(el, '.score').textContent).toBe('7,1 %');
     vi.advanceTimersByTime(REST_MS - 1);
     expect(role(el, 'counter').textContent).toMatch(/^étape 1 sur 8/);
     vi.advanceTimersByTime(1);
-    expect(role(el, 'counter').textContent).toMatch(/^étape 2 sur 8 · coup 0 sur /);
+    expect(role(el, 'counter').textContent).toMatch(/^étape 2 sur 8 · coup 0 sur /);
     expect(choices(el)[1]!.getAttribute('aria-checked')).toBe('true');
     // The number is set, never counted: it is the next stage's score at once.
     expect($(el, '.score').textContent).toBe('45,1 %');
@@ -209,11 +209,11 @@ describe('<pogo-stages>', () => {
     vi.useFakeTimers();
     choices(el)[3]!.click();
     vi.advanceTimersByTime(MOVE_MS);
-    expect(role(el, 'counter').textContent).toMatch(/^étape 4 sur 8 · coup 1 sur /);
+    expect(role(el, 'counter').textContent).toMatch(/^étape 4 sur 8 · coup 1 sur /);
     setMedia(REDUCED_MOTION, true);
     choices(el)[4]!.click();
     vi.advanceTimersByTime(MOVE_MS * 3);
-    expect(role(el, 'counter').textContent).toMatch(/^étape 5 sur 8 · coup 0 sur /);
+    expect(role(el, 'counter').textContent).toMatch(/^étape 5 sur 8 · coup 0 sur /);
     expect(vi.getTimerCount()).toBe(0);
   });
 
