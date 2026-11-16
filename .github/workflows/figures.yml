@@ -11,6 +11,10 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
+        with:
+          # Full history: the round-5 charts' date is curves.json's commit date, and a
+          # shallow clone only knows HEAD's (figures/scripts/v5-date.mjs refuses it).
+          fetch-depth: 0
       - uses: dtolnay/rust-toolchain@stable
       # No pogofish-train: it downloads libtorch, which release-cli.yml also avoids.
       - name: Rust tests

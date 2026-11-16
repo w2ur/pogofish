@@ -61,6 +61,11 @@ export interface V5Data {
   opponent: 'greedy';
   seed: 1;
   source: string;
+  /**
+   * 'YYYY-MM-DD', UTC: the commit date of curves.json (scripts/v5-date.mjs). The benches
+   * carry no timestamp, so this is the date the data stands at, not the day a bench ran.
+   */
+  asOf: string;
   stagesPct: number[];
   /** Each entry is that player's score against the greedy player under lc1-2; `table` is the perfect-play player's measured score, not the game-A solved value. */
   references: Record<'random' | 'greedy' | 'table', Score>;

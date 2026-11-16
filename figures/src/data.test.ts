@@ -253,6 +253,15 @@ describe('the round-5 data', () => {
       });
     }
   });
+
+  it('the packed date is the one the pack script derives (curves.json’s commit date)', async () => {
+    // The pack script's own helper, so the test cannot drift from it. It throws on a
+    // shallow clone, whose last commit is not the file's: CI checks out full history.
+    const helper = resolve(process.cwd(), 'scripts/v5-date.mjs');
+    const { curvesDate } = (await import(/* @vite-ignore */ helper)) as { curvesDate: (root: string) => string };
+    expect(v5.asOf).toMatch(/^\d{4}-\d{2}-\d{2}$/);
+    expect(v5.asOf).toBe(curvesDate(resolve(process.cwd(), '..')));
+  });
 });
 
 describe('the budgets', () => {

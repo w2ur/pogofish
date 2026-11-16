@@ -12,8 +12,13 @@
 // Seed 1 is the seed v5video.mjs and v5sheets.mjs draw; the mosaic keeps one
 // record per game, its result and the player's judged moves, which is all the
 // figure reads of the arena file.
+//
+// `asOf` is the commit date of curves.json (scripts/v5-date.mjs): the bench
+// files carry no timestamp. The script refuses a shallow clone (exit 2) and a
+// curves.json with uncommitted changes (exit 1), where that date would be false.
 import { existsSync, readFileSync, writeFileSync } from 'node:fs';
 import { fileURLToPath } from 'node:url';
+import { DateFinding, curvesDate } from './v5-date.mjs';
 
 const ROOT = fileURLToPath(new URL('../../', import.meta.url));
 const V5 = 'docs/experiments/v5/';
@@ -100,6 +105,7 @@ function packV5() {
     opponent: curves.opponent,
     seed: Number(SEED),
     source: `${V5}curves.json, seed ${SEED}`,
+    asOf: curvesDate(ROOT),
     stagesPct: curves.stages_pct,
     references: curves.references,
     programs,
@@ -128,7 +134,7 @@ try {
     console.log(`pack-v5: wrote public/data/${name}`);
   }
 } catch (error) {
-  if (error instanceof Finding) {
+  if (error instanceof Finding || error instanceof DateFinding) {
     console.error(`pack-v5: finding, nothing written: ${error.message}`);
     process.exit(1);
   }
