@@ -23,8 +23,7 @@ import { sharedAz } from '../nets-shared';
 import { store, type Store } from '../store';
 import { formatCount } from './count-steps';
 import { netPosition, positionWords } from './net-position';
-import { azDiagram } from './net-layers';
-import { barCell, blankRow, colourName, el, netSentence, rankedTable } from './net-view';
+import { barCell, blankRow, colourName, el, rankedTable } from './net-view';
 import netCss from './net.css?raw';
 import searchCss from './pogo-search.css?raw';
 import { signedNote } from './q-steps';
@@ -73,8 +72,6 @@ export function snapshotWords(lang: Lang, s: SearchSnapshot, final: boolean): st
 }
 
 export class PogoSearch extends PogoFigure {
-  static override fidelity = 'live' as const;
-  static override game = 'gameLc12' as const;
   static override styles = netCss + searchCss;
   static override stageMinHeight = '900px';
 
@@ -85,28 +82,12 @@ export class PogoSearch extends PogoFigure {
     search: (s: State, net: AzNet, o: Parameters<SearchRun>[0]) => Promise<SearchSnapshot>;
   } = { store, az: sharedAz, search: lazySearch };
 
-  /** The net's size once read, and the side to move in the position searched. */
-  private weights: number | undefined;
-  private toMove: State['to_move'] | undefined;
-
-  /** Where the position comes from, the net, how many simulations, and how to read the bars and the mean value. */
-  protected override precisions(): string[] {
-    const lang = this.lang;
-    const lines: string[] = [];
-    if (this.getAttribute('position') === 'puzzle5') lines.push(t(lang, 'searchFromPuzzle'));
-    if (this.weights !== undefined) lines.push(netSentence(lang, 'az', this.weights));
-    lines.push(`${t(lang, 'searchSimsBefore')} ${sims(lang, SEARCH_SIMS)}, ${t(lang, 'searchSimsAfter')}`);
-    lines.push(`${t(lang, 'searchBars')} ${formatCount(lang, SEARCH_SIMS)}.`);
-    lines.push(this.toMove ? `${t(lang, 'searchMeanWhat')} (${colourName(lang, this.toMove)}).` : `${t(lang, 'searchMeanWhat')}.`);
-    return lines;
-  }
 
   protected async render(signal: AbortSignal): Promise<void> {
     const which = parsePosition(this.getAttribute('position'));
     const deps = (this.constructor as typeof PogoSearch).deps;
     const [net] = await Promise.all([deps.az(), deps.store.ready()]);
     if (signal.aborted) return;
-    this.weights = azDiagram(net.header).weights;
     const lang = this.lang;
     const root = el('div', 'search');
     this.stage.append(root);
@@ -130,8 +111,6 @@ export class PogoSearch extends PogoFigure {
       const where = p ? positionWords(lang, p) : `${t(lang, 'position')}${colon(lang)} ${t(lang, 'searchPuzzle')}, ${colourName(lang, s.to_move)} ${t(lang, 'toMove')}.`;
       root.replaceChildren(...this.content(lang, s, where, net, before, current.signal));
       root.dataset.position = k;
-      this.toMove = s.to_move;
-      this.refreshPrecisions();
     };
     await draw();
     if (which === 'reader') {
@@ -256,6 +235,12 @@ export class PogoSearch extends PogoFigure {
       stepper.play();
     };
 
-    return [words, boardSlot, status, table, controls];
+    // The bars' and the mean value's scales: the table cannot be read without them.
+    const lower = (x: string): string => x.charAt(0).toLowerCase() + x.slice(1);
+    const scales = [
+      `${t(lang, 'searchBars')} ${formatCount(lang, SEARCH_SIMS)}.`,
+      `${t(lang, 'searchMean')}${colon(lang)} ${lower(t(lang, 'netScaleFrom'))} (${colourName(lang, s.to_move)}).`,
+    ].map((text) => el('p', 'note scale', text));
+    return [words, boardSlot, status, table, controls, ...scales];
   }
 }

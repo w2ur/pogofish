@@ -1,7 +1,7 @@
 import { readFileSync } from 'node:fs';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import type { V5Data } from '../data';
-import { precisionsOf, intersect, resetMedia } from '../test-dom';
+import { intersect, resetMedia } from '../test-dom';
 import { MOSAIC_PROGRAMS, mosaicStages } from './mosaic-grid';
 import { SWEEP_STEP_MS } from './mosaic-sweep';
 import { formatShare } from '../kit/score';
@@ -68,31 +68,6 @@ describe('<pogo-mosaic>', () => {
     expect(items[2]!.nextElementSibling!.classList.contains('controls')).toBe(true);
   });
 
-  it('is measured under lc1-2, citing the data’s source and the mosaics’ directory, with the data’s date', async () => {
-    const el = await mount('en');
-    expect(el.dataset.source).toBe(`${v5.source} · docs/experiments/v5/mosaic/`);
-    expect(precisionsOf(el).slice(0, 2)).toEqual(['Measured before publication: these numbers do not change when you play. Data as of 11 November 2026.', 'Here, the player who repeats a position a third time loses the game.']);
-    expect(el.shadowRoot!.querySelector('.as-of')).toBeNull();
-  });
-
-  it('names the file it asks for until the data loads, and for good when the load fails', async () => {
-    let fail!: (e: Error) => void;
-    PogoMosaic.deps = { v5: () => new Promise((_, reject) => (fail = reject)) };
-    const error = vi.spyOn(console, 'error').mockImplementation(() => {});
-    try {
-      const el = await mount('en');
-      expect(el.dataset.source).toBe('data/v5.json');
-      expect(precisionsOf(el)[0]).toBe('Measured before publication: these numbers do not change when you play.');
-      fail(new Error('503'));
-      await flush();
-      expect(el.hasAttribute('data-failed')).toBe(true);
-      expect(el.dataset.source).toBe('data/v5.json');
-      expect(precisionsOf(el)[0]).toBe('Measured before publication: these numbers do not change when you play.');
-    } finally {
-      error.mockRestore();
-    }
-  });
-
   it('mosaic has 100 squares per stage, won and lost as the data says, for each program picked', async () => {
     const el = await mount('fr');
     expect(choices(el).map((b) => b.dataset.value)).toEqual(['az100', 'td', 'qtab']);
@@ -146,14 +121,6 @@ describe('<pogo-mosaic>', () => {
       'at least one mistake by the program',
       'no move by the program judged',
     ]);
-  });
-
-  it('says in « Précisions » that each stage is a hundred new games, what they are, and what a mistake is', async () => {
-    const el = await mount('fr');
-    const notes = precisionsOf(el);
-    expect(notes[2]).toContain('cent nouvelles parties');
-    expect(notes[3]).toContain('100 premières parties');
-    expect(notes[4]).toMatch(/^Une erreur est un coup du programme/);
   });
 
   it('main view: three grids at stage 0, at rest, every square in its game’s state', async () => {

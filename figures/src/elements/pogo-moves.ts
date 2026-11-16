@@ -64,7 +64,6 @@ function legend(lang: Lang): HTMLElement {
 }
 
 export class PogoMoves extends PogoFigure {
-  static override fidelity = 'live' as const;
   static override styles = movesCss;
 
   /** The engine load; a test swaps it. */
@@ -78,11 +77,6 @@ export class PogoMoves extends PogoFigure {
 
   private get view(): 'start' | 'moves' {
     return this.getAttribute('view') === 'start' ? 'start' : 'moves';
-  }
-
-  /** The moves view plays whole games with no stopping rule; the start position belongs to both games. */
-  protected override game(): 'gameA' | undefined {
-    return this.view === 'moves' ? 'gameA' : undefined;
   }
 
   override connectedCallback(): void {

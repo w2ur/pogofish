@@ -1,4 +1,4 @@
-import { STRINGS, precisionLines, t, type StringKey } from './strings';
+import { STRINGS, t, type StringKey } from './strings';
 
 /** « tu » and its forms as whole words. Letter-aware: `\b` alone takes « ê » for a word break and fires on « arrête ». */
 const TU = /(?<!\p{L})(tu|te|ton|ta|tes|toi)(?!\p{L})/iu;
@@ -27,23 +27,6 @@ describe('strings', () => {
   it('the « tu » check sees the pronoun and not the end of a word', () => {
     for (const ok of ['rien n’arrête la partie', 'la tête', 'une partie', 'Bastille']) expect(ok).not.toMatch(TU);
     for (const bad of ['tu joues', 'à toi de jouer', 'Te voilà', 'ta pile']) expect(bad).toMatch(TU);
-  });
-
-  it('the kit’s « Précisions » sentences: how the figure is made, its date when measured, its game', () => {
-    expect(precisionLines('fr', 'live')).toEqual(['Calculé dans votre navigateur par le moteur du jeu\u202f: rien n’est préenregistré.']);
-    expect(precisionLines('en', 'live')).toEqual(['Computed in your browser by the game’s engine: nothing is prerecorded.']);
-    expect(precisionLines('en', 'illustrative')).toEqual(['A drawing, not a computation.']);
-    expect(precisionLines('en', 'measured')).toEqual(['Measured before publication: these numbers do not change when you play.']);
-    expect(precisionLines('fr', 'measured', 'gameLc12', '11 novembre 2026')).toEqual([
-      'Mesuré avant la publication\u202f: ces chiffres ne changent pas quand vous jouez. Données arrêtées le 11 novembre 2026.',
-      'Ici, le joueur qui répète une troisième fois une position perd la partie.',
-    ]);
-    expect(precisionLines('en', 'live', 'gameA')).toEqual([
-      'Computed in your browser by the game’s engine: nothing is prerecorded.',
-      'Here the game has no stopping rule: a game may never end.',
-    ]);
-    // A date says when data was measured: a live figure has none to print.
-    expect(precisionLines('en', 'live', undefined, '11 November 2026')).toHaveLength(1);
   });
 
   it('no figure string names a file, a path or a code name', () => {

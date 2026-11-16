@@ -8,7 +8,6 @@ import { resolve } from 'node:path';
 const themeCss = readFileSync(resolve(process.cwd(), 'src/kit/theme.css'), 'utf8');
 
 class Fine extends PogoFigure {
-  static override fidelity = 'live' as const;
   renders = 0;
   protected render(): void {
     this.renders++;
@@ -21,70 +20,12 @@ class Fine extends PogoFigure {
     this.playFrom(s, 'opening');
   }
 }
-class Measured extends PogoFigure {
-  static override fidelity = 'measured' as const;
-  static override source = 'data/table.json';
-  protected async render(): Promise<void> {}
-}
-class MeasuredLc12 extends PogoFigure {
-  static override fidelity = 'measured' as const;
-  static override source = 'data/v5.json';
-  static override game = 'gameLc12' as const;
-  protected async render(): Promise<void> {}
-}
-/** Its game read from an attribute, with a sheet of its own. */
-class ByAttribute extends PogoFigure {
-  static override fidelity = 'live' as const;
+/** With a sheet of its own. */
+class Styled extends PogoFigure {
   static override styles = '.stage { outline: 1px solid; }';
-  protected override game() {
-    return this.getAttribute('rules') === 'lc1-2' ? ('gameLc12' as const) : ('gameA' as const);
-  }
-  protected override fidelityKind() {
-    return this.hasAttribute('measured') ? ('measured' as const) : ('live' as const);
-  }
-  protected override sourceFile() {
-    return 'data/x.json';
-  }
-  protected render(): void {}
-}
-/** Its source, its date and a note are strings of its data, known once render() has loaded it. */
-class SourcedByData extends PogoFigure {
-  static override fidelity = 'measured' as const;
-  static override game = 'gameLc12' as const;
-  private source: string | undefined;
-  private date: string | undefined;
-  protected override sourceFile() {
-    return this.source;
-  }
-  protected override dataDate() {
-    return this.date;
-  }
-  protected override precisions() {
-    return this.source ? ['Each square is a game.'] : [];
-  }
-  protected async render(): Promise<void> {
-    await Promise.resolve();
-    this.source = 'docs/experiments/v5/curves.json, seed 1';
-    this.date = '2026-11-11';
-    this.refreshPrecisions();
-  }
-}
-class TwoSources extends PogoFigure {
-  static override fidelity = 'measured' as const;
-  static override source = 'data/a.json · docs/games/';
-  protected render(): void {}
-}
-/** Says how it is made in its own words. */
-class OwnWords extends PogoFigure {
-  static override fidelity = 'live' as const;
-  static override game = 'gameLc12' as const;
-  protected override made() {
-    return 'Computed here; the strength quoted was measured before.';
-  }
   protected render(): void {}
 }
 class Broken extends PogoFigure {
-  static override fidelity = 'measured' as const;
   protected render(): void {
     throw new Error('no engine');
   }
@@ -117,14 +58,9 @@ class Slow extends PogoFigure {
 customElements.define('kit-slow', Slow);
 customElements.define('kit-fine', Fine);
 customElements.define('kit-flaky', Flaky);
-customElements.define('kit-measured', Measured);
 customElements.define('kit-broken', Broken);
-customElements.define('kit-own-words', OwnWords);
-customElements.define('kit-measured-lc12', MeasuredLc12);
 customElements.define('kit-rejected', Rejected);
-customElements.define('kit-by-attribute', ByAttribute);
-customElements.define('kit-sourced-by-data', SourcedByData);
-customElements.define('kit-two-sources', TwoSources);
+customElements.define('kit-styled', Styled);
 
 const flush = () => new Promise((r) => setTimeout(r, 0));
 
@@ -139,9 +75,6 @@ function mount<T extends PogoFigure>(tag: string, lang = 'fr'): T {
 }
 
 const slot = (el: PogoFigure) => el.shadowRoot!.querySelector('slot')!;
-/** The sentences of « Précisions », in order. */
-const precisions = (el: PogoFigure) => [...el.shadowRoot!.querySelectorAll('.precisions .precisions-body p')].map((p) => p.textContent);
-const disclosure = (el: PogoFigure) => el.shadowRoot!.querySelector<HTMLDetailsElement>('details.precisions')!;
 
 beforeEach(() => {
   document.body.innerHTML = '';
@@ -195,36 +128,6 @@ describe('PogoFigure', () => {
     } finally {
       error.mockRestore();
     }
-  });
-
-  it('a failed figure shows no « Précisions », and shows them again when it renders afresh', async () => {
-    const error = vi.spyOn(console, 'error').mockImplementation(() => {});
-    try {
-      const el = mount<Broken>('kit-broken');
-      expect(disclosure(el).hidden).toBe(false);
-      intersect(el);
-      await flush();
-      expect(el.hasAttribute('data-failed')).toBe(true);
-      expect(disclosure(el).hidden).toBe(true);
-      el.remove();
-      expect(disclosure(el).hidden).toBe(false);
-    } finally {
-      error.mockRestore();
-    }
-  });
-
-  it('a figure may say how it is made in its own words, in place of the kit’s first sentence', () => {
-    const el = mount<OwnWords>('kit-own-words', 'en');
-    expect(precisions(el)).toEqual([
-      'Computed here; the strength quoted was measured before.',
-      'Here, the player who repeats a position a third time loses the game.',
-    ]);
-  });
-
-  it('the disclosure’s sign is drawn with an empty alternative text, so it is not read as part of its name', () => {
-    const css = themeCss.replace(/\/\*[\s\S]*?\*\//g, '');
-    expect(css).toMatch(/\.precisions > summary::before \{[^}]*content: '\+' \/ '';/);
-    expect(css).toMatch(/\.precisions\[open\] > summary::before \{[^}]*content: '−' \/ '';/);
   });
 
   it('a rejected async render() leaves the fallback visible too', async () => {
@@ -297,81 +200,26 @@ describe('PogoFigure', () => {
     expect(el.lang).toBe('fr');
   });
 
-  it('ends with « Précisions », closed, in the language of the closest [lang]', () => {
+  it('has no « Précisions »: the shadow root is the frame alone, and the host carries no provenance attribute', () => {
     const fr = mount<Fine>('kit-fine', 'fr-FR');
     const en = mount<Fine>('kit-fine', 'en');
     expect(fr.lang).toBe('fr');
     expect(en.lang).toBe('en');
-    expect(disclosure(fr).open).toBe(false);
-    expect(disclosure(fr).querySelector('summary')!.textContent).toBe('Précisions');
-    expect(disclosure(en).querySelector('summary')!.textContent).toBe('Details');
-    expect(precisions(fr)).toEqual(['Calculé dans votre navigateur par le moteur du jeu\u202f: rien n’est préenregistré.']);
-    expect(precisions(en)).toEqual(['Computed in your browser by the game’s engine: nothing is prerecorded.']);
-    expect(fr.shadowRoot!.lastElementChild).toBe(disclosure(fr));
-    // The kind and the source are the host's, never printed.
-    expect(fr.dataset.fidelity).toBe('live');
-    expect(fr.hasAttribute('data-source')).toBe(false);
-    const m = mount<Measured>('kit-measured', 'en');
-    expect(precisions(m)).toEqual(['Measured before publication: these numbers do not change when you play.']);
-    expect(m.dataset.source).toBe('data/table.json');
-    expect(m.shadowRoot!.textContent).not.toContain('data/table.json');
+    expect(fr.shadowRoot!.children).toHaveLength(1);
+    expect(fr.shadowRoot!.firstElementChild!.className).toBe('frame');
+    expect(fr.shadowRoot!.querySelector('details')).toBeNull();
+    expect(fr.shadowRoot!.textContent).not.toMatch(/Précisions|Details/);
+    for (const a of ['data-fidelity', 'data-game', 'data-source']) expect(fr.hasAttribute(a)).toBe(false);
+    expect(themeCss).not.toContain('.precisions');
   });
 
-  it('names the game in words, and keeps the source on the host', () => {
-    const el = mount<MeasuredLc12>('kit-measured-lc12', 'fr');
-    expect(precisions(el)).toEqual([
-      'Mesuré avant la publication\u202f: ces chiffres ne changent pas quand vous jouez.',
-      'Ici, le joueur qui répète une troisième fois une position perd la partie.',
-    ]);
-    expect(el.dataset.game).toBe('gameLc12');
-    expect(el.dataset.source).toBe('data/v5.json');
-  });
-
-  it('says the game and the kind an instance reports, and adopts the element sheet after the kit sheet', () => {
-    const wrapper = document.createElement('section');
-    wrapper.setAttribute('lang', 'en');
-    const a = document.createElement('kit-by-attribute');
-    a.setAttribute('rules', 'A');
-    const b = document.createElement('kit-by-attribute');
-    b.setAttribute('rules', 'lc1-2');
-    wrapper.append(a, b);
-    document.body.append(wrapper);
-    expect(precisions(a as PogoFigure)[1]).toBe('Here the game has no stopping rule: a game may never end.');
-    expect(precisions(b as PogoFigure)[1]).toBe('Here, the player who repeats a position a third time loses the game.');
+  it('adopts an element sheet after the kit sheet, one per element shared by its instances', () => {
+    const a = mount<Styled>('kit-styled', 'en');
+    const b = mount<Styled>('kit-styled', 'en');
     const sheets = a.shadowRoot!.adoptedStyleSheets;
     expect(sheets).toHaveLength(2);
     expect(sheets[1]).toBe(b.shadowRoot!.adoptedStyleSheets[1]);
     expect(mount<Fine>('kit-fine').shadowRoot!.adoptedStyleSheets).toHaveLength(1);
-    const c = document.createElement('kit-by-attribute');
-    c.setAttribute('rules', 'A');
-    c.setAttribute('measured', '');
-    wrapper.append(c);
-    expect(precisions(c as PogoFigure)[0]).toBe('Measured before publication: these numbers do not change when you play.');
-    expect((c as PogoFigure).dataset.source).toBe('data/x.json');
-  });
-
-  it('refreshPrecisions rewrites them once the data names its source and its date, and keeps the reader’s open', async () => {
-    const el = mount<SourcedByData>('kit-sourced-by-data', 'en');
-    expect(precisions(el)).toEqual([
-      'Measured before publication: these numbers do not change when you play.',
-      'Here, the player who repeats a position a third time loses the game.',
-    ]);
-    expect(el.hasAttribute('data-source')).toBe(false);
-    disclosure(el).open = true;
-    intersect(el);
-    await flush();
-    expect(precisions(el)).toEqual([
-      'Measured before publication: these numbers do not change when you play. Data as of 11 November 2026.',
-      'Here, the player who repeats a position a third time loses the game.',
-      'Each square is a game.',
-    ]);
-    expect(el.dataset.source).toBe('docs/experiments/v5/curves.json, seed 1');
-    expect(disclosure(el).open).toBe(true);
-  });
-
-  it('a figure citing two sources keeps both on the host, joined as they are', () => {
-    const el = mount<TwoSources>('kit-two-sources', 'en');
-    expect(el.dataset.source).toBe('data/a.json · docs/games/');
   });
 
   it('falls back to English with no [lang] ancestor', () => {

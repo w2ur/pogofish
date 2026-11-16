@@ -110,14 +110,6 @@
   display: none;
 }
 
-/*
- * An exception to "every figure ends with « Précisions »" (kit/figure.ts): the
- * inline board carries them. Folded or open, nothing hangs below the frame.
- */
-:host([mode='follow']) .precisions {
-  display: none;
-}
-
 .next {
   display: flex;
   flex-direction: column;

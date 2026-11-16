@@ -16,8 +16,7 @@
   display: contents;
 }
 
-/* An <h1> says its title and nothing else (see the header of kit/figure.ts). */
-.precisions,
+/* An <h1> says its title and nothing else: not even that its drawing failed. */
 .failed {
   display: none;
 }

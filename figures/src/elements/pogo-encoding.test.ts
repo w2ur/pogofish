@@ -5,7 +5,7 @@ import { DEFAULT_GAME } from '../default-game';
 import { features, key, type Triple } from '../engine';
 import { parseAz, parseTd } from '../nets';
 import { createStore, type Store } from '../store';
-import { precisionsOf, intersect, resetMedia } from '../test-dom';
+import { intersect, resetMedia } from '../test-dom';
 import { PogoEncoding, inputText } from './pogo-encoding';
 import { PogoNet } from './pogo-net';
 
@@ -61,13 +61,8 @@ afterEach(() => {
 });
 
 describe('<pogo-encoding>', () => {
-  it('is computed live under lc1-2', async () => {
+  it('counts its inputs in words', async () => {
     const el = await mount('pogo-encoding', 'en');
-    expect(precisionsOf(el)).toEqual([
-      'Computed in your browser by the game’s engine: nothing is prerecorded.',
-      'Here, the player who repeats a position a third time loses the game.',
-      'The height is divided by 12 and the number of repetitions by 2, so that every number stays between −1 and 1.',
-    ]);
     expect($(el, '.total').textContent).toBe('9 cells × 14 + 1 = 127 numbers');
   });
 

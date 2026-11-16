@@ -1,7 +1,7 @@
 import { readFileSync } from 'node:fs';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import type { ReachData } from '../data';
-import { precisionsOf, intersect, resetMedia } from '../test-dom';
+import { intersect, resetMedia } from '../test-dom';
 import { PogoReach } from './pogo-reach';
 
 if (!customElements.get('pogo-reach')) customElements.define('pogo-reach', PogoReach);
@@ -46,13 +46,12 @@ describe('<pogo-reach>', () => {
     expect($(en, '.total').textContent).toBe('230,015,628reachable positions of 232,792,560 possible');
   });
 
-  it('draws each bar at its share of the largest, hidden from assistive tech, and says the scale is linear', async () => {
+  it('draws each bar at its share of the largest, hidden from assistive tech', async () => {
     const el = await mount('en');
     const widths = $$(el, '.bar').map((b) => parseFloat(b.style.width));
     expect(widths[10]).toBe(100);
     expect(widths[9]).toBeCloseTo((50327416 / 68847740) * 100, 3);
     expect($$(el, '.track').every((t) => t.getAttribute('aria-hidden') === 'true')).toBe(true);
-    expect(precisionsOf(el)[2]).toBe('Each bar is proportional to its number, and every number is written: the smallest give only a sliver.');
   });
 
   it('keeps the digit groups of the summary’s second number apart in the label cut', async () => {
@@ -60,16 +59,6 @@ describe('<pogo-reach>', () => {
     expect($$(el, '.what .sep')).toHaveLength(2);
     const css = readFileSync('src/elements/pogo-reach.css', 'utf8');
     expect(css).toMatch(/\.what \.sep \{\s*padding-inline: 0\.12em;/);
-  });
-
-  it('cites reach.json’s own source on its host, and game A in « Précisions »', async () => {
-    const el = await mount('fr');
-    expect(el.dataset.source).toBe('docs/experiments/v3-solve/reach.json');
-    expect(precisionsOf(el).slice(0, 2)).toEqual([
-      `Mesuré avant la publication${NNBSP}: ces chiffres ne changent pas quand vous jouez.`,
-      `Ici le jeu n’a pas de règle d’arrêt${NNBSP}: une partie peut ne jamais finir.`,
-    ]);
-    expect(el.shadowRoot!.textContent).not.toContain('reach.json');
   });
 
   it('a file that does not add up shows the fallback, not a wrong chart', async () => {

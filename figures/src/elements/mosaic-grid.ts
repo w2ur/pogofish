@@ -8,7 +8,6 @@
 // mistake share is mistakes over judged moves, the rule of scripts/pack-v5.mjs
 // and tools/article-visuals/v5sheets.mjs.
 import type { Score, V5Data, V5Mosaic } from '../data';
-import { SOURCES } from '../kit/figure';
 
 export const MOSAIC_PROGRAMS = ['az100', 'td', 'qtab'] as const;
 export type MosaicProgram = (typeof MOSAIC_PROGRAMS)[number];
@@ -85,17 +84,4 @@ export function mosaicStages(d: Pick<V5Data, 'stagesPct' | 'mosaics' | 'programs
       share: mistakes / judged,
     };
   });
-}
-
-/**
- * What the label cites once the data is loaded: the data's own source and the
- * directory of the mosaic files, derived from every mosaic's `source` path.
- * Throws when they do not share one directory.
- */
-export function mosaicSource(d: Pick<V5Data, 'source' | 'mosaics'>): string {
-  const paths = MOSAIC_PROGRAMS.flatMap((p) => d.mosaics[p].map((m) => m.source));
-  const dirs = new Set(paths.map((s) => s.slice(0, s.lastIndexOf('/') + 1)));
-  const [dir] = [...dirs];
-  if (dirs.size !== 1 || !dir) throw new Error(`pogo-mosaic: the mosaics are not in one directory (${[...dirs].join(', ')})`);
-  return `${d.source}${SOURCES}${dir}`;
 }

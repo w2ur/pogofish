@@ -6,25 +6,18 @@
 import type { ReachData } from '../data';
 import { PogoFigure } from '../kit/figure';
 import { t } from '../kit/strings';
-import { REACH_SOURCE, fetchReach } from '../reach';
+import { fetchReach } from '../reach';
 import { countNodes } from './count-steps';
 import reachCss from './pogo-reach.css?raw';
 import { reachChart } from './reach-bars';
 
 export class PogoReach extends PogoFigure {
-  static override fidelity = 'measured' as const;
-  static override source = REACH_SOURCE;
   /** The exploration stops at finished games and knows no repetition rule: game A's. */
-  static override game = 'gameA' as const;
   static override styles = reachCss;
   static override stageMinHeight = '528px';
 
   /** The data load; a test swaps it. */
   static deps: { reach: () => Promise<ReachData> } = { reach: fetchReach };
-
-  protected override precisions(): string[] {
-    return [t(this.lang, 'reachScale')];
-  }
 
   protected async render(signal: AbortSignal): Promise<void> {
     const data = await (this.constructor as typeof PogoReach).deps.reach();

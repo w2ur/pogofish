@@ -4,8 +4,6 @@ import { assetUrl } from './assets';
 import { loadTable, type TableData } from './data';
 
 export const TABLE_FILE = 'data/table.json';
-/** The file the table's figures name under their `measured` label. */
-export const TABLE_SOURCE = 'v3-solve/table.bin';
 
 let pending: Promise<TableData> | undefined;
 

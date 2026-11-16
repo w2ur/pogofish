@@ -176,7 +176,7 @@ export function buildView(lang: Lang, mode: 'inline' | 'follow', h: Handlers): U
   live.setAttribute('aria-live', 'polite');
 
   body.append(status, play, count.element, caption, next);
-  // The follow board is the compact one: no move list. Who the opponent is, the inline board's « Précisions » say.
+  // The follow board is the compact one: no move list.
   if (mode === 'inline') body.append(moves);
   root.append(body, live);
   root.addEventListener('keydown', h.key);

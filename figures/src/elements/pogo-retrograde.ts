@@ -17,7 +17,7 @@ import { transport } from '../kit/controls';
 import { PogoFigure } from '../kit/figure';
 import { Stepper } from '../kit/stepper';
 import { colon, t, type Lang, type StringKey } from '../kit/strings';
-import { TABLE_SOURCE, sharedTable } from '../table';
+import { sharedTable } from '../table';
 import retroCss from './pogo-retrograde.css?raw';
 import { retroSteps, type RetroStepView } from './retro-steps';
 
@@ -29,9 +29,6 @@ export function stepName(lang: Lang, s: Pick<RetroStepView, 'outcome' | 'plies'>
 }
 
 export class PogoRetrograde extends PogoFigure {
-  static override fidelity = 'measured' as const;
-  static override source = TABLE_SOURCE;
-  static override game = 'gameA' as const;
   static override styles = retroCss;
   static override stageMinHeight = '760px';
 
@@ -40,14 +37,6 @@ export class PogoRetrograde extends PogoFigure {
     engine: () => ready(assetUrl(WASM_FILE)),
     table: sharedTable,
   };
-
-  protected override made(): string {
-    return t(this.lang, 'madeSolved');
-  }
-
-  protected override precisions(): string[] {
-    return [t(this.lang, 'retroExamples')];
-  }
 
   protected async render(signal: AbortSignal): Promise<void> {
     const deps = (this.constructor as typeof PogoRetrograde).deps;

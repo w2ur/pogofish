@@ -116,61 +116,6 @@ slot[hidden],
 }
 
 /*
- * « Précisions », the disclosure that ends every figure (figure.ts): closed by
- * default, its summary quiet (the read cut at the small size, muted), with the
- * kit's own sign, a plus that turns to a minus. Inside, plain sentences.
- */
-.precisions {
-  margin: 8px 0 0;
-}
-
-.precisions > summary {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  min-height: 44px;
-  font-size: 12.8px;
-  color: var(--_muted);
-  cursor: pointer;
-  list-style: none;
-}
-
-.precisions > summary::-webkit-details-marker {
-  display: none;
-}
-
-/* The sign is drawn, not read: its text has an empty alternative where browsers take one. */
-.precisions > summary::before {
-  content: '+';
-  content: '+' / '';
-  display: inline-grid;
-  place-items: center;
-  width: 16px;
-  height: 16px;
-  border: 1px solid var(--_edge);
-  font-size: 12.8px;
-  line-height: 1;
-}
-
-.precisions[open] > summary::before {
-  content: '−';
-  content: '−' / '';
-}
-
-.precisions-body {
-  display: flex;
-  flex-direction: column;
-  gap: 8px;
-  max-width: 62ch;
-  padding-bottom: 8px;
-  color: var(--_ink-2);
-}
-
-.precisions-body p {
-  margin: 0;
-}
-
-/*
  * A figure's own title, status line, total or heading, said as a phrase: the read
  * cut at the figure's text size, with weight, never capitals, for emphasis.
  */

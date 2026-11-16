@@ -24,8 +24,8 @@ import { PogoFigure } from '../kit/figure';
 import { Stepper } from '../kit/stepper';
 import { formatShare } from '../kit/score';
 import { colon, t, type Lang, type StringKey } from '../kit/strings';
-import { V5_FILE, sharedV5 } from '../v5';
-import { MOSAIC_COLUMNS, MOSAIC_PROGRAMS, mosaicSource, mosaicStages, type GameMark, type MosaicProgram, type MosaicSquare, type MosaicStage } from './mosaic-grid';
+import { sharedV5 } from '../v5';
+import { MOSAIC_COLUMNS, MOSAIC_PROGRAMS, mosaicStages, type GameMark, type MosaicProgram, type MosaicSquare, type MosaicStage } from './mosaic-grid';
 import { sweepPlan, type SquareState } from './mosaic-sweep';
 import mosaicCss from './pogo-mosaic.css?raw';
 import { pctText, whenNodes, whenText } from './stage-view';
@@ -137,8 +137,6 @@ export function totalsWords(lang: Lang, s: MosaicStage): { wins: string; mistake
 }
 
 export class PogoMosaic extends PogoFigure {
-  static override fidelity = 'measured' as const;
-  static override game = 'gameLc12' as const;
   static override styles = mosaicCss;
   /** The main view and its notes at 640px, closed disclosures: about 800px (measured). */
   static override stageMinHeight = '800px';
@@ -146,32 +144,12 @@ export class PogoMosaic extends PogoFigure {
   /** The data; a test swaps it. */
   static deps: { v5: () => Promise<V5Data> } = { v5: sharedV5 };
 
-  private source: string | undefined;
-  private asOf: string | undefined;
-
-  protected override dataDate(): string | undefined {
-    return this.asOf;
-  }
-
-  /** What the hundred games are, what a mistake is. */
-  protected override precisions(): string[] {
-    const lang = this.lang;
-    return [t(lang, 'mosaicNewGames'), t(lang, 'mosaicSample'), t(lang, 'mosaicMistakeRule')];
-  }
-
-  /** The file the figure asks for until its data is loaded (and for good if that fails), then the data's source and the mosaics' directory. */
-  protected override sourceFile(): string {
-    return this.source ?? V5_FILE;
-  }
 
   protected async render(signal: AbortSignal): Promise<void> {
     const data = await (this.constructor as typeof PogoMosaic).deps.v5();
     if (signal.aborted) return;
     // Every program is read before anything is drawn: data that does not add up fails the figure.
     const all = Object.fromEntries(MOSAIC_PROGRAMS.map((p) => [p, mosaicStages(data, p)])) as Record<MosaicProgram, MosaicStage[]>;
-    this.source = mosaicSource(data);
-    this.asOf = data.asOf;
-    this.refreshPrecisions();
     const lang = this.lang;
 
     const root = el('div', 'mosaics');

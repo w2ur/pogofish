@@ -62,7 +62,6 @@ function glyph(g: Glyph, bang: () => number): Node[] {
 }
 
 export class PogoTitle extends PogoFigure {
-  static override fidelity = 'illustrative' as const;
   static override styles = titleCss;
 
   protected render(signal: AbortSignal): void {

@@ -1,7 +1,7 @@
 import { readFileSync } from 'node:fs';
 import { describe, expect, it } from 'vitest';
 import type { V5Data } from '../data';
-import { MOSAIC_COLUMNS, MOSAIC_PROGRAMS, gameMark, mosaicSource, mosaicStages } from './mosaic-grid';
+import { MOSAIC_COLUMNS, MOSAIC_PROGRAMS, gameMark, mosaicStages } from './mosaic-grid';
 
 const v5 = JSON.parse(readFileSync('public/data/v5.json', 'utf8')) as V5Data;
 
@@ -75,14 +75,3 @@ describe('mosaicStages', () => {
   });
 });
 
-describe('mosaicSource', () => {
-  it('cites the data’s source and the one directory of the mosaics', () => {
-    expect(mosaicSource(v5)).toBe(`${v5.source} · docs/experiments/v5/mosaic/`);
-  });
-
-  it('refuses mosaics whose files do not share one directory', () => {
-    const split = structuredClone(v5);
-    split.mosaics.td[0]!.source = 'docs/elsewhere/td-s1-p000.json';
-    expect(() => mosaicSource(split)).toThrow('one directory');
-  });
-});

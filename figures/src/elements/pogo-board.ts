@@ -15,7 +15,6 @@ import {
   origins,
   resultText,
   tap,
-  NET_STRENGTH,
   type CellMark,
   type Selection,
 } from '../board-state';
@@ -25,10 +24,9 @@ import { initial, legal, type Move, type State, type Triple } from '../engine';
 import { animateMove, drawBoard } from '../kit/board-svg';
 import { PogoFigure, kitSheet } from '../kit/figure';
 import { moveText, moveTip } from '../kit/move-tip';
-import { formatInterval, formatShare } from '../kit/score';
 import { colon, t, type Lang } from '../kit/strings';
 import { SearchClient } from '../search-client';
-import { LEVELS, LEVEL_SIMS, store, type Level, type Store } from '../store';
+import { store, type Level, type Store } from '../store';
 import boardCss from './pogo-board.css?raw';
 import { buildView, colourKey, stamp, type CountValue, type Ui } from './pogo-board-view';
 
@@ -50,8 +48,6 @@ const announced = new WeakMap<State, number>();
 let pageDriver: Driver | undefined;
 
 export class PogoBoard extends PogoFigure {
-  static override fidelity = 'live' as const;
-  static override game = 'gameLc12' as const;
   static override stageMinHeight = '560px';
 
   /** What every board shares; a test swaps them. */
@@ -78,24 +74,6 @@ export class PogoBoard extends PogoFigure {
 
   private get deps() {
     return (this.constructor as typeof PogoBoard).deps;
-  }
-
-  /** Computed here, but quoting a strength measured before: both said truly. */
-  protected override made(): string {
-    return t(this.lang, 'boardMade');
-  }
-
-  /** Who the opponent is, what the levels change, and its measured strength, said for a reader of the essay's first part. */
-  protected override precisions(): string[] {
-    const lang = this.lang;
-    const c = colon(lang);
-    const semi = lang === 'fr' ? '\u202f;' : ';';
-    const levels = LEVELS.map((l) => `${t(lang, l).toLowerCase()}, ${LEVEL_SIMS[l]}`).join(`${semi} `);
-    return [
-      t(lang, 'boardOpponent'),
-      `${t(lang, 'boardLevels')}${c} ${levels}.`,
-      `${t(lang, 'boardStrength')} ${formatShare(lang, NET_STRENGTH.score)} ${t(lang, 'boardStrengthAgainst')} (${t(lang, 'interval95')}${c} ${formatInterval(lang, NET_STRENGTH.ci95)}).`,
-    ];
   }
 
   override connectedCallback(): void {

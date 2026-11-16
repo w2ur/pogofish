@@ -11,9 +11,9 @@ import { LC1_2, ready, terminal } from '../engine';
 import { transport } from '../kit/controls';
 import { PogoFigure } from '../kit/figure';
 import { Stepper } from '../kit/stepper';
-import { t, type Fidelity, type Lang, type StringKey } from '../kit/strings';
+import { t, type Lang, type StringKey } from '../kit/strings';
 import { sharedTable } from '../table';
-import { lineFidelity, lineFrames, parseLine, parseRules, seenText, type Frame, type LineName } from './line-frames';
+import { lineFrames, parseLine, parseRules, seenText, type Frame, type LineName } from './line-frames';
 import lineCss from './pogo-line.css?raw';
 import replayCss from './replay.css?raw';
 import { replayView, resultWords, type Spoken } from './replay-view';
@@ -52,7 +52,6 @@ function say(lang: Lang, f: Frame, endless: boolean): Spoken {
 }
 
 export class PogoLine extends PogoFigure {
-  static override fidelity = 'live' as const;
   static override styles = replayCss + lineCss;
   static override stageMinHeight = '480px';
 
@@ -61,37 +60,6 @@ export class PogoLine extends PogoFigure {
     engine: () => ready(assetUrl(WASM_FILE)),
     table: sharedTable,
   };
-
-  /** Measured only for a table line under game A (lineFidelity); a bad attribute says live, and render fails. */
-  private claim(): ReturnType<typeof lineFidelity> {
-    try {
-      return lineFidelity(parseLine(this.getAttribute('line')), parseRules(this.getAttribute('rules')));
-    } catch {
-      return { kind: 'live' };
-    }
-  }
-
-  protected override fidelityKind(): Fidelity {
-    return this.claim().kind;
-  }
-
-  protected override sourceFile(): string | undefined {
-    return this.claim().source;
-  }
-
-  /** A line read from the solved table says so, in place of « measured ». */
-  protected override made(): string | undefined {
-    return this.claim().kind === 'measured' ? t(this.lang, 'madeSolved') : undefined;
-  }
-
-  /** « Précisions » name the game of the `rules` attribute; a bad one names none, and render fails. */
-  protected override game(): 'gameA' | 'gameLc12' | undefined {
-    try {
-      return parseRules(this.getAttribute('rules')) === null ? 'gameA' : 'gameLc12';
-    } catch {
-      return undefined;
-    }
-  }
 
   protected async render(signal: AbortSignal): Promise<void> {
     const name = parseLine(this.getAttribute('line'));

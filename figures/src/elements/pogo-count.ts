@@ -11,7 +11,6 @@ import countCss from './pogo-count.css?raw';
 const LABEL: Record<CountPart, StringKey> = { colours: 'countColours', stacks: 'countStacks', turn: 'countTurn' };
 
 export class PogoCount extends PogoFigure {
-  static override fidelity = 'live' as const;
   static override styles = countCss;
   static override stageMinHeight = '360px';
 

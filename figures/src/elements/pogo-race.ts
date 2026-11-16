@@ -17,10 +17,10 @@ import { keepCase } from '../kit/keep-case';
 import { PogoFigure } from '../kit/figure';
 import { formatScore, formatShare } from '../kit/score';
 import { colon, t, type Lang, type StringKey } from '../kit/strings';
-import { V5_FILE, sharedV5 } from '../v5';
+import { sharedV5 } from '../v5';
 import { countNodes, formatCount } from './count-steps';
 import raceCss from './pogo-race.css?raw';
-import { raceChart, raceSource, type RaceChart, type RaceProgram, type RaceSeries, type ReferenceKey } from './race-chart';
+import { raceChart, type RaceChart, type RaceProgram, type RaceSeries, type ReferenceKey } from './race-chart';
 import { pctText } from './stage-view';
 
 const NS = 'http://www.w3.org/2000/svg';
@@ -79,50 +79,24 @@ export function passWords(lang: Lang, s: RaceSeries): { name: string; rest: stri
 }
 
 export class PogoRace extends PogoFigure {
-  static override fidelity = 'measured' as const;
-  static override game = 'gameLc12' as const;
   static override styles = raceCss;
   static override stageMinHeight = '640px';
 
   /** The data; a test swaps it. */
   static deps: { v5: () => Promise<V5Data> } = { v5: sharedV5 };
 
-  private source: string | undefined;
-  private asOf: string | undefined;
-  /** Greedy's score against itself, once loaded: the line every program must pass. */
-  private greedy: number | undefined;
-
-  /** The file the figure asks for until its data is loaded (and for good if that fails), then the data's own source. */
-  protected override sourceFile(): string {
-    return this.source ?? V5_FILE;
-  }
-
-  protected override dataDate(): string | undefined {
-    return this.asOf;
-  }
-
-  /** What the strokes are, the 0 column, what the axis counts, and the rule that decides « above greedy ». */
-  protected override precisions(): string[] {
-    const lang = this.lang;
-    const lines = [t(lang, 'raceCi'), t(lang, 'raceZero'), t(lang, 'raceCompute')];
-    if (this.greedy !== undefined) lines.push(`${t(lang, 'raceRule')} ${formatShare(lang, this.greedy)}.`);
-    return lines;
-  }
 
   protected async render(signal: AbortSignal): Promise<void> {
     const data = await (this.constructor as typeof PogoRace).deps.v5();
     if (signal.aborted) return;
     const chart = raceChart(data);
-    this.source = raceSource(data);
-    this.asOf = data.asOf;
-    this.greedy = data.references.greedy.score;
-    this.refreshPrecisions();
     const lang = this.lang;
 
     const root = el('div', 'race');
     const head = el('div', 'head');
     head.append(el('p', 'say title', t(lang, 'raceTitle')), el('p', 'unit', t(lang, 'raceUnit')));
-    root.append(head, this.plot(lang, chart), el('p', 'axis-note', t(lang, 'raceAxis')));
+    // What the strokes are and why the 0 column stands apart: the chart cannot be read without them.
+    root.append(head, this.plot(lang, chart), ...(['raceAxis', 'raceCi', 'raceZero'] as const).map((k) => el('p', 'axis-note', t(lang, k))));
     root.append(this.passes(lang, chart), this.values(lang, chart, data));
     this.stage.append(root);
   }

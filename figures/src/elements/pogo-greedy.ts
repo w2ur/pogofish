@@ -3,8 +3,8 @@
 // Each move says the score that chose it, how many moves greedy weighed and,
 // when several tied, that the move was drawn among them. « Nouvelle partie »
 // draws the next seed and plays the new game; under reduced motion nothing
-// plays by itself and the reader steps. « Précisions » give the seed, so a game
-// can be found again (greedy.mjs game SEED draws the same one).
+// plays by itself and the reader steps. The `seed` attribute names the game
+// (greedy.mjs game SEED draws the same one).
 import { announceMove } from '../board-state';
 import { WASM_FILE, assetUrl } from '../assets';
 import { ready } from '../engine';
@@ -75,23 +75,12 @@ function sizers(lang: Lang): { over: Line[][]; under: Line[][] } {
 }
 
 export class PogoGreedy extends PogoFigure {
-  static override fidelity = 'live' as const;
-  static override game = 'gameLc12' as const;
   static override styles = replayCss + greedyCss;
   static override stageMinHeight = '640px';
 
   /** The engine; a test swaps it. */
   static deps: { engine: () => Promise<void> } = { engine: () => ready(assetUrl(WASM_FILE)) };
 
-  /** The game shown, once drawn. */
-  private seed: number | undefined;
-
-  /** How greedy breaks a tie, and the number of the draw shown. */
-  protected override precisions(): string[] {
-    const lang = this.lang;
-    if (this.seed === undefined) return [t(lang, 'greedyDraw')];
-    return [`${t(lang, 'greedyDraw')} ${t(lang, 'greedySeedBefore')} ${this.seed}${colon(lang)} ${t(lang, 'greedySeedAfter')}`];
-  }
 
   protected async render(signal: AbortSignal): Promise<void> {
     const first = parseSeed(this.getAttribute('seed'));
@@ -135,8 +124,6 @@ export class PogoGreedy extends PogoFigure {
         counter: (i, n) => `${i} / ${n - 1}`,
         actions: [{ label: t(lang, 'newGame'), primary: true, onClick: () => load(nextSeed(seed), true) }],
       });
-      this.seed = seed;
-      this.refreshPrecisions();
       view.show(0);
       body.replaceChildren(view.status, view.slot, row, view.after, view.live);
       if (hadFocus) row.querySelector<HTMLButtonElement>('[data-role="action"]')?.focus();

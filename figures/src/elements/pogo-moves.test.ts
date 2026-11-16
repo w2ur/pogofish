@@ -1,5 +1,5 @@
 import { afterEach, describe, expect, it } from 'vitest';
-import { precisionsOf, intersect, resetMedia, shownText } from '../test-dom';
+import { intersect, resetMedia, shownText } from '../test-dom';
 import { PogoMoves } from './pogo-moves';
 
 if (!customElements.get('pogo-moves')) customElements.define('pogo-moves', PogoMoves);
@@ -41,14 +41,6 @@ describe('<pogo-moves view="start">', () => {
 });
 
 describe('<pogo-moves view="moves">', () => {
-  it('names the game it plays in « Précisions »; the start position names none', async () => {
-    expect(precisionsOf(await mount('moves'))).toEqual([
-      'Calculé dans votre navigateur par le moteur du jeu\u202f: rien n’est préenregistré.',
-      'Ici le jeu n’a pas de règle d’arrêt\u202f: une partie peut ne jamais finir.',
-    ]);
-    expect(precisionsOf(await mount('start'))).toEqual(['Calculé dans votre navigateur par le moteur du jeu\u202f: rien n’est préenregistré.']);
-  });
-
   it('lifting a1 shows its one-piece cells, then its two-piece cells', async () => {
     const el = await mount('moves');
     expect(marks(el, 'target')).toEqual([0, 1, 2]);

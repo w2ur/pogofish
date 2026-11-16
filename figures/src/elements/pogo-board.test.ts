@@ -5,7 +5,7 @@ import { DEFAULT_GAME } from '../default-game';
 import { describeCell } from '../board-state';
 import { createDriver, type Searcher } from '../driver';
 import { LC1_2, legal, moveName, play, replay, terminal, type State, type Triple } from '../engine';
-import { precisionsOf, REDUCED_MOTION, intersect, observersOf, resetMedia, setMedia, shownText } from '../test-dom';
+import { REDUCED_MOTION, intersect, observersOf, resetMedia, setMedia, shownText } from '../test-dom';
 import { createStore, type Store } from '../store';
 import { PogoBoard } from './pogo-board';
 
@@ -111,24 +111,13 @@ describe('<pogo-board> inline', () => {
     expect(el.shadowRoot!.querySelectorAll('.play svg text')).toHaveLength(0);
   });
 
-  it('says in « Précisions », in words, who the opponent is, what the levels change and its measured strength', async () => {
+  it('names the levels in words, with nothing technical under the board', async () => {
     const el = await mount('fr');
-    expect(precisionsOf(el)).toEqual([
-      'La partie se calcule dans votre navigateur\u202f: chaque coup de l’ordinateur y est cherché pendant que vous jouez. Sa force, citée plus bas, a été mesurée avant la publication.',
-      'Ici, le joueur qui répète une troisième fois une position perd la partie.',
-      'Vous jouez contre AlphaZero, un programme qui a appris le Pogo en jouant contre lui-même\u202f; la deuxième partie de l’article raconte comment.',
-      'Avant chaque coup, il examine un nombre fixe de suites possibles de la partie, selon le niveau\u202f: facile, 25\u202f; normal, 100\u202f; difficile, 400.',
-      'Au niveau normal, il gagne 85,5\u202f% de ses parties contre le joueur glouton, un programme simple dont parle aussi la deuxième partie (intervalle à 95\u202f%\u202f: 82,3 à 88,7\u202f%).',
-    ]);
     // Nothing technical under the board, and no tag on a level.
     expect(el.shadowRoot!.querySelector('.note')).toBeNull();
     expect(el.shadowRoot!.textContent).not.toContain('az-lc1-s1');
     expect($(el, '.choice[data-value="normal"]').textContent).toBe('Normal');
     expect($(el, '.choice[data-value="easy"]').textContent).toBe('Facile');
-    const en = await mount('en');
-    expect(precisionsOf(en)[4]).toBe(
-      'At the normal level, it wins 85.5% of its games against the greedy player, a simple program the second part also describes (95% interval: 82.3 to 88.7%).',
-    );
     expect($(el, 'slot').hidden).toBe(true);
   });
 
@@ -669,8 +658,6 @@ describe('<pogo-board mode="follow"> as a panel', () => {
     expect(css).toMatch(/:host\(\[data-idle\]\),\s*:host\(\[data-yield\]\) \{\s*display: none;/);
     expect(css).toMatch(/\.bar \{[^}]*min-height: 44px;/);
     expect(css).not.toMatch(/animation|transition/);
-    // No « Précisions » in either state: one rule on the mode, none on the folded state alone.
-    expect(css).toMatch(/:host\(\[mode='follow'\]\) \.precisions \{\s*display: none;/);
     expect(css).not.toMatch(/data-collapsed/);
   });
 });

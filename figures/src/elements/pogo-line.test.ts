@@ -1,6 +1,6 @@
 import { readFileSync } from 'node:fs';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
-import { precisionsOf, shownText } from '../test-dom';
+import { shownText } from '../test-dom';
 import type { TableData } from '../data';
 import { key, replay } from '../engine';
 import type { PlayFromDetail } from '../kit/figure';
@@ -39,24 +39,6 @@ afterEach(() => {
 });
 
 describe('<pogo-line>', () => {
-  it('labels the engine’s lines as computed live, under the game of its rules', async () => {
-    for (const line of ['shortestWin', 'loop']) {
-      expect(precisionsOf(await mount(line, 'A', 'en'))).toEqual(['Computed in your browser by the game’s engine: nothing is prerecorded.', 'Here the game has no stopping rule: a game may never end.']);
-      expect(precisionsOf(await mount(line, 'lc1-2', 'en'))).toEqual(['Computed in your browser by the game’s engine: nothing is prerecorded.', 'Here, the player who repeats a position a third time loses the game.']);
-    }
-  });
-
-  it('labels the table’s lines as measured under game A only: the table says nothing of lc1-2', async () => {
-    for (const line of ['centreLoss', 'openingWin']) {
-      const a = await mount(line, 'A', 'en');
-      expect(precisionsOf(a)).toEqual(['Established before publication by the complete solution of the game: nothing here depends on what you play.', 'Here the game has no stopping rule: a game may never end.']);
-      expect(a.dataset.source).toBe('v3-solve/table.bin');
-      const lc = await mount(line, 'lc1-2', 'en');
-      expect(precisionsOf(lc)).toEqual(['Computed in your browser by the game’s engine: nothing is prerecorded.', 'Here, the player who repeats a position a third time loses the game.']);
-      expect(lc.hasAttribute('data-source')).toBe(false);
-    }
-  });
-
   it('a bad rules attribute shows the fallback rather than the wrong game', async () => {
     const error = vi.spyOn(console, 'error').mockImplementation(() => {});
     const el = await mount('loop', 'B');

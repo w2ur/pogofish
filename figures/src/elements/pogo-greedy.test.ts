@@ -1,5 +1,5 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
-import { precisionsOf, shownText } from '../test-dom';
+import { shownText } from '../test-dom';
 import { REDUCED_MOTION, intersect, resetMedia, setMedia } from '../test-dom';
 import { greedyGame, nextSeed } from './greedy-game';
 import { PogoGreedy } from './pogo-greedy';
@@ -40,15 +40,8 @@ afterEach(() => {
 });
 
 describe('<pogo-greedy>', () => {
-  it('is computed live, under the repetition rule', async () => {
-    expect(precisionsOf(await mount('en')).slice(0, 2)).toEqual(['Computed in your browser by the game’s engine: nothing is prerecorded.', 'Here, the player who repeats a position a third time loses the game.']);
-  });
-
-  it('gives the seed in « Précisions » and steps through its game, each move with its score', async () => {
+  it('steps through its game, each move with its score', async () => {
     const el = await mount('fr', '17');
-    expect(precisionsOf(el)[2]).toBe(
-      'Quand plusieurs coups ont le même score, le glouton tire au sort entre eux. Ce tirage porte ici le numéro 17\u202f: le même numéro redonne la même partie.',
-    );
     expect(el.shadowRoot!.querySelector('.head')).toBeNull();
     const plies = greedyGame(17).frames.length - 1;
     expect(counter(el)).toBe(`0 / ${plies}`);
@@ -77,7 +70,6 @@ describe('<pogo-greedy>', () => {
     vi.useFakeTimers();
     role(el, 'action').click();
     const seed = nextSeed(1);
-    expect(precisionsOf(el)[2]).toContain(`le numéro ${seed}\u202f:`);
     expect(counter(el)).toBe(`0 / ${greedyGame(seed).frames.length - 1}`);
     vi.advanceTimersByTime(1100);
     expect(counter(el)).toMatch(/^1 \//);

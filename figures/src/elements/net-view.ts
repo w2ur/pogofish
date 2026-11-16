@@ -6,7 +6,6 @@ import type { Colour, State } from '../engine';
 import { formatShare } from '../kit/score';
 import { moveTip, type TipHooks } from '../kit/move-tip';
 import { colon, t, type Lang } from '../kit/strings';
-import { countNodes, formatCount } from './count-steps';
 import { positionWords, type NetPosition } from './net-position';
 import type { PolicyRow } from './net-readout';
 import { signedNote } from './q-steps';
@@ -21,11 +20,6 @@ export function el<K extends keyof HTMLElementTagNameMap>(tag: K, className = ''
 }
 
 export const colourName = (lang: Lang, c: Colour): string => t(lang, c === 'White' ? 'white' : 'red');
-
-/** « Le réseau d’AlphaZero entraîné pour cet article compte 130 164 nombres réglables (poids et biais). », for « Précisions ». */
-export function netSentence(lang: Lang, kind: 'az' | 'td', weights: number): string {
-  return `${t(lang, kind === 'az' ? 'netAzIs' : 'netTdIs')} ${formatCount(lang, weights)} ${t(lang, 'netAdjustable')}.`;
-}
 
 /** Which position is shown, in words, and the hint to play one's own when it is the default. */
 export function positionLine(lang: Lang): { element: HTMLElement; update(p: NetPosition): void } {
@@ -150,7 +144,8 @@ export function policyView(lang: Lang, hooks?: (m: PolicyRow['move']) => TipHook
     { text: t(lang, 'netPreference'), cls: 'share' },
   ]);
   ranked.caption.textContent = t(lang, 'netPrefsTitle');
-  element.append(lede, ranked.element);
+  // The bars' scale, under them: a length means nothing without it.
+  element.append(lede, ranked.element, el('p', 'note scale', t(lang, 'netPrefScale')));
   return {
     element,
     update(rows, actions) {

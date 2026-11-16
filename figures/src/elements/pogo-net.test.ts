@@ -6,8 +6,7 @@ import { key, type State } from '../engine';
 import { formatShare } from '../kit/score';
 import { parseAz, parseTd, type TdNet } from '../nets';
 import { createStore } from '../store';
-import { precisionsOf, intersect, resetMedia, shownText } from '../test-dom';
-import { formatCount } from './count-steps';
+import { intersect, resetMedia, shownText } from '../test-dom';
 import { PogoNet } from './pogo-net';
 import { signedNote } from './q-steps';
 
@@ -54,21 +53,14 @@ afterEach(() => {
 });
 
 describe('<pogo-net>', () => {
-  it('is computed live under lc1-2, and says in « Précisions » which net it runs and its size, never its code name', async () => {
+  it('says the preference bars’ scale under their table, in its own text, and never names a net by its code name', async () => {
     const td1 = await mount('td', 'en');
-    expect(precisionsOf(td1)).toEqual([
-      'Computed in your browser by the game’s engine: nothing is prerecorded.',
-      'Here, the player who repeats a position a third time loses the game.',
-      'The TD(λ) program’s net trained for this essay has 24,705 adjustable numbers (weights and biases).',
-      'A value on this scale, not a share of games won.',
-    ]);
     expect(td1.shadowRoot!.textContent).not.toContain('v4-td-lc1-s1');
+    expect(td1.shadowRoot!.querySelector('.policy')).toBeNull();
     const az1 = await mount('az', 'fr');
-    expect(precisionsOf(az1).slice(2)).toEqual([
-      `Le réseau d’AlphaZero entraîné pour cet article compte ${formatCount('fr', 130164)} nombres réglables (poids et biais).`,
-      'Une note sur cette échelle, pas une part de parties gagnées.',
-      'Chaque barre va de 0 à 100\u202f%.',
-    ]);
+    const scale = $(az1, '.policy .scale');
+    expect(scale.textContent).toBe('Chaque barre va de 0 à 100\u202f%.');
+    expect(scale.previousElementSibling!.classList.contains('ranked')).toBe(true);
     expect(az1.shadowRoot!.textContent).not.toContain('az-lc1-s1');
   });
 
@@ -131,7 +123,6 @@ describe('<pogo-net>', () => {
     expect($(el, '.value-number').textContent).toBe(signedNote('fr', DEFAULT.td));
     const words = $(el, '.value-view .note').textContent!;
     expect(words).toContain('De −1, la défaite, à +1, la victoire, pour le joueur au trait (Rouge).');
-    expect(precisionsOf(el)).toContain('Une note sur cette échelle, pas une part de parties gagnées.');
     expect($(el, '.value-view').textContent).not.toMatch(/%/);
     expect($(el, '.where-from').textContent).toBe('Position : l’erreur d’ouverture, après 3 coups.');
   });

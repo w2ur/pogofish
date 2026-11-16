@@ -1,7 +1,7 @@
 import { readFileSync } from 'node:fs';
 import { describe, expect, it } from 'vitest';
 import type { V5Data } from '../data';
-import { RACE_PROGRAMS, firstAboveGreedy, raceChart, raceSource } from './race-chart';
+import { RACE_PROGRAMS, firstAboveGreedy, raceChart } from './race-chart';
 
 const v5 = JSON.parse(readFileSync('public/data/v5.json', 'utf8')) as V5Data;
 const chart = raceChart(v5);
@@ -75,10 +75,6 @@ describe('raceChart', () => {
     const stage = (gamesTrained: number, score: number, lo: number) => ({ gamesTrained, pct: 0, score, ci95: [lo, score + 0.01] as [number, number] });
     expect(firstAboveGreedy([stage(0, 0.1, 0.05), stage(10, 0.5, 0.48), stage(20, 0.6, 0.55)], 0.493)?.gamesTrained).toBe(20);
     expect(firstAboveGreedy([stage(0, 0.1, 0.05)], 0.493)).toBeNull();
-  });
-
-  it('cites the data’s own source', () => {
-    expect(raceSource(v5)).toBe(v5.source);
   });
 
   it('refuses data whose references or stages it cannot place', () => {

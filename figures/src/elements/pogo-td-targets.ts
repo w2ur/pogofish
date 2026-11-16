@@ -15,8 +15,7 @@ import type { TdNet } from '../nets';
 import { sharedTd } from '../nets-shared';
 import { store, type GameRecord, type Store } from '../store';
 import { plies } from './net-position';
-import { tdDiagram } from './net-layers';
-import { colourName, el, netSentence } from './net-view';
+import { colourName, el } from './net-view';
 import netCss from './net.css?raw';
 import tdCss from './pogo-td-targets.css?raw';
 import { signedNote } from './q-steps';
@@ -118,28 +117,17 @@ function chart(w: TdWalk): { svg: SVGSVGElement; show(k: number): void } {
 }
 
 export class PogoTdTargets extends PogoFigure {
-  static override fidelity = 'live' as const;
-  static override game = 'gameLc12' as const;
   static override styles = netCss + tdCss;
   static override stageMinHeight = '642px';
 
   /** The game, the engine and the TD net; a test swaps them. */
   static deps: { store: Store; td: () => Promise<TdNet> } = { store, td: sharedTd };
 
-  /** The net's size once read, once loaded. */
-  private weights: number | undefined;
-
-  /** Whose values these are. */
-  protected override precisions(): string[] {
-    return this.weights === undefined ? [] : [netSentence(this.lang, 'td', this.weights)];
-  }
 
   protected async render(signal: AbortSignal): Promise<void> {
     const deps = (this.constructor as typeof PogoTdTargets).deps;
     const [net] = await Promise.all([deps.td(), deps.store.ready()]);
     if (signal.aborted) return;
-    this.weights = tdDiagram(net.header).weights;
-    this.refreshPrecisions();
     const lang = this.lang;
     const root = el('div', 'td-targets');
     this.stage.append(root);

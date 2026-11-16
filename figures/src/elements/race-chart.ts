@@ -126,8 +126,3 @@ export function raceChart(d: Pick<V5Data, 'programs' | 'references'>): RaceChart
     axis: { from, to, perDecade, ticks },
   };
 }
-
-/** What the label cites once the data is loaded: the data's own source. */
-export function raceSource(d: Pick<V5Data, 'source'>): string {
-  return d.source;
-}

@@ -8,7 +8,7 @@ import { drawBoard } from '../src/kit/board-svg';
 import { controlButton, transport } from '../src/kit/controls';
 import { PogoFigure, kitSheet, type PlayFromDetail } from '../src/kit/figure';
 import { Stepper } from '../src/kit/stepper';
-import { t, type Fidelity, type Lang } from '../src/kit/strings';
+import { t, type Lang } from '../src/kit/strings';
 import { ESSAY } from './essay';
 
 const lang = (): Lang => (document.documentElement.lang.startsWith('fr') ? 'fr' : 'en');
@@ -66,10 +66,8 @@ function game(plies: number): { states: State[]; moves: Move[] } {
   return { states, moves };
 }
 
-function demo(kind: Fidelity, source?: string): CustomElementConstructor {
+function demo(): CustomElementConstructor {
   return class extends PogoFigure {
-    static override fidelity = kind;
-    static override source = source;
     static override stageMinHeight = '400px';
 
     protected async render(): Promise<void> {
@@ -117,9 +115,7 @@ configureAssets({
 });
 defineAll();
 
-customElements.define('kit-demo-live', demo('live'));
-customElements.define('kit-demo-measured', demo('measured', 'data/table.json'));
-customElements.define('kit-demo-illustrative', demo('illustrative'));
+customElements.define('kit-demo', demo());
 
 async function build(): Promise<void> {
   await ready('/pogo/pogofish_wasm_bg.wasm');
@@ -292,8 +288,8 @@ async function build(): Promise<void> {
   follow.setAttribute('mode', 'follow');
   app.append(follow);
 
-  app.append(heading('PogoFigure + Stepper · one per fidelity'));
-  for (const tag of ['kit-demo-live', 'kit-demo-measured', 'kit-demo-illustrative']) {
+  app.append(heading('PogoFigure + Stepper'));
+  for (const tag of ['kit-demo']) {
     const el = document.createElement(tag);
     el.innerHTML = `<p>${l === 'fr' ? 'Sans JavaScript, cette phrase remplace la figure.' : 'Without JavaScript, this sentence stands in for the figure.'}</p>`;
     el.style.marginBottom = '32px';

@@ -20,7 +20,7 @@ import { formatCount } from './count-steps';
 import { azDiagram, tdDiagram, type Column, type NetDiagram } from './net-layers';
 import { netPosition, positionWords } from './net-position';
 import { azReadout } from './net-readout';
-import { el, netSentence, policyView, positionLine, valueView } from './net-view';
+import { el, policyView, positionLine, valueView } from './net-view';
 import netCss from './net.css?raw';
 
 export type NetKind = 'td' | 'az';
@@ -88,26 +88,12 @@ function diagramView(lang: Lang, d: NetDiagram, kind: NetKind): HTMLElement {
 }
 
 export class PogoNet extends PogoFigure {
-  static override fidelity = 'live' as const;
-  static override game = 'gameLc12' as const;
   static override styles = netCss;
   /** A floor only: net.css keeps each kind's measured room, by width (`:host([kind])`). */
   static override stageMinHeight = '600px';
   /** The game, the engine and the two nets; a test swaps them. */
   static deps: { store: Store; az: () => Promise<AzNet>; td: () => Promise<TdNet> } = { store, az: sharedAz, td: sharedTd };
 
-  /** The net's size once read, once loaded. */
-  private weights: number | undefined;
-
-  /** Which net this is and its size, what its value is not, and the preferences' scale. */
-  protected override precisions(): string[] {
-    const lang = this.lang;
-    const kind = this.getAttribute('kind') === 'az' ? 'az' : 'td';
-    const lines = this.weights === undefined ? [] : [netSentence(lang, kind, this.weights)];
-    lines.push(t(lang, 'netNotShare'));
-    if (kind === 'az') lines.push(t(lang, 'netPrefScale'));
-    return lines;
-  }
 
   protected async render(signal: AbortSignal): Promise<void> {
     const kind = parseKind(this.getAttribute('kind'));
@@ -116,8 +102,6 @@ export class PogoNet extends PogoFigure {
     if (signal.aborted) return;
     const lang = this.lang;
     const diagram = kind === 'az' ? azDiagram(net.header) : tdDiagram(net.header);
-    this.weights = diagram.weights;
-    this.refreshPrecisions();
 
     const root = el('div', `net net-${kind}`);
     const where = positionLine(lang);

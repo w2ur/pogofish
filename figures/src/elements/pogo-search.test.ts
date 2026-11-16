@@ -6,7 +6,7 @@ import { key, moveName, type State } from '../engine';
 import { bestMove, search, type SearchSnapshot } from '../mcts';
 import { parseAz, type AzNet } from '../nets';
 import { createStore, type Store } from '../store';
-import { precisionsOf, REDUCED_MOTION, intersect, resetMedia, setMedia, shownText } from '../test-dom';
+import { REDUCED_MOTION, intersect, resetMedia, setMedia, shownText } from '../test-dom';
 import { PogoSearch } from './pogo-search';
 import { PUZZLE5, STOPS } from './search-steps';
 import { formatShare } from '../kit/score';
@@ -78,19 +78,12 @@ describe('<pogo-search>', () => {
     expect(table.nextElementSibling!.classList.contains('search-controls')).toBe(true);
   });
 
-  it('is computed live under lc1-2, on puzzle 5, before any simulation', async () => {
+  it('shows puzzle 5 before any simulation, the bars’ and the mean value’s scales under the table', async () => {
     const el = await mount('puzzle5', 'en');
-    expect(precisionsOf(el).slice(0, 3)).toEqual([
-      'Computed in your browser by the game’s engine: nothing is prerecorded.',
-      'Here, the player who repeats a position a third time loses the game.',
-      'This position comes from a series of problems used to test the programs: one move forces the win in it, and greedy plays another.',
-    ]);
-    expect(precisionsOf(el).slice(4)).toEqual([
-      'The search runs 100 simulations, as many as the board’s opponent at the normal level.',
+    expect([...el.shadowRoot!.querySelectorAll('.search .scale')].map((p) => p.textContent)).toEqual([
       'Bars: the preference from 0 to 100%, the visits from 0 to 100.',
-      'Mean value: the average of the values brought back by the simulations through this move, from −1, a loss, to +1, a win, for the player to move (Red).',
+      'Mean value: from −1, a loss, to +1, a win, for the player to move (Red).',
     ]);
-    expect(precisionsOf(el)[3]).toMatch(/^The AlphaZero net trained for this essay has [\d,]+ adjustable numbers \(weights and biases\)\.$/);
     expect(el.shadowRoot!.textContent).not.toMatch(/az-lc1-s1|puzzle 5|bench/);
     expect($(el, '.search').dataset.position).toBe(key(PUZZLE5));
     expect($(el, '.where-from').textContent).toBe('Position: a test problem, Red to move.');

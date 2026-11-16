@@ -6,7 +6,7 @@ import type { Triple } from '../engine';
 import { parseTd } from '../nets';
 import { lambdaReturns } from '../players';
 import { createStore, type Store } from '../store';
-import { precisionsOf, REDUCED_MOTION, intersect, resetMedia, setMedia } from '../test-dom';
+import { REDUCED_MOTION, intersect, resetMedia, setMedia } from '../test-dom';
 import { PogoTdTargets, stepWords } from './pogo-td-targets';
 import { signedNote } from './q-steps';
 import { TD_LAMBDA, tdGame, tdWalk } from './td-walk';
@@ -61,16 +61,6 @@ describe('<pogo-td-targets>', () => {
   it('puts the transport right under the chart it steps, before the legend and the table', async () => {
     const el = await mount('fr');
     expect(el.shadowRoot!.querySelector('.plot')!.nextElementSibling!.classList.contains('controls')).toBe(true);
-  });
-
-  it('is computed live under lc1-2 and says in « Précisions » whose values these are, never the net’s code name', async () => {
-    const el = await mount('en');
-    expect(precisionsOf(el)).toEqual([
-      'Computed in your browser by the game’s engine: nothing is prerecorded.',
-      'Here, the player who repeats a position a third time loses the game.',
-      'The TD(λ) program’s net trained for this essay has 24,705 adjustable numbers (weights and biases).',
-    ]);
-    expect(el.shadowRoot!.textContent).not.toContain('v4-td-lc1-s1');
   });
 
   it('pogo-td-targets uses lastFinished when there is one, DEFAULT_GAME otherwise, and says which', async () => {

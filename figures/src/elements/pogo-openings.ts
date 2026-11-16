@@ -5,7 +5,7 @@
 // destination. The board shows the position the choice is made in and the
 // chosen move on it; « Réponses des Rouges » plays the chosen opening and
 // lists Red's replies; « Jouer d’ici » hands the position after the chosen
-// moves to the playable board. The verdicts are game A's, as the label says.
+// moves to the playable board. The verdicts are game A's.
 import { boardInput, type BoardInput } from '../board-input';
 import { announceMove, chooseCount, describeCell, origins, tap, type Selection } from '../board-state';
 import { WASM_FILE, assetUrl } from '../assets';
@@ -17,7 +17,7 @@ import { choiceGroup, controlButton, type ChoiceGroup } from '../kit/controls';
 import { PogoFigure } from '../kit/figure';
 import { moveText, tipControl } from '../kit/move-tip';
 import { colon, t, type Lang } from '../kit/strings';
-import { sharedTable, TABLE_SOURCE } from '../table';
+import { sharedTable } from '../table';
 import { reach, reachText } from './moves-reach';
 import { choicesAfter, headLine, sameMove, verdictText, type Choices } from './openings-verdicts';
 import openingsCss from './pogo-openings.css?raw';
@@ -47,9 +47,6 @@ interface Ui {
 }
 
 export class PogoOpenings extends PogoFigure {
-  static override fidelity = 'measured' as const;
-  static override source = TABLE_SOURCE;
-  static override game = 'gameA' as const;
   static override styles = openingsCss;
   static override stageMinHeight = '560px';
 
@@ -68,14 +65,6 @@ export class PogoOpenings extends PogoFigure {
   private selection: Selection = null;
   /** The move whose explanation is shown in the list: its stack and landing are marked on the board. */
   private preview: Triple | null = null;
-
-  protected override made(): string {
-    return t(this.lang, 'madeSolved');
-  }
-
-  protected override precisions(): string[] {
-    return [t(this.lang, 'openingsVerdicts')];
-  }
 
   protected async render(signal: AbortSignal): Promise<void> {
     const deps = (this.constructor as typeof PogoOpenings).deps;

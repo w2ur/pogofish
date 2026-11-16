@@ -1,29 +1,27 @@
 // <pogo-stages program="qtab|td|az100">: one learning program at the stages of
 // its training (public/data/v5.json, seed 1). The reader picks a stage; the
-// figure shows its measured score against the greedy player under lc1-2 (its
-// 95 % interval, as the data gives it, in « Précisions »), says which colour the program had
+// figure shows its measured score against the greedy player under lc1-2, says which colour the program had
 // in the game shown and how that game ended, and replays it move by move
 // through the shared replay view. The game's first moves are the bench's
 // random opening (`openingPlies`, from the game file) and say so. Choosing a stage plays its game; under reduced
-// motion nothing plays by itself. data-source names the file asked for, then the
-// data's own source and the directory of its games.
+// motion nothing plays by itself.
 import { announceMove } from '../board-state';
 import { WASM_FILE, assetUrl } from '../assets';
 import type { V5Data, V5Stage } from '../data';
 import { moveName, ready, type Colour } from '../engine';
 import { choiceGroup, transport } from '../kit/controls';
 import { keepCase } from '../kit/keep-case';
-import { formatInterval, formatShare } from '../kit/score';
+import { formatShare } from '../kit/score';
 import { PogoFigure } from '../kit/figure';
 import { Stepper } from '../kit/stepper';
 import { colon, t, type Lang, type StringKey } from '../kit/strings';
-import { V5_FILE, sharedV5 } from '../v5';
+import { sharedV5 } from '../v5';
 import { countNodes, formatCount } from './count-steps';
 import { seenText, type Frame } from './line-frames';
 import stagesCss from './pogo-stages.css?raw';
 import replayCss from './replay.css?raw';
 import { colourKey, replayView, resultWords, type Line, type Spoken } from './replay-view';
-import { parseProgram, pctText, stageFrames, stagesSource, whenNodes, whenText, type StageProgram } from './stage-view';
+import { parseProgram, pctText, stageFrames, whenNodes, whenText, type StageProgram } from './stage-view';
 
 const PROGRAM_KEY: Record<StageProgram, StringKey> = { qtab: 'progQtab', td: 'progTd', az100: 'progAz100' };
 
@@ -101,8 +99,6 @@ function sizers(lang: Lang): Line[][] {
 }
 
 export class PogoStages extends PogoFigure {
-  static override fidelity = 'measured' as const;
-  static override game = 'gameLc12' as const;
   static override styles = replayCss + stagesCss;
   static override stageMinHeight = '760px';
 
@@ -112,28 +108,6 @@ export class PogoStages extends PogoFigure {
     v5: sharedV5,
   };
 
-  private source: string | undefined;
-  private asOf: string | undefined;
-  /** The stage shown, once the data is loaded. */
-  private shownStage: V5Stage | undefined;
-
-  /** The file the figure asks for until its data is loaded (and for good if that fails), then the data's own sources. */
-  protected override sourceFile(): string {
-    return this.source ?? V5_FILE;
-  }
-
-  protected override dataDate(): string | undefined {
-    return this.asOf;
-  }
-
-  /** What the score is measured on, and the shown stage's interval in words. */
-  protected override precisions(): string[] {
-    const lang = this.lang;
-    const lines = [t(lang, 'stagesBench')];
-    const s = this.shownStage;
-    if (s) lines.push(`${t(lang, 'stagesInterval')} ${formatInterval(lang, s.ci95)}.`);
-    return lines;
-  }
 
   protected async render(signal: AbortSignal): Promise<void> {
     const program = parseProgram(this.getAttribute('program'));
@@ -148,9 +122,6 @@ export class PogoStages extends PogoFigure {
     });
     // Every game is replayed before anything is drawn: one that ends otherwise than the data says fails the figure.
     const games = stages.map(stageFrames);
-    this.source = stagesSource(data, stages);
-    this.asOf = data.asOf;
-    this.refreshPrecisions();
 
     const el = <K extends keyof HTMLElementTagNameMap>(tag: K, className: string, text = ''): HTMLElementTagNameMap[K] => {
       const node = document.createElement(tag);
@@ -192,8 +163,6 @@ export class PogoStages extends PogoFigure {
       const w = stageWords(lang, program, stage);
       announce.textContent = [w.where, w.score, w.shown].join('. ');
       picker.set(String(stage.pct));
-      this.shownStage = stage;
-      this.refreshPrecisions();
       const view = replayView({
         lang,
         steps: frames,
