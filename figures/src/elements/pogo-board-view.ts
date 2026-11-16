@@ -4,7 +4,7 @@ import { SCREEN_ORDER, longestResult } from '../board-state';
 import { initial, type Colour } from '../engine';
 import { boardLabels } from '../kit/board-labels';
 import { drawBoard } from '../kit/board-svg';
-import { choiceGroup, controlButton, type ChoiceGroup } from '../kit/controls';
+import { choiceGroup, controlButton, iconControl, type ChoiceGroup } from '../kit/controls';
 import { colon, t, type Lang, type StringKey } from '../kit/strings';
 import { LEVELS, type Level } from '../store';
 
@@ -12,11 +12,22 @@ export type CountValue = '1' | '2' | '3';
 export const COLOURS: readonly Colour[] = ['White', 'Red'];
 export const colourKey = (c: Colour): StringKey => (c === 'White' ? 'white' : 'red');
 
+/** The follow board's controls: its bar, and the dot it shrinks to. */
+export interface PanelUi {
+  bar: HTMLElement;
+  status: HTMLElement;
+  /** Open ↔ bar, in words: « Réduire », « Ouvrir ». */
+  toggle: HTMLButtonElement;
+  toDot: HTMLButtonElement;
+  close: HTMLButtonElement;
+  /** The dot: one square that says what it is and reopens the board. */
+  dot: HTMLButtonElement;
+}
+
 export interface Ui {
   root: HTMLElement;
   body: HTMLElement;
-  barStatus?: HTMLElement;
-  toggle?: HTMLButtonElement;
+  panel?: PanelUi;
   caption: HTMLElement;
   /** The turn line, or the result, in one area two lines high. */
   status: HTMLElement;
@@ -57,8 +68,20 @@ export interface Handlers {
   /** Focus left the confirmation: back to « Nouvelle partie ». */
   cancelAbandon(): void;
   retry(): void;
+  /** The follow board: open ↔ bar. */
   toggle(): void;
+  toDot(): void;
+  close(): void;
+  /** The dot was pressed: the board opens. */
+  reopen(): void;
 }
+
+/** Shrink to a dot: a square, and a smaller one filled in its corner. */
+const DOT_ICON = 'M2.5 2.5h11v11h-11zM8.5 8.5h3v3h-3z';
+/** Close: a cross. */
+const CLOSE_ICON = 'M3.5 3.5l9 9M12.5 3.5l-9 9';
+/** The board itself: three by three squares. */
+const BOARD_ICON = 'M2 2h12v12H2zM6 2v12M10 2v12M2 6h12M2 10h12';
 
 /** « Vous gagnez. » as the stamp says it: the sentence without its full stop. */
 export const stamp = (you: string): string => you.replace(/\.$/, '');
@@ -76,15 +99,26 @@ export function buildView(lang: Lang, mode: 'inline' | 'follow', h: Handlers): U
   const body = el('div', 'body');
   body.id = 'board-body';
 
-  let barStatus: HTMLElement | undefined;
-  let toggle: HTMLButtonElement | undefined;
+  let panel: PanelUi | undefined;
   if (mode === 'follow') {
     const bar = el('div', 'bar');
-    barStatus = el('p', 'bar-status say');
-    toggle = controlButton(t(lang, 'collapse'), h.toggle, true);
+    const status = el('p', 'bar-status say');
+    const toggle = controlButton(t(lang, 'collapse'), h.toggle, true);
+    toggle.dataset.role = 'size';
     toggle.setAttribute('aria-controls', body.id);
-    bar.append(barStatus, toggle);
-    root.append(bar);
+    const toDot = iconControl(t(lang, 'boardToDot'), DOT_ICON, h.toDot);
+    toDot.dataset.role = 'dot-size';
+    const close = iconControl(t(lang, 'boardClose'), CLOSE_ICON, h.close);
+    close.dataset.role = 'close';
+    const actions = el('div', 'bar-actions');
+    actions.append(toggle, toDot, close);
+    bar.append(status, actions);
+    const dot = iconControl(t(lang, 'boardReopen'), BOARD_ICON, h.reopen);
+    dot.classList.add('dot');
+    dot.dataset.role = 'dot';
+    dot.hidden = true;
+    root.append(bar, dot);
+    panel = { bar, status, toggle, toDot, close, dot };
   }
 
   const caption = el('p', 'caption');
@@ -139,7 +173,7 @@ export function buildView(lang: Lang, mode: 'inline' | 'follow', h: Handlers): U
   });
   count.element.classList.add('counts');
 
-  // Side and level exist in the inline board only; the follow board shows the game.
+  // Side and level, for the next game: on the follow board too, which is the page's board.
   const side = choiceGroup<Colour>({
     label: t(lang, 'side'),
     id: 'side-label',
@@ -163,8 +197,7 @@ export function buildView(lang: Lang, mode: 'inline' | 'follow', h: Handlers): U
   const next = el('div', 'next');
   const row = el('div', 'controls');
   row.append(retry, newGame);
-  if (mode === 'inline') next.append(setup, summary);
-  next.append(row);
+  next.append(setup, summary, row);
 
   const moves = el('details', 'moves');
   const movesSummary = el('summary', 'label');
@@ -184,8 +217,7 @@ export function buildView(lang: Lang, mode: 'inline' | 'follow', h: Handlers): U
   return {
     root,
     body,
-    barStatus,
-    toggle,
+    panel,
     caption,
     status,
     turn,

@@ -68,12 +68,15 @@ const live = (el: PogoBoard) => $(el, '.sr').textContent;
 /** The « Nouvelle partie » buttons the reader can see: exactly one, wherever the game stands. */
 const shownNewGame = (el: PogoBoard) =>
   [...el.shadowRoot!.querySelectorAll<HTMLButtonElement>('[data-role="new-game"]')].filter((b) => b.closest('[hidden]') === null);
-/** Starts a new game; during a game that takes the second press, as the reader's would. */
+/** Starts a new game; during one that takes three presses, as the reader's would: ask, abandon, start. */
 const newGame = (el: PogoBoard) => {
   const shown = shownNewGame(el);
   expect(shown).toHaveLength(1);
   shown[0]!.click();
-  if (shown[0]!.textContent === 'Abandonner la partie\u202f?' || shown[0]!.textContent === 'Abandon this game?') shown[0]!.click();
+  if (shown[0]!.textContent === 'Abandonner la partie\u202f?' || shown[0]!.textContent === 'Abandon this game?') {
+    shown[0]!.click();
+    shownNewGame(el)[0]!.click();
+  }
 };
 const key = (target: Element, k: string) =>
   target.dispatchEvent(new KeyboardEvent('keydown', { key: k, bubbles: true, composed: true }));
@@ -358,11 +361,27 @@ describe('<pogo-board> inline', () => {
     button.click();
     button.dispatchEvent(new FocusEvent('blur'));
     expect(button.textContent).toBe('Nouvelle partie');
-    // Two presses in a row abandon the game for a new one.
+    // Two presses in a row abandon the game, and nothing starts until the reader asks.
     button.click();
     button.click();
-    expect(store.current()).not.toBe(start);
+    expect(store.current()).toBeNull();
     expect(store.lastFinished()).toBeNull();
+    expect($(el, '.setup').hidden).toBe(false);
+  });
+
+  // Regression: « Abandonner » started the next game at once, with the side and level of the last.
+  it('after « Abandonner », side and level can be chosen again before the next game', async () => {
+    const el = await mount('en');
+    newGame(el);
+    shownNewGame(el)[0]!.click();
+    shownNewGame(el)[0]!.click();
+    expect(store.current()).toBeNull();
+    expect($(el, '.setup').hidden).toBe(false);
+    expect($(el, '.turn').textContent).toBe('Choose your side and the level, then start a new game.');
+    $<HTMLButtonElement>(el, '.choice[data-value="Red"]').click();
+    $<HTMLButtonElement>(el, '.choice[data-value="hard"]').click();
+    shownNewGame(el)[0]!.click();
+    expect(store.current()).toMatchObject({ readerColour: 'Red', level: 'hard' });
   });
 
   it('the abandon question goes away when the game moves on, with no blur (Safari and Firefox do not focus a clicked button)', async () => {
@@ -409,7 +428,7 @@ describe('<pogo-board> inline', () => {
     expect($(el, '.status').nextElementSibling).toBe($(el, '.play'));
   });
 
-  it('a new game mid-way abandons the current one', async () => {
+  it('a new game mid-way abandons the current one, then starts afresh', async () => {
     const el = await mount('en');
     newGame(el);
     const [from, n, to] = firstLegal(store.current()!.states[0]!);
@@ -450,15 +469,15 @@ describe('<pogo-board mode="follow">', () => {
     const inline = await mount('fr');
     newGame(inline);
     const el = await mount('fr', { mode: 'follow' });
-    expect(el.shadowRoot!.querySelector('.setup')).toBeNull();
     expect($(el, '.bar-status').textContent).toBe('À vous de jouer\u00a0· Blanc');
     const toggle = $<HTMLButtonElement>(el, '.bar .control');
     // A game started on the inline board leaves it folded.
     expect(toggle.getAttribute('aria-expanded')).toBe('false');
     expect(toggle.textContent).toBe('Ouvrir');
     expect($(el, '.body').hidden).toBe(true);
-    expect(el.hasAttribute('data-collapsed')).toBe(true);
+    expect(el.dataset.size).toBe('bar');
     toggle.click();
+    expect(el.dataset.size).toBe('open');
     expect(toggle.getAttribute('aria-expanded')).toBe('true');
     expect(toggle.textContent).toBe('Réduire');
     expect($(el, '.body').hidden).toBe(false);
@@ -659,26 +678,124 @@ describe('<pogo-board mode="follow"> as a panel', () => {
     expect(css).toMatch(/\.bar \{[^}]*min-height: 44px;/);
     expect(css).not.toMatch(/animation|transition/);
     expect(css).not.toMatch(/data-collapsed/);
+    expect(css).toMatch(/:host\(\[data-closed\]\)/);
   });
 });
 
-describe('<pogo-board mode="follow"> is compact', () => {
-  it('holds the board, the count and the bar only; « Nouvelle partie » once the game is over', async () => {
+describe('<pogo-board mode="follow"> is the page’s board', () => {
+  const toggleOf = (el: PogoBoard) => $<HTMLButtonElement>(el, '[data-role="size"]');
+
+  it('is compact: no move list; « Nouvelle partie » all along, asking once during a game', async () => {
     reply = (_s, ply) => DEFAULT_GAME[ply]!;
     const el = await mount('fr', { mode: 'follow' });
     store.newGame('White', 'normal');
     await flush();
-    $<HTMLButtonElement>(el, '.bar .control').click();
+    toggleOf(el).click();
     expect(el.shadowRoot!.querySelector('details.moves')).toBeNull();
     expect(el.shadowRoot!.querySelector('.note')).toBeNull();
-    expect(el.shadowRoot!.querySelector('.setup')).toBeNull();
-    expect(shownNewGame(el)).toHaveLength(0);
+    expect(shownNewGame(el)).toHaveLength(1);
+    expect($(el, '.summary').textContent).toBe('Blanc · Normal');
     for (let ply = 0; ply < DEFAULT_GAME.length; ply += 2) {
       store.play(DEFAULT_GAME[ply]!);
       await flush();
     }
     expect($(el, '.bar-status').textContent).toBe('Blanc gagne');
+    // The game over, the next one is set up first.
+    expect($(el, '.setup').hidden).toBe(false);
     expect(shownNewGame(el)).toHaveLength(1);
+  });
+
+  // Regression: the follow board offered « Nouvelle partie » only once a game was over, and never the setup.
+  it('after « Abandonner », it stays, and offers side and level before the next game', async () => {
+    const el = await mount('en', { mode: 'follow' });
+    store.newGame('White', 'normal');
+    await flush();
+    toggleOf(el).click();
+    shownNewGame(el)[0]!.click();
+    expect(shownNewGame(el)[0]!.textContent).toBe('Abandon this game?');
+    shownNewGame(el)[0]!.click();
+    expect(store.current()).toBeNull();
+    expect(el.hasAttribute('data-idle')).toBe(false);
+    expect($(el, '.setup').hidden).toBe(false);
+    $<HTMLButtonElement>(el, '.choice[data-value="Red"]').click();
+    $<HTMLButtonElement>(el, '.choice[data-value="easy"]').click();
+    shownNewGame(el)[0]!.click();
+    expect(store.current()).toMatchObject({ readerColour: 'Red', level: 'easy' });
+  });
+
+  it('open() shows it with no game under way, unfolded on the setup, and moves focus into it', async () => {
+    const el = document.createElement('pogo-board') as PogoBoard;
+    el.setAttribute('mode', 'follow');
+    el.setAttribute('lang', 'fr');
+    document.body.append(el);
+    expect(el.hasAttribute('data-idle')).toBe(true);
+    // Called before it has rendered: it shows, then takes focus once drawn.
+    el.open();
+    expect(el.hasAttribute('data-idle')).toBe(false);
+    intersect(el);
+    await flush();
+    expect(el.dataset.size).toBe('open');
+    expect($(el, '.body').hidden).toBe(false);
+    expect($(el, '.setup').hidden).toBe(false);
+    expect(shownNewGame(el)).toHaveLength(1);
+    expect(el.shadowRoot!.activeElement).not.toBeNull();
+    expect(el.shadowRoot!.activeElement!.closest('.setup')).not.toBeNull();
+  });
+
+  it('three sizes, the reader’s: open, a bar, a dot of at most 48px that says what it is and reopens it', async () => {
+    const el = await mount('fr', { mode: 'follow' });
+    store.newGame('White', 'normal');
+    await flush();
+    const dotSize = $<HTMLButtonElement>(el, '[data-role="dot-size"]');
+    expect(dotSize.getAttribute('aria-label')).toBe('Réduire le plateau à une pastille');
+    expect(dotSize.querySelector('[role="tooltip"]')!.textContent).toBe('Réduire le plateau à une pastille');
+    dotSize.click();
+    expect(el.dataset.size).toBe('dot');
+    expect(store.followSize()).toBe('dot');
+    expect($(el, '.bar').hidden).toBe(true);
+    expect($(el, '.body').hidden).toBe(true);
+    const dot = $<HTMLButtonElement>(el, '[data-role="dot"]');
+    expect(dot.hidden).toBe(false);
+    expect(dot.getAttribute('aria-label')).toBe('Rouvrir le plateau de Pogo');
+    expect(el.shadowRoot!.activeElement).toBe(dot);
+    const css = readFileSync(resolve(process.cwd(), 'src/elements/pogo-board.css'), 'utf8');
+    const rule = /\.dot \{([^}]*)\}/.exec(css)![1]!;
+    const px = (p: string) => Number(new RegExp(`${p}: (\\d+)px`).exec(rule)![1]);
+    expect(px('width')).toBeLessThanOrEqual(48);
+    expect(px('height')).toBeLessThanOrEqual(48);
+    dot.click();
+    expect(el.dataset.size).toBe('open');
+    expect($(el, '.body').hidden).toBe(false);
+  });
+
+  it('the close control hides it until the next open() or the next position handed over', async () => {
+    const el = await mount('fr', { mode: 'follow' });
+    store.newGame('White', 'normal');
+    await flush();
+    const close = $<HTMLButtonElement>(el, '[data-role="close"]');
+    expect(close.getAttribute('aria-label')).toBe('Fermer le plateau');
+    close.click();
+    expect(el.hasAttribute('data-closed')).toBe(true);
+    store.play(firstLegal(store.current()!.states.at(-1)!));
+    await flush();
+    expect(el.hasAttribute('data-closed')).toBe(true);
+    el.open();
+    expect(el.hasAttribute('data-closed')).toBe(false);
+    close.click();
+    document.dispatchEvent(
+      new CustomEvent('pogo:playfrom', { detail: { state: replay(DEFAULT_GAME.slice(0, 2)).at(-1)!, label: 'coup 2' } }),
+    );
+    await flush();
+    expect(el.hasAttribute('data-closed')).toBe(false);
+    expect(el.dataset.size).toBe('open');
+  });
+
+  it('an inline board keeps working, and open() on it takes focus to its board', async () => {
+    const el = await mount('fr');
+    expect(el.hasAttribute('data-idle')).toBe(false);
+    expect(el.shadowRoot!.querySelector('.bar')).toBeNull();
+    el.open();
+    expect(el.shadowRoot!.activeElement).not.toBeNull();
   });
 });
 

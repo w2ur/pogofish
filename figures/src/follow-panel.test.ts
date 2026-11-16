@@ -1,28 +1,35 @@
 import { afterEach, describe, expect, it } from 'vitest';
-import { FOLLOW_OPEN_DEFAULT, escapeAction, followShown, openAtStart, watchInlineBoards, type ObserverCtor } from './follow-panel';
+import { FOLLOW_SIZE_DEFAULT, escapeAction, followShown, isFollowSize, sizeAtStart, watchInlineBoards, type ObserverCtor } from './follow-panel';
 
-describe('the follow board, open or folded', () => {
-  it('starts folded; a game started on a board keeps the reader’s choice, a figure’s « Jouer cette position contre l’ordinateur » opens it', () => {
-    expect(FOLLOW_OPEN_DEFAULT).toBe(false);
-    expect(openAtStart(FOLLOW_OPEN_DEFAULT, 'board')).toBe(false);
-    expect(openAtStart(true, 'board')).toBe(true);
-    expect(openAtStart(FOLLOW_OPEN_DEFAULT, 'figure')).toBe(true);
-    expect(openAtStart(true, 'figure')).toBe(true);
+describe('the follow board, its size and its close', () => {
+  it('starts as a bar; a game started on a board keeps the reader’s size, a figure’s « Jouer cette position contre l’ordinateur » opens it', () => {
+    expect(FOLLOW_SIZE_DEFAULT).toBe('bar');
+    expect(sizeAtStart('bar', 'board')).toBe('bar');
+    expect(sizeAtStart('dot', 'board')).toBe('dot');
+    expect(sizeAtStart('open', 'board')).toBe('open');
+    for (const size of ['open', 'bar', 'dot'] as const) expect(sizeAtStart(size, 'figure')).toBe('open');
+    expect(['open', 'bar', 'dot'].every(isFollowSize)).toBe(true);
+    expect(isFollowSize('folded')).toBe(false);
   });
 
-  it('is shown only with a game, and gives way to an inline board on screen unless it holds focus', () => {
-    expect(followShown({ game: false, inlineOnScreen: false, focusInside: false })).toBe(false);
-    expect(followShown({ game: true, inlineOnScreen: false, focusInside: false })).toBe(true);
-    expect(followShown({ game: true, inlineOnScreen: true, focusInside: false })).toBe(false);
-    expect(followShown({ game: true, inlineOnScreen: true, focusInside: true })).toBe(true);
+  it('is shown with a game, or once the page opened it; never once closed; and gives way to an inline board on screen unless it holds focus', () => {
+    const base = { game: true, summoned: false, closed: false, inlineOnScreen: false, focusInside: false };
+    expect(followShown({ ...base, game: false })).toBe(false);
+    expect(followShown({ ...base, game: false, summoned: true })).toBe(true);
+    expect(followShown(base)).toBe(true);
+    expect(followShown({ ...base, closed: true })).toBe(false);
+    expect(followShown({ ...base, closed: true, summoned: true, focusInside: true })).toBe(false);
+    expect(followShown({ ...base, inlineOnScreen: true })).toBe(false);
+    expect(followShown({ ...base, inlineOnScreen: true, focusInside: true })).toBe(true);
   });
 
-  it('Escape puts the abandon question away first, then a lifted stack, then folds an open follow board', () => {
-    const base = { confirming: false, lifted: false, follow: true, open: true };
+  it('Escape puts the abandon question away first, then a lifted stack, then folds an open follow board to its bar', () => {
+    const base = { confirming: false, lifted: false, follow: true, size: 'open' as const };
     expect(escapeAction({ ...base, confirming: true, lifted: true })).toBe('keep-game');
     expect(escapeAction({ ...base, lifted: true })).toBe('put-down');
     expect(escapeAction(base)).toBe('fold');
-    expect(escapeAction({ ...base, open: false })).toBe('none');
+    expect(escapeAction({ ...base, size: 'bar' })).toBe('none');
+    expect(escapeAction({ ...base, size: 'dot' })).toBe('none');
     // An inline board has nothing to fold.
     expect(escapeAction({ ...base, follow: false })).toBe('none');
   });

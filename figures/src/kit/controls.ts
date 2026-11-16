@@ -62,13 +62,21 @@ const PAUSE = 'M3.5 2.5h3v11h-3zM9.5 2.5h3v11h-3z';
 /** Replay: an open circle and its arrowhead, stroked like the chevrons. */
 const REPLAY = 'M12.5 8a4.5 4.5 0 1 1-1.32-3.18M11.5 1.5v3.5H8';
 
-function iconButton(direction: 'left' | 'right', label: string, onClick: () => void): HTMLButtonElement {
+/**
+ * A square icon control of the kit's size: its `label`, a full verb phrase, is its
+ * accessible name and its tooltip (labelTip). `d` is a 16-unit path, stroked.
+ */
+export function iconControl(label: string, d: string, onClick: () => void): HTMLButtonElement {
   const b = controlButton('', onClick, true);
   b.classList.add('icon');
   b.setAttribute('aria-label', label);
-  b.append(icon('chevron', CHEVRON[direction]));
+  b.append(icon('chevron', d));
   labelTip(b, label);
   return b;
+}
+
+function iconButton(direction: 'left' | 'right', label: string, onClick: () => void): HTMLButtonElement {
+  return iconControl(label, CHEVRON[direction], onClick);
 }
 
 /**

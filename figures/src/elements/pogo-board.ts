@@ -1,10 +1,12 @@
 // <pogo-board>: the reader plays Pogo against the AlphaZero net. `mode="inline"`
-// is the full figure (side, level, new game); `mode="follow"` is the compact
-// board bound to the same game: an opaque panel the page fixes to a corner,
-// shown once a game is under way, folded to its bar until the reader opens it,
-// and hidden while an inline board is on screen (follow-panel.ts). Every board
-// shows the store's one game; the driver plays the AI's side once for the
-// page. The choices come from board-state.ts, never from the DOM.
+// is the full figure; `mode="follow"` is the page's board, compact and bound to
+// the same game: an opaque panel the page fixes to a corner, shown once a game is
+// under way or once the page calls open(), in three sizes the reader chooses
+// (open, a bar, a dot), closable, and hidden while an inline board is on screen
+// (follow-panel.ts). Both offer side and level before each game, and « Nouvelle
+// partie » asks once before abandoning one, which then leaves the setup for the
+// next. Every board shows the store's one game; the driver plays the AI's side
+// once for the page. The choices come from board-state.ts, never from the DOM.
 import {
   announceMove,
   chooseCount,
@@ -19,7 +21,7 @@ import {
   type Selection,
 } from '../board-state';
 import { createDriver, type Driver } from '../driver';
-import { escapeAction, followShown, watchInlineBoards, type ObserverCtor } from '../follow-panel';
+import { escapeAction, followShown, watchInlineBoards, type FollowSize, type ObserverCtor } from '../follow-panel';
 import { initial, legal, type Move, type State, type Triple } from '../engine';
 import { animateMove, drawBoard } from '../kit/board-svg';
 import { PogoFigure, kitSheet } from '../kit/figure';
@@ -67,6 +69,10 @@ export class PogoBoard extends PogoFigure {
   /** The game and ply this board last heard, shown or not: a board that shows again never reads back what it heard hidden. */
   private heard: { start: State; ply: number } | undefined;
   private drawn = '';
+  /** A follow board the page opened (open()), or whose game the reader abandoned: shown with no game. */
+  private summoned = false;
+  /** open() was called before the board was drawn: focus goes in once it is. */
+  private focusWhenDrawn = false;
 
   private get mode(): 'inline' | 'follow' {
     return this.getAttribute('mode') === 'follow' ? 'follow' : 'inline';
@@ -83,13 +89,7 @@ export class PogoBoard extends PogoFigure {
     if (this.mode !== 'follow') return;
     this.stage.style.setProperty('--_stage-min', '0px');
     const { store: s } = this.deps;
-    const sync = (): void => {
-      const game = s.current() !== null;
-      this.toggleAttribute('data-idle', !game);
-      // Out of the page while an inline board is on screen, unless focus is inside it.
-      const focusInside = this.shadowRoot!.activeElement !== null;
-      this.toggleAttribute('data-yield', game && !followShown({ game, inlineOnScreen: this.inlineOnScreen, focusInside }));
-    };
+    const sync = (): void => this.syncPanel();
     const inline = watchInlineBoards(
       this.ownerDocument,
       (on) => {
@@ -120,6 +120,71 @@ export class PogoBoard extends PogoFigure {
     if (s.current() === null && s.hasSaved()) s.ready().catch(() => undefined);
   }
 
+  /**
+   * Shows the board and moves focus into it. A follow board is shown even with no game
+   * under way (it then offers the setup), unclosed and open; focus goes to the setup, or
+   * to the board during a game. Before the board is drawn, focus goes in once it is.
+   */
+  open(): void {
+    if (this.mode === 'follow') {
+      const { store: s } = this.deps;
+      this.summoned = true;
+      s.setFollowClosed(false);
+      s.setFollowSize('open');
+      this.syncPanel();
+      // The engine, and a saved game with it, as early as possible: render waits for them.
+      s.ready().catch(() => undefined);
+    }
+    if (!this.ui) {
+      this.focusWhenDrawn = true;
+      return;
+    }
+    this.update();
+    this.focusInside();
+  }
+
+  /** Whether a follow board shows, and how big: its host attributes, read by its sheet and the page. */
+  private syncPanel(): void {
+    if (this.mode !== 'follow') return;
+    const s = this.deps.store;
+    const game = s.current() !== null;
+    const closed = s.followClosed();
+    // Out of the page with nothing to show, or closed by the reader.
+    const idle = closed || (!game && !this.summoned);
+    this.toggleAttribute('data-idle', idle);
+    this.toggleAttribute('data-closed', closed);
+    // Out of the page while an inline board is on screen, unless focus is inside it.
+    const focusInside = this.shadowRoot!.activeElement !== null;
+    this.toggleAttribute(
+      'data-yield',
+      !idle && !followShown({ game, summoned: this.summoned, closed, inlineOnScreen: this.inlineOnScreen, focusInside }),
+    );
+    this.dataset.size = s.followSize();
+  }
+
+  /** Focus into the board: the setup with no game under way, else the board's cells. */
+  private focusInside(): void {
+    const ui = this.ui;
+    if (!ui) return;
+    const g = this.deps.store.current();
+    if (!g || g.finished) {
+      const stop = ui.side.buttons.find((b) => b.tabIndex === 0) ?? ui.side.buttons[0];
+      stop?.focus();
+      return;
+    }
+    ui.cells[this.focusCell]?.focus();
+  }
+
+  private setSize(size: FollowSize): void {
+    this.deps.store.setFollowSize(size);
+    this.update();
+    const panel = this.ui?.panel;
+    if (!panel) return;
+    // Shrunk to its dot, the board keeps focus on it, pressed by a click that focused nothing (Safari) or by a key.
+    // Any other control that went away hands focus on in update() (repairFocus).
+    if (size === 'dot') panel.dot.focus();
+  }
+
   protected async render(signal: AbortSignal): Promise<void> {
     const { store: s } = this.deps;
     await s.ready();
@@ -139,8 +204,12 @@ export class PogoBoard extends PogoFigure {
         this.update();
       },
       retry: () => this.deps.driver().retry(),
-      toggle: () => {
-        this.deps.store.setFollowOpen(!this.deps.store.followOpen());
+      toggle: () => this.setSize(this.deps.store.followSize() === 'open' ? 'bar' : 'open'),
+      toDot: () => this.setSize('dot'),
+      reopen: () => this.setSize('open'),
+      close: () => {
+        this.summoned = false;
+        this.deps.store.setFollowClosed(true);
         this.update();
       },
     });
@@ -168,16 +237,30 @@ export class PogoBoard extends PogoFigure {
       { once: true },
     );
     this.update();
+    if (this.focusWhenDrawn) {
+      this.focusWhenDrawn = false;
+      this.focusInside();
+    }
   }
 
-  /** With no game under way, starts one; during one, asks first (« Abandonner la partie ? »), then abandons it. */
+  /**
+   * With no game under way, starts one. During one, asks first (« Abandonner la
+   * partie ? »), then abandons it: no game starts, so side and level can be chosen
+   * before the next (a follow board stays shown for that).
+   */
   private newGame(): void {
     const g = this.deps.store.current();
-    if (g && !g.finished && !this.confirming) {
-      this.confirming = true;
-      this.update();
-      // The button's name changes under focus; the live region says it too.
-      if (this.ui) this.ui.live.textContent = t(this.lang, 'abandon');
+    if (g && !g.finished) {
+      if (!this.confirming) {
+        this.confirming = true;
+        this.update();
+        // The button's name changes under focus; the live region says it too.
+        if (this.ui) this.ui.live.textContent = t(this.lang, 'abandon');
+        return;
+      }
+      this.confirming = false;
+      if (this.mode === 'follow') this.summoned = true;
+      this.deps.store.abandon();
       return;
     }
     this.confirming = false;
@@ -232,7 +315,7 @@ export class PogoBoard extends PogoFigure {
             confirming: this.confirming,
             lifted: this.selection !== null,
             follow: this.mode === 'follow',
-            open: this.deps.store.followOpen(),
+            size: this.deps.store.followSize(),
           })
         : 'none';
     if (escape === 'keep-game') {
@@ -246,7 +329,7 @@ export class PogoBoard extends PogoFigure {
     } else if (escape === 'fold') {
       // Folding hides the body: repairFocus() hands focus to the toggle if it was there.
       e.preventDefault();
-      this.deps.store.setFollowOpen(false);
+      this.deps.store.setFollowSize('bar');
       this.update();
     } else if (['1', '2', '3'].includes(e.key) && this.selection !== null) {
       e.preventDefault();
@@ -325,23 +408,22 @@ export class PogoBoard extends PogoFigure {
     ui.summary.textContent = underWay ? `${t(lang, colourKey(g.readerColour))} · ${t(lang, g.level)}` : '';
     ui.newGame.textContent = t(lang, this.confirming ? 'abandon' : 'newGame');
     ui.newGame.classList.toggle('secondary', underWay);
-    // The follow board offers a new game only once this one is over.
-    ui.newGame.hidden = this.mode === 'follow' && !g?.finished;
-    // An empty row still costs its gap: the compact board drops what it does not show.
-    if (this.mode === 'follow') {
-      ui.status.hidden = true;
-      ui.next.hidden = ui.newGame.hidden && ui.retry.hidden;
-    }
+    // The compact board says the turn in its bar.
+    if (this.mode === 'follow') ui.status.hidden = true;
 
-    // Follow bar: whose turn, and the reader's open or folded, which no move changes.
-    if (ui.barStatus && ui.toggle) {
-      const open = st.followOpen();
+    // Follow bar: whose turn, and the reader's size, which no move changes.
+    const panel = ui.panel;
+    if (panel) {
+      const size = st.followSize();
       // The colour stays with its separator when the narrow bar wraps the line.
-      ui.barStatus.textContent = result ? result.who : line.replace(' · ', '\u00a0· ');
-      ui.toggle.textContent = t(lang, open ? 'collapse' : 'expand');
-      ui.toggle.setAttribute('aria-expanded', String(open));
-      ui.body.hidden = !open;
-      this.toggleAttribute('data-collapsed', !open);
+      panel.status.textContent = result ? result.who : line.replace(' · ', '\u00a0· ');
+      panel.toggle.textContent = t(lang, size === 'open' ? 'collapse' : 'expand');
+      panel.toggle.setAttribute('aria-expanded', String(size === 'open'));
+      ui.body.hidden = size !== 'open';
+      panel.bar.hidden = size === 'dot';
+      panel.dot.hidden = size !== 'dot';
+      ui.root.dataset.size = size;
+      this.syncPanel();
     }
 
     // The moves so far, as text.
@@ -453,7 +535,8 @@ export class PogoBoard extends PogoFigure {
     if (!active) return;
     const gone = active.closest('[hidden], [data-off]') !== null || (active as HTMLButtonElement).disabled === true;
     if (!gone) return;
-    if (ui.body.hidden) ui.toggle?.focus();
+    if (ui.panel && !ui.panel.dot.hidden) ui.panel.dot.focus();
+    else if (ui.body.hidden) ui.panel?.toggle.focus();
     else ui.cells[this.focusCell]?.focus();
   }
 }

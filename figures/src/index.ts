@@ -21,6 +21,19 @@ export function defineAll(): void {
   document.addEventListener('pogo:playfrom', () => h.wake('pogo-board'));
 }
 
+/**
+ * Opens the page's board: the follow board if the page has one, else the first board.
+ * A follow board with no game waits undefined (registry.ts), so this asks for its module
+ * first, then calls its open(): what the essay's « vous pouvez jouer ici » does.
+ */
+export async function openBoard(): Promise<void> {
+  if (typeof document === 'undefined') return;
+  handle?.wake('pogo-board');
+  await customElements.whenDefined('pogo-board');
+  const board = document.querySelector('pogo-board[mode="follow"]') ?? document.querySelector('pogo-board');
+  (board as (Element & { open?: () => void }) | null)?.open?.();
+}
+
 /** Imports and defines every element now, whatever the page holds: the eager path, for tests and tools. */
 export async function loadAll(): Promise<void> {
   await Promise.all(

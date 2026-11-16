@@ -5,7 +5,7 @@
 import { DEFAULT_GAME } from './default-game';
 import { assetUrl, WASM_FILE } from './assets';
 import { LC1_2, initial, legal, play, ready, terminal, winner, type Colour, type State, type Triple } from './engine';
-import { FOLLOW_OPEN_DEFAULT, openAtStart } from './follow-panel';
+import { FOLLOW_SIZE_DEFAULT, isFollowSize, sizeAtStart, type FollowSize } from './follow-panel';
 import type { PlayFromDetail } from './kit/figure';
 import { holdsGame, STORAGE_KEY } from './saved';
 
@@ -47,6 +47,11 @@ export interface Store {
   ready(): Promise<void>;
   /** Abandons any game under way and starts one from the initial position. */
   newGame(readerColour: Colour, level: Level): void;
+  /**
+   * Ends the game under way without starting another, so that side and level can be
+   * chosen first. An abandoned game is not a finished one: `lastFinished` keeps its own.
+   */
+  abandon(): void;
   /** Plays `m` in the current game; throws if there is none, it is over, or `m` is not legal. */
   play(m: Triple): void;
   /**
@@ -64,13 +69,16 @@ export interface Store {
    */
   hasSaved(): boolean;
   /**
-   * Whether the follow board is open rather than folded to its bar: the reader's
-   * choice, kept in the storage record for the page's session. Folded by default;
-   * `playFrom` opens it, `newGame` and moves leave it (follow-panel.ts).
+   * The follow board's size, open, bar or dot: the reader's choice, kept in the storage
+   * record for the page's session. A bar by default; `playFrom` opens it, `newGame`
+   * and moves leave it (follow-panel.ts).
    */
-  followOpen(): boolean;
-  /** The reader opened or folded the follow board. */
-  setFollowOpen(open: boolean): void;
+  followSize(): FollowSize;
+  /** The reader chose a size for the follow board. */
+  setFollowSize(size: FollowSize): void;
+  /** Whether the reader closed the follow board: hidden until it is opened again, or a figure hands a position over. */
+  followClosed(): boolean;
+  setFollowClosed(closed: boolean): void;
 }
 
 /** The part of `Storage` the store uses. */
@@ -94,7 +102,9 @@ interface SavedFile {
   current: Saved | null;
   lastFinished: Saved | null;
   prefs: { readerColour: Colour; level: Level };
-  /** The follow board is open; absent in a record written before it existed, which restores folded. */
+  followSize?: FollowSize;
+  followClosed?: boolean;
+  /** Before followSize: true restores open, anything else a bar. */
   followOpen?: boolean;
 }
 
@@ -196,7 +206,8 @@ export function createStore(o: StoreOptions): Store {
   let current: GameRecord | null = null;
   let last: GameRecord | null = null;
   let prefs: { readerColour: Colour; level: Level } = { readerColour: 'White', level: 'normal' };
-  let followOpen = FOLLOW_OPEN_DEFAULT;
+  let followSize: FollowSize = FOLLOW_SIZE_DEFAULT;
+  let followClosed = false;
   let restored = false;
   let readyPromise: Promise<void> | undefined;
 
@@ -218,7 +229,8 @@ export function createStore(o: StoreOptions): Store {
       current: current && toSaved(current),
       lastFinished: last && toSaved(last),
       prefs,
-      followOpen,
+      followSize,
+      followClosed,
     };
     try {
       o.storage?.setItem(STORAGE_KEY, JSON.stringify(file));
@@ -242,7 +254,8 @@ export function createStore(o: StoreOptions): Store {
     if (typeof file !== 'object' || file === null || file.v !== 1) return;
     const p = file.prefs;
     if (p && isColour(p.readerColour) && isLevel(p.level)) prefs = { readerColour: p.readerColour, level: p.level };
-    followOpen = file.followOpen === true;
+    followSize = isFollowSize(file.followSize) ? file.followSize : file.followOpen === true ? 'open' : FOLLOW_SIZE_DEFAULT;
+    followClosed = file.followClosed === true;
     try {
       const lastFinished = file.lastFinished ? rebuild(file.lastFinished) : null;
       if (lastFinished?.finished) last = lastFinished;
@@ -283,12 +296,20 @@ export function createStore(o: StoreOptions): Store {
     hasSaved() {
       return holdsGame(read());
     },
-    followOpen: () => followOpen,
+    followSize: () => followSize,
+    followClosed: () => followClosed,
 
-    setFollowOpen(open) {
+    setFollowSize(size) {
       restore();
-      if (open === followOpen) return;
-      followOpen = open;
+      if (size === followSize) return;
+      followSize = size;
+      write();
+    },
+
+    setFollowClosed(closed) {
+      restore();
+      if (closed === followClosed) return;
+      followClosed = closed;
       write();
     },
 
@@ -305,8 +326,16 @@ export function createStore(o: StoreOptions): Store {
     newGame(readerColour, level) {
       restore();
       prefs = { readerColour, level };
-      followOpen = openAtStart(followOpen, 'board');
+      followSize = sizeAtStart(followSize, 'board');
       begin(initial(), readerColour, level);
+      changed();
+    },
+
+    abandon() {
+      restore();
+      if (current === null) return;
+      // Unfinished, so changed() does not take it for the last finished game.
+      current = null;
       changed();
     },
 
@@ -314,7 +343,8 @@ export function createStore(o: StoreOptions): Store {
       if (!isStateShape(s) || terminal(s, LC1_2)) return;
       restore();
       prefs = { ...prefs, readerColour: s.to_move };
-      followOpen = openAtStart(followOpen, 'figure');
+      followSize = sizeAtStart(followSize, 'figure');
+      followClosed = false;
       begin(s, s.to_move, prefs.level, label);
       changed();
       emit('playfrom');

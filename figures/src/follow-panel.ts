@@ -1,37 +1,46 @@
 // What the follow board (<pogo-board mode="follow">) decides about itself, apart
-// from the board: whether it is open or folded to its bar, whether it is shown
-// at all, and what Escape does. It is a small panel fixed to a corner of the
-// page, so it starts folded, opens only when the reader asks for a board, and
-// gives way to an inline board on screen.
+// from the board: its size, whether it is shown at all, and what Escape does. It
+// is the page's one board, a small panel fixed to a corner: it comes in three
+// sizes, the reader's choice (open: board and controls; bar: one line; dot: one
+// small square that reopens it), and it can be closed. It shows with a game
+// under way, or once the page opens it (open()) with none, and gives way to an
+// inline board on screen.
 //
-// Open or folded is the reader's choice and lasts for the page's session: the
-// store keeps it in its storage record, beside the saved game (store.ts), so a
-// reload restores it, and a follow board defined late (woken by a figure's
-// « Jouer cette position contre l’ordinateur ») finds the state the event already set. Moves and the AI's
-// replies never change it.
+// Size and close are the reader's choice and last for the page's session: the
+// store keeps them in its storage record, beside the saved game (store.ts), so a
+// reload restores them, and a follow board defined late (woken by a figure's
+// « Jouer cette position contre l’ordinateur ») finds the state the event already
+// set. Moves and the AI's replies never change them.
 
 /** How a game started: on a board (inline, or the follow board's own « Nouvelle partie »), or from a figure's « Jouer cette position contre l’ordinateur ». */
 export type FollowStart = 'board' | 'figure';
 
-/** Folded until the reader opens it, or a figure hands a position over. */
-export const FOLLOW_OPEN_DEFAULT = false;
+/** Open: the board and its controls; bar: one line, the turn and the controls; dot: one small square that reopens it. */
+export type FollowSize = 'open' | 'bar' | 'dot';
+export const FOLLOW_SIZES: readonly FollowSize[] = ['open', 'bar', 'dot'];
+export const isFollowSize = (x: unknown): x is FollowSize => FOLLOW_SIZES.includes(x as FollowSize);
+
+/** A bar until the reader opens it, or a figure hands a position over. */
+export const FOLLOW_SIZE_DEFAULT: FollowSize = 'bar';
 
 /**
- * Whether the follow board is open once a game starts. A figure's « Jouer cette position contre l’ordinateur »
- * opens it: the reader asked for a board and may be far from the inline one. A
- * game started on a board keeps the reader's last choice (folded by default).
+ * The follow board's size once a game starts. A figure's « Jouer cette position
+ * contre l’ordinateur » opens it: the reader asked for a board. A game started on
+ * a board keeps the reader's last choice.
  */
-export function openAtStart(open: boolean, how: FollowStart): boolean {
-  return how === 'figure' ? true : open;
+export function sizeAtStart(size: FollowSize, how: FollowStart): FollowSize {
+  return how === 'figure' ? 'open' : size;
 }
 
 /**
- * Whether the follow board is shown. Not without a game; not while an inline board
- * of the same document is on screen (two boards of one game side by side are noise),
+ * Whether the follow board is shown. Not once the reader closed it; not with no
+ * game, unless the page opened it (`summoned`); not while an inline board of the
+ * same document is on screen (two boards of one game side by side are noise),
  * unless focus is inside it: hiding a focused panel would move focus by itself.
  */
-export function followShown(o: { game: boolean; inlineOnScreen: boolean; focusInside: boolean }): boolean {
-  if (!o.game) return false;
+export function followShown(o: { game: boolean; summoned: boolean; closed: boolean; inlineOnScreen: boolean; focusInside: boolean }): boolean {
+  if (o.closed) return false;
+  if (!o.game && !o.summoned) return false;
   return !o.inlineOnScreen || o.focusInside;
 }
 
@@ -39,12 +48,12 @@ export type EscapeAction = 'keep-game' | 'put-down' | 'fold' | 'none';
 
 /**
  * What Escape does, nearest first: it puts away the abandon question, then a
- * lifted stack, then, on an open follow board, folds it. Folded, it does nothing.
+ * lifted stack, then, on an open follow board, folds it to its bar. A bar or a dot it leaves.
  */
-export function escapeAction(o: { confirming: boolean; lifted: boolean; follow: boolean; open: boolean }): EscapeAction {
+export function escapeAction(o: { confirming: boolean; lifted: boolean; follow: boolean; size: FollowSize }): EscapeAction {
   if (o.confirming) return 'keep-game';
   if (o.lifted) return 'put-down';
-  if (o.follow && o.open) return 'fold';
+  if (o.follow && o.size === 'open') return 'fold';
   return 'none';
 }
 

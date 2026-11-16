@@ -135,68 +135,118 @@ describe('the store', () => {
   });
 });
 
-describe('the follow board’s open or folded', () => {
-  it('is folded by default; a game started on a board leaves it, a figure’s playFrom opens it', () => {
+describe('the follow board’s size and its close', () => {
+  it('is a bar by default; a game started on a board leaves its size, a figure’s playFrom opens it', () => {
     const store = make();
-    expect(store.followOpen()).toBe(false);
+    expect(store.followSize()).toBe('bar');
     store.newGame('White', 'normal');
-    expect(store.followOpen()).toBe(false);
+    expect(store.followSize()).toBe('bar');
+    store.setFollowSize('dot');
+    store.newGame('Red', 'easy');
+    expect(store.followSize()).toBe('dot');
     store.playFrom(replay(DEFAULT_GAME.slice(0, 2)).at(-1)!, 'coup 2');
-    expect(store.followOpen()).toBe(true);
+    expect(store.followSize()).toBe('open');
   });
 
-  it('the reader’s choice survives ten moves and the next game started on a board', () => {
+  it('the reader’s size survives ten moves and the next game started on a board', () => {
     const store = make();
     store.newGame('White', 'normal');
-    store.setFollowOpen(true);
+    store.setFollowSize('open');
     // Ten plies, each side's: moves and replies alike leave it.
     for (let ply = 0; ply < 10; ply++) {
       store.play(lasting(store.current()!.states.at(-1)!));
-      expect(store.followOpen()).toBe(true);
+      expect(store.followSize()).toBe('open');
     }
     expect(store.current()!.finished).toBe(false);
     store.newGame('Red', 'easy');
-    expect(store.followOpen()).toBe(true);
-    store.setFollowOpen(false);
-    store.playFrom(replay(DEFAULT_GAME.slice(0, 2)).at(-1)!, 'coup 2');
-    expect(store.followOpen()).toBe(true);
+    expect(store.followSize()).toBe('open');
   });
 
-  it('is kept in the storage record, and a record without it restores folded', async () => {
+  it('closed, it stays closed through moves and new games, until a figure hands a position over', () => {
+    const store = make();
+    store.newGame('White', 'normal');
+    store.setFollowClosed(true);
+    store.play(lasting(store.current()!.states.at(-1)!));
+    store.newGame('White', 'normal');
+    expect(store.followClosed()).toBe(true);
+    store.playFrom(replay(DEFAULT_GAME.slice(0, 2)).at(-1)!, 'coup 2');
+    expect(store.followClosed()).toBe(false);
+  });
+
+  it('size and close are kept in the storage record; a record without them restores a bar, open if it said so', async () => {
     const storage = memory();
     const first = make(storage);
     first.newGame('White', 'normal');
-    first.setFollowOpen(true);
-    expect(JSON.parse(storage.data.get(STORAGE_KEY)!).followOpen).toBe(true);
+    first.setFollowSize('dot');
+    first.setFollowClosed(true);
+    const saved = JSON.parse(storage.data.get(STORAGE_KEY)!);
+    expect(saved.followSize).toBe('dot');
+    expect(saved.followClosed).toBe(true);
     const second = make(storage);
     await second.ready();
-    expect(second.followOpen()).toBe(true);
+    expect(second.followSize()).toBe('dot');
+    expect(second.followClosed()).toBe(true);
 
-    first.setFollowOpen(false);
-    const third = make(storage);
-    await third.ready();
-    expect(third.followOpen()).toBe(false);
-
-    // A record written before the field existed: the game comes back, folded.
-    const old = JSON.parse(storage.data.get(STORAGE_KEY)!);
-    old.followOpen = undefined;
-    storage.setItem(STORAGE_KEY, JSON.stringify({ ...old, followOpen: undefined }));
-    expect(storage.data.get(STORAGE_KEY)).not.toContain('followOpen');
+    // A record written before them: folded is a bar, open stays open.
+    for (const [old, size] of [
+      [false, 'bar'],
+      [true, 'open'],
+    ] as const) {
+      const record = { ...saved, followOpen: old, followSize: undefined, followClosed: undefined };
+      storage.setItem(STORAGE_KEY, JSON.stringify(record));
+      const third = make(storage);
+      await third.ready();
+      expect(third.current()).not.toBeNull();
+      expect(third.followSize()).toBe(size);
+      expect(third.followClosed()).toBe(false);
+    }
+    // A size the store does not know restores a bar.
+    storage.setItem(STORAGE_KEY, JSON.stringify({ ...saved, followSize: 'huge' }));
     const fourth = make(storage);
     await fourth.ready();
-    expect(fourth.current()).not.toBeNull();
-    expect(fourth.followOpen()).toBe(false);
+    expect(fourth.followSize()).toBe('bar');
   });
 
-  it('opening it before ready() does not lose the saved game, and the choice wins over the record', async () => {
+  it('choosing a size before ready() does not lose the saved game, and the choice wins over the record', async () => {
     const storage = memory();
     const first = make(storage);
     first.newGame('White', 'normal');
     const second = make(storage);
-    second.setFollowOpen(true);
+    second.setFollowSize('open');
     await second.ready();
     expect(second.current()).not.toBeNull();
-    expect(second.followOpen()).toBe(true);
+    expect(second.followSize()).toBe('open');
+  });
+});
+
+describe('abandon', () => {
+  // Regression: the abandon left no way to choose side and level before the next game.
+  it('ends the game under way without starting another, so the next one can be set up first', () => {
+    const store = make();
+    const heard = vi.fn();
+    store.on('game', heard);
+    store.newGame('White', 'normal');
+    store.play(lasting(store.current()!.states.at(-1)!));
+    heard.mockClear();
+    store.abandon();
+    expect(store.current()).toBeNull();
+    expect(heard).toHaveBeenCalledTimes(1);
+    // An abandoned game is not a finished one: the figures that read lastFinished keep theirs.
+    expect(store.lastFinished()).toBeNull();
+    store.setReaderColour('Red');
+    store.setLevel('hard');
+    store.newGame(store.preferences().readerColour, store.preferences().level);
+    expect(store.current()).toMatchObject({ readerColour: 'Red', level: 'hard' });
+  });
+
+  it('is kept: a reload does not bring the abandoned game back', async () => {
+    const storage = memory();
+    const first = make(storage);
+    first.newGame('White', 'normal');
+    first.abandon();
+    const second = make(storage);
+    await second.ready();
+    expect(second.current()).toBeNull();
   });
 });
 

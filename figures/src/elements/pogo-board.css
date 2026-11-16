@@ -4,9 +4,11 @@
  */
 
 /*
- * A follow board waits, out of the page, until a game is under way, and gives
- * way while an inline board is on screen (follow-panel.ts).
+ * A follow board waits, out of the page, until a game is under way or the page
+ * opens it, stays out once the reader closes it, and gives way while an inline
+ * board is on screen (follow-panel.ts).
  */
+:host([data-closed]),
 :host([data-idle]),
 :host([data-yield]) {
   display: none;
@@ -138,10 +140,42 @@
 
 .bar {
   display: flex;
+  flex-wrap: wrap;
   min-height: 44px;
   align-items: center;
   justify-content: space-between;
   gap: 8px;
+}
+
+.bar-actions {
+  display: flex;
+  gap: 8px;
+  margin-left: auto;
+}
+
+.bar[hidden],
+.dot[hidden] {
+  display: none;
+}
+
+/*
+ * The smallest size: one square in the page's corner that says what it is and
+ * reopens the board. The panel gives up its frame; the square keeps the kit's
+ * outline, on the page's ground so no text shows through it.
+ */
+.pb[data-size='dot'] {
+  padding: 0;
+  border: 0;
+  background: none;
+}
+
+.dot {
+  width: 44px;
+  height: 44px;
+}
+
+.control.secondary.dot {
+  background: var(--_ground);
 }
 
 .bar-status {
