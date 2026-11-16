@@ -2,7 +2,8 @@
 // tag, imports a tag's module when its first instance nears the screen, and
 // defines the class. Until then the element shows its light-DOM children (the
 // page styles them under `:not(:defined)`); an import that fails leaves them in
-// place for good. lazy-plan.ts decides what to import; this file only observes.
+// place for good, and so does a class that cannot be defined. lazy-plan.ts decides
+// what to import; this file only observes.
 import { LazyPlan } from './lazy-plan';
 import type { Loader } from './registry';
 
@@ -44,6 +45,10 @@ export function lazyDefine(o: LazyOptions): LazyHandle {
   const onError =
     o.onError ??
     ((tag: string, error: unknown) => console.warn(`pogo-figures: <${tag}> could not load; its fallback stays`, error));
+  const fail = (tag: string, error: unknown): void => {
+    plan.settle(tag, false);
+    onError(tag, error);
+  };
 
   const io =
     typeof IntersectionObserver === 'function'
@@ -64,13 +69,17 @@ export function lazyDefine(o: LazyOptions): LazyHandle {
       const run = o.loaders[tag]!()
         .then(
           (ctor) => {
-            if (!customElements.get(tag)) customElements.define(tag, ctor);
+            // A class the registry refuses (a constructor already defined under another
+            // name) is a failure like a failed import: warned once, the fallback stays.
+            try {
+              if (!customElements.get(tag)) customElements.define(tag, ctor);
+            } catch (error) {
+              fail(tag, error);
+              return;
+            }
             plan.settle(tag, true);
           },
-          (error: unknown) => {
-            plan.settle(tag, false);
-            onError(tag, error);
-          },
+          (error: unknown) => fail(tag, error),
         )
         .finally(() => inFlight.delete(run));
       inFlight.add(run);

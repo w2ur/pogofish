@@ -146,6 +146,34 @@ describe('lazyDefine', () => {
     expect(customElements.get(tag)).toBeDefined();
   });
 
+  it('a class the registry refuses fails like a failed import: one warning, never retried', async () => {
+    const taken = fresh();
+    const tag = fresh();
+    const ctor = class extends HTMLElement {};
+    customElements.define(taken, ctor);
+    let calls = 0;
+    const errors: string[] = [];
+    const el = add(tag);
+    handle = lazyDefine({
+      loaders: {
+        [tag]: async () => {
+          calls++;
+          return ctor; // already defined under another name: define() throws
+        },
+      },
+      onError: (t) => errors.push(t),
+    });
+    intersect(el);
+    await handle.settled();
+    intersect(add(tag));
+    await tick();
+    await handle.settled();
+    expect(errors).toEqual([tag]);
+    expect(calls).toBe(1);
+    expect(customElements.get(tag)).toBeUndefined();
+    expect(el.textContent).toBe('fallback');
+  });
+
   it('imports every present tag at once when IntersectionObserver is missing', async () => {
     const tag = fresh();
     const absent = fresh();
