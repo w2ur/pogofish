@@ -9,6 +9,7 @@ import { WASM_FILE, assetUrl } from '../assets';
 import type { TableData } from '../data';
 import { LC1_2, ready, terminal } from '../engine';
 import { transport } from '../kit/controls';
+import { autoplay } from '../kit/autoplay';
 import { PogoFigure } from '../kit/figure';
 import { Stepper } from '../kit/stepper';
 import { t, type Lang, type StringKey } from '../kit/strings';
@@ -17,6 +18,10 @@ import { lineFrames, parseLine, parseRules, seenText, type Frame, type LineName 
 import lineCss from './pogo-line.css?raw';
 import replayCss from './replay.css?raw';
 import { replayView, resultWords, type Spoken } from './replay-view';
+
+/** How long the loop rests on the start position before it goes round again, in ms. */
+export const LOOP_REST = 1600;
+
 
 const LINE_KEY: Record<LineName, StringKey> = {
   shortestWin: 'lineShortestWin',
@@ -93,7 +98,7 @@ export class PogoLine extends PogoFigure {
       }
     };
 
-    const stepper = new Stepper(frames.length, show, { signal, interval: 1100, ...(cyclic ? { wrapTo: 1 } : {}) });
+    const stepper = new Stepper(frames.length, show, { signal, interval: 1100, ...(cyclic ? { wrapTo: 1, rest: LOOP_REST } : {}) });
     const row = transport(stepper, {
       lang,
       counter: (i, n) => `${i} / ${n - 1}`,
@@ -109,6 +114,8 @@ export class PogoLine extends PogoFigure {
     });
     const playHere = row.querySelector<HTMLButtonElement>('[data-role="action"]');
     show(0);
+    // Under reduced motion the line shows its last position: the end, or for the loop, the start reached again.
+    autoplay(this, stepper, { signal, still: () => stepper.go(stepper.steps - 1) });
     root.append(view.status, view.slot, row, view.live);
     this.stage.append(root);
   }

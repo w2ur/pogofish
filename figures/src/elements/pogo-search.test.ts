@@ -6,7 +6,7 @@ import { key, moveName, type State } from '../engine';
 import { bestMove, search, type SearchSnapshot } from '../mcts';
 import { parseAz, type AzNet } from '../nets';
 import { createStore, type Store } from '../store';
-import { REDUCED_MOTION, intersect, resetMedia, setMedia, shownText } from '../test-dom';
+import { REDUCED_MOTION, intersect, playState, resetMedia, setMedia, shownText } from '../test-dom';
 import { PogoSearch } from './pogo-search';
 import { PUZZLE5, STOPS } from './search-steps';
 import { formatShare } from '../kit/score';
@@ -72,6 +72,25 @@ afterEach(() => {
 });
 
 describe('<pogo-search>', () => {
+  it('runs the search by itself once on screen, then plays its steps', async () => {
+    setMedia(REDUCED_MOTION, false);
+    const el = await mount('puzzle5', 'en');
+    expect(el.shadowRoot!.querySelector('[data-role="counter"]')).toBeNull();
+    intersect(el);
+    await until(() => !!el.shadowRoot!.querySelector('[data-role="counter"]'));
+    expect(playState(el)).toBe('pause');
+    el.remove();
+  });
+
+  it('under reduced motion it waits for « Lancer »', async () => {
+    setMedia(REDUCED_MOTION, true);
+    const el = await mount('puzzle5', 'en');
+    intersect(el);
+    await flush();
+    expect(el.shadowRoot!.querySelector('[data-role="counter"]')).toBeNull();
+    expect(role(el, 'run').disabled).toBe(false);
+  });
+
   it('keeps its controls right under the table of moves they step', async () => {
     const el = await mount('puzzle5', 'fr');
     const table = el.shadowRoot!.querySelector('.search > .ranked')!;

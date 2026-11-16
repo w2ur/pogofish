@@ -19,6 +19,7 @@
 // its eight stages stacked, each one SVG of four paths: no node per game.
 import type { V5Data } from '../data';
 import { choiceGroup, transport } from '../kit/controls';
+import { autoplay } from '../kit/autoplay';
 import { keepCase } from '../kit/keep-case';
 import { PogoFigure } from '../kit/figure';
 import { Stepper } from '../kit/stepper';
@@ -235,6 +236,7 @@ export class PogoMosaic extends PogoFigure {
     const stepper = new Stepper(data.stagesPct.length, (k) => show(k, false), { signal, interval: SWEEP_INTERVAL });
     const row = transport(stepper, { lang, counter: (i) => pctText(lang, data.stagesPct[i]!) });
     show(0, true);
+    autoplay(this, stepper, { signal, still: () => stepper.go(stepper.steps - 1) });
     box.append(...grids.map((g) => g.item), row, live);
     return box;
   }

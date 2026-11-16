@@ -1,7 +1,7 @@
 import { readFileSync } from 'node:fs';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import type { V5Data } from '../data';
-import { intersect, resetMedia } from '../test-dom';
+import { intersect, resetMedia, leave, playState } from '../test-dom';
 import { MOSAIC_PROGRAMS, mosaicStages } from './mosaic-grid';
 import { SWEEP_STEP_MS } from './mosaic-sweep';
 import { formatShare } from '../kit/score';
@@ -61,6 +61,28 @@ afterEach(() => {
 });
 
 describe('<pogo-mosaic>', () => {
+  it('starts by itself once half of it is on screen, pauses when it leaves, and resumes when it comes back', async () => {
+    const el = await mount('fr');
+    expect(playState(el)).toBe('play');
+    intersect(el);
+    expect(playState(el)).toBe('pause');
+    leave(el);
+    expect(playState(el)).toBe('play');
+    intersect(el);
+    expect(playState(el)).toBe('pause');
+    el.remove();
+  });
+
+  it('a reader’s pause holds when it comes back on screen', async () => {
+    const el = await mount('fr');
+    intersect(el);
+    el.shadowRoot!.querySelector<HTMLButtonElement>('[data-role="play"]')!.click();
+    leave(el);
+    intersect(el);
+    expect(playState(el)).toBe('play');
+    el.remove();
+  });
+
   it('puts the transport right under the three grids it steps', async () => {
     const el = await mount('fr');
     const items = [...el.shadowRoot!.querySelectorAll('.sweep > .sweep-item')];

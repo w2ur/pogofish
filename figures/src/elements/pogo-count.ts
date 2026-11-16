@@ -3,6 +3,7 @@
 // The rows still to come keep their room, so a step never moves the page.
 import { Stepper } from '../kit/stepper';
 import { transport } from '../kit/controls';
+import { autoplay } from '../kit/autoplay';
 import { PogoFigure } from '../kit/figure';
 import { t, type StringKey } from '../kit/strings';
 import { countSteps, formatCount, type CountPart } from './count-steps';
@@ -65,6 +66,7 @@ export class PogoCount extends PogoFigure {
     const stepper = new Stepper(steps.length, show, { signal, interval: 1400 });
     show(0);
     root.append(transport(stepper, { lang }));
+    autoplay(this, stepper, { signal, still: () => stepper.go(stepper.steps - 1) });
     this.stage.append(root);
   }
 }

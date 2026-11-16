@@ -9,6 +9,7 @@ import { announceMove } from '../board-state';
 import { WASM_FILE, assetUrl } from '../assets';
 import { ready } from '../engine';
 import { transport } from '../kit/controls';
+import { autoplay } from '../kit/autoplay';
 import { PogoFigure } from '../kit/figure';
 import { Stepper } from '../kit/stepper';
 import { colon, t, type Lang } from '../kit/strings';
@@ -103,7 +104,7 @@ export class PogoGreedy extends PogoFigure {
     const stop = (): void => game?.abort();
     signal.addEventListener('abort', stop, { once: true });
 
-    const load = (seed: number, autoplay: boolean): void => {
+    const load = (seed: number, start: boolean): void => {
       game?.abort();
       const current = new AbortController();
       game = current;
@@ -127,7 +128,9 @@ export class PogoGreedy extends PogoFigure {
       view.show(0);
       body.replaceChildren(view.status, view.slot, row, view.after, view.live);
       if (hadFocus) row.querySelector<HTMLButtonElement>('[data-role="action"]')?.focus();
-      if (autoplay) stepper.play();
+      // The first game starts by itself on screen (under reduced motion it shows its end); a new one plays at once.
+      autoplay(this, stepper, { signal: current.signal, ...(start ? {} : { still: () => stepper.go(last) }) });
+      if (start) stepper.play();
     };
 
     load(first, false);

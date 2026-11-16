@@ -11,6 +11,7 @@
 import { LC1_2, key, legal, moveName, type Move, type State, type Triple } from '../engine';
 import { labelledBoard } from '../kit/board-labels';
 import { drawBoard } from '../kit/board-svg';
+import { autoplay, type Playable } from '../kit/autoplay';
 import { controlButton, transport } from '../kit/controls';
 import { PogoFigure } from '../kit/figure';
 import { formatShare } from '../kit/score';
@@ -206,7 +207,30 @@ export class PogoSearch extends PogoFigure {
     first.append(launch, fromHere);
     controls.append(first);
 
+    // Autoplay drives « Lancer » until the search has run, then its steps.
+    let stepper: Stepper | undefined;
+    let running = false;
+    let heldOffScreen = false;
+    const playable: Playable = {
+      get playing() {
+        return stepper ? stepper.playing : running;
+      },
+      get readerPaused() {
+        return stepper?.readerPaused ?? false;
+      },
+      play() {
+        heldOffScreen = false;
+        if (stepper) stepper.play();
+        else if (!running) void start();
+      },
+      pause() {
+        if (stepper) stepper.pause();
+        else heldOffScreen = true;
+      },
+    };
+
     const start = async (): Promise<void> => {
+      running = true;
       launch.disabled = true;
       launch.textContent = t(lang, 'searchRunning');
       let kept: SearchSnapshot[];
@@ -216,6 +240,7 @@ export class PogoSearch extends PogoFigure {
         if (signal.aborted) return;
         console.error('pogo-search: search failed', error);
         said.textContent = t(lang, 'searchStopped');
+        running = false;
         launch.disabled = false;
         launch.textContent = t(lang, 'searchRun');
         return;
@@ -223,17 +248,21 @@ export class PogoSearch extends PogoFigure {
       if (signal.aborted) return;
       const frames = [before, ...kept];
       const last = frames.length - 1;
-      const stepper = new Stepper(frames.length, (i) => show(frames[i]!, i === last), { signal, interval: 1100 });
-      const row = transport(stepper, {
+      running = false;
+      const steps = new Stepper(frames.length, (i) => show(frames[i]!, i === last), { signal, interval: 1100 });
+      stepper = steps;
+      const row = transport(steps, {
         lang,
         counter: (i) => sims(lang, frames[i]!.sim),
         actions: [{ label: t(lang, 'playFromHere'), onClick: playFrom }],
       });
       controls.replaceChildren(row);
-      stepper.go(1);
-      // Under reduced motion `play` does nothing: the reader steps.
-      stepper.play();
+      steps.go(1);
+      // Under reduced motion `play` does nothing: the reader steps. Off screen it waits for the figure to come back.
+      if (!heldOffScreen) steps.play();
     };
+    // On screen, the search runs by itself; under reduced motion it waits for « Lancer ».
+    autoplay(this, playable, { signal });
 
     // The bars' and the mean value's scales: the table cannot be read without them.
     const lower = (x: string): string => x.charAt(0).toLowerCase() + x.slice(1);

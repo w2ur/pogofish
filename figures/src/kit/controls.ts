@@ -104,6 +104,7 @@ export function transport(stepper: Stepper, o: TransportOptions): HTMLElement {
     if (focused === next && next.disabled && !prev.disabled) prev.focus();
     counter.textContent = format(stepper.index, stepper.steps);
     const state = stepper.playing ? 'pause' : stepper.ended ? 'replay' : 'play';
+    play.dataset.state = state;
     play.setAttribute('aria-label', t(o.lang, state));
     playIcon.style.display = state === 'play' ? '' : 'none';
     pauseIcon.style.display = state === 'pause' ? '' : 'none';

@@ -1,11 +1,10 @@
 import { readFileSync } from 'node:fs';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
-import { shownText } from '../test-dom';
+import { intersect, leave, playState, resetMedia, shownText } from '../test-dom';
 import type { TableData } from '../data';
 import { key, replay } from '../engine';
 import type { PlayFromDetail } from '../kit/figure';
-import { intersect, resetMedia } from '../test-dom';
-import { PogoLine } from './pogo-line';
+import { LOOP_REST, PogoLine } from './pogo-line';
 
 if (!customElements.get('pogo-line')) customElements.define('pogo-line', PogoLine);
 const table = JSON.parse(readFileSync('public/data/table.json', 'utf8')) as TableData;
@@ -39,6 +38,28 @@ afterEach(() => {
 });
 
 describe('<pogo-line>', () => {
+  it('starts by itself once half of it is on screen, pauses when it leaves, and resumes when it comes back', async () => {
+    const el = await mount('shortestWin', 'A');
+    expect(playState(el)).toBe('play');
+    intersect(el);
+    expect(playState(el)).toBe('pause');
+    leave(el);
+    expect(playState(el)).toBe('play');
+    intersect(el);
+    expect(playState(el)).toBe('pause');
+    el.remove();
+  });
+
+  it('a reader’s pause holds when it comes back on screen', async () => {
+    const el = await mount('shortestWin', 'A');
+    intersect(el);
+    el.shadowRoot!.querySelector<HTMLButtonElement>('[data-role="play"]')!.click();
+    leave(el);
+    intersect(el);
+    expect(playState(el)).toBe('play');
+    el.remove();
+  });
+
   it('a bad rules attribute shows the fallback rather than the wrong game', async () => {
     const error = vi.spyOn(console, 'error').mockImplementation(() => {});
     const el = await mount('loop', 'B');
@@ -72,7 +93,10 @@ describe('<pogo-line>', () => {
       expect(forward).toBeGreaterThan(0);
       vi.useFakeTimers();
       role(el, 'play').click();
-      vi.advanceTimersByTime(1100);
+      // The loop rests on its last position before it goes round again.
+      vi.advanceTimersByTime(1100 + LOOP_REST - 1);
+      expect(counter(el)).toBe('4 / 4');
+      vi.advanceTimersByTime(1);
       expect(counter(el)).toBe('1 / 4');
       // One disc moved: its cut-out, the disc and its ring, as on any forward step.
       expect(animate.mock.calls.length).toBe(forward + 3);
@@ -88,7 +112,7 @@ describe('<pogo-line>', () => {
     vi.advanceTimersByTime(1100 * 4);
     expect(counter(el)).toBe('4 / 4');
     expect(current(el)).toContain('Retour au départ');
-    vi.advanceTimersByTime(1100 * 3);
+    vi.advanceTimersByTime(1100 * 3 + LOOP_REST);
     expect(counter(el)).toBe('3 / 4');
     expect(role(el, 'play').getAttribute('aria-label')).toBe('Pause');
     expect(el.shadowRoot!.textContent).not.toContain('Cette position pour la');

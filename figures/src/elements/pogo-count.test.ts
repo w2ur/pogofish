@@ -1,5 +1,5 @@
 import { afterEach, describe, expect, it, vi } from 'vitest';
-import { intersect, resetMedia } from '../test-dom';
+import { intersect, resetMedia, leave, playState } from '../test-dom';
 import { PogoCount } from './pogo-count';
 
 if (!customElements.get('pogo-count')) customElements.define('pogo-count', PogoCount);
@@ -26,6 +26,28 @@ afterEach(() => {
 });
 
 describe('<pogo-count>', () => {
+  it('starts by itself once half of it is on screen, pauses when it leaves, and resumes when it comes back', async () => {
+    const el = await mount('fr');
+    expect(playState(el)).toBe('play');
+    intersect(el);
+    expect(playState(el)).toBe('pause');
+    leave(el);
+    expect(playState(el)).toBe('play');
+    intersect(el);
+    expect(playState(el)).toBe('pause');
+    el.remove();
+  });
+
+  it('a reader’s pause holds when it comes back on screen', async () => {
+    const el = await mount('fr');
+    intersect(el);
+    el.shadowRoot!.querySelector<HTMLButtonElement>('[data-role="play"]')!.click();
+    leave(el);
+    intersect(el);
+    expect(playState(el)).toBe('play');
+    el.remove();
+  });
+
   it('shows one factor per step with the running product, the rest keeping their room', async () => {
     const el = await mount('fr');
     expect($$(el, '.factor .value').map((n) => n.textContent)).toEqual(['924', '× 125 970', '× 2']);

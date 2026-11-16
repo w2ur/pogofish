@@ -1,7 +1,7 @@
 import { readFileSync } from 'node:fs';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import type { TableData } from '../data';
-import { intersect, resetMedia, shownText } from '../test-dom';
+import { intersect, resetMedia, shownText, leave, playState } from '../test-dom';
 import { PogoRetrograde } from './pogo-retrograde';
 
 if (!customElements.get('pogo-retrograde')) customElements.define('pogo-retrograde', PogoRetrograde);
@@ -33,6 +33,28 @@ afterEach(() => {
 });
 
 describe('<pogo-retrograde>', () => {
+  it('starts by itself once half of it is on screen, pauses when it leaves, and resumes when it comes back', async () => {
+    const el = await mount('fr');
+    expect(playState(el)).toBe('play');
+    intersect(el);
+    expect(playState(el)).toBe('pause');
+    leave(el);
+    expect(playState(el)).toBe('play');
+    intersect(el);
+    expect(playState(el)).toBe('pause');
+    el.remove();
+  });
+
+  it('a reader’s pause holds when it comes back on screen', async () => {
+    const el = await mount('fr');
+    intersect(el);
+    el.shadowRoot!.querySelector<HTMLButtonElement>('[data-role="play"]')!.click();
+    leave(el);
+    intersect(el);
+    expect(playState(el)).toBe('play');
+    el.remove();
+  });
+
   it('steps lost 0 → won 1 → lost 2, each band keeping its room before its turn, the transport heading the figure', async () => {
     const el = await mount('fr');
     // The transport is the figure's first block: the bands grow below it, so it never moves.

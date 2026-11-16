@@ -72,8 +72,8 @@ export class IntersectionObserverMock {
   takeRecords(): IntersectionObserverEntry[] {
     return [];
   }
-  fire(target: Element): void {
-    const record = { target, isIntersecting: true, intersectionRatio: 1 } as IntersectionObserverEntry;
+  fire(target: Element, on = true): void {
+    const record = { target, isIntersecting: on, intersectionRatio: on ? 1 : 0 } as IntersectionObserverEntry;
     this.callback([record], this as unknown as IntersectionObserver);
   }
 }
@@ -81,6 +81,16 @@ export class IntersectionObserverMock {
 /** Brings `el` within every live observer's margin that watches it. */
 export function intersect(el: Element): void {
   for (const o of [...observers]) if (o.targets.has(el)) o.fire(el);
+}
+
+/** Takes `el` off screen for every live observer that watches it. */
+export function leave(el: Element): void {
+  for (const o of [...observers]) if (o.targets.has(el)) o.fire(el, false);
+}
+
+/** What a figure's ▶ shows now: `play`, `pause` while it runs, or `replay` once it has ended. */
+export function playState(el: Element): string | undefined {
+  return el.shadowRoot!.querySelector<HTMLElement>('[data-role="play"]')?.dataset.state;
 }
 
 /** The observers watching `el`, to fire one directly (a browser may deliver queued entries). */

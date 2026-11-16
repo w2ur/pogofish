@@ -6,7 +6,7 @@ import type { Triple } from '../engine';
 import { parseTd } from '../nets';
 import { lambdaReturns } from '../players';
 import { createStore, type Store } from '../store';
-import { REDUCED_MOTION, intersect, resetMedia, setMedia } from '../test-dom';
+import { REDUCED_MOTION, intersect, resetMedia, setMedia, leave, playState } from '../test-dom';
 import { PogoTdTargets, stepWords } from './pogo-td-targets';
 import { signedNote } from './q-steps';
 import { TD_LAMBDA, tdGame, tdWalk } from './td-walk';
@@ -58,6 +58,28 @@ afterEach(() => {
 });
 
 describe('<pogo-td-targets>', () => {
+  it('starts by itself once half of it is on screen, pauses when it leaves, and resumes when it comes back', async () => {
+    const el = await mount('fr');
+    expect(playState(el)).toBe('play');
+    intersect(el);
+    expect(playState(el)).toBe('pause');
+    leave(el);
+    expect(playState(el)).toBe('play');
+    intersect(el);
+    expect(playState(el)).toBe('pause');
+    el.remove();
+  });
+
+  it('a reader’s pause holds when it comes back on screen', async () => {
+    const el = await mount('fr');
+    intersect(el);
+    el.shadowRoot!.querySelector<HTMLButtonElement>('[data-role="play"]')!.click();
+    leave(el);
+    intersect(el);
+    expect(playState(el)).toBe('play');
+    el.remove();
+  });
+
   it('puts the transport right under the chart it steps, before the legend and the table', async () => {
     const el = await mount('fr');
     expect(el.shadowRoot!.querySelector('.plot')!.nextElementSibling!.classList.contains('controls')).toBe(true);
@@ -123,7 +145,7 @@ describe('<pogo-td-targets>', () => {
     );
   });
 
-  it('steps by its buttons only under reduced motion', async () => {
+  it('under reduced motion shows every target computed and never moves by itself', async () => {
     setMedia(REDUCED_MOTION, true);
     vi.useFakeTimers();
     const el = await (async () => {
@@ -132,8 +154,11 @@ describe('<pogo-td-targets>', () => {
       return p;
     })();
     expect(role(el, 'play').getAttribute('aria-label')).not.toBe('Pause');
+    const known = $$(el, '.td-chart .target.known').length;
+    expect(known).toBeGreaterThan(0);
+    expect(role(el, 'next').disabled).toBe(true);
     await vi.advanceTimersByTimeAsync(10_000);
-    expect($$(el, '.td-chart .target.known')).toHaveLength(0);
+    expect($$(el, '.td-chart .target.known')).toHaveLength(known);
   });
 
   it('stepWords: the first and last words', () => {

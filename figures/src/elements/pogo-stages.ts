@@ -10,6 +10,7 @@ import { WASM_FILE, assetUrl } from '../assets';
 import type { V5Data, V5Stage } from '../data';
 import { moveName, ready, type Colour } from '../engine';
 import { choiceGroup, transport } from '../kit/controls';
+import { autoplay } from '../kit/autoplay';
 import { keepCase } from '../kit/keep-case';
 import { formatShare } from '../kit/score';
 import { PogoFigure } from '../kit/figure';
@@ -153,7 +154,7 @@ export class PogoStages extends PogoFigure {
     let game: AbortController | undefined;
     signal.addEventListener('abort', () => game?.abort(), { once: true });
 
-    const choose = (k: number, autoplay: boolean): void => {
+    const choose = (k: number, start: boolean): void => {
       game?.abort();
       const current = new AbortController();
       game = current;
@@ -174,7 +175,9 @@ export class PogoStages extends PogoFigure {
       const row = transport(stepper, { lang, counter: (i, n) => `${i} / ${n - 1}` });
       view.show(0);
       body.replaceChildren(view.status, view.slot, row, view.live);
-      if (autoplay) stepper.play();
+      // The first game starts by itself on screen (under reduced motion it shows its end); a stage chosen plays at once.
+      autoplay(this, stepper, { signal: current.signal, ...(start ? {} : { still: () => stepper.go(stepper.steps - 1) }) });
+      if (start) stepper.play();
     };
 
     const picker = choiceGroup<string>({

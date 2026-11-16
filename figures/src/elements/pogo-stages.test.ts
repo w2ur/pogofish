@@ -1,7 +1,7 @@
 import { readFileSync } from 'node:fs';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import type { V5Data } from '../data';
-import { REDUCED_MOTION, intersect, resetMedia, setMedia, shownText } from '../test-dom';
+import { REDUCED_MOTION, intersect, resetMedia, setMedia, shownText, leave, playState } from '../test-dom';
 import { PogoStages } from './pogo-stages';
 import { formatShare } from '../kit/score';
 
@@ -37,6 +37,28 @@ afterEach(() => {
 });
 
 describe('<pogo-stages>', () => {
+  it('starts by itself once half of it is on screen, pauses when it leaves, and resumes when it comes back', async () => {
+    const el = await mount('td');
+    expect(playState(el)).toBe('play');
+    intersect(el);
+    expect(playState(el)).toBe('pause');
+    leave(el);
+    expect(playState(el)).toBe('play');
+    intersect(el);
+    expect(playState(el)).toBe('pause');
+    el.remove();
+  });
+
+  it('a reader’s pause holds when it comes back on screen', async () => {
+    const el = await mount('td');
+    intersect(el);
+    el.shadowRoot!.querySelector<HTMLButtonElement>('[data-role="play"]')!.click();
+    leave(el);
+    intersect(el);
+    expect(playState(el)).toBe('play');
+    el.remove();
+  });
+
   it('shows its fallback when the data load fails', async () => {
     const deps = PogoStages.deps;
     let fail!: (e: Error) => void;

@@ -1,6 +1,5 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
-import { shownText } from '../test-dom';
-import { REDUCED_MOTION, intersect, resetMedia, setMedia } from '../test-dom';
+import { REDUCED_MOTION, intersect, leave, playState, resetMedia, setMedia, shownText } from '../test-dom';
 import { greedyGame, nextSeed } from './greedy-game';
 import { PogoGreedy } from './pogo-greedy';
 
@@ -40,6 +39,28 @@ afterEach(() => {
 });
 
 describe('<pogo-greedy>', () => {
+  it('starts by itself once half of it is on screen, pauses when it leaves, and resumes when it comes back', async () => {
+    const el = await mount('fr');
+    expect(playState(el)).toBe('play');
+    intersect(el);
+    expect(playState(el)).toBe('pause');
+    leave(el);
+    expect(playState(el)).toBe('play');
+    intersect(el);
+    expect(playState(el)).toBe('pause');
+    el.remove();
+  });
+
+  it('a reader’s pause holds when it comes back on screen', async () => {
+    const el = await mount('fr');
+    intersect(el);
+    el.shadowRoot!.querySelector<HTMLButtonElement>('[data-role="play"]')!.click();
+    leave(el);
+    intersect(el);
+    expect(playState(el)).toBe('play');
+    el.remove();
+  });
+
   it('steps through its game, each move with its score', async () => {
     const el = await mount('fr', '17');
     expect(el.shadowRoot!.querySelector('.head')).toBeNull();

@@ -8,6 +8,7 @@
 // value, the essay's sentence; each step writes that sum with its numbers.
 import type { Colour } from '../engine';
 import { transport } from '../kit/controls';
+import { autoplay } from '../kit/autoplay';
 import { PogoFigure } from '../kit/figure';
 import { Stepper } from '../kit/stepper';
 import { colon, t, type Lang } from '../kit/strings';
@@ -203,6 +204,7 @@ export class PogoTdTargets extends PogoFigure {
     const stepper = new Stepper(T + 2, show, { signal, interval: 1100 });
     const row = transport(stepper, { lang, counter: (i, n) => `${i} / ${n - 1}` });
     show(0);
+    autoplay(this, stepper, { signal, still: () => stepper.go(stepper.steps - 1) });
 
     return [
       words,

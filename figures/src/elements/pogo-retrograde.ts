@@ -14,6 +14,7 @@ import { moveName, ready } from '../engine';
 import { drawBoard } from '../kit/board-svg';
 import { moveTip } from '../kit/move-tip';
 import { transport } from '../kit/controls';
+import { autoplay } from '../kit/autoplay';
 import { PogoFigure } from '../kit/figure';
 import { Stepper } from '../kit/stepper';
 import { colon, t, type Lang, type StringKey } from '../kit/strings';
@@ -104,6 +105,7 @@ export class PogoRetrograde extends PogoFigure {
     const stepper = new Stepper(steps.length, show, { signal, interval: 1800 });
     show(0);
     root.prepend(transport(stepper, { lang }));
+    autoplay(this, stepper, { signal, still: () => stepper.go(stepper.steps - 1) });
     root.append(live);
     this.stage.append(root);
   }
