@@ -1,5 +1,8 @@
 import { STRINGS, fidelityLabel, t, type StringKey } from './strings';
 
+/** « tu » and its forms as whole words. Letter-aware: `\b` alone takes « ê » for a word break and fires on « arrête ». */
+const TU = /(?<!\p{L})(tu|te|ton|ta|tes|toi)(?!\p{L})/iu;
+
 describe('strings', () => {
   it('every StringKey exists in fr and en, non-empty', () => {
     const fr = Object.keys(STRINGS.fr).sort();
@@ -17,8 +20,13 @@ describe('strings', () => {
       expect(value).not.toContain("'");
       // A colon, question mark, exclamation mark or semicolon is preceded by U+202F.
       expect(value).not.toMatch(/(^|[^ ])[:?!;]/);
-      expect(value).not.toMatch(/\b(tu|te|ton|ta|tes|toi)\b/i);
+      expect(value).not.toMatch(TU);
     }
+  });
+
+  it('the « tu » check sees the pronoun and not the end of a word', () => {
+    for (const ok of ['rien n’arrête la partie', 'la tête', 'une partie', 'Bastille']) expect(ok).not.toMatch(TU);
+    for (const bad of ['tu joues', 'à toi de jouer', 'Te voilà', 'ta pile']) expect(bad).toMatch(TU);
   });
 
   it('fidelity label text in both languages for the three kinds', () => {
