@@ -138,6 +138,17 @@ export function drawBoard(s: State, o: BoardOptions = {}): SVGSVGElement {
   return svg;
 }
 
+/**
+ * The centre of cell `i` in the board's 300-unit user space, where drawBoard centres
+ * its stack (moved down and right with `labelRoom`): what a figure drawing over a
+ * board (an arrow, pogo-search) aims at.
+ */
+export function cellCentre(i: number, labelRoom = false): [number, number] {
+  const [x, y] = corner(i);
+  const centre = labelRoom ? 56 : 50;
+  return [x + centre, y + centre];
+}
+
 /** How long a piece takes to travel in a figure (DESIGN.md, « Motion »). */
 export const MOVE_MS = 240;
 
