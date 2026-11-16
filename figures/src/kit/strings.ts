@@ -7,6 +7,7 @@ export type Lang = 'fr' | 'en';
 const fr = {
   play: 'Lecture',
   pause: 'Pause',
+  replay: 'Rejouer depuis le début',
   previous: 'Étape précédente',
   next: 'Étape suivante',
   restart: 'Recommencer',
@@ -264,6 +265,7 @@ export type StringKey = keyof typeof fr;
 const en: Record<StringKey, string> = {
   play: 'Play',
   pause: 'Pause',
+  replay: 'Replay from the start',
   previous: 'Previous step',
   next: 'Next step',
   restart: 'Restart',

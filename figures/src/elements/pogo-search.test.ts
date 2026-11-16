@@ -136,7 +136,7 @@ describe('<pogo-search>', () => {
     await until(() => !!el.shadowRoot!.querySelector('[data-role="counter"]'));
     await new Promise((r) => setTimeout(r, 1300));
     expect($(el, '[data-role="counter"]').textContent).toBe('1 simulation');
-    expect(role(el, 'play').hidden).toBe(true);
+    expect(role(el, 'play').getAttribute('aria-label')).not.toBe('Pause');
   });
 
   it('plays the steps by itself when motion is allowed', async () => {

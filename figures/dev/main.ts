@@ -97,7 +97,6 @@ function demo(): CustomElementConstructor {
           {
             label: t(l, 'playFromHere'),
             onClick: () => this.playFrom(states[stepper.index]!, `demo-${stepper.index}`),
-            primary: true,
           },
         ],
       });

@@ -131,7 +131,7 @@ describe('<pogo-td-targets>', () => {
       await vi.advanceTimersByTimeAsync(0);
       return p;
     })();
-    expect(role(el, 'play').hidden).toBe(true);
+    expect(role(el, 'play').getAttribute('aria-label')).not.toBe('Pause');
     await vi.advanceTimersByTimeAsync(10_000);
     expect($$(el, '.td-chart .target.known')).toHaveLength(0);
   });

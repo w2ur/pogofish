@@ -100,7 +100,6 @@ export class PogoLine extends PogoFigure {
       actions: [
         {
           label: t(lang, 'playFromHere'),
-          primary: true,
           onClick: () => {
             const f = frames[stepper.index]!;
             this.playFrom(f.state, `${t(lang, LINE_KEY[name])}, ${t(lang, 'ply')} ${f.ply}`);

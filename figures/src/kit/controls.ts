@@ -1,10 +1,12 @@
 // The control row of a stepped figure. The kit owns it so every figure has the
 // same hierarchy: previous, play/pause and next as three square icon buttons of
 // one fixed size, the step counter beside them, then the caller's extra actions.
-// Play and pause are drawn, never set as text: the button keeps its width. At
-// most one primary per row: play/pause when it is shown, otherwise the action
-// the caller marks `primary`. A figure puts this row right under the visual it
-// drives.
+// Play, pause and replay are drawn, never set as text: the button keeps its
+// width. Play/pause is the row's one primary, there under reduced motion too
+// (nothing plays by itself then, but the reader may ask). Once a run has ended
+// on its last state, the same square replays it. A press on pause is the
+// reader's pause (Stepper.pauseByReader), which kit/autoplay.ts never undoes.
+// A figure puts this row right under the visual it drives.
 import { keepCase } from './keep-case';
 import type { Stepper } from './stepper';
 import { t, type Lang } from './strings';
@@ -14,8 +16,6 @@ const NS = 'http://www.w3.org/2000/svg';
 export interface TransportAction {
   label: string;
   onClick: () => void;
-  /** The row's primary when play/pause is absent (reduced motion). */
-  primary?: boolean;
 }
 
 export interface TransportOptions {
@@ -55,6 +55,8 @@ const CHEVRON = { left: 'M10.5 2.5 5 8l5.5 5.5', right: 'M5.5 2.5 11 8l-5.5 5.5'
 /** ▶ and ⏸, as the kit draws them: a triangle, two bars. */
 const PLAY = 'M4 2.5v11L13.5 8z';
 const PAUSE = 'M3.5 2.5h3v11h-3zM9.5 2.5h3v11h-3z';
+/** Replay: an open circle and its arrowhead, stroked like the chevrons. */
+const REPLAY = 'M12.5 8a4.5 4.5 0 1 1-1.32-3.18M11.5 1.5v3.5H8';
 
 function iconButton(direction: 'left' | 'right', label: string, onClick: () => void): HTMLButtonElement {
   const b = controlButton('', onClick, true);
@@ -78,17 +80,18 @@ export function transport(stepper: Stepper, o: TransportOptions): HTMLElement {
   counter.className = 'label num counter';
   counter.dataset.role = 'counter';
   counter.setAttribute('aria-live', 'polite');
-  const play = controlButton('', () => (stepper.playing ? stepper.pause() : stepper.play()));
+  const play = controlButton('', () => (stepper.playing ? stepper.pauseByReader() : stepper.playByReader()));
   play.classList.add('icon');
   play.dataset.role = 'play';
   const playIcon = icon('glyph', PLAY);
   const pauseIcon = icon('glyph', PAUSE);
-  play.append(playIcon, pauseIcon);
+  const replayIcon = icon('replay', REPLAY);
+  play.append(playIcon, pauseIcon, replayIcon);
 
   const extras = (o.actions ?? []).map((a) => {
     const b = controlButton(a.label, a.onClick, true);
     b.dataset.role = 'action';
-    return { b, primary: a.primary === true };
+    return b;
   });
 
   const sync = (): void => {
@@ -100,14 +103,14 @@ export function transport(stepper: Stepper, o: TransportOptions): HTMLElement {
     if (focused === prev && prev.disabled && !next.disabled) next.focus();
     if (focused === next && next.disabled && !prev.disabled) prev.focus();
     counter.textContent = format(stepper.index, stepper.steps);
-    play.hidden = !stepper.auto;
-    play.setAttribute('aria-label', t(o.lang, stepper.playing ? 'pause' : 'play'));
-    playIcon.style.display = stepper.playing ? 'none' : '';
-    pauseIcon.style.display = stepper.playing ? '' : 'none';
-    for (const { b, primary } of extras) b.classList.toggle('secondary', !(primary && play.hidden));
+    const state = stepper.playing ? 'pause' : stepper.ended ? 'replay' : 'play';
+    play.setAttribute('aria-label', t(o.lang, state));
+    playIcon.style.display = state === 'play' ? '' : 'none';
+    pauseIcon.style.display = state === 'pause' ? '' : 'none';
+    replayIcon.style.display = state === 'replay' ? '' : 'none';
   };
 
-  row.append(prev, play, next, counter, ...extras.map((e) => e.b));
+  row.append(prev, play, next, counter, ...extras);
   stepper.onChange(sync);
   sync();
   return row;

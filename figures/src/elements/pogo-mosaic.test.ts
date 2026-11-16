@@ -236,7 +236,7 @@ describe('<pogo-mosaic>', () => {
       const el = mountSync('fr');
       await vi.advanceTimersByTimeAsync(0);
       setMedia(REDUCED_MOTION, true);
-      expect($(el, '[data-role="play"]').hidden).toBe(true);
+      expect($(el, '[data-role="play"]').getAttribute('aria-label')).not.toBe('Pause');
       ($(el, '[data-role="next"]') as HTMLButtonElement).click();
       const grids = sweptGrids(el);
       for (const g of grids) for (const sq of [...g.children] as SVGGElement[]) expect(['', '0ms']).toContain(sq.style.getPropertyValue('--d'));

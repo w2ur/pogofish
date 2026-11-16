@@ -99,33 +99,42 @@ describe('transport', () => {
     expect(shown()[0]!.querySelector('path')!.getAttribute('d')).toMatch(/h3v11h-3z.*h3v11h-3z/);
     vi.advanceTimersByTime(2000);
     expect(s.playing).toBe(false);
-    expect(play.getAttribute('aria-label')).toBe('Play');
-  });
-
-  it('hides play when reduced motion switches on mid-run and brings it back when it switches off', () => {
-    const s = new Stepper(10, () => {});
-    const action = { label: 'Play from here', onClick: () => {}, primary: true };
-    const row = transport(s, { lang: 'en', actions: [action] });
-    const { play, next } = parts(row);
-    const extra = row.querySelector<HTMLButtonElement>('[data-role="action"]')!;
-    expect(extra.classList.contains('secondary')).toBe(true);
+    // Ended on its last state: the same square now replays it, drawn as a replay arrow.
+    expect(play.getAttribute('aria-label')).toBe('Replay from the start');
+    expect(shown()).toHaveLength(1);
+    expect(shown()[0]!.querySelector('path')!.classList.contains('replay')).toBe(true);
     play.click();
-    setMedia(REDUCED_MOTION, true);
-    expect(play.hidden).toBe(true);
-    expect(play.getAttribute('aria-label')).toBe('Play');
-    // With play gone, the caller's main action becomes the row's one primary.
-    expect(extra.classList.contains('secondary')).toBe(false);
-    next.click();
-    expect(s.index).toBe(1);
-    setMedia(REDUCED_MOTION, false);
-    expect(play.hidden).toBe(false);
-    expect(extra.classList.contains('secondary')).toBe(true);
+    expect(s.index).toBe(0);
+    expect(s.playing).toBe(true);
   });
 
-  it('starts with play hidden under reduced motion', () => {
+  it('a press on pause is the reader’s pause, which the screen does not undo; a press on play lifts it', () => {
+    const s = new Stepper(5, () => {});
+    const { play } = parts(transport(s, { lang: 'en' }));
+    s.play();
+    play.click();
+    expect(s.playing).toBe(false);
+    expect(s.readerPaused).toBe(true);
+    play.click();
+    expect(s.readerPaused).toBe(false);
+    expect(s.playing).toBe(true);
+  });
+
+  it('keeps ▶ under reduced motion: nothing plays by itself, but the reader may play', () => {
     setMedia(REDUCED_MOTION, true);
-    const { play } = parts(transport(new Stepper(4, () => {}), { lang: 'fr' }));
-    expect(play.hidden).toBe(true);
+    const s = new Stepper(4, () => {});
+    const { play } = parts(transport(s, { lang: 'fr' }));
+    expect(play.hidden).toBe(false);
+    s.play();
+    expect(s.playing).toBe(false);
+    play.click();
+    expect(s.playing).toBe(true);
+    // Switched on mid-run, reduced motion stops the run and leaves ▶ there.
+    setMedia(REDUCED_MOTION, false);
+    s.play();
+    setMedia(REDUCED_MOTION, true);
+    expect(s.playing).toBe(false);
+    expect(play.hidden).toBe(false);
   });
 });
 

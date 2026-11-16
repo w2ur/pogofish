@@ -81,7 +81,7 @@ describe('<pogo-qsteps>', () => {
   it('under reduced motion it never plays by itself', async () => {
     setMedia(REDUCED_MOTION, true);
     const el = await mount();
-    expect(role(el, 'play').hidden).toBe(true);
+    expect(role(el, 'play').getAttribute('aria-label')).not.toBe('Pause');
   });
 
   it('an aborted signal stops a running walk', async () => {

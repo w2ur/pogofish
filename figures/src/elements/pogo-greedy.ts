@@ -122,7 +122,7 @@ export class PogoGreedy extends PogoFigure {
       const row = transport(stepper, {
         lang,
         counter: (i, n) => `${i} / ${n - 1}`,
-        actions: [{ label: t(lang, 'newGame'), primary: true, onClick: () => load(nextSeed(seed), true) }],
+        actions: [{ label: t(lang, 'newGame'), onClick: () => load(nextSeed(seed), true) }],
       });
       view.show(0);
       body.replaceChildren(view.status, view.slot, row, view.after, view.live);

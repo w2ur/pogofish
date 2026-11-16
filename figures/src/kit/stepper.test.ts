@@ -97,6 +97,67 @@ describe('Stepper', () => {
     expect(onStep).toHaveBeenCalledWith(1);
   });
 
+  it('under reduced motion the reader may still play: playByReader() runs the timer that play() refuses', () => {
+    setMedia(REDUCED_MOTION, true);
+    const seen: number[] = [];
+    const s = new Stepper(3, (i) => seen.push(i));
+    s.play();
+    expect(s.playing).toBe(false);
+    s.playByReader();
+    expect(s.playing).toBe(true);
+    vi.advanceTimersByTime(900);
+    expect(seen).toEqual([1]);
+    s.destroy();
+  });
+
+  it('remembers a reader’s pause until the reader plays again; a pause by code is not the reader’s', () => {
+    const s = new Stepper(5, () => {});
+    s.play();
+    s.pause();
+    expect(s.readerPaused).toBe(false);
+    s.play();
+    s.pauseByReader();
+    expect(s.playing).toBe(false);
+    expect(s.readerPaused).toBe(true);
+    // Code may not lift it.
+    s.play();
+    expect(s.readerPaused).toBe(true);
+    s.playByReader();
+    expect(s.readerPaused).toBe(false);
+    expect(s.playing).toBe(true);
+    s.destroy();
+  });
+
+  it('says it has ended once automatic play stops on the last step of a figure that does not loop', () => {
+    const s = new Stepper(3, () => {}, { interval: 10 });
+    expect(s.ended).toBe(false);
+    s.play();
+    vi.advanceTimersByTime(20);
+    expect(s.ended).toBe(true);
+    s.prev();
+    expect(s.ended).toBe(false);
+    const loop = new Stepper(3, () => {}, { interval: 10, wrapTo: 0 });
+    loop.go(2);
+    expect(loop.ended).toBe(false);
+    loop.destroy();
+  });
+
+  it('a loop rests on its last step for interval + rest before it starts again', () => {
+    const seen: number[] = [];
+    const s = new Stepper(3, (i) => seen.push(i), { interval: 100, wrapTo: 0, rest: 1000 });
+    s.play();
+    vi.advanceTimersByTime(200);
+    expect(seen).toEqual([1, 2]);
+    vi.advanceTimersByTime(1099);
+    expect(seen).toEqual([1, 2]);
+    vi.advanceTimersByTime(1);
+    expect(seen).toEqual([1, 2, 0]);
+    vi.advanceTimersByTime(100);
+    expect(seen).toEqual([1, 2, 0, 1]);
+    s.destroy();
+    expect(vi.getTimerCount()).toBe(0);
+  });
+
   it('follows the media query: switching it mid-run stops auto', () => {
     const seen: number[] = [];
     const s = new Stepper(10, (i) => seen.push(i));
