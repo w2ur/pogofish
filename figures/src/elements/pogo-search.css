@@ -1,0 +1,109 @@
+/*
+ * <pogo-search>: the position, the board, the step's words (one grid cell for
+ * every step, so the table never moves), the table of root moves, what its
+ * scales are, then the controls. In each cell the number sits over a thin bar
+ * on the scale the figure states: the preference on 0–100 %, the visits on
+ * 0–100 simulations. The move played is marked in ink, never in red.
+ */
+.status {
+  display: grid;
+}
+
+.status > p {
+  grid-area: 1 / 1;
+}
+
+.sizer {
+  visibility: hidden;
+}
+
+.said-now {
+  color: var(--_ink);
+  font-weight: 600;
+}
+
+/* Fixed columns, so the table holds 280px: the headers wrap, the numbers do not. */
+.search-table {
+  table-layout: fixed;
+}
+
+.search-table caption {
+  overflow-wrap: anywhere;
+}
+
+/* Four headers over 280px: the reading cut, which wraps between words where the label cut would not fit. */
+.search-table thead th {
+  vertical-align: bottom;
+  font-stretch: 100%;
+  font-weight: 600;
+  letter-spacing: 0;
+  text-transform: none;
+}
+
+.search-table th.move {
+  width: 5.4em;
+}
+
+.search-table th.mean {
+  width: 5em;
+}
+
+/*
+ * The move played (or leading) is the row on the band, in heavy figures, and the
+ * words over the table name it; its tag is for assistive technology, so a row
+ * never grows as the lead passes from one move to another.
+ */
+.search-table .tag {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  clip-path: inset(50%);
+  white-space: nowrap;
+}
+
+.search-table .line {
+  grid-template-columns: minmax(0, 1fr);
+  gap: 2px;
+}
+
+.search-table .line .value {
+  grid-area: 1 / 1;
+  text-align: left;
+}
+
+.search-table .line .track {
+  grid-area: 2 / 1;
+  height: 6px;
+}
+
+.search-table .line .bar {
+  height: 4px;
+}
+
+.search-table .mean {
+  text-align: right;
+}
+
+.search-table td.mean {
+  white-space: nowrap;
+}
+
+.search-table thead .mean {
+  text-align: right;
+}
+
+.search-table tr.played th,
+.search-table tr.played td {
+  font-weight: 800;
+  background: var(--_rule);
+}
+
+.search-controls {
+  min-height: 44px;
+}
+
+/* A move's name never breaks at its hyphens. */
+.move-name {
+  white-space: nowrap;
+}

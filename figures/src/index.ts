@@ -11,6 +11,7 @@ import { PogoQsteps } from './elements/pogo-qsteps';
 import { PogoRace } from './elements/pogo-race';
 import { PogoReach } from './elements/pogo-reach';
 import { PogoRetrograde } from './elements/pogo-retrograde';
+import { PogoSearch } from './elements/pogo-search';
 import { PogoStages } from './elements/pogo-stages';
 import { PogoTdTargets } from './elements/pogo-td-targets';
 import { PogoTitle } from './elements/pogo-title';
@@ -34,6 +35,7 @@ const ELEMENTS: [string, CustomElementConstructor][] = [
   ['pogo-net', PogoNet],
   ['pogo-encoding', PogoEncoding],
   ['pogo-td-targets', PogoTdTargets],
+  ['pogo-search', PogoSearch],
 ];
 
 /** Registers every `<pogo-…>` element; safe to call twice. */

@@ -353,6 +353,20 @@ async function build(): Promise<void> {
     ),
   );
 
+  for (const position of ['puzzle5', 'reader'] as const) {
+    app.append(heading(`<pogo-search position="${position}"> · 640px stage`));
+    app.append(
+      figure(
+        'pogo-search',
+        { position },
+        l === 'fr'
+          ? 'La recherche d’AlphaZero sur une position : ses simulations, le nombre de passages par chaque coup et le coup qu’il joue.'
+          : 'AlphaZero’s search on a position: its simulations, the number of visits to each move and the move it plays.',
+        '640px',
+      ),
+    );
+  }
+
   app.append(heading('<pogo-race> · 640px stage'));
   const race = figure(
     'pogo-race',
