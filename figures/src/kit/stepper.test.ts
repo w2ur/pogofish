@@ -214,4 +214,18 @@ describe('Stepper', () => {
     expect(vi.getTimerCount()).toBe(0);
     expect(mediaListeners(REDUCED_MOTION)).toBe(0);
   });
+  it('with an interval function, each step is held for its own time', () => {
+    const seen: number[] = [];
+    const s = new Stepper(4, (i) => seen.push(i), { interval: (i) => (i === 1 ? 3000 : 500) });
+    s.play();
+    vi.advanceTimersByTime(500);
+    expect(seen).toEqual([1]);
+    vi.advanceTimersByTime(2999);
+    expect(seen).toEqual([1]);
+    vi.advanceTimersByTime(1);
+    expect(seen).toEqual([1, 2]);
+    vi.advanceTimersByTime(500);
+    expect(seen).toEqual([1, 2, 3]);
+    expect(s.ended).toBe(true);
+  });
 });
