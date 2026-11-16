@@ -79,6 +79,11 @@ export class PogoMoves extends PogoFigure {
     return this.getAttribute('view') === 'start' ? 'start' : 'moves';
   }
 
+  /** The moves view plays whole games with no stopping rule; the start position belongs to both games. */
+  protected override game(): 'gameA' | undefined {
+    return this.view === 'moves' ? 'gameA' : undefined;
+  }
+
   override connectedCallback(): void {
     super.connectedCallback();
     // Room kept before the render, so the board does not push the text down when it arrives.

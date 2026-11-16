@@ -41,6 +41,11 @@ describe('<pogo-moves view="start">', () => {
 });
 
 describe('<pogo-moves view="moves">', () => {
+  it('names the game it plays in its label; the start position names none', async () => {
+    expect($(await mount('moves'), '.fidelity').textContent).toBe('Calcul en direct · jeu sans règle d’arrêt');
+    expect($(await mount('start'), '.fidelity').textContent).toBe('Calcul en direct');
+  });
+
   it('lifting a1 shows its one-piece cells, then its two-piece cells', async () => {
     const el = await mount('moves');
     expect(marks(el, 'target')).toEqual([0, 1, 2]);
