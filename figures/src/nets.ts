@@ -28,6 +28,12 @@ export interface AzNet {
 
 export interface TdNet {
   header: NetHeader;
+  /**
+   * The layers as the file gives them, for a figure that adjusts a copy of them
+   * (elements/td-tune.ts). Never written to. parseTd always sets it; optional so
+   * a stand-in net in a test need not.
+   */
+  layers?: readonly Linear[];
   /** V(s) in [-1, 1], for the player to move. */
   value(s: State): number;
 }
@@ -39,7 +45,7 @@ const AZ_HEADS = ['policy_fc1', 'policy_fc2', 'value_fc1', 'value_fc2'];
 
 const f = Math.fround;
 
-interface Linear {
+export interface Linear {
   inputs: number;
   outputs: number;
   /** `outputs` rows of `inputs` values. */
@@ -165,6 +171,7 @@ export function parseTd(bytes: ArrayBuffer): TdNet {
   const last = layers.length - 1;
   return {
     header,
+    layers,
     value(s) {
       let h = input(s);
       layers.forEach((l, i) => {
