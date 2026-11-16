@@ -44,6 +44,8 @@ export default defineConfig({
     },
   },
   test: {
+    // Unit tests only: scripts/budget.test.mjs reads dist/ after a build and runs under node (npm run budget).
+    include: ['src/**/*.test.ts'],
     environment: 'happy-dom',
     globals: true,
     setupFiles: ['src/test-setup.ts'],

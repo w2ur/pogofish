@@ -8,7 +8,8 @@
     "dev": "vite",
     "prebuild": "node scripts/copy-wasm.mjs",
     "build": "tsc --noEmit && vite build",
-    "test": "vitest run"
+    "test": "vitest run",
+    "budget": "node scripts/budget.test.mjs"
   },
   "dependencies": {
     "pogofish-wasm": "file:../wasm-pkg"

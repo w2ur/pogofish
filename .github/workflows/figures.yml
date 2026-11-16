@@ -38,3 +38,7 @@ jobs:
       - name: Build assertions (worker entry, nothing inlined, no dist/assets/)
         working-directory: figures
         run: ./scripts/check-dist.sh
+      # node runs the file itself: a missing dist/ exits 2 and fails the step, never a silent pass.
+      - name: Size budget and package shape (budget.json)
+        working-directory: figures
+        run: npm run budget

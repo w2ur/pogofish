@@ -1,6 +1,14 @@
 {
-  "_note": "Gzip bytes per file, about twice the size at the time of writing; raw is an optional second cap. Raising one needs a one-line reason in this file.",
-  "table.json": { "gzip": 4000 },
-  "v5.json": { "gzip": 12000, "raw": 200000 },
-  "reach.json": { "gzip": 500 }
+  "_note": "Gzip bytes (Node's zlib.gzipSync, default level); raw is an optional second cap. Each cap is about one and a half times the size measured when it was set, or twice for the data files. Raising one needs a one-line reason in this file.",
+  "js": {
+    "entry": { "gzip": 3200, "_reason": "dist/pogo-figures.js, the one file every page loads, holding no element: 2130 measured 2026-11-16; the plan's ceiling is 120000." },
+    "eager": { "gzip": 8600, "_reason": "The entry and the chunks it imports statically (the engine glue), fetched before any figure nears the screen: 5732 measured 2026-11-16." },
+    "largestChunk": { "gzip": 21500, "_reason": "Any one JS file but the entry; the largest is the kit (figure, strings, theme, store), shared by every element: 14338 measured 2026-11-16." },
+    "total": { "gzip": 151000, "_reason": "Every JS file of dist/, what a page holding all seventeen elements fetches: 100562 measured 2026-11-16." }
+  },
+  "data": {
+    "table.json": { "gzip": 4000 },
+    "v5.json": { "gzip": 12000, "raw": 200000 },
+    "reach.json": { "gzip": 500 }
+  }
 }

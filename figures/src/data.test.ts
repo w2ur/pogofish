@@ -21,9 +21,7 @@ const json = <T>(path: string): T => JSON.parse(read(path).toString()) as T;
 const table = json<TableData>('public/data/table.json');
 const v5 = json<V5Data>('public/data/v5.json');
 const reach = json<ReachData>('public/data/reach.json');
-const budget = Object.fromEntries(
-  Object.entries(json<Record<string, unknown>>('budget.json')).filter(([k]) => !k.startsWith('_')),
-) as Record<string, { gzip: number; raw?: number }>;
+const budget = json<{ data: Record<string, { gzip: number; raw?: number }> }>('budget.json').data;
 
 const triples = (moves: { move: Triple }[]): Triple[] => moves.map((m) => m.move);
 const verdictOf = (moves: { move: Triple; verdict: Verdict }[], name: string): Verdict => {
