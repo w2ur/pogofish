@@ -14,7 +14,7 @@ import type { V5Data } from '../data';
 import { choiceGroup } from '../kit/controls';
 import { formatDate } from '../kit/date';
 import { PogoFigure } from '../kit/figure';
-import { formatScore, percent } from '../kit/score';
+import { formatScore, formatShare } from '../kit/score';
 import { colon, t, type Lang, type StringKey } from '../kit/strings';
 import { V5_FILE, sharedV5 } from '../v5';
 import { countNodes } from './count-steps';
@@ -78,11 +78,9 @@ export function mosaicSvg(squares: readonly Pick<MosaicSquare, 'result' | 'mark'
 /** The stage's totals in words: « 90 gagnées sur 100 », « erreurs : 1,5 % des coups jugés (7 sur 465) ». */
 export function totalsWords(lang: Lang, s: MosaicStage): { wins: string; mistakes: string; bench: string } {
   const n = (x: number): string => new Intl.NumberFormat(lang === 'fr' ? 'fr-FR' : 'en-GB').format(x);
-  const share = percent(s.share).toFixed(1);
-  const sharePct = lang === 'fr' ? `${share.replace('.', ',')} %` : `${share}%`;
   return {
     wins: `${n(s.wins)} ${t(lang, 'mosaicWonOf')} ${n(s.games)}`,
-    mistakes: `${t(lang, 'mosaicMistakes')}${colon(lang)} ${sharePct} ${t(lang, 'mosaicOfJudged')} (${n(s.mistakes)} ${t(lang, 'outOf')} ${n(s.judged)})`,
+    mistakes: `${t(lang, 'mosaicMistakes')}${colon(lang)} ${formatShare(lang, s.share)} ${t(lang, 'mosaicOfJudged')} (${n(s.mistakes)} ${t(lang, 'outOf')} ${n(s.judged)})`,
     bench: `${t(lang, 'mosaicBench')}${colon(lang)} ${formatScore(lang, s)}`,
   };
 }
@@ -217,13 +215,11 @@ export class PogoMosaic extends PogoFigure {
     const body = el('tbody');
     for (const s of stages) {
       const row = el('tr');
-      const share = percent(s.share).toFixed(1);
-      const sharePct = lang === 'fr' ? `${share.replace('.', ',')} %` : `${share}%`;
       row.append(
         th(pctText(lang, s.pct), 'row', 'num'),
         el('td', 'num', n(s.gamesTrained)),
         el('td', 'num', n(s.wins)),
-        el('td', 'num', `${sharePct} (${n(s.mistakes)} / ${n(s.judged)})`),
+        el('td', 'num', `${formatShare(lang, s.share)} (${n(s.mistakes)} / ${n(s.judged)})`),
       );
       body.append(row);
     }

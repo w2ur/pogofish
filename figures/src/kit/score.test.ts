@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { formatScore, percent } from './score';
+import { formatScore, formatShare, percent } from './score';
 
 describe('formatScore', () => {
   it('prints a score as a percentage with one decimal, its interval in the same unit', () => {
@@ -16,5 +16,13 @@ describe('formatScore', () => {
 
   it('keeps one decimal on a round value', () => {
     expect(formatScore('en', { score: 0.5, ci95: [0.48, 0.52] })).toBe('50.0% [48.0; 52.0]');
+  });
+});
+
+describe('formatShare', () => {
+  it('prints a share as the score is printed, without an interval', () => {
+    expect(formatShare('fr', 97 / 186)).toBe('52,2 %');
+    expect(formatShare('en', 7 / 465)).toBe('1.5%');
+    expect(formatShare('fr', 0.0315)).toBe('3,2 %');
   });
 });
