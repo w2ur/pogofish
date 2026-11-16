@@ -117,7 +117,7 @@ describe('<pogo-openings>', () => {
     expect(item(el, 'b1-2-b3').getAttribute('aria-checked')).toBe('true');
   });
 
-  it('« Jouer d’ici » hands the position after the chosen moves to the board', async () => {
+  it('« Jouer cette position contre l’ordinateur » hands the position after the chosen moves to the board', async () => {
     const el = await mount();
     const got: PlayFromDetail[] = [];
     const listen = (e: Event) => got.push((e as CustomEvent<PlayFromDetail>).detail);

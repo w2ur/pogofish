@@ -500,7 +500,7 @@ describe('<pogo-board mode="follow"> as a panel', () => {
   };
   const toggleOf = (el: PogoBoard) => $<HTMLButtonElement>(el, '.bar .control');
 
-  it('a game from a figure’s « Jouer d’ici » opens it; one started on a board leaves it folded', async () => {
+  it('a game from a figure’s « Jouer cette position contre l’ordinateur » opens it; one started on a board leaves it folded', async () => {
     const el = await mount('fr', { mode: 'follow' });
     store.newGame('White', 'normal');
     await flush();

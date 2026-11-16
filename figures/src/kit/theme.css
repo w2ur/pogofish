@@ -144,7 +144,8 @@ slot[hidden],
   appearance: none;
   margin: 0;
   min-height: 44px;
-  padding: 0 16px;
+  /* A label too long for its row wraps (« Jouer cette position contre l’ordinateur »): its lines need room. */
+  padding: 6px 16px;
   border: 2px solid var(--_action);
   border-radius: 0;
   background: var(--_action);
@@ -154,7 +155,7 @@ slot[hidden],
   font-stretch: 125%;
   font-weight: 800;
   letter-spacing: 0.02em;
-  line-height: 1;
+  line-height: 1.15;
   text-transform: uppercase;
   cursor: pointer;
   transition: transform 80ms linear;
@@ -227,8 +228,9 @@ slot[hidden],
   gap: 8px;
 }
 
+/* Progress in words (« étape 2 sur 5 »): room kept for the longest, so the row does not shift as it counts. */
 .counter {
-  min-width: 5ch;
+  min-width: 16ch;
   font-size: 12.8px;
   text-align: center;
   color: var(--_ink);

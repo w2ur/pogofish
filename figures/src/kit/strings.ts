@@ -5,14 +5,15 @@
 export type Lang = 'fr' | 'en';
 
 const fr = {
-  play: 'Lecture',
-  pause: 'Pause',
+  play: 'Lancer l’animation',
+  pause: 'Mettre l’animation en pause',
   replay: 'Rejouer depuis le début',
-  previous: 'Étape précédente',
-  next: 'Étape suivante',
+  previous: 'Revenir à l’étape précédente',
+  next: 'Passer à l’étape suivante',
+  progressStep: 'étape',
   restart: 'Recommencer',
   newGame: 'Nouvelle partie',
-  playFromHere: 'Jouer d’ici',
+  playFromHere: 'Jouer cette position contre l’ordinateur',
   white: 'Blanc',
   red: 'Rouge',
   wins: 'gagne',
@@ -263,14 +264,15 @@ export type StringKey = keyof typeof fr;
 
 // Typed against the French keys: a key missing here, or one French lacks, fails tsc.
 const en: Record<StringKey, string> = {
-  play: 'Play',
-  pause: 'Pause',
+  play: 'Play the animation',
+  pause: 'Pause the animation',
   replay: 'Replay from the start',
-  previous: 'Previous step',
-  next: 'Next step',
+  previous: 'Go back one step',
+  next: 'Go forward one step',
+  progressStep: 'step',
   restart: 'Restart',
   newGame: 'New game',
-  playFromHere: 'Play from here',
+  playFromHere: 'Play this position against the computer',
   white: 'White',
   red: 'Red',
   wins: 'wins',

@@ -196,7 +196,7 @@ export class PogoSearch extends PogoFigure {
     show(before, false);
 
 
-    // The controls: « Lancer » and « Jouer d'ici » until the search has run, then its steps.
+    // The controls: « Lancer » and « Jouer cette position contre l’ordinateur » until the search has run, then its steps.
     const controls = el('div', 'search-controls');
     const playFrom = (): void => this.playFrom(s, t(lang, 'searchLabel'));
     const launch = controlButton(t(lang, 'searchRun'), () => void start());
@@ -253,7 +253,7 @@ export class PogoSearch extends PogoFigure {
       stepper = steps;
       const row = transport(steps, {
         lang,
-        counter: (i) => sims(lang, frames[i]!.sim),
+        counter: (i) => `${sims(lang, frames[i]!.sim)} ${t(lang, 'outOf')} ${formatCount(lang, SEARCH_SIMS)}`,
         actions: [{ label: t(lang, 'playFromHere'), onClick: playFrom }],
       });
       controls.replaceChildren(row);

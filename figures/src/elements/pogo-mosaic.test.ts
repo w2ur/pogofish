@@ -152,7 +152,7 @@ describe('<pogo-mosaic>', () => {
       await vi.advanceTimersByTimeAsync(0);
       const grids = sweptGrids(el);
       expect(grids).toHaveLength(3);
-      expect($(el, '[data-role="counter"]').textContent).toBe('0\u202f%');
+      expect($(el, '[data-role="counter"]').textContent).toBe('étape 1 sur 8 · 0\u202f%');
       expect($(el, '[data-role="play"]').hidden).toBe(false);
       expect(vi.getTimerCount()).toBe(0);
       expect(grids.map((g) => g.closest('.sweep-item')!.querySelector('.cell .where:not([data-off])')!.textContent)).toEqual([
@@ -236,16 +236,16 @@ describe('<pogo-mosaic>', () => {
       ($(el, '[data-role="play"]') as HTMLButtonElement).click();
       await vi.advanceTimersByTimeAsync(1100 * 3 + 10);
       const counter = $(el, '[data-role="counter"]');
-      expect(counter.textContent).toBe('5%');
+      expect(counter.textContent).toBe('step 4 of 8 · 5%');
       el.remove();
       await vi.advanceTimersByTimeAsync(10000);
-      expect(counter.textContent).toBe('5%');
+      expect(counter.textContent).toBe('step 4 of 8 · 5%');
       expect(vi.getTimerCount()).toBe(0);
       const again = mountSync('en');
       await vi.advanceTimersByTimeAsync(0);
       ($(again, '[data-role="play"]') as HTMLButtonElement).click();
       await vi.advanceTimersByTimeAsync(1100 * 8);
-      expect($(again, '[data-role="counter"]').textContent).toBe('100%');
+      expect($(again, '[data-role="counter"]').textContent).toBe('step 8 of 8 · 100%');
       expect(vi.getTimerCount()).toBe(0);
     } finally {
       vi.useRealTimers();
@@ -258,7 +258,7 @@ describe('<pogo-mosaic>', () => {
       const el = mountSync('fr');
       await vi.advanceTimersByTimeAsync(0);
       setMedia(REDUCED_MOTION, true);
-      expect($(el, '[data-role="play"]').getAttribute('aria-label')).not.toBe('Pause');
+      expect(playState(el)).toBe('play');
       ($(el, '[data-role="next"]') as HTMLButtonElement).click();
       const grids = sweptGrids(el);
       for (const g of grids) for (const sq of [...g.children] as SVGGElement[]) expect(['', '0ms']).toContain(sq.style.getPropertyValue('--d'));

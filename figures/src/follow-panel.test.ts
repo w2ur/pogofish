@@ -2,7 +2,7 @@ import { afterEach, describe, expect, it } from 'vitest';
 import { FOLLOW_OPEN_DEFAULT, escapeAction, followShown, openAtStart, watchInlineBoards, type ObserverCtor } from './follow-panel';
 
 describe('the follow board, open or folded', () => {
-  it('starts folded; a game started on a board keeps the reader’s choice, a figure’s « Jouer d’ici » opens it', () => {
+  it('starts folded; a game started on a board keeps the reader’s choice, a figure’s « Jouer cette position contre l’ordinateur » opens it', () => {
     expect(FOLLOW_OPEN_DEFAULT).toBe(false);
     expect(openAtStart(FOLLOW_OPEN_DEFAULT, 'board')).toBe(false);
     expect(openAtStart(true, 'board')).toBe(true);

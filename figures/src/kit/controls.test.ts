@@ -1,7 +1,7 @@
 import { REDUCED_MOTION, resetMedia, setMedia } from '../test-dom';
 import { readFileSync } from 'node:fs';
 import { resolve } from 'node:path';
-import { choiceGroup, transport } from './controls';
+import { choiceGroup, progress, transport } from './controls';
 import { Stepper } from './stepper';
 
 beforeEach(() => {
@@ -9,6 +9,9 @@ beforeEach(() => {
   vi.useFakeTimers();
 });
 afterEach(() => vi.useRealTimers());
+
+/** A button's own text, without its name's tooltip. */
+const drawn = (b: HTMLElement) => [...b.childNodes].filter((n) => !(n instanceof HTMLElement && n.getAttribute('role') === 'tooltip')).map((n) => n.textContent).join('');
 
 const parts = (row: HTMLElement) => ({
   prev: row.querySelector<HTMLButtonElement>('[data-role="previous"]')!,
@@ -30,19 +33,19 @@ describe('transport', () => {
       'counter',
       'action',
     ]);
-    expect(prev.getAttribute('aria-label')).toBe('Étape précédente');
-    expect(next.getAttribute('aria-label')).toBe('Étape suivante');
-    expect(prev.textContent).toBe('');
+    expect(prev.getAttribute('aria-label')).toBe('Revenir à l’étape précédente');
+    expect(next.getAttribute('aria-label')).toBe('Passer à l’étape suivante');
+    expect(drawn(prev)).toBe('');
     expect(prev.querySelector('svg')).not.toBeNull();
     expect(prev.classList.contains('secondary')).toBe(true);
     expect(play.classList.contains('secondary')).toBe(false);
     // Play is an icon button too, the same square: no text, so its width never changes.
     expect(play.classList.contains('icon')).toBe(true);
-    expect(play.textContent).toBe('');
-    expect(play.getAttribute('aria-label')).toBe('Lecture');
+    expect(drawn(play)).toBe('');
+    expect(play.getAttribute('aria-label')).toBe('Lancer l’animation');
     expect(play.querySelectorAll('svg path.glyph')).toHaveLength(2);
     expect(counter.getAttribute('aria-live')).toBe('polite');
-    expect(counter.textContent).toBe('1 / 8');
+    expect(counter.textContent).toBe('étape 1 sur 8');
     (row.querySelector('[data-role="action"]') as HTMLButtonElement).click();
     expect(restart).toHaveBeenCalledTimes(1);
   });
@@ -55,7 +58,7 @@ describe('transport', () => {
     next.click();
     next.click();
     expect(s.index).toBe(2);
-    expect(counter.textContent).toBe('3 / 3');
+    expect(counter.textContent).toBe('step 3 of 3');
     expect(prev.disabled).toBe(false);
     expect(next.disabled).toBe(true);
   });
@@ -87,14 +90,36 @@ describe('transport', () => {
     expect(counter.textContent).toBe('0 / 8');
   });
 
+  it('says progress in words: « étape 2 sur 5 », or « coup 3 sur 9 » counted from the start position', () => {
+    expect(progress('fr', 'step')(1, 5)).toBe('étape 2 sur 5');
+    expect(progress('en', 'step')(1, 5)).toBe('step 2 of 5');
+    // From the start: step 0 is the position before anything happened.
+    expect(progress('fr', 'move', true)(3, 10)).toBe('coup 3 sur 9');
+    expect(progress('en', 'move', true)(0, 10)).toBe('move 0 of 9');
+    expect(progress('fr', 'step', true)(0, 6)).toBe('étape 0 sur 5');
+  });
+
+  it('every icon button shows its name on hover and focus, and the play square follows its state', () => {
+    const s = new Stepper(3, () => {});
+    const { prev, next, play } = parts(transport(s, { lang: 'en' }));
+    const tip = (b: HTMLElement) => b.querySelector<HTMLElement>('[role="tooltip"]')!.textContent;
+    expect(tip(prev)).toBe('Go back one step');
+    expect(tip(next)).toBe('Go forward one step');
+    expect(tip(play)).toBe('Play the animation');
+    play.click();
+    expect(play.getAttribute('aria-label')).toBe('Pause the animation');
+    expect(tip(play)).toBe('Pause the animation');
+    for (const b of [prev, next, play]) expect(b.classList.contains('icon')).toBe(true);
+  });
+
   it('keeps the play label and icon true to the real state, including at the end of a run', () => {
     const s = new Stepper(3, () => {});
     const { play } = parts(transport(s, { lang: 'en' }));
     const shown = () => [...play.querySelectorAll<SVGSVGElement>('svg')].filter((svg) => svg.style.display !== 'none');
-    expect(play.getAttribute('aria-label')).toBe('Play');
+    expect(play.getAttribute('aria-label')).toBe('Play the animation');
     expect(shown().map((svg) => svg.querySelector('path')!.getAttribute('d'))).toEqual(['M4 2.5v11L13.5 8z']);
     play.click();
-    expect(play.getAttribute('aria-label')).toBe('Pause');
+    expect(play.getAttribute('aria-label')).toBe('Pause the animation');
     expect(shown()).toHaveLength(1);
     expect(shown()[0]!.querySelector('path')!.getAttribute('d')).toMatch(/h3v11h-3z.*h3v11h-3z/);
     vi.advanceTimersByTime(2000);

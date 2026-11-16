@@ -97,13 +97,13 @@ describe('<pogo-qsteps>', () => {
     for (let i = 0; i < 3; i++) role(el, 'next').click();
     expect(current(el).querySelector('.here')!.textContent).toBe('C1');
     expect(notebook(el)).toEqual(['A0,00', 'B0,00', '*C10,10', 'C20,00']);
-    expect(role(el, 'counter').textContent).toBe('3 / 24');
+    expect(role(el, 'counter').textContent).toBe('étape 3 sur 24');
   });
 
   it('under reduced motion it never plays by itself', async () => {
     setMedia(REDUCED_MOTION, true);
     const el = await mount();
-    expect(role(el, 'play').getAttribute('aria-label')).not.toBe('Pause');
+    expect(playState(el)).toBe('play');
   });
 
   it('an aborted signal stops a running walk', async () => {
@@ -112,10 +112,10 @@ describe('<pogo-qsteps>', () => {
     role(el, 'play').click();
     vi.advanceTimersByTime(1600);
     const shown = role(el, 'counter');
-    expect(shown.textContent).toBe('1 / 24');
+    expect(shown.textContent).toBe('étape 1 sur 24');
     el.parentElement!.removeChild(el);
     vi.advanceTimersByTime(1600 * 10);
-    expect(shown.textContent).toBe('1 / 24');
+    expect(shown.textContent).toBe('étape 1 sur 24');
     expect(vi.getTimerCount()).toBe(0);
   });
 });

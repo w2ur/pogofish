@@ -4,7 +4,7 @@
 // board itself as on the playable board: tap a stack, its count, a
 // destination. The board shows the position the choice is made in and the
 // chosen move on it; « Réponses des Rouges » plays the chosen opening and
-// lists Red's replies; « Jouer d’ici » hands the position after the chosen
+// lists Red's replies; « Jouer cette position contre l’ordinateur » hands the position after the chosen
 // moves to the playable board. The verdicts are game A's.
 import { boardInput, type BoardInput } from '../board-input';
 import { announceMove, chooseCount, describeCell, origins, tap, type Selection } from '../board-state';

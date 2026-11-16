@@ -126,7 +126,7 @@
 
 /*
  * The controls keep the room of the steps' row from the start: under 560px that
- * row (two arrows, the counter, play, « Jouer d’ici ») takes two lines where
+ * row (two arrows, the counter, play, « Jouer cette position contre l’ordinateur ») takes two lines where
  * « Lancer » took one, and the figure must not grow when the search runs.
  */
 .search-controls {

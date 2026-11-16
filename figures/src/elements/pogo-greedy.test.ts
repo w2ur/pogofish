@@ -65,7 +65,7 @@ describe('<pogo-greedy>', () => {
     const el = await mount('fr', '17');
     expect(el.shadowRoot!.querySelector('.head')).toBeNull();
     const plies = greedyGame(17).frames.length - 1;
-    expect(counter(el)).toBe(`0 / ${plies}`);
+    expect(counter(el)).toBe(`coup 0 sur ${plies}`);
     expect(current(el)).toBe('Position de départ');
     role(el, 'next').click();
     expect(currentBlock(el).querySelector('.move-name [role="tooltip"]')!.textContent).toMatch(/^De [abc][123], [123] pièces?, vers [abc][123]\.$/);
@@ -91,14 +91,14 @@ describe('<pogo-greedy>', () => {
     vi.useFakeTimers();
     role(el, 'action').click();
     const seed = nextSeed(1);
-    expect(counter(el)).toBe(`0 / ${greedyGame(seed).frames.length - 1}`);
+    expect(counter(el)).toBe(`coup 0 sur ${greedyGame(seed).frames.length - 1}`);
     vi.advanceTimersByTime(1100);
-    expect(counter(el)).toMatch(/^1 \//);
+    expect(counter(el)).toMatch(/^coup 1 sur /);
 
     setMedia(REDUCED_MOTION, true);
     role(el, 'action').click();
     vi.advanceTimersByTime(1100 * 5);
-    expect(counter(el)).toMatch(/^0 \//);
+    expect(counter(el)).toMatch(/^coup 0 sur /);
     expect(vi.getTimerCount()).toBe(0);
   });
 
@@ -116,10 +116,10 @@ describe('<pogo-greedy>', () => {
     role(el, 'play').click();
     vi.advanceTimersByTime(1100);
     const shown = role(el, 'counter');
-    expect(shown.textContent).toMatch(/^1 \//);
+    expect(shown.textContent).toMatch(/^coup 1 sur /);
     el.parentElement!.removeChild(el);
     vi.advanceTimersByTime(1100 * 10);
-    expect(shown.textContent).toMatch(/^1 \//);
+    expect(shown.textContent).toMatch(/^coup 1 sur /);
     expect(vi.getTimerCount()).toBe(0);
   });
 

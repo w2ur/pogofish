@@ -71,7 +71,7 @@ describe('<pogo-line>', () => {
   it('steps through centreLoss to Red’s win', async () => {
     const el = await mount('centreLoss', 'A');
     expect(current(el)).toBe('Position de départ');
-    expect(counter(el)).toBe('0 / 12');
+    expect(counter(el)).toBe('coup 0 sur 12');
     role(el, 'next').click();
     expect(current(el)).toBe('Blanc joue a1-2-b2');
     expect(el.shadowRoot!.querySelector('.said:not([data-off]) .move-name [role="tooltip"]')!.textContent).toBe('De a1, 2 pièces, vers b2.');
@@ -95,9 +95,9 @@ describe('<pogo-line>', () => {
       role(el, 'play').click();
       // The loop rests on its last position before it goes round again.
       vi.advanceTimersByTime(1100 + LOOP_REST - 1);
-      expect(counter(el)).toBe('4 / 4');
+      expect(counter(el)).toBe('coup 4 sur 4');
       vi.advanceTimersByTime(1);
-      expect(counter(el)).toBe('1 / 4');
+      expect(counter(el)).toBe('coup 1 sur 4');
       // One disc moved: its cut-out, the disc and its ring, as on any forward step.
       expect(animate.mock.calls.length).toBe(forward + 3);
     } finally {
@@ -110,11 +110,11 @@ describe('<pogo-line>', () => {
     vi.useFakeTimers();
     role(el, 'play').click();
     vi.advanceTimersByTime(1100 * 4);
-    expect(counter(el)).toBe('4 / 4');
+    expect(counter(el)).toBe('coup 4 sur 4');
     expect(current(el)).toContain('Retour au départ');
     vi.advanceTimersByTime(1100 * 3 + LOOP_REST);
-    expect(counter(el)).toBe('3 / 4');
-    expect(role(el, 'play').getAttribute('aria-label')).toBe('Pause');
+    expect(counter(el)).toBe('coup 3 sur 4');
+    expect(playState(el)).toBe('pause');
     expect(el.shadowRoot!.textContent).not.toContain('Cette position pour la');
   });
 
@@ -123,13 +123,13 @@ describe('<pogo-line>', () => {
     for (let i = 0; i < 4; i++) role(el, 'next').click();
     expect(current(el)).toContain('This position for the 2nd time');
     for (let i = 0; i < 4; i++) role(el, 'next').click();
-    expect(counter(el)).toBe('8 / 8');
+    expect(counter(el)).toBe('move 8 of 8');
     // The end says two lines over the board: the stamp, and how; the live region says the move and the count too.
     expect(current(el)).toBe('White winsRed repeated a position three times.');
     expect(el.shadowRoot!.querySelector('[role="status"]')!.textContent).toContain('This position for the 3rd time');
   });
 
-  it('« Jouer d’ici » hands the shown position to the board, named by line and ply', async () => {
+  it('« Jouer cette position contre l’ordinateur » hands the shown position to the board, named by line and ply', async () => {
     const el = await mount('openingWin', 'A');
     const got: PlayFromDetail[] = [];
     document.addEventListener('pogo:playfrom', (e) => got.push((e as CustomEvent<PlayFromDetail>).detail), { once: true });
@@ -147,10 +147,10 @@ describe('<pogo-line>', () => {
     role(el, 'play').click();
     vi.advanceTimersByTime(1100);
     const shown = $(el, '.counter');
-    expect(shown.textContent).toBe('1 / 4');
+    expect(shown.textContent).toBe('coup 1 sur 4');
     el.parentElement!.removeChild(el);
     vi.advanceTimersByTime(1100 * 10);
-    expect(shown.textContent).toBe('1 / 4');
+    expect(shown.textContent).toBe('coup 1 sur 4');
     expect(vi.getTimerCount()).toBe(0);
   });
 });

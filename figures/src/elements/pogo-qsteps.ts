@@ -9,7 +9,7 @@ import type { Colour } from '../engine';
 import { ready } from '../engine';
 import { labelledBoard } from '../kit/board-labels';
 import { drawBoard } from '../kit/board-svg';
-import { transport } from '../kit/controls';
+import { progress, transport } from '../kit/controls';
 import { autoplay } from '../kit/autoplay';
 import { PogoFigure } from '../kit/figure';
 import { Stepper } from '../kit/stepper';
@@ -150,7 +150,7 @@ export class PogoQsteps extends PogoFigure {
     };
 
     const stepper = new Stepper(frames.length, show, { signal, interval: 1600 });
-    const row = transport(stepper, { lang, counter: (i, n) => `${i} / ${n - 1}` });
+    const row = transport(stepper, { lang, counter: progress(lang, 'step', true) });
     show(0);
     autoplay(this, stepper, { signal, still: () => stepper.go(stepper.steps - 1) });
     boardCol.append(slot, row);

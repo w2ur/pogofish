@@ -2,13 +2,13 @@
 // replays a line of the solved-table extract, one ply per step, under the rules
 // the page names (line-frames.ts). Each step says the move and, under lc1-2,
 // how often the position has stood; the last says who wins and how. Under
-// game A the loop plays on without end. « Jouer d’ici » hands any open position
+// game A the loop plays on without end. « Jouer cette position contre l’ordinateur » hands any open position
 // to the playable board.
 import { announceMove } from '../board-state';
 import { WASM_FILE, assetUrl } from '../assets';
 import type { TableData } from '../data';
 import { LC1_2, ready, terminal } from '../engine';
-import { transport } from '../kit/controls';
+import { progress, transport } from '../kit/controls';
 import { autoplay } from '../kit/autoplay';
 import { PogoFigure } from '../kit/figure';
 import { Stepper } from '../kit/stepper';
@@ -101,7 +101,7 @@ export class PogoLine extends PogoFigure {
     const stepper = new Stepper(frames.length, show, { signal, interval: 1100, ...(cyclic ? { wrapTo: 1, rest: LOOP_REST } : {}) });
     const row = transport(stepper, {
       lang,
-      counter: (i, n) => `${i} / ${n - 1}`,
+      counter: progress(lang, 'move', true),
       actions: [
         {
           label: t(lang, 'playFromHere'),

@@ -124,9 +124,9 @@ describe('<pogo-search>', () => {
     role(el, 'run').click();
     await until(() => !!el.shadowRoot!.querySelector('[data-role="counter"]'));
     // Reduced motion: the first snapshot, then the reader steps to the last.
-    expect($(el, '[data-role="counter"]').textContent).toBe('1 simulation');
+    expect($(el, '[data-role="counter"]').textContent).toBe('1 simulation of 100');
     for (let i = 0; i < STOPS.length; i++) role(el, 'next').click();
-    expect($(el, '[data-role="counter"]').textContent).toBe('100 simulations');
+    expect($(el, '[data-role="counter"]').textContent).toBe('100 simulations of 100');
     const shown = visits(el);
     puzzle.legal.forEach(([a, n, c], i) => expect(shown.get(moveName([a!, n!, c!]))).toBe(puzzle.visits[i]));
     const played = $(el, 'tr.played').dataset.move;
@@ -154,8 +154,8 @@ describe('<pogo-search>', () => {
     role(el, 'run').click();
     await until(() => !!el.shadowRoot!.querySelector('[data-role="counter"]'));
     await new Promise((r) => setTimeout(r, 1300));
-    expect($(el, '[data-role="counter"]').textContent).toBe('1 simulation');
-    expect(role(el, 'play').getAttribute('aria-label')).not.toBe('Pause');
+    expect($(el, '[data-role="counter"]').textContent).toBe('1 simulation of 100');
+    expect(playState(el)).toBe('play');
   });
 
   it('plays the steps by itself when motion is allowed', async () => {
@@ -165,7 +165,7 @@ describe('<pogo-search>', () => {
     role(el, 'run').click();
     await until(() => !!el.shadowRoot!.querySelector('[data-role="counter"]'));
     await vi.advanceTimersByTimeAsync(1100 * STOPS.length);
-    expect($(el, '[data-role="counter"]').textContent).toBe('100 simulations');
+    expect($(el, '[data-role="counter"]').textContent).toBe('100 simulations of 100');
   });
 
   it('a search still running at disconnect is aborted', async () => {
@@ -186,7 +186,7 @@ describe('<pogo-search>', () => {
     expect(at).toBeLessThan(100);
   });
 
-  it('« Jouer d’ici » hands the searched position to the store', async () => {
+  it('« Jouer cette position contre l’ordinateur » hands the searched position to the store', async () => {
     const el = await mount('puzzle5');
     const heard = vi.fn();
     document.addEventListener('pogo:playfrom', heard);

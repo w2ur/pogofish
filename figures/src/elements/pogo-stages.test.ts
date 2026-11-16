@@ -131,7 +131,7 @@ describe('<pogo-stages>', () => {
     const el = await mount('qtab');
     choices(el)[7]!.click();
     const stage = v5.programs.qtab.stages[7]!;
-    expect(role(el, 'counter').textContent).toBe(`0 / ${stage.game.length}`);
+    expect(role(el, 'counter').textContent).toBe(`coup 0 sur ${stage.game.length}`);
     role(el, 'next').click();
     expect(said(el)).toContain('Ouverture tirée au sort');
     for (let i = 1; i < stage.openingPlies; i++) role(el, 'next').click();
@@ -150,11 +150,11 @@ describe('<pogo-stages>', () => {
     vi.useFakeTimers();
     choices(el)[3]!.click();
     vi.advanceTimersByTime(1100);
-    expect(role(el, 'counter').textContent).toMatch(/^1 \//);
+    expect(role(el, 'counter').textContent).toMatch(/^coup 1 sur /);
     setMedia(REDUCED_MOTION, true);
     choices(el)[4]!.click();
     vi.advanceTimersByTime(1100 * 3);
-    expect(role(el, 'counter').textContent).toMatch(/^0 \//);
+    expect(role(el, 'counter').textContent).toMatch(/^coup 0 sur /);
     expect(vi.getTimerCount()).toBe(0);
   });
 
@@ -164,10 +164,10 @@ describe('<pogo-stages>', () => {
     choices(el)[2]!.click();
     vi.advanceTimersByTime(1100);
     const shown = role(el, 'counter');
-    expect(shown.textContent).toMatch(/^1 \//);
+    expect(shown.textContent).toMatch(/^coup 1 sur /);
     el.parentElement!.removeChild(el);
     vi.advanceTimersByTime(1100 * 10);
-    expect(shown.textContent).toMatch(/^1 \//);
+    expect(shown.textContent).toMatch(/^coup 1 sur /);
     expect(vi.getTimerCount()).toBe(0);
   });
 

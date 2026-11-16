@@ -9,7 +9,7 @@ import { announceMove } from '../board-state';
 import { WASM_FILE, assetUrl } from '../assets';
 import type { V5Data, V5Stage } from '../data';
 import { moveName, ready, type Colour } from '../engine';
-import { choiceGroup, transport } from '../kit/controls';
+import { choiceGroup, progress, transport } from '../kit/controls';
 import { autoplay } from '../kit/autoplay';
 import { keepCase } from '../kit/keep-case';
 import { formatShare } from '../kit/score';
@@ -172,7 +172,7 @@ export class PogoStages extends PogoFigure {
         reducedMotion: () => this.reducedMotion(),
       });
       const stepper = new Stepper(frames.length, view.show, { signal: current.signal, interval: 1100 });
-      const row = transport(stepper, { lang, counter: (i, n) => `${i} / ${n - 1}` });
+      const row = transport(stepper, { lang, counter: progress(lang, 'move', true) });
       view.show(0);
       body.replaceChildren(view.status, view.slot, row, view.live);
       // The first game starts by itself on screen (under reduced motion it shows its end); a stage chosen plays at once.

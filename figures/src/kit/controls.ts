@@ -6,8 +6,12 @@
 // (nothing plays by itself then, but the reader may ask). Once a run has ended
 // on its last state, the same square replays it. A press on pause is the
 // reader's pause (Stepper.pauseByReader), which kit/autoplay.ts never undoes.
+// Every icon button is named by a full verb phrase, shown on hover, focus and
+// tap (move-tip.ts's labelTip), and the counter says the progress in words
+// (« étape 2 sur 5 », « coup 3 sur 9 », progress()).
 // A figure puts this row right under the visual it drives.
 import { keepCase } from './keep-case';
+import { labelTip } from './move-tip';
 import type { Stepper } from './stepper';
 import { t, type Lang } from './strings';
 
@@ -21,7 +25,7 @@ export interface TransportAction {
 export interface TransportOptions {
   lang: Lang;
   actions?: TransportAction[];
-  /** The counter's text for step `i` of `steps` (default `i + 1 / steps`). */
+  /** The counter's text for step `i` of `steps` (default « étape i + 1 sur steps », progress()). */
   counter?: (i: number, steps: number) => string;
 }
 
@@ -63,12 +67,22 @@ function iconButton(direction: 'left' | 'right', label: string, onClick: () => v
   b.classList.add('icon');
   b.setAttribute('aria-label', label);
   b.append(icon('chevron', CHEVRON[direction]));
+  labelTip(b, label);
   return b;
+}
+
+/**
+ * The counter in words. `step` counts « étape 2 sur 5 » from 1; `fromStart` counts
+ * from the position before anything happened, step 0 of steps − 1 (« coup 0 sur 9 »).
+ */
+export function progress(lang: Lang, unit: 'step' | 'move', fromStart = false): (i: number, steps: number) => string {
+  const word = t(lang, unit === 'step' ? 'progressStep' : 'ply');
+  return (i, steps) => (fromStart ? `${word} ${i} ${t(lang, 'outOf')} ${steps - 1}` : `${word} ${i + 1} ${t(lang, 'outOf')} ${steps}`);
 }
 
 /** Builds the row and keeps it in step with `stepper`, including reduced motion switched mid-read. */
 export function transport(stepper: Stepper, o: TransportOptions): HTMLElement {
-  const format = o.counter ?? ((i: number, n: number) => `${i + 1} / ${n}`);
+  const format = o.counter ?? progress(o.lang, 'step');
   const row = document.createElement('div');
   row.className = 'controls';
 
@@ -87,6 +101,7 @@ export function transport(stepper: Stepper, o: TransportOptions): HTMLElement {
   const pauseIcon = icon('glyph', PAUSE);
   const replayIcon = icon('replay', REPLAY);
   play.append(playIcon, pauseIcon, replayIcon);
+  const playTip = labelTip(play, t(o.lang, 'play'));
 
   const extras = (o.actions ?? []).map((a) => {
     const b = controlButton(a.label, a.onClick, true);
@@ -106,6 +121,7 @@ export function transport(stepper: Stepper, o: TransportOptions): HTMLElement {
     const state = stepper.playing ? 'pause' : stepper.ended ? 'replay' : 'play';
     play.dataset.state = state;
     play.setAttribute('aria-label', t(o.lang, state));
+    playTip.set(t(o.lang, state));
     playIcon.style.display = state === 'play' ? '' : 'none';
     pauseIcon.style.display = state === 'pause' ? '' : 'none';
     replayIcon.style.display = state === 'replay' ? '' : 'none';

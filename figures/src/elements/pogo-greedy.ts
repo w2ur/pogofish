@@ -8,7 +8,7 @@
 import { announceMove } from '../board-state';
 import { WASM_FILE, assetUrl } from '../assets';
 import { ready } from '../engine';
-import { transport } from '../kit/controls';
+import { progress, transport } from '../kit/controls';
 import { autoplay } from '../kit/autoplay';
 import { PogoFigure } from '../kit/figure';
 import { Stepper } from '../kit/stepper';
@@ -122,7 +122,7 @@ export class PogoGreedy extends PogoFigure {
       const hadFocus = this.shadowRoot?.activeElement?.closest('.game') === body;
       const row = transport(stepper, {
         lang,
-        counter: (i, n) => `${i} / ${n - 1}`,
+        counter: progress(lang, 'move', true),
         actions: [{ label: t(lang, 'newGame'), onClick: () => load(nextSeed(seed), true) }],
       });
       view.show(0);

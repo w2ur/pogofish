@@ -153,7 +153,7 @@ describe('<pogo-td-targets>', () => {
       await vi.advanceTimersByTimeAsync(0);
       return p;
     })();
-    expect(role(el, 'play').getAttribute('aria-label')).not.toBe('Pause');
+    expect(playState(el)).toBe('play');
     const known = $$(el, '.td-chart .target.known').length;
     expect(known).toBeGreaterThan(0);
     expect(role(el, 'next').disabled).toBe(true);

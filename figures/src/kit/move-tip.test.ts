@@ -1,5 +1,5 @@
 import { afterEach, describe, expect, it, vi } from 'vitest';
-import { moveText, moveTip, moveWords, tipControl } from './move-tip';
+import { labelTip, moveText, moveTip, moveWords, tipControl } from './move-tip';
 import { controlButton } from './controls';
 
 afterEach(() => {
@@ -95,6 +95,46 @@ describe('tipControl', () => {
     expect(shown(b)).toBe(true);
     b.dispatchEvent(new KeyboardEvent('keydown', { key: 'Escape', bubbles: true }));
     expect(shown(b)).toBe(false);
+  });
+});
+
+describe('labelTip', () => {
+  const tipIn = (b: Element): HTMLElement => b.querySelector<HTMLElement>('[role="tooltip"]')!;
+
+  it('shows the control’s own name on hover and focus, without describing it a second time', () => {
+    const b = controlButton('', () => {}, true);
+    b.setAttribute('aria-label', 'Passer à l’étape suivante');
+    const tip = labelTip(b, 'Passer à l’étape suivante');
+    document.body.append(b);
+    expect(tipIn(b).textContent).toBe('Passer à l’étape suivante');
+    expect(b.hasAttribute('aria-describedby')).toBe(false);
+    expect(tipIn(b).getAttribute('aria-hidden')).toBe('true');
+    b.dispatchEvent(new PointerEvent('pointerenter'));
+    expect(tipIn(b).hasAttribute('data-open')).toBe(true);
+    b.dispatchEvent(new PointerEvent('pointerleave'));
+    expect(tipIn(b).hasAttribute('data-open')).toBe(false);
+    b.focus();
+    expect(tipIn(b).hasAttribute('data-open')).toBe(true);
+    tip.set('Revenir à l’étape précédente');
+    expect(tipIn(b).textContent).toBe('Revenir à l’étape précédente');
+  });
+
+  it('shows on a tap too, and goes by itself after a moment', () => {
+    vi.useFakeTimers();
+    try {
+      const b = controlButton('', () => {}, true);
+      labelTip(b, 'Mettre l’animation en pause');
+      document.body.append(b);
+      b.dispatchEvent(new PointerEvent('pointerdown', { pointerType: 'touch' }));
+      expect(tipIn(b).hasAttribute('data-open')).toBe(true);
+      vi.advanceTimersByTime(2000);
+      expect(tipIn(b).hasAttribute('data-open')).toBe(false);
+      // A mouse press is not a tap: hover has already shown it.
+      b.dispatchEvent(new PointerEvent('pointerdown', { pointerType: 'mouse' }));
+      expect(tipIn(b).hasAttribute('data-open')).toBe(false);
+    } finally {
+      vi.useRealTimers();
+    }
   });
 });
 

@@ -7,7 +7,7 @@
 // −1…+1 chart, where a target is λ × the next target + (1 − λ) × the next
 // value, the essay's sentence; each step writes that sum with its numbers.
 import type { Colour } from '../engine';
-import { transport } from '../kit/controls';
+import { progress, transport } from '../kit/controls';
 import { autoplay } from '../kit/autoplay';
 import { PogoFigure } from '../kit/figure';
 import { Stepper } from '../kit/stepper';
@@ -202,7 +202,7 @@ export class PogoTdTargets extends PogoFigure {
       live.textContent = [s.head, s.text, s.calc].filter(Boolean).join('. ');
     };
     const stepper = new Stepper(T + 2, show, { signal, interval: 1100 });
-    const row = transport(stepper, { lang, counter: (i, n) => `${i} / ${n - 1}` });
+    const row = transport(stepper, { lang, counter: progress(lang, 'step', true) });
     show(0);
     autoplay(this, stepper, { signal, still: () => stepper.go(stepper.steps - 1) });
 

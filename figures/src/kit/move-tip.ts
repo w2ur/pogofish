@@ -9,6 +9,12 @@
 //   openings list): nothing nested is focusable, the explanation is the
 //   control's own tooltip and part of its description.
 //
+// The same tooltip names an icon control (▶, ⏸, a chevron, a close cross):
+// labelTip() shows the control's aria-label, a full verb phrase, on hover, on
+// focus and on a tap, which on a touch screen neither hovers nor focuses; the
+// tap's tooltip goes by itself after a moment. It describes nothing: the
+// label already names the control.
+//
 // The tooltip is aria-hidden: a live region holding a move name says what it
 // said before, never the explanation at every move; aria-describedby still
 // reads it, since a directly referenced node counts even when hidden. It sits
@@ -76,10 +82,18 @@ function place(holder: Element, tip: HTMLElement): void {
   tip.style.top = `${Math.round(y)}px`;
 }
 
-/** Shows `tip` for `holder` on hover and focus, hides it on leave, blur, Escape and scroll. */
-function wire(holder: HTMLElement, tip: HTMLElement, hooks: TipHooks = {}): void {
-  const described = holder.getAttribute('aria-describedby');
-  holder.setAttribute('aria-describedby', described ? `${described} ${tip.id}` : tip.id);
+/** How long a tooltip shown by a tap stays, in ms. */
+export const TAP_TIP_MS = 1800;
+
+/**
+ * Shows `tip` for `holder` on hover and focus, hides it on leave, blur, Escape and scroll.
+ * `describe` makes the tip the holder's accessible description; `tap` shows it on a touch press too.
+ */
+function wire(holder: HTMLElement, tip: HTMLElement, hooks: TipHooks = {}, o: { describe?: boolean; tap?: boolean } = {}): void {
+  if (o.describe !== false) {
+    const described = holder.getAttribute('aria-describedby');
+    holder.setAttribute('aria-describedby', described ? `${described} ${tip.id}` : tip.id);
+  }
   holder.classList.add('has-move-tip');
   holder.append(tip);
   const popover = typeof tip.showPopover === 'function';
@@ -117,6 +131,17 @@ function wire(holder: HTMLElement, tip: HTMLElement, hooks: TipHooks = {}): void
   holder.addEventListener('blur', () => {
     if (!hovered) hide();
   });
+  if (o.tap) {
+    let timer: ReturnType<typeof setTimeout> | undefined;
+    holder.addEventListener('pointerdown', (e) => {
+      if (e.pointerType !== 'touch') return;
+      show();
+      clearTimeout(timer);
+      timer = setTimeout(() => {
+        if (!holder.matches(':focus-visible')) hide();
+      }, TAP_TIP_MS);
+    });
+  }
   holder.addEventListener('keydown', (e) => {
     if (e.key !== 'Escape' || !open) return;
     // The explanation goes; the figure's own Escape (a lifted stack, a folded board) waits for the next press.
@@ -140,6 +165,22 @@ export function moveTip(lang: Lang, move: Move | Triple, hooks?: TipHooks): HTML
 /** A move's name inside an existing control: the control carries the explanation; nothing nested is focusable. */
 export function tipControl(control: HTMLElement, lang: Lang, m: Move | Triple, hooks?: TipHooks): void {
   wire(control, tooltip(lang, asTriple(m)), hooks);
+}
+
+/** An icon control's name, `text`, shown as its tooltip (see the header); `set` changes it with the control's state. */
+export function labelTip(control: HTMLElement, text: string): { set(text: string): void } {
+  const tip = document.createElement('span');
+  tip.className = 'move-tip';
+  tip.id = `label-tip-${++seq}`;
+  tip.setAttribute('role', 'tooltip');
+  tip.setAttribute('aria-hidden', 'true');
+  tip.textContent = text;
+  wire(control, tip, {}, { describe: false, tap: true });
+  return {
+    set(next) {
+      if (tip.textContent !== next) tip.textContent = next;
+    },
+  };
 }
 
 /** `text` with every move name in it as a moveTip(); `hooks` gives each its own. */

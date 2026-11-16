@@ -7,17 +7,17 @@
 // Open or folded is the reader's choice and lasts for the page's session: the
 // store keeps it in its storage record, beside the saved game (store.ts), so a
 // reload restores it, and a follow board defined late (woken by a figure's
-// « Jouer d’ici ») finds the state the event already set. Moves and the AI's
+// « Jouer cette position contre l’ordinateur ») finds the state the event already set. Moves and the AI's
 // replies never change it.
 
-/** How a game started: on a board (inline, or the follow board's own « Nouvelle partie »), or from a figure's « Jouer d’ici ». */
+/** How a game started: on a board (inline, or the follow board's own « Nouvelle partie »), or from a figure's « Jouer cette position contre l’ordinateur ». */
 export type FollowStart = 'board' | 'figure';
 
 /** Folded until the reader opens it, or a figure hands a position over. */
 export const FOLLOW_OPEN_DEFAULT = false;
 
 /**
- * Whether the follow board is open once a game starts. A figure's « Jouer d’ici »
+ * Whether the follow board is open once a game starts. A figure's « Jouer cette position contre l’ordinateur »
  * opens it: the reader asked for a board and may be far from the inline one. A
  * game started on a board keeps the reader's last choice (folded by default).
  */
