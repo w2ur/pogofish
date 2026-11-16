@@ -174,6 +174,39 @@ describe('lazyDefine', () => {
     expect(el.textContent).toBe('fallback');
   });
 
+  it('lets go of an instance removed before its tag loads, and keeps one that is moved', async () => {
+    const tag = fresh();
+    const a = counted();
+    const gone = add(tag);
+    const moved = add(tag);
+    handle = lazyDefine({ loaders: { [tag]: a.load } });
+    expect(observing(gone)).toBe(1);
+    gone.remove();
+    const box = document.createElement('div');
+    document.body.append(box);
+    box.append(moved);
+    await tick();
+    expect(observing(gone)).toBe(0);
+    expect(observing(moved)).toBe(1);
+    intersect(moved);
+    await handle.settled();
+    expect(a.calls()).toBe(1);
+  });
+
+  it('once a tag is requested, a later instance of it is not watched', async () => {
+    const tag = fresh();
+    const other = fresh();
+    const a = counted();
+    const first = add(tag);
+    handle = lazyDefine({ loaders: { [tag]: a.load, [other]: counted().load } });
+    intersect(first);
+    await handle.settled();
+    const late = add(tag);
+    await tick();
+    expect(observing(late)).toBe(0);
+    expect(a.calls()).toBe(1);
+  });
+
   it('imports every present tag at once when IntersectionObserver is missing', async () => {
     const tag = fresh();
     const absent = fresh();

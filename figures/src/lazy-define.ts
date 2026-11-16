@@ -4,6 +4,13 @@
 // page styles them under `:not(:defined)`); an import that fails leaves them in
 // place for good, and so does a class that cannot be defined. lazy-plan.ts decides
 // what to import; this file only observes.
+//
+// What stays connected: the IntersectionObserver watches only the instances whose
+// tag is still waiting, and lets go of an instance once its tag is requested or once
+// it leaves the document. The MutationObserver stays connected for as long as any
+// tag is still waiting, because an instance can be added at any time (a later render,
+// a tab built on demand); on a page that lacks one of the tags that is the page's
+// whole life. Its work is kept small: it looks only for the tags still waiting.
 import { LazyPlan } from './lazy-plan';
 import type { Loader } from './registry';
 
@@ -38,7 +45,6 @@ export interface LazyHandle {
 export function lazyDefine(o: LazyOptions): LazyHandle {
   const root = o.root ?? document;
   const tags = Object.keys(o.loaders);
-  const selector = tags.join(',');
   const plan = new LazyPlan(tags, (tag) => customElements.get(tag) !== undefined);
   const watched = new Map<string, Set<Element>>();
   const inFlight = new Set<Promise<void>>();
@@ -84,7 +90,10 @@ export function lazyDefine(o: LazyOptions): LazyHandle {
         .finally(() => inFlight.delete(run));
       inFlight.add(run);
     }
-    if (!plan.anyWaiting()) mo?.disconnect();
+    if (!plan.anyWaiting()) {
+      mo?.disconnect();
+      io?.disconnect();
+    }
   }
 
   function consider(el: Element): void {
@@ -105,15 +114,32 @@ export function lazyDefine(o: LazyOptions): LazyHandle {
 
   function scan(node: Node): void {
     if (!(node instanceof Element)) return;
+    const selector = tags.filter((tag) => plan.waiting(tag)).join(',');
+    if (!selector) return;
     if (node.matches(selector)) consider(node);
     for (const el of node.querySelectorAll(selector)) consider(el);
+  }
+
+  /** Lets go of watched instances no longer in the document (a node removed, or one of its descendants). */
+  function release(node: Node): void {
+    if (!(node instanceof Element) || !watched.size) return;
+    for (const set of watched.values())
+      for (const el of set)
+        if (!el.isConnected && (el === node || node.contains(el))) {
+          io?.unobserve(el);
+          set.delete(el);
+        }
   }
 
   // An instance added after this call (a later render, a tab built on demand) is picked up too.
   const mo =
     typeof MutationObserver === 'function'
       ? new MutationObserver((records) => {
-          for (const r of records) for (const n of r.addedNodes) scan(n);
+          for (const r of records) {
+            // A moved instance is removed and added again: it is still connected, and kept.
+            for (const n of r.removedNodes) release(n);
+            for (const n of r.addedNodes) scan(n);
+          }
         })
       : undefined;
   mo?.observe(root, { childList: true, subtree: true });
