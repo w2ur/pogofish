@@ -3,8 +3,12 @@
 // hangs, the same search runs on the main thread from then on (it yields
 // between batches, so the page stays responsive). An error the worker reports
 // is a failure the reader can retry, in a fresh worker. A new request
-// supersedes the one in flight.
+// supersedes the one in flight. The net comes from the page's one fetch
+// (nets-shared.ts): its bytes go with a worker's first request, and the
+// main-thread search reads the page's parsed net, so the file is never
+// downloaded twice, whichever figure or board asked for it first.
 import { assetUrl, NET_FILE, WASM_FILE, workerUrl } from './assets';
+import { sharedAz, sharedAzBytes } from './nets-shared';
 import type { Rules, State, Triple } from './engine';
 import type { SearchSnapshot } from './mcts';
 import type { SearchReply, SearchRequest, WorkerMessage } from './search-handler';
@@ -32,9 +36,12 @@ export interface ClientOptions {
   fallback?: Fallback;
   /**
    * A worker that has not answered after this long is dropped for the main thread; a
-   * main-thread search that has not answered after this long fails (default 30 s).
+   * main-thread search that has not answered after this long fails, and so does a net
+   * that has not loaded (default 30 s).
    */
   timeoutMs?: number;
+  /** The net's bytes, sent to each new worker (default: the page's one fetch). */
+  netBytes?: () => Promise<ArrayBuffer>;
 }
 
 const abortError = (): DOMException => new DOMException('pogo-figures: search superseded or aborted', 'AbortError');
@@ -42,9 +49,11 @@ const abortError = (): DOMException => new DOMException('pogo-figures: search su
 const defaultWorker = (): WorkerLike => new Worker(workerUrl(), { type: 'module' }) as unknown as WorkerLike;
 
 let mainHandler: Promise<Fallback> | undefined;
-/** Loaded on demand: the search and the net parser stay out of the eager bundle. */
+/** Loaded on demand: the search and the net parser stay out of the eager bundle. The net is the page's. */
 const mainThread: Fallback = async (req, signal) => {
-  mainHandler ??= import('./search-handler').then((m) => m.createSearchHandler());
+  mainHandler ??= Promise.all([import('./search-handler'), import('./engine')]).then(([m, e]) =>
+    m.createSearchHandler({ ready: e.ready, loadNet: () => sharedAz() }),
+  );
   return (await mainHandler)(req, signal);
 };
 
@@ -64,11 +73,15 @@ export class SearchClient {
   private readonly createWorker: () => WorkerLike;
   private readonly fallback: Fallback;
   private readonly timeoutMs: number;
+  private readonly netBytes: () => Promise<ArrayBuffer>;
+  /** The worker that has been sent the net's bytes. */
+  private hasNet: WorkerLike | undefined;
 
   constructor(o: ClientOptions = {}) {
     this.createWorker = o.createWorker ?? defaultWorker;
     this.fallback = o.fallback ?? mainThread;
     this.timeoutMs = o.timeoutMs ?? 30_000;
+    this.netBytes = o.netBytes ?? sharedAzBytes;
   }
 
   /** Where the next search will run, once known. */
@@ -96,6 +109,13 @@ export class SearchClient {
       };
       const worker = this.ensureWorker();
       if (worker) {
+        if (this.hasNet !== worker) {
+          // Copied, never transferred: the page's other readers share these bytes.
+          req.netBytes = await this.loadNet(controller.signal);
+          // Superseded while the bytes loaded: nothing was posted, and nothing will be.
+          if (controller.signal.aborted) throw abortError();
+          this.hasNet = worker;
+        }
         const reply = await this.viaWorker(worker, req, controller.signal);
         if (reply && 'error' in reply) {
           // A failed fetch inside the worker may be transient, and the worker's
@@ -115,6 +135,39 @@ export class SearchClient {
       signal?.removeEventListener('abort', onAbort);
       if (this.current === controller) this.current = undefined;
     }
+  }
+
+  /** The net's bytes, bounded by the timeout: a hung fetch must not think forever. Rejects with an `AbortError` on abort. */
+  private loadNet(signal: AbortSignal): Promise<ArrayBuffer> {
+    return new Promise((resolve, reject) => {
+      const done = (): void => {
+        clearTimeout(timer);
+        signal.removeEventListener('abort', onAbort);
+      };
+      const onAbort = (): void => {
+        done();
+        reject(abortError());
+      };
+      const timer = setTimeout(() => {
+        done();
+        reject(new Error(`pogo-figures: the net did not load in ${this.timeoutMs} ms`));
+      }, this.timeoutMs);
+      signal.addEventListener('abort', onAbort, { once: true });
+      if (signal.aborted) {
+        onAbort();
+        return;
+      }
+      this.netBytes().then(
+        (bytes) => {
+          done();
+          resolve(bytes);
+        },
+        (error: unknown) => {
+          done();
+          reject(error);
+        },
+      );
+    });
   }
 
   /** The fallback, bounded by the same timeout as the worker: a hung fetch must not think forever. */

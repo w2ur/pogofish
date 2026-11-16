@@ -98,4 +98,18 @@ describe('the worker endpoint', () => {
     await createWorkerEndpoint(broken, (r) => posted.push(r))(request(9, initial()));
     expect(posted).toEqual([{ id: 9, error: 'pogo-figures: no wasm' }]);
   });
+
+  it('a request carrying the net’s bytes is answered without fetching the net', async () => {
+    const fetchSpy = vi.spyOn(globalThis, 'fetch').mockRejectedValue(new Error('no fetch expected'));
+    try {
+      const h = createSearchHandler();
+      const netBytes = bytes.buffer.slice(bytes.byteOffset, bytes.byteOffset + bytes.byteLength) as ArrayBuffer;
+      const reply = await h({ ...request(1, initial(), 5), netBytes }, new AbortController().signal);
+      if ('error' in reply) throw new Error(reply.error);
+      expect(reply.snapshot.sim).toBe(5);
+      expect(fetchSpy).not.toHaveBeenCalled();
+    } finally {
+      fetchSpy.mockRestore();
+    }
+  });
 });
