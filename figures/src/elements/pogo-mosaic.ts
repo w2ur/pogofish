@@ -26,11 +26,10 @@ import { Stepper } from '../kit/stepper';
 import { formatScore, formatShare } from '../kit/score';
 import { colon, t, type Lang, type StringKey } from '../kit/strings';
 import { V5_FILE, sharedV5 } from '../v5';
-import { countNodes, formatCount } from './count-steps';
 import { MOSAIC_COLUMNS, MOSAIC_PROGRAMS, mosaicSource, mosaicStages, type GameMark, type MosaicProgram, type MosaicSquare, type MosaicStage } from './mosaic-grid';
 import { sweepPlan, type SquareState } from './mosaic-sweep';
 import mosaicCss from './pogo-mosaic.css?raw';
-import { pctText } from './stage-view';
+import { pctText, whenNodes, whenText } from './stage-view';
 
 const NS = 'http://www.w3.org/2000/svg';
 const NAME: Record<MosaicProgram, StringKey> = { az100: 'progAz100', td: 'progTd', qtab: 'progQtab' };
@@ -136,17 +135,6 @@ export function totalsWords(lang: Lang, s: MosaicStage): { wins: string; mistake
     games: `${n(s.mistakenGames)} ${t(lang, 'mosaicGamesMistaken')} · ${n(s.noneJudgedGames)} ${t(lang, 'mosaicGamesNoneJudged')}`,
     bench: `${t(lang, 'mosaicBench')}${colon(lang)} ${formatScore(lang, s)}`,
   };
-}
-
-/** « après 500 parties », or « avant tout entraînement » for stage 0, as text. */
-export function whenText(lang: Lang, gamesTrained: number): string {
-  return gamesTrained === 0 ? t(lang, 'beforeTraining') : `${t(lang, 'mosaicAfter')} ${formatCount(lang, gamesTrained)} ${t(lang, 'stagesGames')}`;
-}
-
-/** « après 500 parties », or « avant tout entraînement » for stage 0, as nodes (the count's digit groups get room). */
-export function whenNodes(lang: Lang, gamesTrained: number): (string | HTMLElement)[] {
-  if (gamesTrained === 0) return [t(lang, 'beforeTraining')];
-  return [`${t(lang, 'mosaicAfter')} `, ...countNodes(lang, gamesTrained), ` ${t(lang, 'stagesGames')}`];
 }
 
 export class PogoMosaic extends PogoFigure {

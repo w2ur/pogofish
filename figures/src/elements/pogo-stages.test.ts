@@ -70,6 +70,19 @@ describe('<pogo-stages>', () => {
     expect(where.querySelector('.keep-case')!.textContent).toBe('λ');
   });
 
+  it('stage 0 reads « avant tout entraînement », not « 0 % de l’entraînement : 0 parties »', async () => {
+    for (const [lang, text] of [
+      ['fr', 'TD(λ) · avant tout entraînement'],
+      ['en', 'TD(λ) · before any training'],
+    ] as const) {
+      const el = await mount('td', lang);
+      expect(v5.programs.td.stages[0]!.gamesTrained).toBe(0);
+      expect(readout(el).querySelector('.where')!.textContent).toBe(text);
+      expect($(el, '[role="status"]').textContent).toMatch(new RegExp(`^${text.replace(/[()]/g, '\\$&')}\\. `));
+      document.body.innerHTML = '';
+    }
+  });
+
   it('offers the data’s stages, the first chosen', async () => {
     const el = await mount('qtab');
     expect(choices(el).map((b) => b.textContent)).toEqual(v5.stagesPct.map((p) => `${p} %`));

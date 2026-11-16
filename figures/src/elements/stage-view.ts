@@ -5,7 +5,8 @@
 import type { V5Data, V5Stage } from '../data';
 import { LC1_2 } from '../engine';
 import { SOURCES } from '../kit/figure';
-import type { Lang } from '../kit/strings';
+import { t, type Lang } from '../kit/strings';
+import { countNodes, formatCount } from './count-steps';
 import { lineFrames, type Frame } from './line-frames';
 
 export type StageProgram = 'qtab' | 'td' | 'az100';
@@ -21,6 +22,17 @@ export function parseProgram(attr: string | null): StageProgram {
 /** « 25 % » with a narrow no-break space in French, "25%" in English. */
 export function pctText(lang: Lang, pct: number): string {
   return lang === 'fr' ? `${pct} %` : `${pct}%`;
+}
+
+/** « après 500 parties », or « avant tout entraînement » for stage 0, as text. */
+export function whenText(lang: Lang, gamesTrained: number): string {
+  return gamesTrained === 0 ? t(lang, 'beforeTraining') : `${t(lang, 'mosaicAfter')} ${formatCount(lang, gamesTrained)} ${t(lang, 'stagesGames')}`;
+}
+
+/** « après 500 parties », or « avant tout entraînement » for stage 0, as nodes (the count's digit groups get room). */
+export function whenNodes(lang: Lang, gamesTrained: number): (string | HTMLElement)[] {
+  if (gamesTrained === 0) return [t(lang, 'beforeTraining')];
+  return [`${t(lang, 'mosaicAfter')} `, ...countNodes(lang, gamesTrained), ` ${t(lang, 'stagesGames')}`];
 }
 
 /**

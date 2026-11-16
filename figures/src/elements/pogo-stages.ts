@@ -23,7 +23,7 @@ import { seenText, type Frame } from './line-frames';
 import stagesCss from './pogo-stages.css?raw';
 import replayCss from './replay.css?raw';
 import { colourKey, replayView, resultWords, type Line, type Spoken } from './replay-view';
-import { parseProgram, pctText, stageFrames, stagesSource, type StageProgram } from './stage-view';
+import { parseProgram, pctText, stageFrames, stagesSource, whenNodes, whenText, type StageProgram } from './stage-view';
 
 const PROGRAM_KEY: Record<StageProgram, StringKey> = { qtab: 'progQtab', td: 'progTd', az100: 'progAz100' };
 
@@ -35,18 +35,22 @@ export function stageWords(
   lang: Lang,
   program: StageProgram,
   stage: V5Stage,
-): { where: string; whereHead: string; whereTail: string; score: string; note: string; shown: string } {
+): { where: string; whereHead: string; whereTail: string; before: boolean; score: string; note: string; shown: string } {
   const c = colon(lang);
   const shown =
     `${t(lang, 'stagesShownIs')} ${t(lang, colourKey(stage.playerColour))}, ` +
     `${t(lang, 'stagesGreedyIs')} ${t(lang, colourKey(other(stage.playerColour)))}${semi(lang)} ` +
     t(lang, stage.result === 'win' ? 'stagesProgramWins' : 'stagesProgramLoses');
-  const whereHead = `${t(lang, PROGRAM_KEY[program])} · ${pctText(lang, stage.pct)} ${t(lang, 'stagesOfTraining')}${c} `;
-  const whereTail = ` ${t(lang, 'stagesGames')}`;
+  // Stage 0 has trained on nothing: « avant tout entraînement », as <pogo-mosaic> says it (whenText).
+  const before = stage.gamesTrained === 0;
+  const name = `${t(lang, PROGRAM_KEY[program])} · `;
+  const whereHead = before ? name : `${name}${pctText(lang, stage.pct)} ${t(lang, 'stagesOfTraining')}${c} `;
+  const whereTail = before ? '' : ` ${t(lang, 'stagesGames')}`;
   return {
-    where: `${whereHead}${formatCount(lang, stage.gamesTrained)}${whereTail}`,
+    where: before ? `${name}${whenText(lang, 0)}` : `${whereHead}${formatCount(lang, stage.gamesTrained)}${whereTail}`,
     whereHead,
     whereTail,
+    before,
     score: `${t(lang, 'stagesScore')}${c} ${formatScore(lang, stage)}`,
     note: t(lang, 'stagesScoreNote'),
     shown,
@@ -138,7 +142,7 @@ export class PogoStages extends PogoFigure {
       const block = el('div', 'stage-words');
       const where = el('p', 'label where num');
       // The label cut all but closes a narrow space: the count's digit groups get room (countNodes).
-      where.append(...keepCase(w.whereHead), ...countNodes(lang, s.gamesTrained), w.whereTail);
+      where.append(...keepCase(w.whereHead), ...(w.before ? whenNodes(lang, 0) : [...countNodes(lang, s.gamesTrained), w.whereTail]));
       block.append(where, el('p', 'score num', w.score), el('p', 'note', w.note), el('p', 'shown', w.shown));
       readout.append(block);
       return block;
