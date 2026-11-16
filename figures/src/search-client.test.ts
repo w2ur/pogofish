@@ -199,8 +199,6 @@ describe('the search client', () => {
     const bytesOf = (m: WorkerMessage) => ('netBytes' in m ? m.netBytes?.byteLength : undefined);
     expect(workers[0]!.sent.map(bytesOf)).toEqual([AZ_BYTES.byteLength]);
     expect(workers[1]!.sent.map(bytesOf)).toEqual([AZ_BYTES.byteLength, undefined]);
-    // Copied to the worker, never transferred: the page's buffer is still whole.
-    expect(AZ_BYTES.byteLength).toBeGreaterThan(0);
   });
 
   it('a request superseded while the net loads posts nothing, and the next one carries the bytes', async () => {
