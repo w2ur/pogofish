@@ -6,8 +6,28 @@
  * grid reflows by itself: as many columns of at least 124px as the box holds
  * (seven in the wide box, four in the essay's column, two on a phone).
  */
-.openings {
+:host {
   container-type: inline-size;
+}
+
+/* The room the figure keeps before it renders, measured on the harness (2026-11-16). */
+.stage {
+  min-height: 1872px;
+}
+
+@container (min-width: 480px) {
+  .stage {
+    min-height: 1457px;
+  }
+}
+
+@container (min-width: 720px) {
+  .stage {
+    min-height: 749px;
+  }
+}
+
+.openings {
   display: flex;
   flex-direction: column;
   gap: 28px;

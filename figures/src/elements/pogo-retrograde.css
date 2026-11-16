@@ -16,7 +16,7 @@
 
 /* The room the figure keeps before it renders, measured on the harness (2026-11-16). */
 .stage {
-  min-height: 1180px;
+  min-height: 1102px;
 }
 
 @container (min-width: 480px) {

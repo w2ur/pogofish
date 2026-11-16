@@ -31,10 +31,12 @@ describe('every figure is centred in its box, and the wide ones use it', () => {
     expect(rule(s, '.line-figure > .controls')).toContain('justify-content: center');
   });
 
-  it('pogo-count: factors, total and transport centred', () => {
+  it('pogo-count: the line, the drawing and the transport centred; the row beside the board from 720px', () => {
     const s = css('pogo-count');
     expect(rule(s, '.count')).toContain('text-align: center');
-    expect(s).toMatch(/\.factor,\s*\.total \{[^}]*align-items: center/);
+    expect(rule(s, '.count')).toContain('align-items: center');
+    // The drawing itself changes layout with the width (count-view.ts): the sheet keeps its room.
+    wide(s);
     expect(rule(s, '.count > .controls')).toContain('justify-content: center');
   });
 
