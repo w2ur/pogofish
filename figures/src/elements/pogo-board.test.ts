@@ -4,7 +4,7 @@ import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { DEFAULT_GAME } from '../default-game';
 import { describeCell } from '../board-state';
 import { createDriver, type Searcher } from '../driver';
-import { LC1_2, legal, play, replay, terminal, type State, type Triple } from '../engine';
+import { LC1_2, legal, moveName, play, replay, terminal, type State, type Triple } from '../engine';
 import { REDUCED_MOTION, intersect, observersOf, resetMedia, setMedia } from '../test-dom';
 import { createStore, type Store } from '../store';
 import { PogoBoard } from './pogo-board';
@@ -545,6 +545,62 @@ describe('<pogo-board mode="follow"> as a panel', () => {
     // It lets go of the inline board at disconnect.
     el.remove();
     expect(observersOf(inline)).toHaveLength(0);
+  });
+
+  it('a yielding follow board never claims a move: the inline board on screen says it', async () => {
+    // The follow board renders first (a saved game, the reader scrolled below), so it sees each move first.
+    mode = 'manual';
+    const el = await mount('fr', { mode: 'follow' });
+    const inline = await mount('fr');
+    store.newGame('White', 'normal');
+    await flush();
+    onScreen(inline, true);
+    expect(el.hasAttribute('data-yield')).toBe(true);
+    const [from, n, to] = firstLegal(store.current()!.states[0]!);
+    cell(inline, from).click();
+    key(cell(inline, from), String(n));
+    cell(inline, to).click();
+    await flush();
+    expect(live(inline)).toBe(`Blanc joue ${moveName([from, n, to])}`);
+    expect(live(el)).toBe('');
+    pending[0]!.resolve();
+    await flush();
+    expect(live(inline)).toMatch(/^Rouge joue /);
+    expect(live(el)).toBe('');
+  });
+
+  it('with the inline board off screen, the follow board, shown and first, says the move, and only it', async () => {
+    mode = 'manual';
+    const el = await mount('fr', { mode: 'follow' });
+    const inline = await mount('fr');
+    store.newGame('White', 'normal');
+    await flush();
+    onScreen(inline, false);
+    expect(el.hasAttribute('data-yield')).toBe(false);
+    store.play(firstLegal(store.current()!.states[0]!));
+    await flush();
+    expect(live(el)).toMatch(/^Blanc joue /);
+    expect(live(inline)).toBe('');
+  });
+
+  it('a move made while no board is shown is not read back later', async () => {
+    mode = 'manual';
+    const el = await mount('fr', { mode: 'follow' });
+    const inline = await mount('fr');
+    store.newGame('White', 'normal');
+    await flush();
+    onScreen(inline, true);
+    // The inline board is put in a hidden container: no board is shown.
+    inline.parentElement!.style.display = 'none';
+    store.play(firstLegal(store.current()!.states[0]!));
+    await flush();
+    expect(live(el)).toBe('');
+    expect(live(inline)).toBe('');
+    inline.parentElement!.style.display = '';
+    pending[0]!.resolve();
+    await flush();
+    // Only the newest move, the AI's: the reader's, made unseen, is not replayed.
+    expect(live(inline)).toMatch(/^Rouge joue [a-c][1-3]-[1-3]-[a-c][1-3]$/);
   });
 
   it('with no inline board on the page, it simply follows', async () => {

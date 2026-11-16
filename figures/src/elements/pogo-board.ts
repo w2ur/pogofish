@@ -38,7 +38,10 @@ function boardSheet(): CSSStyleSheet {
   return sheet;
 }
 
-/** Moves already announced, per game: two boards never say a move twice. */
+/**
+ * Moves already announced, per game: two boards never say a move twice. Only a
+ * board that is shown claims them, so a move is never said into a hidden region.
+ */
 const announced = new WeakMap<State, number>();
 
 let pageDriver: Driver | undefined;
@@ -62,6 +65,8 @@ export class PogoBoard extends PogoFigure {
   /** « Nouvelle partie » was pressed once during a game: the next press abandons it. */
   private confirming = false;
   private seen: { start: State; ply: number } | undefined;
+  /** The game and ply this board last heard, shown or not: a board that shows again never reads back what it heard hidden. */
+  private heard: { start: State; ply: number } | undefined;
   private drawn = '';
 
   private get mode(): 'inline' | 'follow' {
@@ -159,6 +164,7 @@ export class PogoBoard extends PogoFigure {
         this.ui = undefined;
         this.drawn = '';
         this.seen = undefined;
+        this.heard = undefined;
       },
       { once: true },
     );
@@ -405,18 +411,35 @@ export class PogoBoard extends PogoFigure {
     this.syncFocus();
   }
 
-  /** Says each new move, then the result, in the live region of the first board to see it. */
+  /**
+   * Whether this board is on screen to be heard: not a follow board giving way or
+   * waiting, not inside a hidden container. Read once per game event, never in a loop.
+   */
+  private shown(): boolean {
+    if (this.hasAttribute('data-yield') || this.hasAttribute('data-idle')) return false;
+    return typeof this.checkVisibility === 'function' ? this.checkVisibility() : true;
+  }
+
+  /**
+   * Says each new move, then the result, in the live region of the first shown board
+   * to see it. A board not shown claims nothing; what it heard meanwhile it never says
+   * later, and a move made while no board is shown is said by none.
+   */
   private announce(lang: Lang): void {
     const ui = this.ui!;
     const g = this.deps.store.current();
     if (!g) return;
-    const done = announced.get(g.start);
-    if (done === undefined) {
+    const heard = this.heard?.start === g.start ? this.heard.ply : g.moves.length;
+    this.heard = { start: g.start, ply: g.moves.length };
+    if (!this.shown()) return;
+    const claimed = announced.get(g.start);
+    if (claimed === undefined) {
       // A game first seen (new, taken up or restored) is not read back move by move.
       announced.set(g.start, g.moves.length);
       if (g.label) ui.live.textContent = `${t(lang, 'resumed')}${colon(lang)} ${g.label}`;
       return;
     }
+    const done = Math.max(claimed, heard);
     if (g.moves.length <= done) return;
     const said = g.moves.slice(done).map((m, k) => announceMove(lang, g.states[done + k]!.to_move, m));
     const result = resultText(lang, g);
