@@ -216,6 +216,35 @@ describe('<pogo-search>', () => {
     // The tenth by preference gives up its place; the disclosure holds it and the four after it, not the move played.
     const hidden = $$(el, '.others tbody tr').map((r) => r.dataset.move);
     expect(hidden).toEqual(['b2-2-c3', 'b2-2-c1', 'b2-3-b3', 'b3-1-a3', 'b3-1-b2']);
-    expect($(el, '.others-summary').textContent).toMatch(/^The other 5 moves, /);
+    // Their combined preference, from the fixture's priors: the move played is not counted.
+    const fx = fixture.positions.find((p) => p.label === 'puzzle 5')! as unknown as { priors: number[]; legal: number[][] };
+    const share = fx.legal.reduce((a, [x, n, y], i) => (hidden.includes(moveName([x!, n!, y!])) ? a + fx.priors[i]! : a), 0);
+    expect($(el, '.others-summary').textContent).toBe(`The other 5 moves, ${formatShare('en', share)} of the net’s preference`);
+  });
+
+  it('exactly ten moves: all shown, the least preferred one played in its own place, no disclosure', async () => {
+    const fake = async (st: State, net: AzNet, o: { onSnapshot: (x: SearchSnapshot) => void; signal: AbortSignal }) => {
+      const base = (await search(st, net, { sims: 1 })).root;
+      const last = base.map((_, i) => i).sort((a, b) => base[a]!.prior - base[b]!.prior)[0]!;
+      let snap: SearchSnapshot = { sim: 0, root: base };
+      for (let n = 1; n <= 100; n++) {
+        snap = { sim: n, root: base.map((r, i) => ({ ...r, visits: i === last ? n : 0 })) };
+        o.onSnapshot(snap);
+      }
+      return snap;
+    };
+    use(makeStore(), fake);
+    // The default position has ten legal moves.
+    const el = await mount('reader', 'en');
+    const def = fixture.positions.find((p) => p.label === 'openingWin ply 3')!;
+    expect(def.legal).toHaveLength(10);
+    role(el, 'run').click();
+    await until(() => !!el.shadowRoot!.querySelector('[data-role="counter"]'));
+    const rows = $$(el, '.ranked > table > tbody > tr');
+    expect(rows).toHaveLength(10);
+    expect(rows.filter((r) => r.classList.contains('blank'))).toHaveLength(0);
+    expect(rows.at(-1)!.classList.contains('played')).toBe(true);
+    expect($$(el, '.others tbody tr')).toHaveLength(0);
+    expect($(el, '.others').hasAttribute('data-none')).toBe(true);
   });
 });
