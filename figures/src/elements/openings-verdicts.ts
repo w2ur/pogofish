@@ -38,8 +38,6 @@ export function choicesAfter(table: TableData, opening: Triple | null): Choices 
   return opening ? replyChoices(table, opening) : openingChoices(table);
 }
 
-export const holding = (moves: readonly VerdictMove[]): number => moves.filter((m) => m.verdict.kind === 'keeps-draw').length;
-
 export const sameMove = (a: Triple, b: Triple): boolean => a[0] === b[0] && a[1] === b[1] && a[2] === b[2];
 
 /** « garde la nulle » / « perd en 12 » / « gagne en 21 », for the side that played the move. */
@@ -48,10 +46,29 @@ export function verdictText(lang: Lang, v: Verdict): string {
   return `${t(lang, v.kind === 'wins-in' ? 'wins' : 'loses')} ${t(lang, 'verdictIn')} ${v.plies}`;
 }
 
-/** « Premiers coups des Blancs · 6 sur 16 gardent la nulle » / « Réponses des Rouges à a1-1-b1 · 2 sur 16 … ». */
+/** How many moves of the list win, keep the draw and lose, for the side that plays them. */
+export function outcomes(moves: readonly VerdictMove[]): { wins: number; draws: number; losses: number } {
+  const count = (kind: Verdict['kind']): number => moves.filter((m) => m.verdict.kind === kind).length;
+  return { wins: count('wins-in'), draws: count('keeps-draw'), losses: count('loses-in') };
+}
+
+/**
+ * « Premiers coups des Blancs · 6 gardent la nulle, 10 perdent » / « Réponses des Rouges à b1-2-b3 · 2 gagnent, 8 perdent »:
+ * every outcome the list holds, wins, then draws, then losses, a zero one left out.
+ */
 export function headLine(lang: Lang, table: TableData, opening: Triple | null): string {
-  const { moves } = choicesAfter(table, opening);
-  const n = holding(moves);
   const what = opening ? `${t(lang, 'openingsRepliesTo')} ${moveName(opening)}` : t(lang, 'openingsFirst');
-  return `${what} · ${n} ${t(lang, 'outOf')} ${moves.length} ${t(lang, n === 1 ? 'holdsDraw' : 'holdDrawPlural')}`;
+  return `${what} · ${outcomeText(lang, choicesAfter(table, opening).moves)}`;
+}
+
+/** « 2 gagnent, 8 perdent » / "1 wins, 1 holds the draw, 14 lose". */
+export function outcomeText(lang: Lang, moves: readonly VerdictMove[]): string {
+  const o = outcomes(moves);
+  const parts = [
+    [o.wins, 'wins', 'winsPlural'],
+    [o.draws, 'holdsDraw', 'holdDrawPlural'],
+    [o.losses, 'loses', 'losesPlural'],
+  ] as const;
+  const said = parts.filter(([n]) => n > 0).map(([n, one, many]) => `${n} ${t(lang, n === 1 ? one : many)}`);
+  return said.join(', ');
 }

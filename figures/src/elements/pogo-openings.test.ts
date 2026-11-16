@@ -41,7 +41,7 @@ afterEach(() => {
 describe('<pogo-openings>', () => {
   it('lists the sixteen openings with each verdict in words, the six draws counted in its head', async () => {
     const el = await mount();
-    expect(head(el)).toBe('Premiers coups des Blancs · 6 sur 16 gardent la nulle');
+    expect(head(el)).toBe('Premiers coups des Blancs · 6 gardent la nulle, 10 perdent');
     const items = $$(el, '.list .choice');
     expect(items).toHaveLength(16);
     expect(item(el, 'a1-1-b1').textContent).toBe('a1-1-b1, garde la nulle');
@@ -81,21 +81,22 @@ describe('<pogo-openings>', () => {
     const el = await mount();
     item(el, 'c1-1-b1').click();
     level(el).click();
-    expect(head(el)).toBe('Réponses des Rouges à c1-1-b1 · 2 sur 16 gardent la nulle');
+    expect(head(el)).toBe('Réponses des Rouges à c1-1-b1 · 2 gardent la nulle, 14 perdent');
     expect($$(el, '.list .choice')).toHaveLength(16);
     expect($$(el, '.list .verdict[data-holds]')).toHaveLength(2);
     // The board is now the position after the opening, Red to move.
     expect($$(el, '.board .mark.target').map((m) => m.getAttribute('data-cell')).sort()).toEqual(['6', '7', '8']);
   });
 
-  it('counts the replies it has: ten after b1-2-b3, never a typed sixteen', async () => {
+  it('after b1-2-b3, heads Red’s ten replies with its two wins, set heavier as moves that do not lose', async () => {
     const el = await mount('en');
     item(el, 'b1-2-b3').click();
     level(el).click();
-    expect(head(el)).toBe('Red’s replies to b1-2-b3 · 0 of 10 hold the draw');
+    expect(head(el)).toBe('Red’s replies to b1-2-b3 · 2 win, 8 lose');
     expect($$(el, '.list .choice')).toHaveLength(10);
+    expect($$(el, '.list .verdict[data-holds]').map((v) => v.textContent)).toEqual(['wins in 13', 'wins in 13']);
     level(el).click();
-    expect(head(el)).toBe('White’s first moves · 6 of 16 hold the draw');
+    expect(head(el)).toBe('White’s first moves · 6 hold the draw, 10 lose');
     expect(item(el, 'b1-2-b3').getAttribute('aria-checked')).toBe('true');
   });
 
