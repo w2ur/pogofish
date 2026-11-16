@@ -305,6 +305,30 @@ async function build(): Promise<void> {
     app.append(figure('pogo-stages', { program }, l === 'fr' ? fr : en, '640px'));
   }
 
+  app.append(heading('<pogo-net kind="td"> · 640px stage'));
+  app.append(
+    figure(
+      'pogo-net',
+      { kind: 'td' },
+      l === 'fr'
+        ? 'Un réseau de neurones : une position à gauche, ses 127 valeurs d’entrée, deux couches de 128 et 64 neurones, et un neurone de sortie qui donne la note de la position.'
+        : 'A neural network: a position on the left, its 127 input values, two layers of 128 and 64 neurons, and an output neuron that gives the position’s value.',
+      '640px',
+    ),
+  );
+
+  app.append(heading('<pogo-net kind="az"> · 640px stage'));
+  app.append(
+    figure(
+      'pogo-net',
+      { kind: 'az' },
+      l === 'fr'
+        ? 'Le réseau d’AlphaZero et ses deux sorties : une note de la position et une préférence pour chaque coup.'
+        : 'AlphaZero’s network and its two outputs: a value for the position and a preference for each move.',
+      '640px',
+    ),
+  );
+
   app.append(heading('<pogo-race> · 640px stage'));
   const race = figure(
     'pogo-race',
