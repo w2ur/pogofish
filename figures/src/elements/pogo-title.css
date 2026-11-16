@@ -133,14 +133,17 @@ slot[hidden] {
  * With a clock: the same animations, paused, placed by --clock, the media's time
  * (title-clock.ts: a disc tops its jump at --_at + --own + k × --_beat, a glyph
  * leans one way, then the other, on each beat). Nothing advances unless --clock does.
+ * The keyframes go by other names (pogo-beat, sway-beat): a clip found while the
+ * title runs free changes the animation's name, so it restarts placed by the
+ * clock instead of keeping the time it had run.
  */
 :host([data-clock]) .disc {
-  animation: pogo calc(var(--_beat) * 1s) linear infinite paused;
+  animation: pogo-beat calc(var(--_beat) * 1s) linear infinite paused;
   animation-delay: calc((var(--_at) + var(--own) - var(--_beat) * 0.5 - var(--clock, 0)) * 1s);
 }
 
 :host([data-clock]) .sway::before {
-  animation: sway calc(var(--_beat) * 2s) linear infinite paused;
+  animation: sway-beat calc(var(--_beat) * 2s) linear infinite paused;
   animation-delay: calc((var(--_at) + var(--own) - var(--clock, 0)) * 1s);
 }
 
@@ -161,6 +164,35 @@ slot[hidden] {
 
 /* One side on a beat, the other side on the next. */
 @keyframes sway {
+  0% {
+    transform: rotate(calc(var(--tilt) * -1));
+    animation-timing-function: ease-in-out;
+  }
+  50% {
+    transform: rotate(var(--tilt));
+    animation-timing-function: ease-in-out;
+  }
+  100% {
+    transform: rotate(calc(var(--tilt) * -1));
+  }
+}
+
+/* The same two, for the clock (see above). */
+@keyframes pogo-beat {
+  0% {
+    transform: translateY(0);
+    animation-timing-function: cubic-bezier(0.3, 0, 0.5, 1);
+  }
+  50% {
+    transform: translateY(calc(var(--lift) * -0.2em));
+    animation-timing-function: cubic-bezier(0.5, 0, 0.7, 1);
+  }
+  100% {
+    transform: translateY(0);
+  }
+}
+
+@keyframes sway-beat {
   0% {
     transform: rotate(calc(var(--tilt) * -1));
     animation-timing-function: ease-in-out;

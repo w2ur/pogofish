@@ -253,4 +253,43 @@ describe('<pogo-title clock>', () => {
     expect((el.shadowRoot!.querySelector('.drawn') as HTMLElement).style.getPropertyValue('--_period')).toBe('1.24');
     expect(el.hasAttribute('data-clock')).toBe(false);
   });
+
+  it('does not write the clock while the title is off screen', async () => {
+    stubFrames();
+    const v = clip();
+    const el = await mountClock();
+    v.set(1.5, true);
+    expect(drawnClock(el)).toBe('');
+    onScreen(el, true);
+    expect(drawnClock(el)).toBe('1.500');
+    onScreen(el, false);
+    v.set(2.5, true);
+    expect(drawnClock(el)).toBe('1.500');
+  });
+
+  it('stops looking once its clock names something that is not a media element', async () => {
+    const observed = vi.spyOn(MutationObserver.prototype, 'disconnect');
+    const el = await mountClock();
+    const before = observed.mock.calls.length;
+    const div = document.createElement('div');
+    div.className = 'pogo-concert-clip';
+    document.body.append(div);
+    await flush();
+    expect(observed.mock.calls.length).toBe(before + 1);
+    expect(el.hasAttribute('data-clock')).toBe(false);
+    observed.mockRestore();
+  });
+
+  it('a clip found while it runs free switches to keyframes of another name, so the animations restart on the clock', () => {
+    const css = readFileSync(resolve(process.cwd(), 'src/elements/pogo-title.css'), 'utf8');
+    const free = /:host\(\[data-moving\]\) \.disc \{\s*animation: (\S+)/.exec(css)![1];
+    const clocked = /:host\(\[data-clock\]\) \.disc \{\s*animation: (\S+)/.exec(css)![1];
+    expect(free).toBe('pogo');
+    expect(clocked).toBe('pogo-beat');
+    expect(/:host\(\[data-clock\]\) \.sway::before \{\s*animation: (\S+)/.exec(css)![1]).toBe('sway-beat');
+    // The two names hold the same frames.
+    const frames = (name: string) => new RegExp(`@keyframes ${name} \\{([\\s\\S]*?)\\n\\}`).exec(css)![1];
+    expect(frames('pogo-beat')).toBe(frames('pogo'));
+    expect(frames('sway-beat')).toBe(frames('sway'));
+  });
 });

@@ -1,3 +1,5 @@
+import { readFileSync } from 'node:fs';
+import { resolve } from 'node:path';
 import { FREE_PERIOD, OWN_SPREAD, freeRunning, jumpPhase, ownDelay, parseBeat, parseBeatAt, swayPhase } from './title-clock';
 
 const PAGE = { beat: 0.4, beatAt: 0.28 };
@@ -21,14 +23,38 @@ describe('title clock', () => {
     expect(jumpPhase(0.28 + own, PAGE, own)).toBeCloseTo(0.5, 9);
   });
 
-  it('a loop restart re-phases by itself: the phase is a function of the media time alone', () => {
-    // A 3.0 s clip looping: just before the end, then just after the restart.
-    const before = jumpPhase(2.99, PAGE);
-    const after = jumpPhase(0.01, PAGE);
-    expect(after).toBeCloseTo(jumpPhase(0.01, PAGE), 12);
-    expect(before).not.toBeCloseTo(after, 3);
-    // After the restart the next top is at beat-at again.
+  it('a loop restart re-phases by the media time: just after the start, where the beat puts it, not where the run left it', () => {
+    // A 3.0 s clip: 2.99 s is 6.775 beats after beat-at, so 0.775 of a beat past a top (phase 0.275);
+    // just after the restart, 0.01 s is 0.675 of a beat before the top at 0.28 (phase 0.825).
+    expect(jumpPhase(2.99, PAGE)).toBeCloseTo(0.275, 9);
+    expect(jumpPhase(0.01, PAGE)).toBeCloseTo(0.825, 9);
+    // Running on from the end would have given 0.325: the restart jumps the phase, as the clip's time jumps.
+    expect(jumpPhase(2.99 + 0.02, PAGE)).toBeCloseTo(0.325, 9);
     expect(jumpPhase(0.28, PAGE)).toBeCloseTo(0.5, 9);
+  });
+
+  it('the sheet’s paused delays place every piece where jumpPhase and swayPhase say', () => {
+    const css = readFileSync(resolve(process.cwd(), 'src/elements/pogo-title.css'), 'utf8');
+    const delay = (selector: string): string => {
+      const start = css.indexOf(`${selector} {`);
+      const block = css.slice(start, css.indexOf('}', start));
+      return /animation-delay: calc\(\((.*)\) \* 1s\);/.exec(block)![1]!;
+    };
+    /** The CSS sum, evaluated with the custom properties given. */
+    const value = (expr: string, vars: Record<string, number>): number =>
+      Function(`return ${expr.replace(/var\((--[\w-]+)(?:, [\d.]+)?\)/g, (_, v: string) => String(vars[v]))};`)() as number;
+    const frac = (x: number) => x - Math.floor(x);
+    const near = (a: number, b: number) => Math.min(Math.abs(a - b), 1 - Math.abs(a - b));
+    for (const t of [0, 0.28, 1.13, 2.99]) {
+      for (const own of [-0.03, 0, 0.02]) {
+        const vars = { '--_beat': 0.4, '--_at': 0.28, '--own': own, '--clock': t };
+        // A paused animation's place is minus its delay, over its duration.
+        const jump = frac(-value(delay(':host([data-clock]) .disc'), vars) / 0.4);
+        expect(near(jump, jumpPhase(t, PAGE, own))).toBeLessThan(1e-9);
+        const sway = frac(-value(delay(':host([data-clock]) .sway::before'), vars) / 0.8);
+        expect(near(sway, swayPhase(t, PAGE, own))).toBeLessThan(1e-9);
+      }
+    }
   });
 
   it('a letter is at one side on each beat, the other side on the next', () => {

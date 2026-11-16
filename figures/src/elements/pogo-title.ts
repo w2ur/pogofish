@@ -92,8 +92,9 @@ export class PogoTitle extends PogoFigure {
     let media: HTMLMediaElement | undefined;
     let frame = 0;
     const reduced = matchMedia('(prefers-reduced-motion: reduce)');
+    // Off screen nothing is written: the title is placed again when it comes back.
     const write = (): void => {
-      if (media) drawn.style.setProperty('--clock', media.currentTime.toFixed(3));
+      if (media && onScreen) drawn.style.setProperty('--clock', media.currentTime.toFixed(3));
     };
     const tick = (): void => {
       frame = 0;
@@ -133,7 +134,9 @@ export class PogoTitle extends PogoFigure {
       } catch {
         return true; // Not a selector: nothing will ever match it; stay free-running.
       }
-      if (!(found instanceof HTMLMediaElement)) return false;
+      if (found === null) return false;
+      // Found, but not a media element: it never will be; stop looking and stay free-running.
+      if (!(found instanceof HTMLMediaElement)) return true;
       media = found;
       this.setAttribute('data-clock', '');
       for (const type of ['play', 'playing', 'pause', 'waiting', 'seeked', 'timeupdate', 'ended']) {

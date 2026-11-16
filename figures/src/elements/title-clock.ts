@@ -5,7 +5,14 @@
 // its own, so the row reads as a crowd. The letters and the bangs rock from one
 // side to the other once per beat, so a full rock is two beats. Everything here
 // is a function of the media's time: a loop, a seek or a stall re-phases by
-// itself. title.css turns these same formulas into paused CSS animations.
+// itself.
+//
+// What runs in the page is pogo-title.css: paused animations whose
+// animation-delay is these formulas written in CSS terms. jumpPhase and
+// swayPhase run only in the tests, where title-clock.test.ts reads the sheet's
+// delays and checks that they place every piece where these say, so the two
+// cannot drift apart silently. pogo-title.ts uses ownDelay, freeRunning and the
+// parsers.
 
 /** One up-and-down of a disc when no beat is given: 2 × 0.62 s, the title's period before a clock. */
 export const FREE_PERIOD = 1.24;
