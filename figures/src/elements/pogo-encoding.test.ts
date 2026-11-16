@@ -103,6 +103,24 @@ describe('<pogo-encoding>', () => {
     });
   });
 
+  it('the colours are the pieces’ with White to move too, where +1 is a White piece', async () => {
+    const st = makeStore();
+    use(st);
+    st.newGame('White', 'normal');
+    const el = await mount('pogo-encoding');
+    const s = st.current()!.states[0]!;
+    expect(s.to_move).toBe('White');
+    s.cells.forEach((stack, i) => {
+      const slots = $$(el, `.enc-row[data-row="${i}"] .slot`);
+      stack.forEach((piece, k) => {
+        expect(slots[k]!.classList.contains(piece === 'Red' ? 'red' : 'white')).toBe(true);
+        // The mover's piece is +1: a White piece here.
+        expect(slots[k]!.textContent).toBe(piece === 'White' ? '+1' : '−1');
+      });
+    });
+    expect($(el, '.key').textContent).toBe('Blanc au trait : +1 = pièce blanche, −1 = pièce rouge, 0 = pas de pièce.');
+  });
+
   it('a tap on a cell marks its row, and a tap on a row marks its cell', async () => {
     const el = await mount('pogo-encoding');
     const cellButton = (i: number) => $(el, `.cell-button[data-cell="${i}"]`) as HTMLButtonElement;
