@@ -200,6 +200,8 @@ describe('<pogo-mosaic>', () => {
       expect(grids[0]!.closest('.sweep-item')!.querySelector('.cell .totals:not([data-off])')!.textContent).toBe(
         `${s1.wins} gagnées sur 100 · erreurs\u202f: ${formatShare('fr', s1.share)} des coups jugés (${s1.mistakes} sur ${s1.judged})`,
       );
+      // The sweep is over: no square keeps its delay, so a later theme change recolours at once.
+      for (const g of grids) for (const sq of [...g.children] as SVGGElement[]) expect(sq.style.getPropertyValue('--d')).toBe('');
       expect(vi.getTimerCount()).toBe(0);
     } finally {
       vi.useRealTimers();

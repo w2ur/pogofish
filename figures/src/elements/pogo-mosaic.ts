@@ -239,7 +239,11 @@ export class PogoMosaic extends PogoFigure {
         said.push(`${t(lang, NAME[g.program])}${colon(lang)} ${w.wins}`);
       }
       const writeTotals = (): void => {
-        for (const g of grids) only(g.totals, k);
+        for (const g of grids) {
+          only(g.totals, k);
+          // The sweep is over: a square that kept its delay would re-run a staggered recolour on a theme change.
+          for (const sq of g.svg.children) (sq as SVGGElement).style.removeProperty('--d');
+        }
       };
       if (longest === 0) writeTotals();
       else {
