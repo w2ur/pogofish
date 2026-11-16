@@ -60,6 +60,11 @@ const fr = {
   net: 'Réseau',
   netScore: 'Au niveau normal, 100 simulations, il marque',
   netAgainst: 'contre le joueur glouton.',
+  countColours: 'ordres des couleurs, 6 pièces blanches parmi 12',
+  countStacks: 'façons de répartir 12 pièces en 9 piles',
+  countTurn: 'joueurs au trait',
+  countTotal: 'positions possibles',
+  countSteps: 'Le calcul',
 };
 
 export type StringKey = keyof typeof fr;
@@ -120,6 +125,11 @@ const en: Record<StringKey, string> = {
   net: 'Net',
   netScore: 'At normal level, 100 simulations, it scores',
   netAgainst: 'against the greedy player.',
+  countColours: 'colour orders, 6 White pieces among 12',
+  countStacks: 'ways to share 12 pieces among 9 stacks',
+  countTurn: 'players to move',
+  countTotal: 'possible positions',
+  countSteps: 'The count',
 };
 
 export const STRINGS: Record<Lang, Record<StringKey, string>> = { fr, en };

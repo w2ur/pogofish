@@ -1,0 +1,63 @@
+/*
+ * <pogo-count>: three factors over a 3px ink rule, then the product. The big
+ * numbers follow the figure's width (container units), so the product holds
+ * on one line from 280px to the full band.
+ */
+.count {
+  container-type: inline-size;
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.factors {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.factor,
+.total {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  margin: 0;
+}
+
+/* A step still to come keeps its room, out of sight and out of the reading order. */
+[data-off] {
+  visibility: hidden;
+}
+
+.value {
+  font-size: clamp(28px, 9cqi, 72px);
+}
+
+.total {
+  padding-top: 12px;
+  border-top: 3px solid var(--_ink);
+}
+
+.product {
+  font-size: clamp(36px, 13cqi, 120px);
+  white-space: nowrap;
+}
+
+.what {
+  font-size: 12.8px;
+  color: var(--_ink-2);
+}
+
+.binomial {
+  color: var(--_muted);
+  text-transform: none;
+  white-space: nowrap;
+}
+
+/* A digit-group separator, narrow no-break space or comma, given room to be seen. */
+.sep {
+  padding-inline: 0.06em;
+}

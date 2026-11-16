@@ -27,6 +27,19 @@ function html(markup: string): DocumentFragment {
   return template.content;
 }
 
+/** A figure element with its fallback sentence, as the page writes it. */
+function figure(tag: string, attrs: Record<string, string>, fallback: string, maxWidth = ''): HTMLElement {
+  const el = document.createElement(tag);
+  for (const [k, v] of Object.entries(attrs)) el.setAttribute(k, v);
+  const p = document.createElement('p');
+  p.textContent = fallback;
+  el.append(p);
+  el.id = [tag, ...Object.values(attrs)].join('-');
+  if (maxWidth) el.style.maxWidth = maxWidth;
+  el.style.marginBottom = '32px';
+  return el;
+}
+
 function heading(text: string): HTMLElement {
   const h = document.createElement('h2');
   h.textContent = text;
@@ -194,6 +207,9 @@ async function build(): Promise<void> {
   follow.setAttribute('mode', 'follow');
   follow.style.maxWidth = '320px';
   app.append(follow);
+
+  app.append(heading('<pogo-count> · full band'));
+  app.append(figure('pogo-count', {}, l === 'fr' ? 'Le décompte des positions du Pogo, étape par étape.' : 'The count of Pogo positions, step by step.'));
 
   app.append(heading('PogoFigure + Stepper · one per fidelity'));
   for (const tag of ['kit-demo-live', 'kit-demo-measured', 'kit-demo-illustrative']) {
