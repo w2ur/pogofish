@@ -20,7 +20,7 @@
 }
 
 :host(pogo-net[kind='az']) .stage {
-  min-height: 1669px;
+  min-height: 1633px;
 }
 
 @container (min-width: 560px) {
@@ -29,7 +29,7 @@
   }
 
   :host(pogo-net[kind='az']) .stage {
-    min-height: 1218px;
+    min-height: 1201px;
   }
 }
 

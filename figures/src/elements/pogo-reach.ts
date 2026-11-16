@@ -17,7 +17,7 @@ export class PogoReach extends PogoFigure {
   /** The exploration stops at finished games and knows no repetition rule: game A's. */
   static override game = 'gameA' as const;
   static override styles = reachCss;
-  static override stageMinHeight = '560px';
+  static override stageMinHeight = '528px';
 
   /** The data load; a test swaps it. */
   static deps: { reach: () => Promise<ReachData> } = { reach: fetchReach };

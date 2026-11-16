@@ -116,6 +116,29 @@
       .follow-demo:not(:defined) {
         display: none;
       }
+      /* The essay as the page sets it: a reading column, the figure under its paragraph, the caption after it. */
+      .essay {
+        max-width: 640px;
+        margin: 0 0 48px;
+      }
+      .essay-para {
+        max-width: 62ch;
+        font-size: 19px;
+        line-height: 1.55;
+        margin: 0 0 16px;
+      }
+      .essay-figure {
+        margin: 0;
+      }
+      /* The hub's .pogo-prose figcaption (src/styles/pogo.css), copied for the harness. */
+      .essay-figure figcaption {
+        margin-top: 16px;
+        padding-top: 8px;
+        border-top: 1px solid var(--pogo-rule);
+        font-size: 16px;
+        line-height: 1.45;
+        color: var(--pogo-ink);
+      }
       #played {
         font-size: 12.8px;
         color: var(--pogo-muted);

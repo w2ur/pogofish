@@ -1,8 +1,8 @@
 // <pogo-retrograde>: retrograde analysis in three steps, from the solved table
 // (retro-steps.ts): positions lost in 0, then won in 1, then lost in 2. Each
 // step adds its band under the last, so the analysis is read climbing back
-// from the end of the game; the bands still to come keep their room, so
-// nothing moves on the page. A move is drawn on its board (the lifted stack
+// from the end of the game; the bands still to come take no room, so the
+// transport stays right under the band just shown. A move is drawn on its board (the lifted stack
 // ringed, its destinations dashed) and named under it, with the letter of the
 // position it leads to; the name carries its explanation (kit/move-tip.ts), so
 // the caption is read, and the board's title names only the position.
@@ -32,7 +32,8 @@ export class PogoRetrograde extends PogoFigure {
   static override source = TABLE_SOURCE;
   static override game = 'gameA' as const;
   static override styles = retroCss;
-  static override stageMinHeight = '760px';
+  /** The first band and the transport at 280px; later bands add their own room as the steps add them. */
+  static override stageMinHeight = '320px';
 
   /** The engine and the table; a test swaps them. */
   static deps: { engine: () => Promise<void>; table: () => Promise<TableData> } = {

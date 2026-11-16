@@ -121,7 +121,7 @@ export class PogoTdTargets extends PogoFigure {
   static override fidelity = 'live' as const;
   static override game = 'gameLc12' as const;
   static override styles = netCss + tdCss;
-  static override stageMinHeight = '720px';
+  static override stageMinHeight = '642px';
 
   /** The game, the engine and the TD net; a test swaps them. */
   static deps: { store: Store; td: () => Promise<TdNet> } = { store, td: sharedTd };

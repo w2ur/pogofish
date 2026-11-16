@@ -9,6 +9,7 @@ import { controlButton, transport } from '../src/kit/controls';
 import { PogoFigure, kitSheet, type PlayFromDetail } from '../src/kit/figure';
 import { Stepper } from '../src/kit/stepper';
 import { t, type Fidelity, type Lang } from '../src/kit/strings';
+import { ESSAY } from './essay';
 
 const lang = (): Lang => (document.documentElement.lang.startsWith('fr') ? 'fr' : 'en');
 
@@ -141,6 +142,12 @@ async function build(): Promise<void> {
   h1.className = 'pogo-title-demo';
   h1.id = 'title-upgraded';
   const signature = document.createElement('pogo-title');
+  // In step with the clip beside it, as the page sets it (?free drops the clock).
+  if (!new URLSearchParams(location.search).has('free')) {
+    signature.setAttribute('clock', '.pogo-concert-clip');
+    signature.setAttribute('beat', '0.4');
+    signature.setAttribute('beat-at', '0.28');
+  }
   fill(signature);
   h1.append(signature);
   const plain = document.createElement('h1');
@@ -152,7 +159,19 @@ async function build(): Promise<void> {
   const head = document.createElement('div');
   head.className = 'pogo-title-head';
   head.append(h1, plain);
-  app.append(head);
+  // A 3 s looping clip whose square tops its bounce every 0.4 s, at 0.28 s (dev/beat-clip.mp4):
+  // the pieces must top their jumps with it, freeze when it pauses, and re-phase when it loops.
+  const clip = document.createElement('video');
+  clip.className = 'pogo-concert-clip';
+  clip.src = new URL('./beat-clip.mp4', import.meta.url).href;
+  clip.loop = true;
+  clip.muted = true;
+  clip.autoplay = true;
+  clip.playsInline = true;
+  clip.controls = true;
+  clip.width = 320;
+  clip.height = 180;
+  app.append(head, clip);
 
   app.append(heading('Type cuts'));
   app.append(
@@ -208,17 +227,52 @@ async function build(): Promise<void> {
   }
   app.append(kitBox(boards));
 
-  app.append(heading('<pogo-board> · inline'));
-  const board = document.createElement('pogo-board');
-  board.id = 'board-inline';
-  board.innerHTML = `<p>${l === 'fr' ? 'Sans JavaScript, le plateau ne se joue pas.' : 'Without JavaScript, the board cannot be played.'}</p>`;
-  board.style.maxWidth = '640px';
-  app.append(board);
+  // The essay's figures in page order, as the page sets them: the paragraph the reader has
+  // just read, then the figure, then the author's caption (dev/essay.ts).
+  app.append(heading('The essay’s figures · each under its paragraph, its caption after it, in a 640px column'));
+  const ids = new Map<string, number>();
+  for (const f of ESSAY) {
+    const words = f[l];
+    const col = document.createElement('section');
+    col.className = 'essay';
+    const para = document.createElement('p');
+    para.className = 'essay-para';
+    para.textContent = words.para;
+    const fig = document.createElement('figure');
+    fig.className = 'essay-figure';
+    const el = document.createElement(f.tag);
+    for (const [k, v] of Object.entries(f.attrs)) el.setAttribute(k, v);
+    const fallback = document.createElement('p');
+    fallback.textContent = words.fallback;
+    el.append(fallback);
+    // One id per figure: its tag and the attribute values that make it a variant, numbered when repeated.
+    const base = [f.tag, ...Object.entries(f.attrs).filter(([k]) => k !== 'mode').map(([, v]) => v)].join('-');
+    const n = (ids.get(base) ?? 0) + 1;
+    ids.set(base, n);
+    el.id = n > 1 ? `${base}-${n}` : base;
+    if (f.tag === 'pogo-board') el.id = 'board-inline';
+    fig.append(el);
+    if (words.caption) {
+      const cap = document.createElement('figcaption');
+      cap.textContent = words.caption;
+      fig.append(cap);
+    }
+    col.append(para, fig);
+    app.append(col);
+  }
+
+  app.append(heading('Variants the essay does not use · <pogo-line rules="lc1-2">, <pogo-search position="reader">'));
+  for (const [tag, attrs] of [
+    ['pogo-line', { line: 'loop', rules: 'lc1-2' }],
+    ['pogo-search', { position: 'reader' }],
+  ] as const) {
+    app.append(figure(tag, attrs, l === 'fr' ? 'Une variante.' : 'A variant.', '640px'));
+  }
 
   app.append(
     heading('<pogo-board mode="follow"> · fixed to the bottom-right corner, as the page sets it: folded once a game is under way, hidden while the inline board is on screen'),
   );
-  // A long column of text below the inline board, so the follow board covers text, as on the page.
+  // A long column of text below, so the follow board covers text, as on the page.
   const column = document.createElement('div');
   column.id = 'follow-column';
   column.style.cssText = 'max-width:62ch;font-size:19px;line-height:1.55';
@@ -227,9 +281,9 @@ async function build(): Promise<void> {
       ? 'Le Blanc joue le premier. Chaque pile peut sauter d’une, deux ou trois cases ; le haut de la pile la possède, et la partie se lit jusqu’au bout du texte. '
       : 'White moves first. Each stack may jump one, two or three cells; its top piece owns it, and the game reads to the end of the text. ';
   for (let k = 0; k < 24; k++) {
-    const p = document.createElement('p');
-    p.textContent = sentence.repeat(3);
-    column.append(p);
+    const para = document.createElement('p');
+    para.textContent = sentence.repeat(3);
+    column.append(para);
   }
   app.append(column);
   const follow = document.createElement('pogo-board');
@@ -237,182 +291,6 @@ async function build(): Promise<void> {
   follow.className = 'follow-demo';
   follow.setAttribute('mode', 'follow');
   app.append(follow);
-
-  app.append(heading('<pogo-moves view="start"> · 640px stage'));
-  app.append(figure('pogo-moves', { view: 'start' }, l === 'fr' ? 'Le plateau de trois cases sur trois au départ.' : 'The three-by-three board at the start.', '640px'));
-  app.append(heading('<pogo-moves view="moves"> · 640px stage'));
-  app.append(figure('pogo-moves', { view: 'moves' }, l === 'fr' ? 'Les coups possibles depuis une pile.' : 'The possible moves from a stack.', '640px'));
-
-  for (const [line, rules] of [
-    ['shortestWin', 'A'],
-    ['loop', 'A'],
-    ['loop', 'lc1-2'],
-    ['centreLoss', 'A'],
-    ['openingWin', 'A'],
-  ] as const) {
-    app.append(heading(`<pogo-line line="${line}" rules="${rules}"> · 52ch column`));
-    app.append(figure('pogo-line', { line, rules }, l === 'fr' ? 'Une partie, coup par coup.' : 'A game, move by move.', '52ch'));
-  }
-
-  app.append(heading('<pogo-count> · full band'));
-  app.append(figure('pogo-count', {}, l === 'fr' ? 'Le décompte des positions du Pogo, étape par étape.' : 'The count of Pogo positions, step by step.'));
-
-  app.append(heading('<pogo-reach> · 52ch column'));
-  app.append(
-    figure(
-      'pogo-reach',
-      {},
-      l === 'fr'
-        ? 'L’exploration en largeur, niveau par niveau : les positions nouvelles atteintes à chaque coup, jusqu’au quinzième.'
-        : 'The breadth-first exploration, level by level: the new positions reached at each move, up to the fifteenth.',
-      '52ch',
-    ),
-  );
-
-  app.append(heading('<pogo-retrograde> · 640px stage'));
-  app.append(
-    figure(
-      'pogo-retrograde',
-      {},
-      l === 'fr'
-        ? 'L’analyse rétrograde : en partant des fins de partie, les positions sont marquées gagnées ou perdues, tour après tour, en remontant vers le départ.'
-        : 'Retrograde analysis: starting from the ends of games, positions are marked won or lost, round after round, climbing back towards the start.',
-      '640px',
-    ),
-  );
-
-  app.append(heading('<pogo-openings> · 640px stage'));
-  app.append(
-    figure(
-      'pogo-openings',
-      {},
-      l === 'fr'
-        ? 'Les seize premiers coups possibles et leur issue : seuls les six qui restent sur la rangée de départ évitent la défaite.'
-        : 'The sixteen possible first moves and their outcome: only the six that stay on the starting row avoid defeat.',
-      '640px',
-    ),
-  );
-
-  app.append(heading('<pogo-greedy> · 52ch column'));
-  app.append(
-    figure(
-      'pogo-greedy',
-      {},
-      l === 'fr'
-        ? 'Une partie entre deux programmes gloutons, chacun choisissant le coup qui maximise l’écart entre son nombre de piles et celui de son adversaire.'
-        : 'A game between two greedy programs, each choosing the move that maximises the gap between its number of stacks and its opponent’s.',
-      '52ch',
-    ),
-  );
-
-  app.append(heading('<pogo-qsteps> · 640px stage'));
-  app.append(
-    figure(
-      'pogo-qsteps',
-      {},
-      l === 'fr'
-        ? 'Le Q-learning pas à pas : les notes des positions, toutes à 0 au départ, mises à jour coup après coup.'
-        : 'Q-learning step by step: the values of the positions, all 0 at the start, updated move after move.',
-      '640px',
-    ),
-  );
-
-  for (const [program, fr, en] of [
-    ['qtab', 'Des parties du Q-learning à plusieurs étapes de son apprentissage.', 'Games of the Q-learning program at several stages of its training.'],
-    ['td', 'Des parties du programme TD(λ) à plusieurs étapes de son apprentissage.', 'Games of the TD(λ) program at several stages of its training.'],
-    ['az100', 'Des parties d’AlphaZero à plusieurs étapes de son apprentissage.', 'Games of AlphaZero at several stages of its training.'],
-  ] as const) {
-    app.append(heading(`<pogo-stages program="${program}"> · 640px stage`));
-    app.append(figure('pogo-stages', { program }, l === 'fr' ? fr : en, '640px'));
-  }
-
-  app.append(heading('<pogo-net kind="td"> · 640px stage'));
-  app.append(
-    figure(
-      'pogo-net',
-      { kind: 'td' },
-      l === 'fr'
-        ? 'Un réseau de neurones : une position à gauche, ses 127 valeurs d’entrée, deux couches de 128 et 64 neurones, et un neurone de sortie qui donne la note de la position.'
-        : 'A neural network: a position on the left, its 127 input values, two layers of 128 and 64 neurons, and an output neuron that gives the position’s value.',
-      '640px',
-    ),
-  );
-
-  app.append(heading('<pogo-encoding> · 640px stage'));
-  app.append(
-    figure(
-      'pogo-encoding',
-      {},
-      l === 'fr'
-        ? 'La même position traduite en 127 nombres : 14 pour chacune des neuf cases, puis le nombre de répétitions de la position.'
-        : 'The same position as 127 numbers: 14 for each of the nine cells, then the number of repetitions of the position.',
-      '640px',
-    ),
-  );
-
-  app.append(heading('<pogo-td-targets> · 640px stage'));
-  app.append(
-    figure(
-      'pogo-td-targets',
-      {},
-      l === 'fr'
-        ? 'Les valeurs cibles d’une partie, calculées depuis la fin et remontant position par position.'
-        : 'The target values of a game, computed from the end and climbing back position by position.',
-      '640px',
-    ),
-  );
-
-  app.append(heading('<pogo-net kind="az"> · 640px stage'));
-  app.append(
-    figure(
-      'pogo-net',
-      { kind: 'az' },
-      l === 'fr'
-        ? 'Le réseau d’AlphaZero et ses deux sorties : une note de la position et une préférence pour chaque coup.'
-        : 'AlphaZero’s network and its two outputs: a value for the position and a preference for each move.',
-      '640px',
-    ),
-  );
-
-  for (const position of ['puzzle5', 'reader'] as const) {
-    app.append(heading(`<pogo-search position="${position}"> · 640px stage`));
-    app.append(
-      figure(
-        'pogo-search',
-        { position },
-        l === 'fr'
-          ? 'La recherche d’AlphaZero sur une position : ses simulations, le nombre de passages par chaque coup et le coup qu’il joue.'
-          : 'AlphaZero’s search on a position: its simulations, the number of visits to each move and the move it plays.',
-        '640px',
-      ),
-    );
-  }
-
-  app.append(heading('<pogo-race> · 640px stage'));
-  const race = figure(
-    'pogo-race',
-    {},
-    l === 'fr'
-      ? 'Le nombre de parties d’entrainement qu’il faut à chaque programme pour dépasser le glouton.'
-      : 'The number of training games each program needs to pass greedy.',
-    '640px',
-  );
-  const video = document.createElement('p');
-  video.textContent = 'https://youtu.be/ARDa8YljkWE';
-  race.append(video);
-  app.append(race);
-
-  app.append(heading('<pogo-mosaic> · 640px stage'));
-  app.append(
-    figure(
-      'pogo-mosaic',
-      {},
-      l === 'fr'
-        ? 'Des mosaïques qui montrent, pour chaque programme, l’évolution de ses résultats au fil de l’entrainement.'
-        : 'Mosaics that show, for each program, how its results change over training.',
-      '640px',
-    ),
-  );
 
   app.append(heading('PogoFigure + Stepper · one per fidelity'));
   for (const tag of ['kit-demo-live', 'kit-demo-measured', 'kit-demo-illustrative']) {

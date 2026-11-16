@@ -15,17 +15,17 @@
 }
 
 :host([position='puzzle5']) .stage {
-  min-height: 1095px;
+  min-height: 992px;
 }
 
 :host([position='reader']) .stage {
-  min-height: 1071px;
+  min-height: 968px;
 }
 
 @container (min-width: 560px) {
   :host([position='puzzle5']) .stage,
   :host([position='reader']) .stage {
-    min-height: 951px;
+    min-height: 915px;
   }
 }
 
