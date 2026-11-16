@@ -6,7 +6,8 @@
 // chosen move on it; « Réponses des Rouges » plays the chosen opening and
 // lists Red's replies; « Jouer d’ici » hands the position after the chosen
 // moves to the playable board. The verdicts are game A's, as the label says.
-import { announceMove, chooseCount, describeCell, neighbour, origins, SCREEN_ORDER, tap, type Selection } from '../board-state';
+import { boardInput, type BoardInput } from '../board-input';
+import { announceMove, chooseCount, describeCell, origins, tap, type Selection } from '../board-state';
 import { WASM_FILE, assetUrl } from '../assets';
 import type { TableData } from '../data';
 import { legal, moveName, parseMoveName, play, ready, type Move, type Triple } from '../engine';
@@ -35,7 +36,7 @@ function verdictLine(lang: Lang, c: Choices, m: Triple): string {
 interface Ui {
   head: HTMLElement;
   svg: SVGSVGElement;
-  cells: HTMLButtonElement[];
+  input: BoardInput;
   count: ChoiceGroup<CountValue>;
   listSlot: HTMLElement;
   list: ChoiceGroup<string> | undefined;
@@ -64,7 +65,6 @@ export class PogoOpenings extends PogoFigure {
   /** The move chosen in the list shown: an opening, or a reply. */
   private chosen: Triple | null = null;
   private selection: Selection = null;
-  private focusCell = 0;
 
   protected async render(signal: AbortSignal): Promise<void> {
     const deps = (this.constructor as typeof PogoOpenings).deps;
@@ -115,20 +115,21 @@ export class PogoOpenings extends PogoFigure {
 
     const play_ = el('div', 'play');
     const svg = drawBoard(openings.position, { labelRoom: true });
-    const grid = el('div', 'cells');
-    grid.setAttribute('role', 'group');
-    grid.setAttribute('aria-label', t(lang, 'board'));
-    const cells: HTMLButtonElement[] = [];
-    for (const i of SCREEN_ORDER) {
-      const b = el('button', 'cell-button');
-      b.type = 'button';
-      b.dataset.cell = String(i);
-      b.addEventListener('click', () => this.onCell(i));
-      cells[i] = b;
-      grid.append(b);
-    }
-    grid.addEventListener('keydown', (e) => this.onArrow(e));
-    play_.append(svg, boardLabels(), grid);
+    const input = boardInput({
+      label: t(lang, 'board'),
+      onCell: (i) => this.onCell(i),
+      keys: root,
+      lifted: () => this.selection !== null,
+      onCount: (n) => {
+        this.selection = chooseCount(this.selection, this.moves(), n);
+        this.update();
+      },
+      onDrop: () => {
+        this.selection = null;
+        this.update();
+      },
+    });
+    play_.append(svg, boardLabels(), input.grid);
 
     const count = choiceGroup<CountValue>({
       label: `${t(lang, 'pieces')}${colon(lang)}`,
@@ -155,11 +156,10 @@ export class PogoOpenings extends PogoFigure {
     row.append(level, playHere);
 
     root.append(head.box, body, readout.box, row);
-    root.addEventListener('keydown', this.onKey);
     this.ui = {
       head: head.line,
       svg,
-      cells,
+      input,
       count,
       listSlot,
       list: undefined,
@@ -240,7 +240,6 @@ export class PogoOpenings extends PogoFigure {
   }
 
   private onCell(i: number): void {
-    this.focusCell = i;
     const r = tap(this.selection, this.moves(), i);
     if ('play' in r) {
       this.choose(r.play);
@@ -248,34 +247,6 @@ export class PogoOpenings extends PogoFigure {
     }
     this.selection = r.selection;
     this.update();
-  }
-
-  private onArrow(e: KeyboardEvent): void {
-    const from = Number((e.target as HTMLElement).dataset.cell ?? this.focusCell);
-    const to = neighbour(from, e.key);
-    if (to === from && !e.key.startsWith('Arrow')) return;
-    e.preventDefault();
-    this.focusCell = to;
-    this.syncFocus();
-    this.ui?.cells[to]?.focus();
-  }
-
-  /** 1/2/3 choose the count, Escape puts the stack down. */
-  private onKey = (e: KeyboardEvent): void => {
-    if (this.selection === null) return;
-    if (e.key === 'Escape') {
-      e.preventDefault();
-      this.selection = null;
-      this.update();
-    } else if (['1', '2', '3'].includes(e.key)) {
-      e.preventDefault();
-      this.selection = chooseCount(this.selection, this.moves(), Number(e.key));
-      this.update();
-    }
-  };
-
-  private syncFocus(): void {
-    this.ui?.cells.forEach((b, i) => (b.tabIndex = i === this.focusCell ? 0 : -1));
   }
 
   private update(): void {
@@ -303,14 +274,14 @@ export class PogoOpenings extends PogoFigure {
     ui.svg.replaceWith(svg);
     ui.svg = svg;
 
-    ui.cells.forEach((b, i) => {
+    ui.input.cells.forEach((b, i) => {
       const mark = sel?.from === i ? 'selected' : land.includes(i) ? 'target' : !sel && lift.includes(i) ? 'can-lift' : null;
       const actionable = mark !== null || lift.includes(i);
       b.setAttribute('aria-label', describeCell(lang, c.position, i, mark));
       b.toggleAttribute('data-actionable', actionable);
       b.setAttribute('aria-disabled', String(!actionable));
     });
-    this.syncFocus();
+    ui.input.syncFocus();
 
     const available = options.map((o) => o.count);
     ui.count.element.toggleAttribute('data-off', sel === null);

@@ -3,7 +3,8 @@
 // lift a stack and see where one, two or three pieces can go (moves-reach.ts,
 // from legal()); tapping a destination plays it, so the sides alternate and a
 // stack of three soon appears. « Recommencer » goes back to the start.
-import { announceMove, chooseCount, describeCell, neighbour, origins, SCREEN_ORDER, tap, type Selection } from '../board-state';
+import { boardInput, type BoardInput } from '../board-input';
+import { announceMove, chooseCount, describeCell, origins, tap, type Selection } from '../board-state';
 import { WASM_FILE, assetUrl } from '../assets';
 import { initial, legal, play as playMove, ready, terminal, winner, type Colour, type Move, type State, type Triple } from '../engine';
 import { boardLabels, labelledBoard } from '../kit/board-labels';
@@ -20,7 +21,7 @@ const NS = 'http://www.w3.org/2000/svg';
 interface Ui {
   play: HTMLElement;
   svg: SVGSVGElement;
-  cells: HTMLButtonElement[];
+  input: BoardInput;
   count: ChoiceGroup<CountValue>;
   line: HTMLElement;
 }
@@ -72,7 +73,6 @@ export class PogoMoves extends PogoFigure {
   private s: State = { cells: [], to_move: 'White', move_count: 0, history: [] };
   private last: Triple | undefined;
   private selection: Selection = null;
-  private focusCell = 0;
   private said = '';
 
   private get view(): 'start' | 'moves' {
@@ -111,22 +111,21 @@ export class PogoMoves extends PogoFigure {
     const play = document.createElement('div');
     play.className = 'play';
     const svg = drawBoard(this.s, { labelRoom: true });
-    const grid = document.createElement('div');
-    grid.className = 'cells';
-    grid.setAttribute('role', 'group');
-    grid.setAttribute('aria-label', t(lang, 'board'));
-    const cells: HTMLButtonElement[] = [];
-    for (const i of SCREEN_ORDER) {
-      const b = document.createElement('button');
-      b.type = 'button';
-      b.className = 'cell-button';
-      b.dataset.cell = String(i);
-      b.addEventListener('click', () => this.onCell(i));
-      cells[i] = b;
-      grid.append(b);
-    }
-    grid.addEventListener('keydown', (e) => this.onArrow(e));
-    play.append(svg, boardLabels(), grid);
+    const input = boardInput({
+      label: t(lang, 'board'),
+      onCell: (i) => this.onCell(i),
+      keys: root,
+      lifted: () => this.selection !== null,
+      onCount: (n) => {
+        this.selection = chooseCount(this.selection, this.moves(), n);
+        this.update(false);
+      },
+      onDrop: () => {
+        this.selection = null;
+        this.update(false);
+      },
+    });
+    play.append(svg, boardLabels(), input.grid);
 
     const count = choiceGroup<CountValue>({
       label: `${t(lang, 'pieces')}${colon(lang)}`,
@@ -160,8 +159,7 @@ export class PogoMoves extends PogoFigure {
     );
 
     root.append(play, count.element, line, row);
-    root.addEventListener('keydown', this.onKey);
-    this.ui = { play, svg, cells, count, line };
+    this.ui = { play, svg, input, count, line };
     signal.addEventListener('abort', () => (this.ui = undefined), { once: true });
     this.stage.append(root);
     this.update(false);
@@ -173,7 +171,6 @@ export class PogoMoves extends PogoFigure {
   }
 
   private onCell(i: number): void {
-    this.focusCell = i;
     const r = tap(this.selection, this.moves(), i);
     if ('play' in r) {
       this.said = `${announceMove(this.lang, this.s.to_move, r.play)}. `;
@@ -186,34 +183,6 @@ export class PogoMoves extends PogoFigure {
     }
     this.selection = r.selection;
     this.update(false);
-  }
-
-  private onArrow(e: KeyboardEvent): void {
-    const from = Number((e.target as HTMLElement).dataset.cell ?? this.focusCell);
-    const to = neighbour(from, e.key);
-    if (to === from && !e.key.startsWith('Arrow')) return;
-    e.preventDefault();
-    this.focusCell = to;
-    this.syncFocus();
-    this.ui?.cells[to]?.focus();
-  }
-
-  /** 1/2/3 choose the count, Escape puts the stack down. */
-  private onKey = (e: KeyboardEvent): void => {
-    if (this.selection === null) return;
-    if (e.key === 'Escape') {
-      e.preventDefault();
-      this.selection = null;
-      this.update(false);
-    } else if (['1', '2', '3'].includes(e.key)) {
-      e.preventDefault();
-      this.selection = chooseCount(this.selection, this.moves(), Number(e.key));
-      this.update(false);
-    }
-  };
-
-  private syncFocus(): void {
-    this.ui?.cells.forEach((b, i) => (b.tabIndex = i === this.focusCell ? 0 : -1));
   }
 
   private update(moved: boolean, before?: SVGSVGElement): void {
@@ -239,14 +208,14 @@ export class PogoMoves extends PogoFigure {
     if (moved && before && this.last && !this.reducedMotion()) animateMove(before, svg, this.last);
     ui.svg = svg;
 
-    ui.cells.forEach((b, i) => {
+    ui.input.cells.forEach((b, i) => {
       const mark = sel?.from === i ? 'selected' : land.includes(i) ? 'target' : !sel && lift.includes(i) ? 'can-lift' : null;
       const actionable = mark !== null || lift.includes(i);
       b.setAttribute('aria-label', describeCell(lang, this.s, i, mark));
       b.toggleAttribute('data-actionable', actionable);
       b.setAttribute('aria-disabled', String(!actionable));
     });
-    this.syncFocus();
+    ui.input.syncFocus();
 
     const available = options.map((o) => o.count);
     ui.count.element.toggleAttribute('data-off', sel === null);
