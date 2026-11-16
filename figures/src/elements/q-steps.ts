@@ -6,6 +6,10 @@
 // the move ends the game, else −V(next). No exploration: each side plays its
 // best Q, ties to the first move in engine order, except at A, where White
 // plays the line's move.
+//
+// The figure plays the walk as a script (qScript): the first update that
+// changes a note of each kind of position (a C, then B, then A) is played
+// slowly, in five sub-steps; every other update is one step.
 import { LC1_2, initial, key, legal, play, terminal, winner, type Colour, type Move, type State, type Triple } from '../engine';
 import { qTarget, qUpdate } from '../players';
 
@@ -15,8 +19,9 @@ export const ALPHA = 0.1;
 /**
  * The endgame shown: the opening mistake of fig. 12 (`openingWin`, table.json),
  * whose first six moves lead to A, White to move; its seventh is White's move at
- * A. From B, each of Red's two replies leaves White a win in one. Six games: the
- * first two each find one C, the third gives B a value, the fourth gives A one.
+ * A. From B, each of Red's two replies leaves White a win in one. Five games: the
+ * first two each find one C, the third gives B a value, the fourth gives A one,
+ * the fifth shows every note still growing.
  */
 export const QSTEPS_PREFIX: Triple[] = [
   [2, 1, 1],
@@ -27,7 +32,7 @@ export const QSTEPS_PREFIX: Triple[] = [
   [3, 1, 0],
 ];
 export const QSTEPS_FIRST: Triple = [1, 1, 0];
-export const QSTEPS_GAMES = 6;
+export const QSTEPS_GAMES = 5;
 
 export interface Candidate {
   /** The notebook row the move leads to, or null for a position the notebook does not keep. */
@@ -161,4 +166,95 @@ export function noteText(lang: 'fr' | 'en', x: number): string {
 /** A move's value, signed: « +1,00 », « −0,10 », « 0,00 ». */
 export function signedNote(lang: 'fr' | 'en', x: number): string {
   return (x > 0.0005 ? '+' : '') + noteText(lang, x);
+}
+
+/** The moves of an update as the figure lists them: one row per notebook position, the others grouped. */
+export interface MoveGroup {
+  /** `to`: a move to a notebook row; `win`/`lose`: moves that end the game; `unseen`: moves to positions the notebook does not keep. */
+  kind: 'to' | 'win' | 'lose' | 'unseen';
+  to: string | null;
+  count: number;
+  q: number;
+}
+
+export function moveGroups(u: Update): MoveGroup[] {
+  const named: MoveGroup[] = u.candidates.filter((c) => c.to !== null).map((c) => ({ kind: 'to', to: c.to, count: 1, q: c.q + 0 }));
+  const rest = u.candidates.filter((c) => c.to === null);
+  const group = (kind: 'win' | 'lose' | 'unseen', q: number, of: Candidate[]): MoveGroup[] =>
+    of.length ? [{ kind, to: null, count: of.length, q }] : [];
+  const unseen = rest.filter((c) => !c.ends);
+  // A position the notebook does not keep has never been valued: its note is 0, and so is the move.
+  // (`+ 0` above: a note of 0 negated is −0, which is 0 to the reader.)
+  if (unseen.some((c) => c.q !== 0)) throw new Error('q-steps: a move to a position outside the notebook has a value');
+  return [
+    ...named,
+    ...group('win', 1, rest.filter((c) => c.ends && c.q === 1)),
+    ...group('lose', -1, rest.filter((c) => c.ends && c.q === -1)),
+    ...group('unseen', 0, unseen),
+  ];
+}
+
+/** The five sub-steps of an update played slowly, in the essay's order. */
+export const Q_PHASES = ['look', 'value', 'best', 'formula', 'write'] as const;
+export type QPhase = (typeof Q_PHASES)[number];
+
+export interface QStep {
+  /** Index of the walk's frame. */
+  frame: number;
+  /** The sub-step, for an update played slowly; null for a frame shown at once. */
+  phase: QPhase | null;
+  /** Held long enough to be read for the first time: the first game, and every sub-step. */
+  slow: boolean;
+  /** The step's place in its game, from 1, and the game's number of steps. */
+  at: number;
+  of: number;
+}
+
+/**
+ * The walk as the figure plays it. An update is played slowly the first time a
+ * position of its kind (C, B, A) changes its note; everything else is one step.
+ */
+export function qScript(walk: QWalk): QStep[] {
+  const seen = new Set<string>();
+  const steps: QStep[] = [];
+  walk.frames.forEach((f, frame) => {
+    const u = f.update;
+    const kind = u ? u.name.charAt(0) : '';
+    if (u && u.after !== u.before && !seen.has(kind)) {
+      seen.add(kind);
+      for (const phase of Q_PHASES) steps.push({ frame, phase, slow: true, at: 0, of: 0 });
+    } else {
+      steps.push({ frame, phase: null, slow: f.game <= 1, at: 0, of: 0 });
+    }
+  });
+  for (const s of steps) {
+    const game = walk.frames[s.frame]!.game;
+    const mine = steps.filter((x) => walk.frames[x.frame]!.game === game);
+    s.at = mine.indexOf(s) + 1;
+    s.of = mine.length;
+  }
+  return steps;
+}
+
+/** The notebook as it stands at a step: until an update is written, its row keeps the old note. */
+export function notesAt(walk: QWalk, step: QStep): Record<string, number> {
+  const f = walk.frames[step.frame]!;
+  if (step.phase === null || step.phase === 'write' || !f.update) return f.notes;
+  return { ...f.notes, [f.update.name]: f.update.before };
+}
+
+/** The notebook after each game: column 0 before the first, then one per game. */
+export function notebookColumns(walk: QWalk): Record<string, number>[] {
+  return walk.frames.filter((f) => f.kind !== 'update').map((f) => f.notes);
+}
+
+/** For each row, the first game after which its note is not 0 (null: never). */
+export function firstGames(walk: QWalk): Record<string, number | null> {
+  const columns = notebookColumns(walk);
+  return Object.fromEntries(
+    walk.rows.map((r) => {
+      const g = columns.findIndex((c) => c[r] !== 0);
+      return [r, g < 0 ? null : g];
+    }),
+  );
 }
