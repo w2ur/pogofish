@@ -424,3 +424,8 @@ slot[hidden],
 .counts .control[hidden] {
   display: none;
 }
+
+/* A symbol inside an uppercase cut keeps its case (kit/keep-case.ts): λ stays λ, never Λ. */
+.keep-case {
+  text-transform: none;
+}

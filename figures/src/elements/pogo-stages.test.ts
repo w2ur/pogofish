@@ -63,6 +63,13 @@ describe('<pogo-stages>', () => {
     }
   });
 
+  it('its heading names TD(λ) with a lowercase λ the label cut cannot uppercase', async () => {
+    const el = await mount('td', 'en');
+    const where = readout(el).querySelector('.where')!;
+    expect(where.textContent).toMatch(/^TD\(λ\) · /);
+    expect(where.querySelector('.keep-case')!.textContent).toBe('λ');
+  });
+
   it('offers the data’s stages, the first chosen', async () => {
     const el = await mount('qtab');
     expect(choices(el).map((b) => b.textContent)).toEqual(v5.stagesPct.map((p) => `${p} %`));

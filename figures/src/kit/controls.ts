@@ -3,6 +3,7 @@
 // counter, then one primary play/pause, then the caller's extra actions.
 // At most one primary per row: play/pause when it is shown, otherwise the
 // action the caller marks `primary`.
+import { keepCase } from './keep-case';
 import type { Stepper } from './stepper';
 import { t, type Lang } from './strings';
 
@@ -27,7 +28,8 @@ export function controlButton(label: string, onClick: () => void, secondary = fa
   const b = document.createElement('button');
   b.type = 'button';
   b.className = secondary ? 'control secondary' : 'control';
-  b.textContent = label;
+  // The control cut is uppercase: a symbol in the label keeps its case.
+  b.append(...keepCase(label));
   b.addEventListener('click', onClick);
   return b;
 }

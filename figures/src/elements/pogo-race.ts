@@ -14,6 +14,7 @@
 // and no layout is read.
 import type { V5Data } from '../data';
 import { formatDate } from '../kit/date';
+import { keepCase } from '../kit/keep-case';
 import { PogoFigure } from '../kit/figure';
 import { formatScore } from '../kit/score';
 import { colon, t, type Lang, type StringKey } from '../kit/strings';
@@ -216,7 +217,9 @@ export class PogoRace extends PogoFigure {
     };
     for (const s of chart.series) {
       const table = el('table', `table table-${s.program}`);
-      table.append(el('caption', 'label', t(lang, NAME[s.program])));
+      const caption = el('caption', 'label');
+      caption.append(...keepCase(t(lang, NAME[s.program])));
+      table.append(caption);
       const head = el('tr');
       head.append(th(t(lang, 'raceStage'), 'col'), th(t(lang, 'raceGames'), 'col'), th(t(lang, 'raceScore'), 'col'));
       const body = el('tbody');

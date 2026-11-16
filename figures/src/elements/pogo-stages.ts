@@ -12,6 +12,7 @@ import { WASM_FILE, assetUrl } from '../assets';
 import type { V5Data, V5Stage } from '../data';
 import { moveName, ready, type Colour } from '../engine';
 import { choiceGroup, transport } from '../kit/controls';
+import { keepCase } from '../kit/keep-case';
 import { formatScore } from '../kit/score';
 import { PogoFigure } from '../kit/figure';
 import { Stepper } from '../kit/stepper';
@@ -137,7 +138,7 @@ export class PogoStages extends PogoFigure {
       const block = el('div', 'stage-words');
       const where = el('p', 'label where num');
       // The label cut all but closes a narrow space: the count's digit groups get room (countNodes).
-      where.append(w.whereHead, ...countNodes(lang, s.gamesTrained), w.whereTail);
+      where.append(...keepCase(w.whereHead), ...countNodes(lang, s.gamesTrained), w.whereTail);
       block.append(where, el('p', 'score num', w.score), el('p', 'note', w.note), el('p', 'shown', w.shown));
       readout.append(block);
       return block;

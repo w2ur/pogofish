@@ -20,6 +20,7 @@
 import type { V5Data } from '../data';
 import { choiceGroup, transport } from '../kit/controls';
 import { formatDate } from '../kit/date';
+import { keepCase } from '../kit/keep-case';
 import { PogoFigure } from '../kit/figure';
 import { Stepper } from '../kit/stepper';
 import { formatScore, formatShare } from '../kit/score';
@@ -211,7 +212,7 @@ export class PogoMosaic extends PogoFigure {
       const item = el('div', 'sweep-item');
       const heads = all[program].map((s) => {
         const head = el('p', 'label where num');
-        head.append(`${t(lang, NAME[program])} · `, ...whenNodes(lang, s.gamesTrained));
+        head.append(...keepCase(`${t(lang, NAME[program])} · `), ...whenNodes(lang, s.gamesTrained));
         return head;
       });
       const totals = all[program].map((s) => {
@@ -350,7 +351,9 @@ export class PogoMosaic extends PogoFigure {
       return cell;
     };
     const table = el('table', 'table');
-    table.append(el('caption', 'label', t(lang, NAME[program])));
+    const caption = el('caption', 'label');
+    caption.append(...keepCase(t(lang, NAME[program])));
+    table.append(caption);
     const head = el('tr');
     head.append(
       th(t(lang, 'raceStage'), 'col'),
