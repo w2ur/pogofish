@@ -5,7 +5,8 @@
 // how many times its position has been seen.
 import type { TableData } from '../data';
 import { LC1_2, initial, key, play, terminal, winner, type Colour, type Rules, type State, type Triple } from '../engine';
-import { t, type Lang } from '../kit/strings';
+import { t, type Fidelity, type Lang } from '../kit/strings';
+import { TABLE_SOURCE } from '../table';
 
 export type LineName = keyof TableData['lines'];
 
@@ -93,4 +94,15 @@ function ordinal(lang: Lang, n: number): string {
   const teen = n % 100 >= 11 && n % 100 <= 13;
   const suffix = teen ? 'th' : ({ 1: 'st', 2: 'nd', 3: 'rd' } as Record<number, string>)[n % 10] ?? 'th';
   return `${n}${suffix}`;
+}
+
+/**
+ * What a line's label may claim (spec §7). The shortest win and the loop are the
+ * engine's, under either rule set. The centre loss and the opening win are the
+ * solved table's, which is game A's alone: measured under "A", only computed under
+ * lc1-2, where the table says nothing.
+ */
+export function lineFidelity(name: LineName, rules: Rules): { kind: Fidelity; source?: string } {
+  const fromTable = name === 'centreLoss' || name === 'openingWin';
+  return fromTable && rules === null ? { kind: 'measured', source: TABLE_SOURCE } : { kind: 'live' };
 }

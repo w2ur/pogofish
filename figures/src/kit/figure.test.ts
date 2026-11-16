@@ -34,6 +34,12 @@ class ByAttribute extends PogoFigure {
   protected override game() {
     return this.getAttribute('rules') === 'lc1-2' ? ('gameLc12' as const) : ('gameA' as const);
   }
+  protected override fidelityKind() {
+    return this.hasAttribute('measured') ? ('measured' as const) : ('live' as const);
+  }
+  protected override sourceFile() {
+    return 'data/x.json';
+  }
   protected render(): void {}
 }
 class Broken extends PogoFigure {
@@ -212,7 +218,7 @@ describe('PogoFigure', () => {
     expect(el.shadowRoot!.querySelector('.fidelity .source')!.textContent).toBe('data/v5.json');
   });
 
-  it('names the game an instance reports, and adopts the element sheet after the kit sheet', () => {
+  it('names the game and the kind an instance reports, and adopts the element sheet after the kit sheet', () => {
     const wrapper = document.createElement('section');
     wrapper.setAttribute('lang', 'en');
     const a = document.createElement('kit-by-attribute');
@@ -227,6 +233,12 @@ describe('PogoFigure', () => {
     expect(sheets).toHaveLength(2);
     expect(sheets[1]).toBe(b.shadowRoot!.adoptedStyleSheets[1]);
     expect(mount<Fine>('kit-fine').shadowRoot!.adoptedStyleSheets).toHaveLength(1);
+    const c = document.createElement('kit-by-attribute');
+    c.setAttribute('rules', 'A');
+    c.setAttribute('measured', '');
+    wrapper.append(c);
+    expect(fidelity(c as PogoFigure)).toBe('Measured data · game with no stopping rule · source: data/x.json');
+    expect(c.shadowRoot!.querySelector('.fidelity .source')!.textContent).toBe('data/x.json');
   });
 
   it('falls back to English with no [lang] ancestor', () => {

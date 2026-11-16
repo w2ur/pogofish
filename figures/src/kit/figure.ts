@@ -86,6 +86,19 @@ export abstract class PogoFigure extends HTMLElement {
     return (this.constructor as typeof PogoFigure).game;
   }
 
+  /**
+   * What the label says the figure is, and its source file when measured: the class's
+   * by default. A figure whose kind depends on an attribute overrides both; they are
+   * read once, with game(), when the frame is built.
+   */
+  protected fidelityKind(): Fidelity {
+    return (this.constructor as typeof PogoFigure).fidelity;
+  }
+
+  protected sourceFile(): string | undefined {
+    return (this.constructor as typeof PogoFigure).source;
+  }
+
   protected reducedMotion(): boolean {
     return matchMedia('(prefers-reduced-motion: reduce)').matches;
   }
@@ -149,8 +162,9 @@ export abstract class PogoFigure extends HTMLElement {
 
     const label = document.createElement('p');
     label.className = 'fidelity';
-    const text = fidelityLabel(this.lang, ctor.fidelity, ctor.source, this.game());
-    const source = ctor.fidelity === 'measured' ? ctor.source : undefined;
+    const kind = this.fidelityKind();
+    const text = fidelityLabel(this.lang, kind, this.sourceFile(), this.game());
+    const source = kind === 'measured' ? this.sourceFile() : undefined;
     if (source) {
       label.append(text.slice(0, -source.length));
       const file = document.createElement('span');

@@ -2,7 +2,7 @@ import { readFileSync } from 'node:fs';
 import { describe, expect, it } from 'vitest';
 import type { TableData } from '../data';
 import { LC1_2, initial, key, terminal } from '../engine';
-import { lineFrames, parseLine, parseRules, seenText } from './line-frames';
+import { lineFidelity, lineFrames, parseLine, parseRules, seenText } from './line-frames';
 
 const table = JSON.parse(readFileSync('public/data/table.json', 'utf8')) as TableData;
 const tops = (cells: string[][]) => cells.filter((s) => s.length > 0).map((s) => s[s.length - 1]);
@@ -76,5 +76,18 @@ describe('seenText', () => {
     expect(seenText('en', 3)).toBe('This position for the 3rd time');
     expect(seenText('en', 2)).toBe('This position for the 2nd time');
     expect(seenText('en', 11)).toBe('This position for the 11th time');
+  });
+});
+
+describe('lineFidelity', () => {
+  it('the engine’s lines are live under either rules; the table’s are measured under game A only', () => {
+    for (const rules of [null, LC1_2]) {
+      expect(lineFidelity('shortestWin', rules)).toEqual({ kind: 'live' });
+      expect(lineFidelity('loop', rules)).toEqual({ kind: 'live' });
+    }
+    for (const name of ['centreLoss', 'openingWin'] as const) {
+      expect(lineFidelity(name, null)).toEqual({ kind: 'measured', source: 'v3-solve/table.bin' });
+      expect(lineFidelity(name, LC1_2)).toEqual({ kind: 'live' });
+    }
   });
 });

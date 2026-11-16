@@ -38,11 +38,20 @@ afterEach(() => {
 });
 
 describe('<pogo-line>', () => {
-  it('names the game of its rules attribute in the fidelity label', async () => {
-    const a = await mount('shortestWin', 'A', 'en');
-    const b = await mount('shortestWin', 'lc1-2', 'en');
-    expect($(a, '.fidelity').textContent).toBe('Measured data · game with no stopping rule · source: v3-solve/table.bin');
-    expect($(b, '.fidelity').textContent).toContain('repetition rule (lc1-2)');
+  it('labels the engine’s lines as computed live, under the game of its rules', async () => {
+    for (const line of ['shortestWin', 'loop']) {
+      expect($(await mount(line, 'A', 'en'), '.fidelity').textContent).toBe('Computed live · game with no stopping rule');
+      expect($(await mount(line, 'lc1-2', 'en'), '.fidelity').textContent).toBe('Computed live · repetition rule (lc1-2)');
+    }
+  });
+
+  it('labels the table’s lines as measured under game A only: the table says nothing of lc1-2', async () => {
+    for (const line of ['centreLoss', 'openingWin']) {
+      const a = await mount(line, 'A', 'en');
+      expect($(a, '.fidelity').textContent).toBe('Measured data · game with no stopping rule · source: v3-solve/table.bin');
+      expect($(a, '.fidelity .source').textContent).toBe('v3-solve/table.bin');
+      expect($(await mount(line, 'lc1-2', 'en'), '.fidelity').textContent).toBe('Computed live · repetition rule (lc1-2)');
+    }
   });
 
   it('a bad rules attribute shows the fallback rather than the wrong game', async () => {

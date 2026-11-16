@@ -13,9 +13,9 @@ import { animateMove, drawBoard } from '../kit/board-svg';
 import { transport } from '../kit/controls';
 import { PogoFigure } from '../kit/figure';
 import { Stepper } from '../kit/stepper';
-import { t, type Lang, type StringKey } from '../kit/strings';
-import { TABLE_SOURCE, sharedTable } from '../table';
-import { lineFrames, parseLine, parseRules, seenText, type Frame, type LineName } from './line-frames';
+import { t, type Fidelity, type Lang, type StringKey } from '../kit/strings';
+import { sharedTable } from '../table';
+import { lineFidelity, lineFrames, parseLine, parseRules, seenText, type Frame, type LineName } from './line-frames';
 import lineCss from './pogo-line.css?raw';
 
 const LINE_KEY: Record<LineName, StringKey> = {
@@ -54,8 +54,7 @@ function say(lang: Lang, f: Frame, endless: boolean): Said {
 }
 
 export class PogoLine extends PogoFigure {
-  static override fidelity = 'measured' as const;
-  static override source = TABLE_SOURCE;
+  static override fidelity = 'live' as const;
   static override styles = lineCss;
   static override stageMinHeight = '480px';
 
@@ -64,6 +63,23 @@ export class PogoLine extends PogoFigure {
     engine: () => ready(assetUrl(WASM_FILE)),
     table: sharedTable,
   };
+
+  /** Measured only for a table line under game A (lineFidelity); a bad attribute says live, and render fails. */
+  private claim(): ReturnType<typeof lineFidelity> {
+    try {
+      return lineFidelity(parseLine(this.getAttribute('line')), parseRules(this.getAttribute('rules')));
+    } catch {
+      return { kind: 'live' };
+    }
+  }
+
+  protected override fidelityKind(): Fidelity {
+    return this.claim().kind;
+  }
+
+  protected override sourceFile(): string | undefined {
+    return this.claim().source;
+  }
 
   /** The label names the game of the `rules` attribute; a bad one names none, and render fails. */
   protected override game(): 'gameA' | 'gameLc12' | undefined {
@@ -125,7 +141,8 @@ export class PogoLine extends PogoFigure {
       const before = svg;
       slot.replaceChildren(labelledBoard(next));
       svg = next;
-      if (before && f.move && i === shown + 1 && !this.reducedMotion()) animateMove(before, next, f.move);
+      const forward = i === shown + 1;
+      if (before && f.move && forward && !this.reducedMotion()) animateMove(before, next, f.move);
       shown = i;
       // A finished position cannot be played on: under either rule set the board would have nothing to do.
       if (playHere) {
