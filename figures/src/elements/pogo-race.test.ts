@@ -2,17 +2,18 @@ import { readFileSync } from 'node:fs';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import type { V5Data } from '../data';
 import { formatScore, formatShare } from '../kit/score';
-import { intersect, resetMedia } from '../test-dom';
-import { PogoRace } from './pogo-race';
-import { RACE_PROGRAMS } from './race-chart';
+import { intersect, leave, playState, REDUCED_MOTION, resetMedia, setMedia } from '../test-dom';
+import { PogoRace, RACE_MS, raceHold } from './pogo-race';
+import { RACE_PROGRAMS, raceChart, raceEvents } from './race-chart';
 
 if (!customElements.get('pogo-race')) customElements.define('pogo-race', PogoRace);
 const v5 = JSON.parse(readFileSync('public/data/v5.json', 'utf8')) as V5Data;
 
 const flush = () => new Promise((r) => setTimeout(r, 0));
 
-async function mount(lang = 'fr'): Promise<PogoRace> {
+async function mount(lang = 'fr', reduced = false): Promise<PogoRace> {
   resetMedia();
+  setMedia(REDUCED_MOTION, reduced);
   const section = document.createElement('section');
   section.setAttribute('lang', lang);
   const el = document.createElement('pogo-race') as PogoRace;
@@ -24,13 +25,29 @@ async function mount(lang = 'fr'): Promise<PogoRace> {
   return el;
 }
 
+/** As mount, with fake timers already on. */
+async function mountFake(lang: string): Promise<PogoRace> {
+  resetMedia();
+  const section = document.createElement('section');
+  section.setAttribute('lang', lang);
+  const el = document.createElement('pogo-race') as PogoRace;
+  section.append(el);
+  document.body.append(section);
+  intersect(el);
+  await vi.advanceTimersByTimeAsync(0);
+  return el;
+}
+
 const $ = (el: PogoRace, s: string) => el.shadowRoot!.querySelector<HTMLElement>(s)!;
 const $$ = (el: PogoRace, s: string) => [...el.shadowRoot!.querySelectorAll<HTMLElement>(s)];
+const key = (el: PogoRace, k: string): void => void $(el, '.scrub').dispatchEvent(new KeyboardEvent('keydown', { key: k }));
+const said = (el: PogoRace): string[] => $$(el, '.pass').filter((li) => !li.hasAttribute('data-off')).map((li) => li.className);
 
 beforeEach(() => {
   PogoRace.deps = { v5: () => Promise.resolve(v5) };
 });
 afterEach(() => {
+  vi.useRealTimers();
   document.body.innerHTML = '';
 });
 
@@ -82,40 +99,104 @@ describe('<pogo-race>', () => {
 
   it('plots one marker per stage, stage 0 in the zero column, the drawing hidden from assistive tech', async () => {
     const el = await mount('en');
-    expect($(el, '.plot').getAttribute('aria-hidden')).toBe('true');
+    for (const part of $$(el, '.plot > :not(.scrub)')) expect(part.getAttribute('aria-hidden')).toBe('true');
     expect($$(el, '.zero .mark')).toHaveLength(RACE_PROGRAMS.length);
-    expect($$(el, '.log .mark')).toHaveLength(RACE_PROGRAMS.reduce((n, p) => n + v5.programs[p].stages.length - 1, 0));
+    expect($$(el, '.log .ink .mark')).toHaveLength(RACE_PROGRAMS.reduce((n, p) => n + v5.programs[p].stages.length - 1, 0));
     expect($$(el, '.log .run')).toHaveLength(RACE_PROGRAMS.length);
-    // Every name is direct: one per program at its line's end, one per reference.
-    expect($$(el, '.log .name').map((n) => n.textContent)).toEqual(
-      expect.arrayContaining(['AlphaZero with search', 'AlphaZero, no search', 'TD(λ)', 'Q-learning', 'exact table', 'greedy', 'random']),
-    );
+    // Every name is direct: one riding each program's line, one per reference.
+    expect($$(el, '.log .ref-name').map((n) => n.textContent)).toEqual(['exact table', 'greedy', 'random']);
+    expect($$(el, '.log .head-name').map((n) => n.firstChild!.textContent)).toEqual([
+      'AlphaZero with search',
+      'AlphaZero, no search',
+      'TD(λ)',
+      'Q-learning',
+    ]);
     expect($$(el, '.log-axis .tick').map((n) => n.textContent)).toEqual(['100', '1,000', '10,000', '100,000', '1,000,000']);
   });
 
-  it('says in words where each program first passes greedy, from the data', async () => {
+  it('says in words where each program first passes greedy, from the data, in the order it happens', async () => {
     const fr = await mount('fr');
-    const said = $$(fr, '.pass').map((li) => li.textContent);
-    expect(said).toEqual([
-      'AlphaZero, 100 simulations : au-dessus du glouton dès 500 parties.',
-      'AlphaZero sans recherche : au-dessus du glouton dès 5 000 parties.',
-      'TD(λ) : au-dessus du glouton dès 1 000 parties.',
-      `Q-learning : jamais au-dessus du glouton en 5 000 000 parties (${formatShare('fr', v5.programs.qtab.stages[7]!.score)} à la fin).`,
+    expect($$(fr, '.pass').map((li) => li.textContent)).toEqual([
+      'AlphaZero, 100 simulations\u202f: au-dessus du glouton dès 500 parties.',
+      'TD(λ)\u202f: au-dessus du glouton dès 1\u202f000 parties.',
+      'AlphaZero sans recherche\u202f: au-dessus du glouton dès 5\u202f000 parties.',
+      `Q-learning\u202f: jamais au-dessus du glouton en 5\u202f000\u202f000 parties (${formatShare('fr', v5.programs.qtab.stages[7]!.score)} à la fin).`,
     ]);
     expect(fr.shadowRoot!.querySelector('.rule')).toBeNull();
   });
 
-  it('nothing moves: no animation, no transition, no timer', async () => {
+  it('at rest, the finished chart: every crossing and every sentence, the clock at the end', async () => {
+    const el = await mount('fr');
+    expect(said(el)).toHaveLength(4);
+    expect($$(el, '.cross').every((f) => !f.hasAttribute('data-off'))).toBe(true);
+    expect($$(el, '.cross')).toHaveLength(3);
+    expect($(el, '[data-role="counter"]').textContent).toBe('5\u202f000\u202f000 parties');
+    expect($(el, '.ink').style.clipPath).toContain('calc(4.000% - 7px)');
+  });
+
+  it('runs once on screen: the clock sweeps at one speed, each sentence landing when its crossing is reached', async () => {
     vi.useFakeTimers();
-    try {
-      const pending = mount('en');
-      await vi.runAllTimersAsync();
-      await pending;
-      expect(vi.getTimerCount()).toBe(0);
-    } finally {
-      vi.useRealTimers();
+    const el = await mountFake('fr');
+    intersect(el);
+    expect(playState(el)).toBe('pause');
+    expect($(el, '[data-role="counter"]').textContent).toBe('avant l’entraînement');
+    expect(said(el)).toHaveLength(0);
+    const events = raceEvents(raceChart(v5));
+    const landedAt: Record<string, number> = {};
+    let elapsed = 0;
+    for (let i = 0; i < events.length - 1; i++) {
+      // While it runs, the clock heads for the next stop, over the time that stop is away.
+      expect($(el, '.race').style.getPropertyValue('--_t')).toBe(`${raceHold(events, i)}ms`);
+      vi.advanceTimersByTime(raceHold(events, i));
+      elapsed += raceHold(events, i);
+      for (const c of said(el)) landedAt[c] ??= events[i + 1]!.games;
     }
+    expect(landedAt).toEqual({ 'pass pass-az100': 500, 'pass pass-td': 1000, 'pass pass-az0': 5000, 'pass pass-qtab': 5_000_000 });
+    expect(elapsed).toBeGreaterThanOrEqual(15_000);
+    expect(elapsed).toBeLessThanOrEqual(20_000);
+    expect(Math.abs(elapsed - RACE_MS)).toBeLessThan(20);
+    expect(playState(el)).toBe('replay');
+  });
+
+  it('a head’s value is its program’s last measured stage reached, and a head waits for its program’s first stage', async () => {
+    const el = await mount('fr');
+    const az = $(el, '.head-name.name-az100');
+    const td = $(el, '.head-name.name-td');
+    key(el, 'Home');
+    expect(az.hasAttribute('data-off')).toBe(true);
+    key(el, 'ArrowRight');
+    expect($(el, '[data-role="counter"]').textContent).toBe('100 parties');
+    expect(az.hasAttribute('data-off')).toBe(false);
+    expect(az.querySelector('.head-value')!.textContent).toBe(formatShare('fr', v5.programs.az100.stages[1]!.score));
+    expect(td.hasAttribute('data-off')).toBe(true);
+    key(el, 'ArrowRight');
+    key(el, 'ArrowRight');
+    expect($(el, '[data-role="counter"]').textContent).toBe('500 parties');
+    expect(td.hasAttribute('data-off')).toBe(false);
+    expect(td.querySelector('.head-value')!.textContent).toBe(formatShare('fr', v5.programs.td.stages[1]!.score));
+    expect($(el, '.scrub').getAttribute('aria-valuetext')).toBe('500 parties');
+    expect(said(el)).toEqual(['pass pass-az100']);
+    key(el, 'End');
+    expect($(el, '[data-role="counter"]').textContent).toBe('5\u202f000\u202f000 parties');
+  });
+
+  it('a reader’s key on the clock pauses the race, and the pause holds when the figure comes back', async () => {
+    const el = await mount('fr');
+    intersect(el);
+    expect(playState(el)).toBe('pause');
+    key(el, 'ArrowRight');
+    expect(playState(el)).toBe('play');
+    leave(el);
+    intersect(el);
+    expect(playState(el)).toBe('play');
+  });
+
+  it('under reduced motion, the finished chart, nothing starts, and nothing glides', async () => {
+    const el = await mount('fr', true);
+    intersect(el);
+    expect(playState(el)).toBe('play');
+    expect($(el, '[data-role="counter"]').textContent).toBe('5\u202f000\u202f000 parties');
     const css = readFileSync('src/elements/pogo-race.css', 'utf8');
-    expect(css).not.toMatch(/animation|transition|@keyframes/);
+    expect(css).toMatch(/@media \(prefers-reduced-motion: reduce\) \{\s*\.ink,\s*\.clock,\s*\.heads \.head-name \{\s*transition: none;/);
   });
 });

@@ -368,3 +368,104 @@
   font-size: 12.8px;
   color: var(--_muted);
 }
+
+/*
+ * The race. One clock sweeps the log box: the ink it has passed is uncovered
+ * (a clip on .ink), each name rides its line's head, and every move shares the
+ * clock's duration (--_t) and its constant speed (linear), so a head stays on
+ * its straight segment. Under reduced motion nothing glides: the reader's
+ * steps land at once.
+ */
+.race {
+  --_t: 0ms;
+}
+
+.ink {
+  position: absolute;
+  inset: 0;
+  transition: clip-path var(--_t) linear;
+}
+
+.clock {
+  position: absolute;
+  top: -8px;
+  bottom: 0;
+  width: 0;
+  border-left: 1px solid var(--_ink);
+  transition: left var(--_t) linear;
+  pointer-events: none;
+}
+
+/* The clock's handle, at the axis: what the reader grabs. */
+.clock::after {
+  content: '';
+  position: absolute;
+  bottom: -7px;
+  left: -6px;
+  width: 11px;
+  height: 11px;
+  background: var(--_ground);
+  border: 2px solid var(--_ink);
+}
+
+.heads .head-name {
+  transition:
+    left var(--_t) linear,
+    top var(--_t) linear;
+}
+
+.head-name[data-off] {
+  visibility: hidden;
+}
+
+.head-value {
+  font-weight: 400;
+  white-space: nowrap;
+  color: var(--_ink-2);
+}
+
+/* The first point whose whole interval clears greedy's line: framed when the clock reaches it. */
+.cross {
+  position: absolute;
+  width: 21px;
+  height: 21px;
+  transform: translate(-50%, -50%);
+  border: 2px solid var(--_ink);
+}
+
+.cross[data-off] {
+  visibility: hidden;
+}
+
+.pass[data-off] {
+  visibility: hidden;
+}
+
+/* Over the log box and its axis: the clock's slider, for the pointer and the keyboard. */
+.scrub {
+  grid-area: 1 / 4 / 3 / 5;
+  position: relative;
+  z-index: 1;
+  cursor: ew-resize;
+  touch-action: pan-y;
+}
+
+.scrub:focus-visible {
+  outline: 2px solid var(--_ink);
+  outline-offset: 4px;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .ink,
+  .clock,
+  .heads .head-name {
+    transition: none;
+  }
+}
+
+/* At phone width a head carries its name only: its score would run out of the box. */
+@container (max-width: 479px) {
+  .head-value {
+    display: none;
+  }
+}
