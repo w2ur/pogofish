@@ -369,7 +369,7 @@ describe('<pogo-board> inline', () => {
     expect($(el, '.setup').hidden).toBe(false);
   });
 
-  // Regression: « Abandonner » started the next game at once, with the side and level of the last.
+  // Regression: c2850d9 — « Abandonner » started the next game at once, with the side and level of the last.
   it('after « Abandonner », side and level can be chosen again before the next game', async () => {
     const el = await mount('en');
     newGame(el);
@@ -705,7 +705,7 @@ describe('<pogo-board mode="follow"> is the page’s board', () => {
     expect(shownNewGame(el)).toHaveLength(1);
   });
 
-  // Regression: the follow board offered « Nouvelle partie » only once a game was over, and never the setup.
+  // Regression: c2850d9 — the follow board offered « Nouvelle partie » only once a game was over, and never the setup.
   it('after « Abandonner », it stays, and offers side and level before the next game', async () => {
     const el = await mount('en', { mode: 'follow' });
     store.newGame('White', 'normal');

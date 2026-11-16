@@ -220,7 +220,7 @@ describe('the follow board’s size and its close', () => {
 });
 
 describe('abandon', () => {
-  // Regression: the abandon left no way to choose side and level before the next game.
+  // Regression: c2850d9 — the abandon left no way to choose side and level before the next game.
   it('ends the game under way without starting another, so the next one can be set up first', () => {
     const store = make();
     const heard = vi.fn();
