@@ -13,6 +13,10 @@
 import type { State } from '../engine';
 import { fidelityLabel, t, type Fidelity, type Lang } from './strings';
 import themeCss from './theme.css?raw';
+// The store listens for `pogo:playfrom` on the document. Each element is its own
+// chunk, loaded on approach: a figure that hands a position over may be on the page
+// before any board is, so the store comes with the kit, never after the event.
+import '../store';
 
 /** How a figure that cites more than one source joins them in its sourceFile(). */
 export const SOURCES = ' · ';

@@ -1,46 +1,31 @@
-import { PogoBoard } from './elements/pogo-board';
-import { PogoCount } from './elements/pogo-count';
-import { PogoEncoding } from './elements/pogo-encoding';
-import { PogoGreedy } from './elements/pogo-greedy';
-import { PogoLine } from './elements/pogo-line';
-import { PogoMosaic } from './elements/pogo-mosaic';
-import { PogoMoves } from './elements/pogo-moves';
-import { PogoNet } from './elements/pogo-net';
-import { PogoOpenings } from './elements/pogo-openings';
-import { PogoQsteps } from './elements/pogo-qsteps';
-import { PogoRace } from './elements/pogo-race';
-import { PogoReach } from './elements/pogo-reach';
-import { PogoRetrograde } from './elements/pogo-retrograde';
-import { PogoSearch } from './elements/pogo-search';
-import { PogoStages } from './elements/pogo-stages';
-import { PogoTdTargets } from './elements/pogo-td-targets';
-import { PogoTitle } from './elements/pogo-title';
+// The entry a page imports. It holds only what every page needs to start: the
+// list of tags, one loader per tag, and the lazy-definition logic. Each element
+// is its own chunk, imported when the first instance of its tag nears the screen.
+import { lazyDefine, type LazyHandle } from './lazy-define';
+import { immediate, LOADERS } from './registry';
 
 export { manifest } from './manifest';
 
-const ELEMENTS: [string, CustomElementConstructor][] = [
-  ['pogo-board', PogoBoard],
-  ['pogo-title', PogoTitle],
-  ['pogo-moves', PogoMoves],
-  ['pogo-line', PogoLine],
-  ['pogo-count', PogoCount],
-  ['pogo-reach', PogoReach],
-  ['pogo-retrograde', PogoRetrograde],
-  ['pogo-openings', PogoOpenings],
-  ['pogo-greedy', PogoGreedy],
-  ['pogo-qsteps', PogoQsteps],
-  ['pogo-stages', PogoStages],
-  ['pogo-race', PogoRace],
-  ['pogo-mosaic', PogoMosaic],
-  ['pogo-net', PogoNet],
-  ['pogo-encoding', PogoEncoding],
-  ['pogo-td-targets', PogoTdTargets],
-  ['pogo-search', PogoSearch],
-];
+let handle: LazyHandle | undefined;
 
-/** Registers every `<pogo-…>` element; safe to call twice. */
+/**
+ * Registers every `<pogo-…>` element, each when the first instance of its tag nears
+ * the screen (at once without IntersectionObserver), including instances added later;
+ * safe to call twice. An element stays undefined, its fallback shown, until then.
+ */
 export function defineAll(): void {
-  for (const [name, ctor] of ELEMENTS) if (!customElements.get(name)) customElements.define(name, ctor);
+  if (handle || typeof document === 'undefined') return;
+  handle = lazyDefine({ loaders: LOADERS, immediate });
+}
+
+/** Imports and defines every element now, whatever the page holds: the eager path, for tests and tools. */
+export async function loadAll(): Promise<void> {
+  await Promise.all(
+    Object.entries(LOADERS).map(async ([tag, load]) => {
+      const ctor = await load();
+      if (!customElements.get(tag)) customElements.define(tag, ctor);
+    }),
+  );
 }
 
 export * from './engine';
