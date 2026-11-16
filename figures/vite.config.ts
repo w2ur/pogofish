@@ -30,6 +30,18 @@ export default defineConfig({
       formats: ['es'],
       fileName: (_format, name) => `${name}.js`,
     },
+    rollupOptions: {
+      output: {
+        // The engine, shared by the page and the worker, is one chunk; the net parser and
+        // the search load on demand in another. Left alone, Rollup folds the parser into
+        // the engine chunk, which the page loads eagerly.
+        manualChunks: (id) => {
+          if (/\/src\/engine\.ts$/.test(id) || /pogofish[-_]wasm/.test(id)) return 'engine';
+          if (/\/src\/(nets|mcts)\.ts$/.test(id)) return 'search';
+          return undefined;
+        },
+      },
+    },
   },
   test: {
     environment: 'happy-dom',
