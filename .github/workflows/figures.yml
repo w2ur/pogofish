@@ -18,6 +18,8 @@ jobs:
           # shallow clone only knows HEAD's (figures/scripts/v5-date.mjs refuses it).
           fetch-depth: 0
       - uses: dtolnay/rust-toolchain@stable
+      # Caches ~/.cargo and target/, keyed on Cargo.lock and the toolchain.
+      - uses: Swatinem/rust-cache@v2
       # No pogofish-train: it downloads libtorch, which release-cli.yml also avoids.
       - name: Rust tests
         run: cargo test --release -p pogofish-engine -p pogofish-search -p pogofish-infer -p pogofish-wasm
