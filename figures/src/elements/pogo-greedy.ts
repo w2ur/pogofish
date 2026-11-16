@@ -35,8 +35,7 @@ function say(lang: Lang, f: GreedyFrame, stopped: boolean): Spoken {
   const lines = [
     { className: 'move', text: move },
     { className: 'note', text: note },
-    { className: 'shout who', text: who },
-    { className: 'how', text: how },
+    { className: 'result', text: [who, how].filter(Boolean).map((p) => (p.endsWith('.') ? p : `${p}.`)).join(' ') },
   ].filter((l) => l.text !== '');
   return { lines, title: sentences([move, note, who]), live: sentences([move, note, who, how]) };
 }
@@ -55,10 +54,10 @@ function sizers(lang: Lang): Line[][] {
   const ends = (['W', 'R'] as const).flatMap((winner) =>
     [false, true].map((byRepetition) => {
       const { who, how } = resultWords(lang, { winner, byRepetition });
-      return [move, note, { className: 'shout who', text: who }, { className: 'how', text: how }];
+      return [move, note, { className: 'result', text: `${who}. ${how}` }];
     }),
   );
-  return [...ends, [move, note, { className: 'how', text: unfinishedLine(lang) }]];
+  return [...ends, [move, note, { className: 'result', text: unfinishedLine(lang) }]];
 }
 
 export class PogoGreedy extends PogoFigure {
