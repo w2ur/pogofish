@@ -141,7 +141,8 @@ export class PogoLine extends PogoFigure {
       const before = svg;
       slot.replaceChildren(labelledBoard(next));
       svg = next;
-      const forward = i === shown + 1;
+      // A step forward, or the loop wrapping from its last frame to its first move, which is one too.
+      const forward = i === shown + 1 || (cyclic && shown === last && i === 1);
       if (before && f.move && forward && !this.reducedMotion()) animateMove(before, next, f.move);
       shown = i;
       // A finished position cannot be played on: under either rule set the board would have nothing to do.

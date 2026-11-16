@@ -74,6 +74,27 @@ describe('<pogo-line>', () => {
     expect(role(el, 'action').disabled).toBe(true);
   });
 
+  it('the loop’s wrap, last frame to first move, moves its piece like any step forward', async () => {
+    const proto = Element.prototype as unknown as { animate?: unknown };
+    const had = proto.animate;
+    const animate = vi.fn();
+    proto.animate = animate;
+    try {
+      const el = await mount('loop', 'A');
+      for (let i = 0; i < 4; i++) role(el, 'next').click();
+      const forward = animate.mock.calls.length;
+      expect(forward).toBeGreaterThan(0);
+      vi.useFakeTimers();
+      role(el, 'play').click();
+      vi.advanceTimersByTime(1100);
+      expect(counter(el)).toBe('1 / 4');
+      // One disc moved: its cut-out, the disc and its ring, as on any forward step.
+      expect(animate.mock.calls.length).toBe(forward + 3);
+    } finally {
+      proto.animate = had;
+    }
+  });
+
   it('under game A the loop plays on without end and counts nothing', async () => {
     const el = await mount('loop', 'A');
     vi.useFakeTimers();
