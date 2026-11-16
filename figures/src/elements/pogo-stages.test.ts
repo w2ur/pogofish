@@ -2,8 +2,8 @@ import { readFileSync } from 'node:fs';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import type { V5Data } from '../data';
 import { REDUCED_MOTION, intersect, resetMedia, setMedia, shownText, leave, playState } from '../test-dom';
-import { PogoStages } from './pogo-stages';
-import { formatShare } from '../kit/score';
+import { MOVE_MS, PogoStages, REST_MS } from './pogo-stages';
+import { formatInterval, formatShare } from '../kit/score';
 
 if (!customElements.get('pogo-stages')) customElements.define('pogo-stages', PogoStages);
 const v5 = JSON.parse(readFileSync('public/data/v5.json', 'utf8')) as V5Data;
@@ -27,8 +27,9 @@ async function mount(program: string, lang = 'fr'): Promise<PogoStages> {
 const $ = (el: PogoStages, s: string) => el.shadowRoot!.querySelector<HTMLElement>(s)!;
 const role = (el: PogoStages, r: string) => $(el, `[data-role="${r}"]`) as HTMLButtonElement;
 const choices = (el: PogoStages) => [...el.shadowRoot!.querySelectorAll<HTMLButtonElement>('[role="radio"]')];
-const readout = (el: PogoStages) => el.shadowRoot!.querySelector('.stage-words:not([data-off])')!;
-const said = (el: PogoStages) => el.shadowRoot!.querySelector('.said:not([data-off]):not(.sizer)')!.textContent;
+const $$ = (el: PogoStages, s: string) => [...el.shadowRoot!.querySelectorAll<HTMLElement>(s)];
+const drawn = (el: PogoStages) => $$(el, '.lines .run:not([data-off])').length;
+const said = (el: PogoStages) => shownText(el.shadowRoot!.querySelector('.said:not([data-off]):not(.sizer)')!);
 
 beforeEach(() => resetMedia());
 afterEach(() => {
@@ -77,7 +78,7 @@ describe('<pogo-stages>', () => {
 
   it('its heading names TD(λ) with a lowercase λ the label cut cannot uppercase', async () => {
     const el = await mount('td', 'en');
-    const where = readout(el).querySelector('.where')!;
+    const where = $(el, '.where');
     expect(where.textContent).toMatch(/^TD\(λ\) · /);
     expect(where.querySelector('.keep-case')!.textContent).toBe('λ');
   });
@@ -89,49 +90,88 @@ describe('<pogo-stages>', () => {
     ] as const) {
       const el = await mount('td', lang);
       expect(v5.programs.td.stages[0]!.gamesTrained).toBe(0);
-      expect(readout(el).querySelector('.where')!.textContent).toBe(text);
+      expect($(el, '.where').textContent).toBe(text);
       expect($(el, '[role="status"]').textContent).toMatch(new RegExp(`^${text.replace(/[()]/g, '\\$&')}\\. `));
       document.body.innerHTML = '';
     }
   });
 
-  it('offers the data’s stages, the first chosen', async () => {
+  it('the points of the curve are the stage picker: one radio per stage of the data, named by its score, the first chosen', async () => {
     const el = await mount('qtab');
-    expect(choices(el).map((b) => b.textContent)).toEqual(v5.stagesPct.map((p) => `${p} %`));
-    expect(choices(el)[0]!.getAttribute('aria-checked')).toBe('true');
+    expect($(el, '[role="radiogroup"]').getAttribute('aria-label')).toBe('Étape de l’entraînement');
+    expect(choices(el)).toHaveLength(v5.stagesPct.length);
+    expect(choices(el).map((b) => b.getAttribute('aria-checked'))).toEqual(['true', ...v5.stagesPct.slice(1).map(() => 'false')]);
+    expect(choices(el).map((b) => b.tabIndex)).toEqual([0, ...v5.stagesPct.slice(1).map(() => -1)]);
+    expect(choices(el)[0]!.getAttribute('aria-label')).toBe('avant tout entraînement : 3,1 % de parties gagnées contre le glouton');
+    expect(choices(el)[7]!.getAttribute('aria-label')).toBe('100 % de l’entraînement : 17,8 % de parties gagnées contre le glouton');
   });
 
-  it('stage scores shown equal V5Data', async () => {
+  it('places each point at its stage’s measured score, and names the three references with their scores', async () => {
+    const el = await mount('td');
+    choices(el).forEach((b, k) => {
+      const stage = v5.programs.td.stages.find((s) => s.pct === v5.stagesPct[k])!;
+      expect(parseFloat(b.style.top)).toBeCloseTo((1 - stage.score) * 100, 2);
+    });
+    expect($$(el, '.ref-name').map((r) => r.textContent)).toEqual(['table exacte 91,9 %', 'glouton 49,3 %', 'hasard 3,1 %']);
+    expect($$(el, '.lines .ref')).toHaveLength(3);
+    expect($$(el, '.x-axis .tick').map((x) => x.textContent)).toEqual(v5.stagesPct.map(String));
+    expect($(el, '.unit-x').textContent).toBe('part de l’entraînement, en %');
+    expect($(el, '.unit-y').textContent).toBe('parties gagnées, en %');
+  });
+
+  it('the headline score and its interval equal V5Data at every stage of the three programs', async () => {
     for (const program of ['qtab', 'td', 'az100'] as const) {
       for (const lang of ['fr', 'en'] as const) {
         const el = await mount(program, lang);
         for (const [k, stage] of v5.programs[program].stages.entries()) {
           choices(el)[k]!.click();
-          const text = readout(el).querySelector('.score')!.textContent!;
-          expect(text).toContain(formatShare(lang, stage.score));
+          const text = $(el, '.score').textContent!;
+          expect(text).toBe(formatShare(lang, stage.score));
           // The percentage on screen is the data's score, within the 0.05 point of its rounding.
-          const num = (x: string) => Number(x.replace(',', '.'));
-          const shown = num(text.match(/^(\d+[.,]\d)\u202f?% (?:de parties gagnées contre le glouton|of games won against greedy)$/)![1]!);
+          const shown = Number(text.match(/^(\d+[.,]\d)/)![1]!.replace(',', '.'));
           expect(Math.abs(shown - stage.score * 100)).toBeLessThanOrEqual(0.05 + 1e-9);
+          expect($(el, '.interval').textContent).toContain(formatInterval(lang, stage.ci95));
         }
+        document.body.innerHTML = '';
       }
     }
   });
 
-  it('says what the score is, against whom, the program’s colour and how its game ended', async () => {
+  it('says what the score is, where in training, and who is who in the game shown', async () => {
     const el = await mount('az100');
     choices(el)[7]!.click();
-    const r = readout(el).textContent!;
-    expect(r).toContain('AlphaZero, 100 simulations · 100 % de l’entraînement : 10 000 parties');
-    expect(r).toContain('89,1\u202f% de parties gagnées contre le glouton');
-    expect(r).toContain('Partie montrée : le programme est Blanc, le glouton Rouge ; le programme gagne.');
+    expect($(el, '.where').textContent).toBe('AlphaZero, 100 simulations · après 10 000 parties, 100 % de l’entraînement');
+    expect($(el, '.headline').textContent).toBe('Score contre le glouton89,1 %intervalle à 95 % : 87,8 à 90,3 %');
+    expect($(el, '.shown').textContent).toBe('Partie montrée : le programme est Blanc, le glouton Rouge.');
+  });
+
+  it('the curve is drawn up to the stage shown, whose point is the large one', async () => {
+    const el = await mount('td');
+    expect(drawn(el)).toBe(0);
+    expect(choices(el).map((b) => b.dataset.when)).toEqual(['now', 'later', 'later', 'later', 'later', 'later', 'later', 'later']);
+    choices(el)[3]!.click();
+    expect(drawn(el)).toBe(3);
+    expect(choices(el).map((b) => b.dataset.when)).toEqual(['past', 'past', 'past', 'now', 'later', 'later', 'later', 'later']);
+    expect($$(el, '.lines .run')).toHaveLength(v5.stagesPct.length - 1);
+  });
+
+  it('the arrow keys move along the curve and choose', async () => {
+    const el = await mount('td');
+    choices(el)[0]!.focus();
+    choices(el)[0]!.dispatchEvent(new KeyboardEvent('keydown', { key: 'ArrowRight', bubbles: true }));
+    expect(choices(el)[1]!.getAttribute('aria-checked')).toBe('true');
+    expect(el.shadowRoot!.activeElement).toBe(choices(el)[1]);
+    choices(el)[1]!.dispatchEvent(new KeyboardEvent('keydown', { key: 'ArrowLeft', bubbles: true }));
+    choices(el)[0]!.dispatchEvent(new KeyboardEvent('keydown', { key: 'ArrowLeft', bubbles: true }));
+    expect(choices(el)[7]!.getAttribute('aria-checked')).toBe('true');
   });
 
   it('replays the chosen stage’s game to its end, the opening said as random', async () => {
     const el = await mount('qtab');
     choices(el)[7]!.click();
+    role(el, 'play').click();
     const stage = v5.programs.qtab.stages[7]!;
-    expect(role(el, 'counter').textContent).toBe(`coup 0 sur ${stage.game.length}`);
+    expect(role(el, 'counter').textContent).toBe(`étape 8 sur 8 · coup 0 sur ${stage.game.length}`);
     role(el, 'next').click();
     expect(said(el)).toContain('Ouverture tirée au sort');
     for (let i = 1; i < stage.openingPlies; i++) role(el, 'next').click();
@@ -143,31 +183,59 @@ describe('<pogo-stages>', () => {
     );
     while (!role(el, 'next').disabled) role(el, 'next').click();
     expect(said(el)).toContain('Rouge gagne');
+    expect(role(el, 'counter').textContent).toBe(`étape 8 sur 8 · coup ${stage.game.length} sur ${stage.game.length}`);
+  });
+
+  it('the stages advance by themselves: a game ends, rests, and the next stage starts with its own score', async () => {
+    const el = await mount('td');
+    vi.useFakeTimers();
+    role(el, 'play').click();
+    const moves = v5.programs.td.stages[0]!.game.length;
+    vi.advanceTimersByTime(MOVE_MS * moves);
+    expect(role(el, 'counter').textContent).toBe(`étape 1 sur 8 · coup ${moves} sur ${moves}`);
+    expect($(el, '.score').textContent).toBe('7,1 %');
+    vi.advanceTimersByTime(REST_MS - 1);
+    expect(role(el, 'counter').textContent).toMatch(/^étape 1 sur 8/);
+    vi.advanceTimersByTime(1);
+    expect(role(el, 'counter').textContent).toMatch(/^étape 2 sur 8 · coup 0 sur /);
+    expect(choices(el)[1]!.getAttribute('aria-checked')).toBe('true');
+    // The number is set, never counted: it is the next stage's score at once.
+    expect($(el, '.score').textContent).toBe('45,1 %');
+    expect(REST_MS).toBeGreaterThan(MOVE_MS);
   });
 
   it('choosing a stage plays its game; under reduced motion it waits for the reader', async () => {
     const el = await mount('td');
     vi.useFakeTimers();
     choices(el)[3]!.click();
-    vi.advanceTimersByTime(1100);
-    expect(role(el, 'counter').textContent).toMatch(/^coup 1 sur /);
+    vi.advanceTimersByTime(MOVE_MS);
+    expect(role(el, 'counter').textContent).toMatch(/^étape 4 sur 8 · coup 1 sur /);
     setMedia(REDUCED_MOTION, true);
     choices(el)[4]!.click();
-    vi.advanceTimersByTime(1100 * 3);
-    expect(role(el, 'counter').textContent).toMatch(/^coup 0 sur /);
+    vi.advanceTimersByTime(MOVE_MS * 3);
+    expect(role(el, 'counter').textContent).toMatch(/^étape 5 sur 8 · coup 0 sur /);
     expect(vi.getTimerCount()).toBe(0);
+  });
+
+  it('under reduced motion it rests on the last stage, its game ended and the whole curve drawn', async () => {
+    setMedia(REDUCED_MOTION, true);
+    const el = await mount('az100');
+    expect(playState(el)).toBe('play');
+    expect(drawn(el)).toBe(v5.stagesPct.length - 1);
+    expect($(el, '.score').textContent).toBe('89,1 %');
+    expect(role(el, 'next').disabled).toBe(true);
   });
 
   it('an aborted signal stops a running replay', async () => {
     const el = await mount('az100');
     vi.useFakeTimers();
     choices(el)[2]!.click();
-    vi.advanceTimersByTime(1100);
+    vi.advanceTimersByTime(MOVE_MS);
     const shown = role(el, 'counter');
-    expect(shown.textContent).toMatch(/^coup 1 sur /);
+    expect(shown.textContent).toMatch(/· coup 1 sur /);
     el.parentElement!.removeChild(el);
-    vi.advanceTimersByTime(1100 * 10);
-    expect(shown.textContent).toMatch(/^coup 1 sur /);
+    vi.advanceTimersByTime(MOVE_MS * 10);
+    expect(shown.textContent).toMatch(/· coup 1 sur /);
     expect(vi.getTimerCount()).toBe(0);
   });
 
