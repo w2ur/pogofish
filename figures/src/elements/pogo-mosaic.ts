@@ -89,6 +89,12 @@ export function totalsWords(lang: Lang, s: MosaicStage): { wins: string; mistake
   };
 }
 
+/** « après 500 parties », or « avant tout entraînement » for stage 0, as nodes (the count's digit groups get room). */
+export function whenNodes(lang: Lang, gamesTrained: number): (string | HTMLElement)[] {
+  if (gamesTrained === 0) return [t(lang, 'beforeTraining')];
+  return [`${t(lang, 'mosaicAfter')} `, ...countNodes(lang, gamesTrained), ` ${t(lang, 'stagesGames')}`];
+}
+
 export class PogoMosaic extends PogoFigure {
   static override fidelity = 'measured' as const;
   static override game = 'gameLc12' as const;
@@ -188,7 +194,7 @@ export class PogoMosaic extends PogoFigure {
     const w = totalsWords(lang, s);
     const li = el('li', 'stage-item');
     const head = el('p', 'label where num');
-    head.append(`${pctText(lang, s.pct)} · ${t(lang, 'mosaicAfter')} `, ...countNodes(lang, s.gamesTrained), ` ${t(lang, 'stagesGames')}`);
+    head.append(`${pctText(lang, s.pct)} · `, ...whenNodes(lang, s.gamesTrained));
     const svg = mosaicSvg(s.squares);
     svg.setAttribute('role', 'img');
     svg.setAttribute('aria-label', `${w.wins}. ${w.mistakes}. ${w.games}.`);

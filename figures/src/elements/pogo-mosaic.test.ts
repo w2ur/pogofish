@@ -102,6 +102,7 @@ describe('<pogo-mosaic>', () => {
     expect(items[7]!.querySelector('.games-count')!.textContent).toBe(games);
     expect(items[7]!.querySelector('svg')!.getAttribute('aria-label')).toContain(games);
     expect(items[1]!.querySelector('.where')!.textContent).toBe('1 % · après 100 parties');
+    expect(items[0]!.querySelector('.where')!.textContent).toBe('0\u202f% · avant tout entraînement');
     const rows = $$(el, '.table tbody tr').map((r) => [...r.children].map((c) => c.textContent));
     expect(rows).toHaveLength(8);
     expect(rows[7]).toEqual(['100 %', '10 000', '90', '1,5 % (7 / 465)']);
