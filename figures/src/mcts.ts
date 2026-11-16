@@ -22,6 +22,25 @@ export interface SearchSnapshot {
   root: RootRow[];
 }
 
+/**
+ * One simulation, as search() reports it when asked (`onTrace`): the moves it
+ * followed from the root, how it stopped, and what it brought back.
+ */
+export interface SimulationTrace {
+  /** Its number, from 1. */
+  sim: number;
+  /** The moves from the root, in order: the first is the root move whose row it counts in. */
+  moves: Move[];
+  /**
+   * Where it stopped: `new`, a position not yet simulated this turn, valued by the net;
+   * `end`, a finished game, valued by its result; `repeat`, a position already met on
+   * this path, valued by the net.
+   */
+  leaf: 'new' | 'end' | 'repeat';
+  /** The value brought back, for the player to move at the root: what the root move's mean takes in. */
+  value: number;
+}
+
 export interface SearchOptions {
   /** Simulations to run (default 100, as MctsConfig::default). */
   sims?: number;
@@ -33,6 +52,8 @@ export interface SearchOptions {
   batch?: number;
   /** Called after every simulation. */
   onSnapshot?: (s: SearchSnapshot) => void;
+  /** Called after every simulation, before `onSnapshot`, with what it did. Asking changes nothing in the search. */
+  onTrace?: (t: SimulationTrace) => void;
   /** Aborting rejects the search with an `AbortError` before the next simulation; `onSnapshot` does not fire again. */
   signal?: AbortSignal;
 }
@@ -101,9 +122,10 @@ class Tree {
     return value;
   }
 
-  /** One simulation; returns the value for the player to move at `s`. */
-  simulate(s: State, path: Set<string>): number {
+  /** One simulation; returns the value for the player to move at `s`. `trace`, when given, records its path and leaf. */
+  simulate(s: State, path: Set<string>, trace?: Pick<SimulationTrace, 'moves' | 'leaf'>): number {
     if (terminal(s, this.rules)) {
+      if (trace) trace.leaf = 'end';
       const w = winner(s, this.rules);
       if (w === null) return 0;
       return (w === 'W') === (s.to_move === 'White') ? 1 : -1;
@@ -113,6 +135,7 @@ class Tree {
     path.add(k);
     const edges = this.nodes.get(k);
     if (revisit || edges === undefined) {
+      if (trace) trace.leaf = revisit ? 'repeat' : 'new';
       return this.expandIfNeeded(s) ?? this.net.evaluate(s).value;
     }
 
@@ -131,7 +154,8 @@ class Tree {
     });
 
     const edge = edges[index]!;
-    const value = -this.simulate(playUnder(s, edge.move, this.rules), path);
+    trace?.moves.push(edge.move);
+    const value = -this.simulate(playUnder(s, edge.move, this.rules), path, trace);
     edge.visits += 1;
     edge.valueSum = f(edge.valueSum + value);
     return value;
@@ -175,7 +199,7 @@ export function bestMove(snapshot: SearchSnapshot): Move {
  * valued as no game-A position ever is.
  */
 export async function search(s: State, net: AzNet, o: SearchOptions = {}): Promise<SearchSnapshot> {
-  const { sims = 100, cPuct = 1.5, rules = LC1_2, batch = 10, onSnapshot, signal } = o;
+  const { sims = 100, cPuct = 1.5, rules = LC1_2, batch = 10, onSnapshot, onTrace, signal } = o;
   if (signal?.aborted) throw abortError();
   // NaN would make every batch empty and the loop endless; Infinity never yields.
   const step = Number.isFinite(batch) && batch >= 1 ? Math.floor(batch) : 1;
@@ -186,7 +210,13 @@ export async function search(s: State, net: AzNet, o: SearchOptions = {}): Promi
     const end = Math.min(sims, sim + step);
     while (sim < end) {
       if (signal?.aborted) throw abortError();
-      tree.simulate(s, new Set());
+      if (onTrace) {
+        const trace: Pick<SimulationTrace, 'moves' | 'leaf'> = { moves: [], leaf: 'new' };
+        const value = tree.simulate(s, new Set(), trace);
+        onTrace({ sim: sim + 1, moves: trace.moves, leaf: trace.leaf, value });
+      } else {
+        tree.simulate(s, new Set());
+      }
       sim += 1;
       onSnapshot?.(tree.snapshot(s, sim));
     }
