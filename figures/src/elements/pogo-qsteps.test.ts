@@ -61,6 +61,13 @@ describe('qWords', () => {
 });
 
 describe('<pogo-qsteps>', () => {
+  it('puts the transport right under the board it steps, the notebook beside or below them', async () => {
+    const el = await mount('fr');
+    const col = el.shadowRoot!.querySelector('.board-col')!;
+    expect([...col.children].map((c) => c.className)).toEqual(['board-slot', 'controls']);
+    expect(col.nextElementSibling!.classList.contains('notebook')).toBe(true);
+  });
+
   it('is computed live, under the repetition rule', async () => {
     expect(precisionsOf(await mount('en'))).toEqual([
       'Computed in your browser by the game’s engine: nothing is prerecorded.',

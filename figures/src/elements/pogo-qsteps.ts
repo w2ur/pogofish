@@ -130,8 +130,9 @@ export class PogoQsteps extends PogoFigure {
       cells.set(r, { row, value });
     }
     table.append(thead, tbody);
+    // The transport sits right under the board it steps; the notebook beside them, or under them.
+    const boardCol = el('div', 'board-col');
     const body = el('div', 'body');
-    body.append(slot, table);
 
     const show = (i: number): void => {
       const f = frames[i]!;
@@ -158,7 +159,9 @@ export class PogoQsteps extends PogoFigure {
     const stepper = new Stepper(frames.length, show, { signal, interval: 1600 });
     const row = transport(stepper, { lang, counter: (i, n) => `${i} / ${n - 1}` });
     show(0);
-    root.append(status, body, row, live);
+    boardCol.append(slot, row);
+    body.append(boardCol, table);
+    root.append(status, body, live);
     this.stage.append(root);
   }
 }

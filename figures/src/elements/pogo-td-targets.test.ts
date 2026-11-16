@@ -58,6 +58,11 @@ afterEach(() => {
 });
 
 describe('<pogo-td-targets>', () => {
+  it('puts the transport right under the chart it steps, before the legend and the table', async () => {
+    const el = await mount('fr');
+    expect(el.shadowRoot!.querySelector('.plot')!.nextElementSibling!.classList.contains('controls')).toBe(true);
+  });
+
   it('is computed live under lc1-2 and says in « Précisions » whose values these are, never the net’s code name', async () => {
     const el = await mount('en');
     expect(precisionsOf(el)).toEqual([

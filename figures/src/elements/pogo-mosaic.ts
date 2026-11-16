@@ -257,7 +257,7 @@ export class PogoMosaic extends PogoFigure {
     const stepper = new Stepper(data.stagesPct.length, (k) => show(k, false), { signal, interval: SWEEP_INTERVAL });
     const row = transport(stepper, { lang, counter: (i) => pctText(lang, data.stagesPct[i]!) });
     show(0, true);
-    box.append(row, ...grids.map((g) => g.item), live);
+    box.append(...grids.map((g) => g.item), row, live);
     return box;
   }
 

@@ -40,6 +40,12 @@
   }
 }
 
+.board-col {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
 .board-slot .board-frame {
   width: min(100%, 360px);
 }

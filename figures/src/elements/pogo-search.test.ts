@@ -72,6 +72,12 @@ afterEach(() => {
 });
 
 describe('<pogo-search>', () => {
+  it('keeps its controls right under the table of moves they step', async () => {
+    const el = await mount('puzzle5', 'fr');
+    const table = el.shadowRoot!.querySelector('.search > .ranked')!;
+    expect(table.nextElementSibling!.classList.contains('search-controls')).toBe(true);
+  });
+
   it('is computed live under lc1-2, on puzzle 5, before any simulation', async () => {
     const el = await mount('puzzle5', 'en');
     expect(precisionsOf(el).slice(0, 3)).toEqual([

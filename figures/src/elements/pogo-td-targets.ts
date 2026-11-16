@@ -220,9 +220,9 @@ export class PogoTdTargets extends PogoFigure {
       words,
       status,
       plot,
+      row,
       legend,
       el('p', 'note axis-words', t(lang, 'tdAxis')),
-      row,
       live,
       this.values(lang, g, w),
     ];

@@ -61,6 +61,13 @@ afterEach(() => {
 });
 
 describe('<pogo-mosaic>', () => {
+  it('puts the transport right under the three grids it steps', async () => {
+    const el = await mount('fr');
+    const items = [...el.shadowRoot!.querySelectorAll('.sweep > .sweep-item')];
+    expect(items).toHaveLength(3);
+    expect(items[2]!.nextElementSibling!.classList.contains('controls')).toBe(true);
+  });
+
   it('is measured under lc1-2, citing the data’s source and the mosaics’ directory, with the data’s date', async () => {
     const el = await mount('en');
     expect(el.dataset.source).toBe(`${v5.source} · docs/experiments/v5/mosaic/`);
