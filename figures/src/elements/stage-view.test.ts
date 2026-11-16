@@ -1,7 +1,7 @@
 import { readFileSync } from 'node:fs';
 import { describe, expect, it } from 'vitest';
 import type { V5Data } from '../data';
-import { parseProgram, pctText, stageFrames } from './stage-view';
+import { parseProgram, pctText, stageFrames, stagesSource } from './stage-view';
 
 const v5 = JSON.parse(readFileSync('public/data/v5.json', 'utf8')) as V5Data;
 
@@ -43,5 +43,20 @@ describe('stageFrames', () => {
     expect(stage.openingPlies).toBe(4);
     for (const bad of [-1, 1.5, stage.game.length, Number.NaN]) expect(() => stageFrames({ ...stage, openingPlies: bad })).toThrow();
     expect(stageFrames({ ...stage, openingPlies: 0 })).toHaveLength(stage.game.length + 1);
+  });
+});
+
+describe('stagesSource', () => {
+  it('cites the data’s source and the one directory of the games replayed', () => {
+    for (const program of ['qtab', 'td', 'az100'] as const) {
+      expect(stagesSource(v5, v5.programs[program].stages)).toBe(`${v5.source} · docs/experiments/v5/games/`);
+    }
+  });
+
+  it('refuses games that do not share one directory', () => {
+    const [a, b] = v5.programs.td.stages;
+    const moved = { ...b!, source: { ...b!.source, game: 'elsewhere/td-s1-p001.json' } };
+    expect(() => stagesSource(v5, [a!, moved])).toThrow();
+    expect(() => stagesSource(v5, [])).toThrow();
   });
 });

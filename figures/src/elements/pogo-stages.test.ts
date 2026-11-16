@@ -37,9 +37,11 @@ afterEach(() => {
 });
 
 describe('<pogo-stages>', () => {
-  it('is measured under lc1-2, its source the data’s own string', async () => {
+  it('is measured under lc1-2, citing the data’s own source and the games’ directory', async () => {
     const el = await mount('td', 'en');
-    expect($(el, '.fidelity').textContent).toBe(`Measured data · repetition rule (lc1-2) · source: ${v5.source}`);
+    expect($(el, '.fidelity').textContent).toBe(
+      `Measured data · repetition rule (lc1-2) · source: ${v5.source} · docs/experiments/v5/games/`,
+    );
   });
 
   it('offers the data’s stages, the first chosen', async () => {

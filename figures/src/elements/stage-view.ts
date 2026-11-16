@@ -2,8 +2,9 @@
 // program the attribute names, a stage's measured score written as the data
 // gives it (the kit's score format, kit/score.ts), and the stage's game replayed through the engine under lc1-2,
 // refused if it does not end as the data says.
-import type { V5Stage } from '../data';
+import type { V5Data, V5Stage } from '../data';
 import { LC1_2 } from '../engine';
+import { SOURCES } from '../kit/figure';
 import type { Lang } from '../kit/strings';
 import { lineFrames, type Frame } from './line-frames';
 
@@ -41,4 +42,16 @@ export function stageFrames(stage: V5Stage): Frame[] {
     throw new Error(`pogo-stages: the game of stage ${stage.pct} does not end as the data says (${stage.result})`);
   }
   return frames;
+}
+
+/**
+ * What the label cites once the data is loaded: the data's own source and the
+ * directory of the games replayed, derived from the stages' `source.game` paths.
+ * Throws when the games do not share one directory.
+ */
+export function stagesSource(data: Pick<V5Data, 'source'>, stages: readonly V5Stage[]): string {
+  const dirs = new Set(stages.map((s) => s.source.game.slice(0, s.source.game.lastIndexOf('/') + 1)));
+  const [dir] = [...dirs];
+  if (dirs.size !== 1 || !dir) throw new Error(`pogo-stages: the games are not in one directory (${[...dirs].join(', ')})`);
+  return `${data.source}${SOURCES}${dir}`;
 }

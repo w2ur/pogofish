@@ -14,6 +14,9 @@ import type { State } from '../engine';
 import { fidelityLabel, t, type Fidelity, type Lang } from './strings';
 import themeCss from './theme.css?raw';
 
+/** How a figure that cites more than one source joins them in its sourceFile(). */
+export const SOURCES = ' · ';
+
 let sheet: CSSStyleSheet | undefined;
 const elementSheets = new Map<string, CSSStyleSheet>();
 
@@ -187,12 +190,16 @@ export abstract class PogoFigure extends HTMLElement {
       const file = document.createElement('span');
       file.className = 'source';
       // Each path segment keeps its line; a long path may break after a slash, and only there.
-      for (const part of source.match(/[^/]*\/|[^/]+$/g) ?? [source]) {
-        const segment = document.createElement('span');
-        segment.className = 'segment';
-        segment.textContent = part;
-        file.append(segment);
-      }
+      // Several sources are joined by « · », where the line may break too.
+      source.split(SOURCES).forEach((path, k) => {
+        if (k > 0) file.append(SOURCES);
+        for (const part of path.match(/[^/]*\/|[^/]+$/g) ?? [path]) {
+          const segment = document.createElement('span');
+          segment.className = 'segment';
+          segment.textContent = part;
+          file.append(segment);
+        }
+      });
       label.append(file);
     } else {
       label.textContent = text;

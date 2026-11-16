@@ -5,7 +5,8 @@
 // in the game shown and how that game ended, and replays it move by move
 // through the shared replay view. The game's first moves are the bench's
 // random opening (`openingPlies`, from the game file) and say so. Choosing a stage plays its game; under reduced
-// motion nothing plays by itself. The label names the data's own source.
+// motion nothing plays by itself. The label names the data's own source and
+// the directory of its games.
 import { announceMove } from '../board-state';
 import { WASM_FILE, assetUrl } from '../assets';
 import type { V5Data, V5Stage } from '../data';
@@ -21,7 +22,7 @@ import { seenText, type Frame } from './line-frames';
 import stagesCss from './pogo-stages.css?raw';
 import replayCss from './replay.css?raw';
 import { colourKey, replayView, resultWords, type Line, type Spoken } from './replay-view';
-import { parseProgram, pctText, stageFrames, type StageProgram } from './stage-view';
+import { parseProgram, pctText, stageFrames, stagesSource, type StageProgram } from './stage-view';
 
 const PROGRAM_KEY: Record<StageProgram, StringKey> = { qtab: 'progQtab', td: 'progTd', az100: 'progAz100' };
 
@@ -100,7 +101,7 @@ export class PogoStages extends PogoFigure {
 
   private source: string | undefined;
 
-  /** The data's own source string, once loaded; until then the label names none. */
+  /** The data's own sources, once loaded; until then the label names none. */
   protected override sourceFile(): string | undefined {
     return this.source;
   }
@@ -118,7 +119,7 @@ export class PogoStages extends PogoFigure {
     });
     // Every game is replayed before anything is drawn: one that ends otherwise than the data says fails the figure.
     const games = stages.map(stageFrames);
-    this.source = data.source;
+    this.source = stagesSource(data, stages);
     this.refreshLabel();
 
     const el = <K extends keyof HTMLElementTagNameMap>(tag: K, className: string, text = ''): HTMLElementTagNameMap[K] => {
