@@ -1,8 +1,10 @@
 // The control row of a stepped figure. The kit owns it so every figure has the
-// same hierarchy: previous and next as square icon buttons around the step
-// counter, then one primary play/pause, then the caller's extra actions.
-// At most one primary per row: play/pause when it is shown, otherwise the
-// action the caller marks `primary`.
+// same hierarchy: previous, play/pause and next as three square icon buttons of
+// one fixed size, the step counter beside them, then the caller's extra actions.
+// Play and pause are drawn, never set as text: the button keeps its width. At
+// most one primary per row: play/pause when it is shown, otherwise the action
+// the caller marks `primary`. A figure puts this row right under the visual it
+// drives.
 import { keepCase } from './keep-case';
 import type { Stepper } from './stepper';
 import { t, type Lang } from './strings';
@@ -34,7 +36,8 @@ export function controlButton(label: string, onClick: () => void, secondary = fa
   return b;
 }
 
-function chevron(direction: 'left' | 'right'): SVGSVGElement {
+/** A 16px icon, drawn in the button's own colour, hidden from assistive tech: the button's label names it. */
+function icon(className: string, d: string): SVGSVGElement {
   const svg = document.createElementNS(NS, 'svg');
   svg.setAttribute('viewBox', '0 0 16 16');
   svg.setAttribute('width', '16');
@@ -42,17 +45,22 @@ function chevron(direction: 'left' | 'right'): SVGSVGElement {
   svg.setAttribute('aria-hidden', 'true');
   svg.setAttribute('focusable', 'false');
   const path = document.createElementNS(NS, 'path');
-  path.setAttribute('d', direction === 'left' ? 'M10.5 2.5 5 8l5.5 5.5' : 'M5.5 2.5 11 8l-5.5 5.5');
-  path.setAttribute('class', 'chevron');
+  path.setAttribute('d', d);
+  path.setAttribute('class', className);
   svg.append(path);
   return svg;
 }
+
+const CHEVRON = { left: 'M10.5 2.5 5 8l5.5 5.5', right: 'M5.5 2.5 11 8l-5.5 5.5' } as const;
+/** ▶ and ⏸, as the kit draws them: a triangle, two bars. */
+const PLAY = 'M4 2.5v11L13.5 8z';
+const PAUSE = 'M3.5 2.5h3v11h-3zM9.5 2.5h3v11h-3z';
 
 function iconButton(direction: 'left' | 'right', label: string, onClick: () => void): HTMLButtonElement {
   const b = controlButton('', onClick, true);
   b.classList.add('icon');
   b.setAttribute('aria-label', label);
-  b.append(chevron(direction));
+  b.append(icon('chevron', CHEVRON[direction]));
   return b;
 }
 
@@ -71,7 +79,11 @@ export function transport(stepper: Stepper, o: TransportOptions): HTMLElement {
   counter.dataset.role = 'counter';
   counter.setAttribute('aria-live', 'polite');
   const play = controlButton('', () => (stepper.playing ? stepper.pause() : stepper.play()));
+  play.classList.add('icon');
   play.dataset.role = 'play';
+  const playIcon = icon('glyph', PLAY);
+  const pauseIcon = icon('glyph', PAUSE);
+  play.append(playIcon, pauseIcon);
 
   const extras = (o.actions ?? []).map((a) => {
     const b = controlButton(a.label, a.onClick, true);
@@ -89,11 +101,13 @@ export function transport(stepper: Stepper, o: TransportOptions): HTMLElement {
     if (focused === next && next.disabled && !prev.disabled) prev.focus();
     counter.textContent = format(stepper.index, stepper.steps);
     play.hidden = !stepper.auto;
-    play.textContent = t(o.lang, stepper.playing ? 'pause' : 'play');
+    play.setAttribute('aria-label', t(o.lang, stepper.playing ? 'pause' : 'play'));
+    playIcon.style.display = stepper.playing ? 'none' : '';
+    pauseIcon.style.display = stepper.playing ? '' : 'none';
     for (const { b, primary } of extras) b.classList.toggle('secondary', !(primary && play.hidden));
   };
 
-  row.append(prev, counter, next, play, ...extras.map((e) => e.b));
+  row.append(prev, play, next, counter, ...extras.map((e) => e.b));
   stepper.onChange(sync);
   sync();
   return row;

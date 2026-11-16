@@ -248,6 +248,11 @@ slot[hidden],
   stroke-linecap: square;
 }
 
+/* ▶ and ⏸: filled in the button's colour. */
+.control .glyph {
+  fill: currentColor;
+}
+
 .control[hidden] {
   display: none;
 }

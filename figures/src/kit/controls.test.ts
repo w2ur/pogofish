@@ -18,16 +18,16 @@ const parts = (row: HTMLElement) => ({
 });
 
 describe('transport', () => {
-  it('lays out previous, counter, next as icon buttons, then play/pause, then the extra actions', () => {
+  it('lays out previous, play/pause and next as icon buttons, the counter beside them, then the extra actions', () => {
     const s = new Stepper(8, () => {});
     const restart = vi.fn();
     const row = transport(s, { lang: 'fr', actions: [{ label: 'Recommencer', onClick: restart }] });
     const { prev, next, play, counter } = parts(row);
     expect([...row.children].map((c) => (c as HTMLElement).dataset.role)).toEqual([
       'previous',
-      'counter',
-      'next',
       'play',
+      'next',
+      'counter',
       'action',
     ]);
     expect(prev.getAttribute('aria-label')).toBe('Étape précédente');
@@ -36,6 +36,11 @@ describe('transport', () => {
     expect(prev.querySelector('svg')).not.toBeNull();
     expect(prev.classList.contains('secondary')).toBe(true);
     expect(play.classList.contains('secondary')).toBe(false);
+    // Play is an icon button too, the same square: no text, so its width never changes.
+    expect(play.classList.contains('icon')).toBe(true);
+    expect(play.textContent).toBe('');
+    expect(play.getAttribute('aria-label')).toBe('Lecture');
+    expect(play.querySelectorAll('svg path.glyph')).toHaveLength(2);
     expect(counter.getAttribute('aria-live')).toBe('polite');
     expect(counter.textContent).toBe('1 / 8');
     (row.querySelector('[data-role="action"]') as HTMLButtonElement).click();
@@ -82,15 +87,19 @@ describe('transport', () => {
     expect(counter.textContent).toBe('0 / 8');
   });
 
-  it('keeps the play label true to the real state, including at the end of a run', () => {
+  it('keeps the play label and icon true to the real state, including at the end of a run', () => {
     const s = new Stepper(3, () => {});
     const { play } = parts(transport(s, { lang: 'en' }));
-    expect(play.textContent).toBe('Play');
+    const shown = () => [...play.querySelectorAll<SVGSVGElement>('svg')].filter((svg) => svg.style.display !== 'none');
+    expect(play.getAttribute('aria-label')).toBe('Play');
+    expect(shown().map((svg) => svg.querySelector('path')!.getAttribute('d'))).toEqual(['M4 2.5v11L13.5 8z']);
     play.click();
-    expect(play.textContent).toBe('Pause');
+    expect(play.getAttribute('aria-label')).toBe('Pause');
+    expect(shown()).toHaveLength(1);
+    expect(shown()[0]!.querySelector('path')!.getAttribute('d')).toMatch(/h3v11h-3z.*h3v11h-3z/);
     vi.advanceTimersByTime(2000);
     expect(s.playing).toBe(false);
-    expect(play.textContent).toBe('Play');
+    expect(play.getAttribute('aria-label')).toBe('Play');
   });
 
   it('hides play when reduced motion switches on mid-run and brings it back when it switches off', () => {
@@ -103,7 +112,7 @@ describe('transport', () => {
     play.click();
     setMedia(REDUCED_MOTION, true);
     expect(play.hidden).toBe(true);
-    expect(play.textContent).toBe('Play');
+    expect(play.getAttribute('aria-label')).toBe('Play');
     // With play gone, the caller's main action becomes the row's one primary.
     expect(extra.classList.contains('secondary')).toBe(false);
     next.click();

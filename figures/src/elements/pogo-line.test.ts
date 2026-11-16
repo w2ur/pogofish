@@ -112,7 +112,7 @@ describe('<pogo-line>', () => {
     expect(current(el)).toContain('De retour à la position de départ');
     vi.advanceTimersByTime(1100 * 3);
     expect(counter(el)).toBe('3 / 4');
-    expect(role(el, 'play').textContent).toBe('Pause');
+    expect(role(el, 'play').getAttribute('aria-label')).toBe('Pause');
     expect(el.shadowRoot!.textContent).not.toContain('Cette position pour la');
   });
 
