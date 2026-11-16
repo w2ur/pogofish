@@ -14,6 +14,10 @@ export const WASM_FILE = 'pogofish_wasm_bg.wasm';
 export const NET_FILE = 'nets/az-lc1-s1.pfw';
 /** The net the board plays and the footer names. */
 export const NET_NAME = 'az-lc1-s1';
+/** The TD(λ) value net: models/v4-td-lc1-s1/td.pfv (seed 1, lc1-2), copied under this name. */
+export const TD_FILE = 'nets/td-s1.pfv';
+/** The checkpoint the TD figures name: the directory it was trained in. */
+export const TD_NAME = 'v4-td-lc1-s1';
 
 export function assetUrl(name: string): string {
   return new URL(name, base).href;
