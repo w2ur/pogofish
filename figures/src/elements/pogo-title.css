@@ -83,6 +83,31 @@ slot[hidden] {
 }
 
 /*
+ * A rocking glyph keeps its place in the text, transparent, and gives its ink to
+ * a copy of itself laid over it, which turns a few degrees about its foot. Only
+ * the copy moves (transform), so the line and the box never change.
+ */
+.sway {
+  position: relative;
+  -webkit-text-fill-color: transparent;
+}
+
+/*
+ * The copy sits on the original's content box, which spans the font's ascent and
+ * descent: with the font's own line height, its baseline falls on the original's.
+ * The title's tight leading (0.82) would set it higher.
+ */
+.sway::before {
+  content: attr(data-glyph);
+  position: absolute;
+  left: 0;
+  top: 0;
+  line-height: normal;
+  -webkit-text-fill-color: currentColor;
+  transform-origin: 50% 100%;
+}
+
+/*
  * A camp (a letter and its O's) never breaks; the title breaks at the <wbr>
  * between parts. The bangs break only as a last resort, through the h1's own
  * overflow-wrap, when their run alone is wider than the line. The class is
@@ -92,22 +117,68 @@ slot[hidden] {
   white-space: nowrap;
 }
 
-/* Out of step: each disc enters its jump at its own phase of one up-and-down. */
+/*
+ * Free-running, on screen: each disc at its own phase of one up-and-down of
+ * --_period seconds (the beat, else 1.24 s), each glyph rocking over two.
+ */
 :host([data-moving]) .disc {
-  animation: pogo 0.62s cubic-bezier(0.3, 0, 0.5, 1) calc(var(--phase) * -1.24s) infinite alternate;
+  animation: pogo calc(var(--_period) * 1s) linear calc(var(--phase) * var(--_period) * -1s) infinite;
 }
 
+:host([data-moving]) .sway::before {
+  animation: sway calc(var(--_period) * 2s) linear calc(var(--own) * -1s) infinite;
+}
+
+/*
+ * With a clock: the same animations, paused, placed by --clock, the media's time
+ * (title-clock.ts: a disc tops its jump at --_at + --own + k × --_beat, a glyph
+ * leans one way, then the other, on each beat). Nothing advances unless --clock does.
+ */
+:host([data-clock]) .disc {
+  animation: pogo calc(var(--_beat) * 1s) linear infinite paused;
+  animation-delay: calc((var(--_at) + var(--own) - var(--_beat) * 0.5 - var(--clock, 0)) * 1s);
+}
+
+:host([data-clock]) .sway::before {
+  animation: sway calc(var(--_beat) * 2s) linear infinite paused;
+  animation-delay: calc((var(--_at) + var(--own) - var(--clock, 0)) * 1s);
+}
+
+/* Up, then down along the same curve played backwards: the jump the title always had. */
 @keyframes pogo {
-  from {
+  0% {
+    transform: translateY(0);
+    animation-timing-function: cubic-bezier(0.3, 0, 0.5, 1);
+  }
+  50% {
+    transform: translateY(calc(var(--lift) * -0.2em));
+    animation-timing-function: cubic-bezier(0.5, 0, 0.7, 1);
+  }
+  100% {
     transform: translateY(0);
   }
-  to {
-    transform: translateY(calc(var(--lift) * -0.2em));
+}
+
+/* One side on a beat, the other side on the next. */
+@keyframes sway {
+  0% {
+    transform: rotate(calc(var(--tilt) * -1));
+    animation-timing-function: ease-in-out;
+  }
+  50% {
+    transform: rotate(var(--tilt));
+    animation-timing-function: ease-in-out;
+  }
+  100% {
+    transform: rotate(calc(var(--tilt) * -1));
   }
 }
 
 @media (prefers-reduced-motion: reduce) {
-  :host([data-moving]) .disc {
+  :host([data-moving]) .disc,
+  :host([data-clock]) .disc,
+  :host([data-moving]) .sway::before,
+  :host([data-clock]) .sway::before {
     animation: none;
   }
 }

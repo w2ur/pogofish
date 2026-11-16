@@ -1,7 +1,7 @@
 import { readFileSync } from 'node:fs';
 import { resolve } from 'node:path';
-import { afterEach, describe, expect, it } from 'vitest';
-import { intersect, observersOf, resetMedia } from '../test-dom';
+import { afterEach, describe, expect, it, vi } from 'vitest';
+import { REDUCED_MOTION, intersect, observersOf, resetMedia, setMedia } from '../test-dom';
 import { PogoTitle } from './pogo-title';
 
 if (!customElements.get('pogo-title')) customElements.define('pogo-title', PogoTitle);
@@ -101,5 +101,156 @@ describe('<pogo-title>', () => {
     expect(css).toMatch(/\.precisions,\s*\.failed \{\s*display: none;/);
     // Animation only under the attribute the visibility observer sets.
     expect(css).toMatch(/:host\(\[data-moving\]\) \.disc \{\s*animation: pogo/);
+  });
+
+  it('the letters and the bangs rock by a transparent glyph and its drawn copy, the text unchanged', async () => {
+    const el = await mount();
+    const sway = [...el.shadowRoot!.querySelectorAll<HTMLElement>('.sway')];
+    expect(sway.map((x) => x.dataset.glyph).join('')).toBe('PG' + '!'.repeat(8));
+    // The bangs out of step with one another, the letters on the beat.
+    const own = sway.map((x) => Number(x.style.getPropertyValue('--own')));
+    expect(own.slice(0, 2)).toEqual([0, 0]);
+    expect(new Set(own.slice(2)).size).toBeGreaterThan(4);
+    for (const o of own) expect(Math.abs(o)).toBeLessThanOrEqual(0.05);
+    const css = readFileSync(resolve(process.cwd(), 'src/elements/pogo-title.css'), 'utf8');
+    // Only a transform moves: the box is the text's.
+    const sway2 = /@keyframes sway \{([\s\S]*?)\n\}/.exec(css)![1]!;
+    expect(sway2).toContain('rotate(');
+    expect(sway2).not.toMatch(/translate|width|margin|left|top/);
+  });
+});
+
+/** A media element whose time and play state the test sets. */
+function clip(cls = 'pogo-concert-clip'): HTMLVideoElement & { set(t: number, paused: boolean): void } {
+  const v = document.createElement('video') as HTMLVideoElement & { set(t: number, paused: boolean): void };
+  v.className = cls;
+  let time = 0;
+  let paused = true;
+  Object.defineProperty(v, 'currentTime', { get: () => time, configurable: true });
+  Object.defineProperty(v, 'paused', { get: () => paused, configurable: true });
+  v.set = (t, p) => {
+    time = t;
+    paused = p;
+    v.dispatchEvent(new Event(p ? 'pause' : 'playing'));
+  };
+  document.body.append(v);
+  return v;
+}
+
+async function mountClock(): Promise<PogoTitle> {
+  resetMedia();
+  const h1 = document.createElement('h1');
+  const el = document.createElement('pogo-title') as PogoTitle;
+  el.setAttribute('clock', '.pogo-concert-clip');
+  el.setAttribute('beat', '0.4');
+  el.setAttribute('beat-at', '0.28');
+  el.textContent = FR;
+  h1.append(el);
+  document.body.append(h1);
+  intersect(el);
+  await flush();
+  return el;
+}
+
+describe('<pogo-title clock>', () => {
+  let frames: FrameRequestCallback[] = [];
+  const step = (): void => {
+    const run = frames;
+    frames = [];
+    for (const f of run) f(0);
+  };
+  const drawnClock = (el: PogoTitle) => (el.shadowRoot!.querySelector('.drawn') as HTMLElement).style.getPropertyValue('--clock');
+
+  afterEach(() => {
+    vi.unstubAllGlobals();
+    frames = [];
+  });
+
+  function stubFrames(): void {
+    let id = 0;
+    vi.stubGlobal('requestAnimationFrame', (f: FrameRequestCallback) => {
+      frames.push(f);
+      return ++id;
+    });
+    vi.stubGlobal('cancelAnimationFrame', () => {
+      frames = [];
+    });
+  }
+
+  it('follows the media’s time while it plays and the title is on screen, and freezes when it pauses', async () => {
+    stubFrames();
+    const v = clip();
+    const el = await mountClock();
+    expect(el.hasAttribute('data-clock')).toBe(true);
+    expect(el.hasAttribute('data-moving')).toBe(false);
+    onScreen(el, true);
+    expect(frames).toHaveLength(0);
+    v.set(1.2, false);
+    expect(frames).toHaveLength(1);
+    v.set(1.5, false);
+    step();
+    expect(drawnClock(el)).toBe('1.500');
+    expect(frames).toHaveLength(1);
+    // A loop: the time jumps back, the pieces with it.
+    v.set(0.1, false);
+    step();
+    expect(drawnClock(el)).toBe('0.100');
+    v.set(0.3, true);
+    expect(frames).toHaveLength(0);
+    expect(drawnClock(el)).toBe('0.300');
+    // Off screen, it does not run even if the clip plays.
+    onScreen(el, false);
+    v.set(0.5, false);
+    expect(frames).toHaveLength(0);
+    onScreen(el, true);
+    expect(frames).toHaveLength(1);
+  });
+
+  it('stops its loop and its listeners at disconnect', async () => {
+    stubFrames();
+    const v = clip();
+    const el = await mountClock();
+    onScreen(el, true);
+    v.set(1, false);
+    expect(frames).toHaveLength(1);
+    el.remove();
+    expect(frames).toHaveLength(0);
+    expect(el.hasAttribute('data-clock')).toBe(false);
+    v.set(2, false);
+    expect(frames).toHaveLength(0);
+  });
+
+  it('runs no loop under reduced motion, and its sheet stills both modes', async () => {
+    stubFrames();
+    const v = clip();
+    const el = await mountClock();
+    setMedia(REDUCED_MOTION, true);
+    onScreen(el, true);
+    v.set(1, false);
+    expect(frames).toHaveLength(0);
+    const css = readFileSync(resolve(process.cwd(), 'src/elements/pogo-title.css'), 'utf8');
+    const reduced = /@media \(prefers-reduced-motion: reduce\) \{([\s\S]*?)\n\}/.exec(css)![1]!;
+    for (const sel of [':host([data-moving]) .disc', ':host([data-clock]) .disc', ':host([data-moving]) .sway::before', ':host([data-clock]) .sway::before']) {
+      expect(reduced).toContain(sel);
+    }
+  });
+
+  it('finds a clip the page adds later; without one it runs free, at the beat as its period', async () => {
+    stubFrames();
+    const el = await mountClock();
+    expect(el.hasAttribute('data-clock')).toBe(false);
+    onScreen(el, true);
+    expect(el.hasAttribute('data-moving')).toBe(true);
+    expect((el.shadowRoot!.querySelector('.drawn') as HTMLElement).style.getPropertyValue('--_period')).toBe('0.4');
+    clip();
+    await flush();
+    expect(el.hasAttribute('data-clock')).toBe(true);
+    expect(el.hasAttribute('data-moving')).toBe(false);
+  });
+
+  it('with no clock and no beat, it keeps the period it always had', async () => {
+    const el = await mount();
+    expect((el.shadowRoot!.querySelector('.drawn') as HTMLElement).style.getPropertyValue('--_period')).toBe('1.24');
+    expect(el.hasAttribute('data-clock')).toBe(false);
   });
 });
