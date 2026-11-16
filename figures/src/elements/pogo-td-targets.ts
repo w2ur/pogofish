@@ -41,7 +41,7 @@ function whereText(lang: Lang, ply: number, mover: Colour): string {
   return `${when.charAt(0).toUpperCase()}${when.slice(1)}, ${colourName(lang, mover)} ${t(lang, 'toMove')}`;
 }
 
-/** « Partie : votre dernière partie terminée, 23 coups, victoire des Rouges. » */
+/** « Partie : la dernière partie terminée du plateau, 23 coups, victoire des Rouges. » */
 export function gameWords(lang: Lang, g: TdGame): string {
   const name = g.source === 'reader' ? t(lang, 'tdYourLast') : t(lang, 'lineOpeningWin');
   const won = g.result === null ? '' : `, ${t(lang, 'tdWon')} ${t(lang, g.result === 'W' ? 'tdWhites' : 'tdReds')}`;

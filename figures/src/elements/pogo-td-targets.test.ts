@@ -73,7 +73,7 @@ describe('<pogo-td-targets>', () => {
     expect($(el, '.hint').hasAttribute('data-off')).toBe(false);
     s.newGame('Red', 'easy');
     for (const m of [...LOOP, ...LOOP]) s.play(m);
-    expect($(el, '.where-from').textContent).toBe('Partie : votre dernière partie terminée, 8 coups, victoire des Blancs.');
+    expect($(el, '.where-from').textContent).toBe('Partie : la dernière partie terminée du plateau, 8 coups, victoire des Blancs.');
     expect($$(el, '.td-table tbody tr')).toHaveLength(9);
     expect($(el, '.hint').hasAttribute('data-off')).toBe(true);
   });
