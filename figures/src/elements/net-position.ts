@@ -1,7 +1,7 @@
 // The one position the net figures show (<pogo-net>, <pogo-encoding> and
 // <pogo-search position="reader">): the essay speaks of « la position
 // ci-dessus » from one figure to the next, so they read it from here alone.
-// It is the reader's board right now when a game is under way or finished
+// It is the position on the board right now when a game is under way or finished
 // (the last position with a move still to play, for a finished one), else the
 // default game after three moves, the position the article's own drawings used.
 import { DEFAULT_GAME } from '../default-game';
@@ -38,7 +38,7 @@ export function plies(lang: Lang, n: number): string {
   return `${n} ${t(lang, n === 1 ? 'ply' : 'movesUnit')}`;
 }
 
-/** « Position : votre partie, après 7 coups. » or « Position : l’erreur d’ouverture, après 3 coups. » */
+/** « Position : la partie du plateau, après 7 coups. » or « Position : l’erreur d’ouverture, après 3 coups. » */
 export function positionWords(lang: Lang, p: NetPosition): string {
   const game = p.source === 'reader' ? t(lang, 'posYourGame') : t(lang, 'lineOpeningWin');
   const when = p.ply === 0 ? t(lang, 'posAtStart') : `${t(lang, 'posAfter')} ${plies(lang, p.ply)}`;

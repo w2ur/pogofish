@@ -3,6 +3,7 @@ import { DEFAULT_GAME } from '../default-game';
 import { LC1_2, initial, key, replay, terminal } from '../engine';
 import { createStore } from '../store';
 import { DEFAULT_PLY, netPosition, positionWords } from './net-position';
+import { PUZZLE5 } from './search-steps';
 
 const make = () => createStore({ storage: null, loadEngine: () => Promise.resolve() });
 
@@ -20,12 +21,12 @@ describe('the position the net figures show', () => {
     const store = make();
     store.newGame('White', 'normal');
     expect(netPosition(store)).toMatchObject({ source: 'reader', ply: 0 });
-    expect(positionWords('fr', netPosition(store))).toBe('Position : votre partie, au départ.');
+    expect(positionWords('fr', netPosition(store))).toBe('Position : la partie du plateau, au départ.');
     store.play(DEFAULT_GAME[0]!);
     const p = netPosition(store);
     expect(p).toMatchObject({ source: 'reader', ply: 1 });
     expect(p.state).toBe(store.current()!.states[1]);
-    expect(positionWords('en', p)).toBe('Position: your game, after 1 move.');
+    expect(positionWords('en', p)).toBe('Position: the game on the board, after 1 move.');
   });
 
   it('a finished game gives its last position before the end, and says so', () => {
@@ -35,7 +36,7 @@ describe('the position the net figures show', () => {
     const p = netPosition(store);
     expect(p).toMatchObject({ source: 'reader', ply: 8, beforeEnd: true });
     expect(terminal(p.state, LC1_2)).toBe(false);
-    expect(positionWords('fr', p)).toBe('Position : votre partie, après 8 coups, la dernière position avant la fin.');
+    expect(positionWords('fr', p)).toBe('Position : la partie du plateau, après 8 coups, la dernière position avant la fin.');
   });
 
   it('never hands back the initial object of the default line twice mutated', () => {
@@ -43,5 +44,12 @@ describe('the position the net figures show', () => {
     const b = netPosition(make());
     expect(a.state).not.toBe(initial());
     expect(key(a.state)).toBe(key(b.state));
+  });
+
+  it('a game opened from a figure with « Jouer d’ici » is the game on the board, not « votre partie »', () => {
+    const store = make();
+    store.playFrom(PUZZLE5, 'la recherche d’AlphaZero');
+    expect(positionWords('fr', netPosition(store))).toBe('Position\u202f: la partie du plateau, au départ.');
+    expect(positionWords('en', netPosition(store))).toBe('Position: the game on the board, at the start.');
   });
 });

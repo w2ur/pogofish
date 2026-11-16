@@ -122,7 +122,7 @@ describe('<pogo-net>', () => {
     s.newGame('White', 'normal');
     s.play(DEFAULT_GAME[0]!);
     expect($(el, '.net').dataset.position).not.toBe(before);
-    expect($(el, '.where-from').textContent).toBe('Position: your game, after 1 move.');
+    expect($(el, '.where-from').textContent).toBe('Position: the game on the board, after 1 move.');
     expect($(el, '.value-number').textContent).toBe(signedNote('en', td.value(s.current()!.states[1]!)));
     expect($(el, '.hint').hasAttribute('data-off')).toBe(true);
   });

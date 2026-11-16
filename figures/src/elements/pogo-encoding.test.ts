@@ -151,7 +151,7 @@ describe('<pogo-encoding>', () => {
     expect(c).toBe(d);
     expect(c).not.toBe(a);
     expect(c).toBe(key(s.current()!.states[1]!));
-    expect($(enc, '.where-from').textContent).toBe('Position : votre partie, après 1 coup.');
+    expect($(enc, '.where-from').textContent).toBe('Position : la partie du plateau, après 1 coup.');
   });
 });
 
