@@ -114,6 +114,8 @@ describe('<pogo-td-targets>', () => {
     role(el, 'next').click();
     expect(said(el).querySelector('.step-head')!.textContent).toBe('Après 8 coups, Blanc au trait');
     expect(said(el).querySelector('.calc')!.textContent).toBe('cible = résultat = +1,00');
+    // The target is this position’s, not the next one’s.
+    expect(said(el).querySelector('.step-text')!.textContent).toBe('La position suivante est la fin de la partie\u202f: la cible de cette position est le résultat.');
     expect($$(el, '.td-chart .target.known').map((x) => x.dataset.t)).toEqual(['8']);
     role(el, 'next').click();
     const w = tdWalk(tdGame(makeStore()).states, (s) => td.value(s));
