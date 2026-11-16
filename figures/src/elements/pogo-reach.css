@@ -1,0 +1,111 @@
+/*
+ * <pogo-reach>: a table drawn as a bar chart. Each row is the move, a bar on
+ * one linear scale, and its number. Bars are ink, never red: no side owns them.
+ */
+.reach {
+  container-type: inline-size;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.bars {
+  width: 100%;
+  border-collapse: collapse;
+}
+
+.caption {
+  margin-bottom: 8px;
+  font-size: 12.8px;
+  text-align: left;
+  caption-side: top;
+  color: var(--_ink);
+}
+
+thead th {
+  padding: 0 0 4px;
+  font-size: 12.8px;
+  color: var(--_muted);
+  text-align: right;
+  border-bottom: 1px solid var(--_rule);
+}
+
+thead th.ply {
+  padding-right: 8px;
+}
+
+tbody th,
+tbody td {
+  padding: 0;
+}
+
+tbody th.ply {
+  width: 3ch;
+  padding-right: 8px;
+  font-size: 12.8px;
+  font-weight: 400;
+  text-align: right;
+  color: var(--_muted);
+}
+
+.line {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 10.5ch;
+  align-items: center;
+  gap: 8px;
+  min-height: 24px;
+}
+
+/* The zero line runs through every row: the tracks touch, each carrying its piece of it. */
+.track {
+  align-self: stretch;
+  display: flex;
+  align-items: center;
+  border-left: 1px solid var(--_ink);
+}
+
+.bar {
+  height: 14px;
+  background: var(--_ink);
+}
+
+.value {
+  font-size: 15px;
+  text-align: right;
+  white-space: nowrap;
+  color: var(--_ink);
+}
+
+.scale {
+  margin: 0;
+  font-size: 12.8px;
+  color: var(--_muted);
+}
+
+.total {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  margin: 0;
+  padding-top: 12px;
+  border-top: 3px solid var(--_ink);
+}
+
+.reachable {
+  font-size: clamp(28px, 9cqi, 44px);
+  white-space: nowrap;
+}
+
+.what {
+  font-size: 12.8px;
+  color: var(--_ink-2);
+}
+
+/* A digit-group separator, narrow no-break space or comma, given room to be seen. */
+.sep {
+  padding-inline: 0.06em;
+}
+
+.reachable .sep {
+  padding-inline: 0.1em;
+}

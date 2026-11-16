@@ -2,6 +2,7 @@ import { PogoBoard } from './elements/pogo-board';
 import { PogoCount } from './elements/pogo-count';
 import { PogoLine } from './elements/pogo-line';
 import { PogoMoves } from './elements/pogo-moves';
+import { PogoReach } from './elements/pogo-reach';
 import { PogoTitle } from './elements/pogo-title';
 
 export { manifest } from './manifest';
@@ -12,6 +13,7 @@ const ELEMENTS: [string, CustomElementConstructor][] = [
   ['pogo-moves', PogoMoves],
   ['pogo-line', PogoLine],
   ['pogo-count', PogoCount],
+  ['pogo-reach', PogoReach],
 ];
 
 /** Registers every `<pogo-…>` element; safe to call twice. */

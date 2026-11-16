@@ -227,6 +227,18 @@ async function build(): Promise<void> {
   app.append(heading('<pogo-count> · full band'));
   app.append(figure('pogo-count', {}, l === 'fr' ? 'Le décompte des positions du Pogo, étape par étape.' : 'The count of Pogo positions, step by step.'));
 
+  app.append(heading('<pogo-reach> · 52ch column'));
+  app.append(
+    figure(
+      'pogo-reach',
+      {},
+      l === 'fr'
+        ? 'L’exploration en largeur, niveau par niveau : les positions nouvelles atteintes à chaque coup, jusqu’au quinzième.'
+        : 'The breadth-first exploration, level by level: the new positions reached at each move, up to the fifteenth.',
+      '52ch',
+    ),
+  );
+
   app.append(heading('PogoFigure + Stepper · one per fidelity'));
   for (const tag of ['kit-demo-live', 'kit-demo-measured', 'kit-demo-illustrative']) {
     const el = document.createElement(tag);
