@@ -146,7 +146,7 @@ describe('the words of the board', () => {
   });
 
   it('writes the net’s measured strength with each language’s decimals', () => {
-    expect(formatStrength('fr')).toBe('0,855 [0,823 ; 0,887]');
-    expect(formatStrength('en')).toBe('0.855 [0.823, 0.887]');
+    expect(formatStrength('fr')).toBe('85,5\u202f% [82,3\u202f; 88,7]');
+    expect(formatStrength('en')).toBe('85.5% [82.3; 88.7]');
   });
 });

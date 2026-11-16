@@ -113,11 +113,11 @@ describe('<pogo-board> inline', () => {
     const el = await mount('fr');
     expect($(el, '.fidelity').textContent).toBe('Calcul en direct · règle des répétitions (lc1-2)');
     expect($(el, '.note').textContent).toContain('az-lc1-s1');
-    expect($(el, '.note').textContent).toContain('0,855 [0,823 ; 0,887]');
+    expect($(el, '.note').textContent).toContain('85,5\u202f% [82,3\u202f; 88,7]');
     expect($(el, '.choice[data-value="normal"]').textContent).toBe('Normal · mesuré');
     expect($(el, '.choice[data-value="easy"]').textContent).toBe('Facile');
     const en = await mount('en');
-    expect($(en, '.note').textContent).toContain('0.855 [0.823, 0.887]');
+    expect($(en, '.note').textContent).toContain('85.5% [82.3; 88.7]');
     expect($(el, 'slot').hidden).toBe(true);
   });
 

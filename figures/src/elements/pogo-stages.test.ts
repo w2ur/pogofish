@@ -3,7 +3,7 @@ import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import type { V5Data } from '../data';
 import { REDUCED_MOTION, intersect, resetMedia, setMedia } from '../test-dom';
 import { PogoStages } from './pogo-stages';
-import { formatScore } from './stage-view';
+import { formatScore } from '../kit/score';
 
 if (!customElements.get('pogo-stages')) customElements.define('pogo-stages', PogoStages);
 const v5 = JSON.parse(readFileSync('public/data/v5.json', 'utf8')) as V5Data;
@@ -56,12 +56,13 @@ describe('<pogo-stages>', () => {
           choices(el)[k]!.click();
           const text = readout(el).querySelector('.score')!.textContent!;
           expect(text).toContain(formatScore(lang, stage));
-          // The number on screen is the data's, digit for digit, and the interval is there.
-          const shown = Number(text.match(/(\d+[.,]\d+) \[/)![1]!.replace(',', '.'));
-          expect(shown).toBe(stage.score);
-          const [lo, hi] = text.match(/\[(.+)\]/)![1]!.split(lang === 'fr' ? ' ; ' : ', ').map((x) => Number(x.replace(',', '.')));
-          expect(Math.abs(lo! - stage.ci95[0])).toBeLessThanOrEqual(0.0005);
-          expect(Math.abs(hi! - stage.ci95[1])).toBeLessThanOrEqual(0.0005);
+          // The percentage on screen is the data's score, within the 0.05 point of its rounding, and so is the interval.
+          const num = (x: string) => Number(x.replace(',', '.'));
+          const shown = num(text.match(/(\d+[.,]\d)\u202f?% \[/)![1]!);
+          expect(Math.abs(shown - stage.score * 100)).toBeLessThanOrEqual(0.05 + 1e-9);
+          const [lo, hi] = text.match(/\[(.+)\]/)![1]!.split(lang === 'fr' ? '\u202f; ' : '; ').map(num);
+          expect(Math.abs(lo! - stage.ci95[0] * 100)).toBeLessThanOrEqual(0.05 + 1e-9);
+          expect(Math.abs(hi! - stage.ci95[1] * 100)).toBeLessThanOrEqual(0.05 + 1e-9);
         }
       }
     }
@@ -72,7 +73,7 @@ describe('<pogo-stages>', () => {
     choices(el)[7]!.click();
     const r = readout(el).textContent!;
     expect(r).toContain('AlphaZero, 100 simulations · 100 % de l’entraînement : 10 000 parties');
-    expect(r).toContain('Score contre le joueur glouton : 0,8905 [0,878 ; 0,903]');
+    expect(r).toContain('Score contre le joueur glouton\u202f: 89,1\u202f% [87,8\u202f; 90,3]');
     expect(r).toContain('Part des parties gagnées');
     expect(r).toContain('Partie montrée : le programme est Blanc, le glouton Rouge ; le programme gagne.');
   });

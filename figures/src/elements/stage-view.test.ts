@@ -1,7 +1,7 @@
 import { readFileSync } from 'node:fs';
 import { describe, expect, it } from 'vitest';
 import type { V5Data } from '../data';
-import { formatScore, parseProgram, pctText, stageFrames } from './stage-view';
+import { parseProgram, pctText, stageFrames } from './stage-view';
 
 const v5 = JSON.parse(readFileSync('public/data/v5.json', 'utf8')) as V5Data;
 
@@ -12,21 +12,7 @@ describe('parseProgram', () => {
   });
 });
 
-describe('formatScore', () => {
-  it('writes the score as the data gives it and its interval to three decimals, per language', () => {
-    expect(formatScore('fr', { score: 0.855, ci95: [0.823, 0.887] })).toBe('0,855 [0,823 ; 0,887]');
-    expect(formatScore('en', { score: 0.855, ci95: [0.823, 0.887] })).toBe('0.855 [0.823, 0.887]');
-    expect(formatScore('fr', { score: 0.0315, ci95: [0.023966732281239318, 0.039033267718760686] })).toBe(
-      '0,0315 [0,024 ; 0,039]',
-    );
-    expect(formatScore('en', { score: 0.5, ci95: [0.48, 0.52] })).toBe('0.500 [0.480, 0.520]');
-  });
-
-  it('round 5’s last tabular stage reads as its document writes it', () => {
-    const last = v5.programs.qtab.stages.at(-1)!;
-    expect(formatScore('en', last)).toBe('0.178 [0.163, 0.193]');
-  });
-
+describe('pctText', () => {
   it('percentages', () => {
     expect(pctText('fr', 25)).toBe('25 %');
     expect(pctText('en', 25)).toBe('25%');

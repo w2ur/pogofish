@@ -5,6 +5,7 @@
 import type { Colour, Move, State, Triple } from './engine';
 import { moveName } from './engine';
 import type { GameRecord } from './store';
+import { formatScore } from './kit/score';
 import { colon, t, type Lang } from './kit/strings';
 
 /** A lifted stack and how many of its pieces; `null` when nothing is lifted. */
@@ -134,9 +135,7 @@ export function longestResult(lang: Lang): ResultText {
 /** The net's measured strength at « normal »: v2-results.md, criterion 1 (arena seed 7, 400 games). */
 export const NET_STRENGTH = { score: 0.855, ci95: [0.823, 0.887] as const };
 
-/** « 0,855 [0,823 ; 0,887] » in French, "0.855 [0.823, 0.887]" in English. */
+/** « 85,5 % [82,3 ; 88,7] » in French, "85.5% [82.3; 88.7]" in English: the kit’s one score format. */
 export function formatStrength(lang: Lang): string {
-  const n = (x: number): string => (lang === 'fr' ? x.toFixed(3).replace('.', ',') : x.toFixed(3));
-  const [lo, hi] = NET_STRENGTH.ci95;
-  return lang === 'fr' ? `${n(NET_STRENGTH.score)} [${n(lo)} ; ${n(hi)}]` : `${n(NET_STRENGTH.score)} [${n(lo)}, ${n(hi)}]`;
+  return formatScore(lang, NET_STRENGTH);
 }

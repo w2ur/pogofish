@@ -11,6 +11,7 @@ import { WASM_FILE, assetUrl } from '../assets';
 import type { V5Data, V5Stage } from '../data';
 import { moveName, ready, type Colour } from '../engine';
 import { choiceGroup, transport } from '../kit/controls';
+import { formatScore } from '../kit/score';
 import { PogoFigure } from '../kit/figure';
 import { Stepper } from '../kit/stepper';
 import { colon, t, type Lang, type StringKey } from '../kit/strings';
@@ -20,7 +21,7 @@ import { seenText, type Frame } from './line-frames';
 import stagesCss from './pogo-stages.css?raw';
 import replayCss from './replay.css?raw';
 import { colourKey, replayView, resultWords, type Line, type Spoken } from './replay-view';
-import { OPENING_PLIES, formatScore, parseProgram, pctText, stageFrames, type StageProgram } from './stage-view';
+import { OPENING_PLIES, parseProgram, pctText, stageFrames, type StageProgram } from './stage-view';
 
 const PROGRAM_KEY: Record<StageProgram, StringKey> = { qtab: 'progQtab', td: 'progTd', az100: 'progAz100' };
 
