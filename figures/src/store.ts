@@ -5,6 +5,7 @@
 import { DEFAULT_GAME } from './default-game';
 import { assetUrl, WASM_FILE } from './assets';
 import { LC1_2, initial, legal, play, ready, terminal, winner, type Colour, type State, type Triple } from './engine';
+import { FOLLOW_OPEN_DEFAULT, openAtStart } from './follow-panel';
 import type { PlayFromDetail } from './kit/figure';
 import { holdsGame, STORAGE_KEY } from './saved';
 
@@ -62,6 +63,14 @@ export interface Store {
    * Saved preferences alone do not count, so a follow board does not load the engine for them.
    */
   hasSaved(): boolean;
+  /**
+   * Whether the follow board is open rather than folded to its bar: the reader's
+   * choice, kept in the storage record for the page's session. Folded by default;
+   * `playFrom` opens it, `newGame` and moves leave it (follow-panel.ts).
+   */
+  followOpen(): boolean;
+  /** The reader opened or folded the follow board. */
+  setFollowOpen(open: boolean): void;
 }
 
 /** The part of `Storage` the store uses. */
@@ -85,6 +94,8 @@ interface SavedFile {
   current: Saved | null;
   lastFinished: Saved | null;
   prefs: { readerColour: Colour; level: Level };
+  /** The follow board is open; absent in a record written before it existed, which restores folded. */
+  followOpen?: boolean;
 }
 
 const COLOURS: readonly Colour[] = ['White', 'Red'];
@@ -185,6 +196,7 @@ export function createStore(o: StoreOptions): Store {
   let current: GameRecord | null = null;
   let last: GameRecord | null = null;
   let prefs: { readerColour: Colour; level: Level } = { readerColour: 'White', level: 'normal' };
+  let followOpen = FOLLOW_OPEN_DEFAULT;
   let restored = false;
   let readyPromise: Promise<void> | undefined;
 
@@ -206,6 +218,7 @@ export function createStore(o: StoreOptions): Store {
       current: current && toSaved(current),
       lastFinished: last && toSaved(last),
       prefs,
+      followOpen,
     };
     try {
       o.storage?.setItem(STORAGE_KEY, JSON.stringify(file));
@@ -229,6 +242,7 @@ export function createStore(o: StoreOptions): Store {
     if (typeof file !== 'object' || file === null || file.v !== 1) return;
     const p = file.prefs;
     if (p && isColour(p.readerColour) && isLevel(p.level)) prefs = { readerColour: p.readerColour, level: p.level };
+    followOpen = file.followOpen === true;
     try {
       const lastFinished = file.lastFinished ? rebuild(file.lastFinished) : null;
       if (lastFinished?.finished) last = lastFinished;
@@ -269,6 +283,14 @@ export function createStore(o: StoreOptions): Store {
     hasSaved() {
       return holdsGame(read());
     },
+    followOpen: () => followOpen,
+
+    setFollowOpen(open) {
+      restore();
+      if (open === followOpen) return;
+      followOpen = open;
+      write();
+    },
 
     on(ev, fn) {
       listeners[ev].add(fn);
@@ -283,6 +305,7 @@ export function createStore(o: StoreOptions): Store {
     newGame(readerColour, level) {
       restore();
       prefs = { readerColour, level };
+      followOpen = openAtStart(followOpen, 'board');
       begin(initial(), readerColour, level);
       changed();
     },
@@ -291,6 +314,7 @@ export function createStore(o: StoreOptions): Store {
       if (!isStateShape(s) || terminal(s, LC1_2)) return;
       restore();
       prefs = { ...prefs, readerColour: s.to_move };
+      followOpen = openAtStart(followOpen, 'figure');
       begin(s, s.to_move, prefs.level, label);
       changed();
       emit('playfrom');

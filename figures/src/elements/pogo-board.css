@@ -3,8 +3,12 @@
  * Nothing here names a colour: every paint is a kit token.
  */
 
-/* A follow board waits, out of the page, until a game is under way. */
-:host([data-idle]) {
+/*
+ * A follow board waits, out of the page, until a game is under way, and gives
+ * way while an inline board is on screen (follow-panel.ts).
+ */
+:host([data-idle]),
+:host([data-yield]) {
   display: none;
 }
 
@@ -20,8 +24,18 @@
   max-width: 100%;
 }
 
+/*
+ * The follow board is a panel the page fixes over its text: opaque and framed,
+ * bar included, folded or open, so nothing of the page shows through it. The
+ * flyer's rule (3px of ink) around the kit's 12px. It never animates: it
+ * appears, folds and opens in place.
+ */
 .pb[data-mode='follow'] {
+  position: relative;
   max-width: 320px;
+  padding: 12px;
+  border: 3px solid var(--_ink);
+  background: var(--_ground);
 }
 
 .body {
@@ -70,6 +84,8 @@
   gap: 8px;
 }
 
+.status[hidden],
+.next[hidden],
 .turn-box[hidden],
 .setup[hidden],
 .summary[hidden],
@@ -131,6 +147,7 @@
 
 .bar {
   display: flex;
+  min-height: 44px;
   align-items: center;
   justify-content: space-between;
   gap: 8px;

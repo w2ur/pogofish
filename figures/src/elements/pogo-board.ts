@@ -1,9 +1,10 @@
 // <pogo-board>: the reader plays Pogo against the AlphaZero net. `mode="inline"`
 // is the full figure (side, level, new game); `mode="follow"` is the compact
-// board bound to the same game, shown once a game is under way and collapsible
-// to a bar. Every board shows the store's one game; the driver plays the AI's
-// side once for the page. The choices come from board-state.ts, never from
-// the DOM.
+// board bound to the same game: an opaque panel the page fixes to a corner,
+// shown once a game is under way, folded to its bar until the reader opens it,
+// and hidden while an inline board is on screen (follow-panel.ts). Every board
+// shows the store's one game; the driver plays the AI's side once for the
+// page. The choices come from board-state.ts, never from the DOM.
 import {
   announceMove,
   chooseCount,
@@ -18,6 +19,7 @@ import {
   type Selection,
 } from '../board-state';
 import { createDriver, type Driver } from '../driver';
+import { escapeAction, followShown, watchInlineBoards, type ObserverCtor } from '../follow-panel';
 import { initial, legal, moveName, type Move, type State, type Triple } from '../engine';
 import { animateMove, drawBoard } from '../kit/board-svg';
 import { PogoFigure, kitSheet } from '../kit/figure';
@@ -47,7 +49,7 @@ export class PogoBoard extends PogoFigure {
   static override stageMinHeight = '560px';
 
   /** What every board shares; a test swaps them. */
-  static deps: { store: Store; driver: () => Driver } = {
+  static deps: { store: Store; driver: () => Driver; observer?: ObserverCtor } = {
     store,
     driver: () => (pageDriver ??= createDriver(store, new SearchClient())),
   };
@@ -55,7 +57,8 @@ export class PogoBoard extends PogoFigure {
   private ui: Ui | undefined;
   private selection: Selection = null;
   private focusCell = 0;
-  private collapsed = false;
+  /** A follow board: whether an inline board of the document is on screen. */
+  private inlineOnScreen = false;
   /** « Nouvelle partie » was pressed once during a game: the next press abandons it. */
   private confirming = false;
   private seen: { start: State; ply: number } | undefined;
@@ -77,10 +80,37 @@ export class PogoBoard extends PogoFigure {
     this.stage.style.setProperty('--_stage-min', '0px');
     const { store: s } = this.deps;
     const sync = (): void => {
-      this.toggleAttribute('data-idle', s.current() === null);
+      const game = s.current() !== null;
+      this.toggleAttribute('data-idle', !game);
+      // Out of the page while an inline board is on screen, unless focus is inside it.
+      const focusInside = this.shadowRoot!.activeElement !== null;
+      this.toggleAttribute('data-yield', game && !followShown({ game, inlineOnScreen: this.inlineOnScreen, focusInside }));
     };
-    const off = s.on('game', sync);
-    this.signal.addEventListener('abort', off, { once: true });
+    const inline = watchInlineBoards(
+      this.ownerDocument,
+      (on) => {
+        this.inlineOnScreen = on;
+        sync();
+      },
+      this.deps.observer,
+    );
+    const off = s.on('game', () => {
+      inline.rescan();
+      sync();
+    });
+    // Focus leaving the panel may let it give way at last; activeElement settles after the event.
+    const onFocusOut = (): void => void queueMicrotask(sync);
+    this.addEventListener('focusout', onFocusOut);
+    this.signal.addEventListener(
+      'abort',
+      () => {
+        off();
+        inline.disconnect();
+        this.inlineOnScreen = false;
+        this.removeEventListener('focusout', onFocusOut);
+      },
+      { once: true },
+    );
     sync();
     // A game saved before a reload: restoring it is what shows this board.
     if (s.current() === null && s.hasSaved()) s.ready().catch(() => undefined);
@@ -106,7 +136,7 @@ export class PogoBoard extends PogoFigure {
       },
       retry: () => this.deps.driver().retry(),
       toggle: () => {
-        this.collapsed = !this.collapsed;
+        this.deps.store.setFollowOpen(!this.deps.store.followOpen());
         this.update();
       },
     });
@@ -189,15 +219,29 @@ export class PogoBoard extends PogoFigure {
     this.ui?.cells[to]?.focus();
   }
 
-  /** 1/2/3 choose the count, Escape puts the stack down; anywhere in the board. */
+  /** 1/2/3 choose the count; Escape puts the question, then the stack, away, then folds a follow board. Anywhere in the board. */
   private onKey = (e: KeyboardEvent): void => {
-    if (e.key === 'Escape' && this.confirming) {
+    const escape =
+      e.key === 'Escape'
+        ? escapeAction({
+            confirming: this.confirming,
+            lifted: this.selection !== null,
+            follow: this.mode === 'follow',
+            open: this.deps.store.followOpen(),
+          })
+        : 'none';
+    if (escape === 'keep-game') {
       e.preventDefault();
       this.confirming = false;
       this.update();
-    } else if (e.key === 'Escape' && this.selection !== null) {
+    } else if (escape === 'put-down') {
       e.preventDefault();
       this.selection = null;
+      this.update();
+    } else if (escape === 'fold') {
+      // Folding hides the body: repairFocus() hands focus to the toggle if it was there.
+      e.preventDefault();
+      this.deps.store.setFollowOpen(false);
       this.update();
     } else if (['1', '2', '3'].includes(e.key) && this.selection !== null) {
       e.preventDefault();
@@ -260,7 +304,8 @@ export class PogoBoard extends PogoFigure {
     ui.turn.textContent = line;
     ui.retry.hidden = status !== 'failed' || result !== null;
     ui.caption.textContent = g?.label ? `${t(lang, 'resumed')}${colon(lang)} ${g.label}` : '';
-    ui.caption.hidden = !g?.label;
+    // The follow board is compact: the inline board and the live region say where the position came from.
+    ui.caption.hidden = !g?.label || this.mode === 'follow';
 
     // Setup: the choices are for the next game; a game under way keeps its own sides and level.
     const prefs = st.preferences();
@@ -278,14 +323,21 @@ export class PogoBoard extends PogoFigure {
     ui.newGame.classList.toggle('secondary', underWay);
     // The follow board offers a new game only once this one is over.
     ui.newGame.hidden = this.mode === 'follow' && !g?.finished;
+    // An empty row still costs its gap: the compact board drops what it does not show.
+    if (this.mode === 'follow') {
+      ui.status.hidden = ui.retry.hidden;
+      ui.next.hidden = ui.newGame.hidden;
+    }
 
-    // Follow bar: whose turn, collapsible.
+    // Follow bar: whose turn, and the reader's open or folded, which no move changes.
     if (ui.barStatus && ui.toggle) {
-      ui.barStatus.textContent = result ? result.who : line;
-      ui.toggle.textContent = t(lang, this.collapsed ? 'expand' : 'collapse');
-      ui.toggle.setAttribute('aria-expanded', String(!this.collapsed));
-      ui.body.hidden = this.collapsed;
-      this.toggleAttribute('data-collapsed', this.collapsed);
+      const open = st.followOpen();
+      // The colour stays with its separator when the narrow bar wraps the line.
+      ui.barStatus.textContent = result ? result.who : line.replace(' · ', '\u00a0· ');
+      ui.toggle.textContent = t(lang, open ? 'collapse' : 'expand');
+      ui.toggle.setAttribute('aria-expanded', String(open));
+      ui.body.hidden = !open;
+      this.toggleAttribute('data-collapsed', !open);
     }
 
     // The moves so far, as text.

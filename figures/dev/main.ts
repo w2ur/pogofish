@@ -215,11 +215,27 @@ async function build(): Promise<void> {
   board.style.maxWidth = '640px';
   app.append(board);
 
-  app.append(heading('<pogo-board mode="follow"> · appears once a game is under way'));
+  app.append(
+    heading('<pogo-board mode="follow"> · fixed to the bottom-right corner, as the page sets it: folded once a game is under way, hidden while the inline board is on screen'),
+  );
+  // A long column of text below the inline board, so the follow board covers text, as on the page.
+  const column = document.createElement('div');
+  column.id = 'follow-column';
+  column.style.cssText = 'max-width:62ch;font-size:19px;line-height:1.55';
+  const sentence =
+    l === 'fr'
+      ? 'Le Blanc joue le premier. Chaque pile peut sauter d’une, deux ou trois cases ; le haut de la pile la possède, et la partie se lit jusqu’au bout du texte. '
+      : 'White moves first. Each stack may jump one, two or three cells; its top piece owns it, and the game reads to the end of the text. ';
+  for (let k = 0; k < 24; k++) {
+    const p = document.createElement('p');
+    p.textContent = sentence.repeat(3);
+    column.append(p);
+  }
+  app.append(column);
   const follow = document.createElement('pogo-board');
   follow.id = 'board-follow';
+  follow.className = 'follow-demo';
   follow.setAttribute('mode', 'follow');
-  follow.style.maxWidth = '320px';
   app.append(follow);
 
   app.append(heading('<pogo-moves view="start"> · 640px stage'));

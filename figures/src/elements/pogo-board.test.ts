@@ -1,9 +1,11 @@
+import { readFileSync } from 'node:fs';
+import { resolve } from 'node:path';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { DEFAULT_GAME } from '../default-game';
 import { describeCell } from '../board-state';
 import { createDriver, type Searcher } from '../driver';
-import { legal, replay, type State, type Triple } from '../engine';
-import { REDUCED_MOTION, intersect, resetMedia, setMedia } from '../test-dom';
+import { LC1_2, legal, play, replay, terminal, type State, type Triple } from '../engine';
+import { REDUCED_MOTION, intersect, observersOf, resetMedia, setMedia } from '../test-dom';
 import { createStore, type Store } from '../store';
 import { PogoBoard } from './pogo-board';
 
@@ -441,18 +443,24 @@ describe('<pogo-board mode="follow">', () => {
     expect(el.hasAttribute('data-idle')).toBe(false);
   });
 
-  it('is bound to the same game, and collapses to a bar saying whose turn it is', async () => {
+  it('is bound to the same game, folded to a bar saying whose turn it is until the reader opens it', async () => {
     const inline = await mount('fr');
     newGame(inline);
     const el = await mount('fr', { mode: 'follow' });
     expect(el.shadowRoot!.querySelector('.setup')).toBeNull();
-    expect($(el, '.bar-status').textContent).toBe('À vous de jouer · Blanc');
+    expect($(el, '.bar-status').textContent).toBe('À vous de jouer\u00a0· Blanc');
     const toggle = $<HTMLButtonElement>(el, '.bar .control');
-    expect(toggle.getAttribute('aria-expanded')).toBe('true');
-    toggle.click();
+    // A game started on the inline board leaves it folded.
     expect(toggle.getAttribute('aria-expanded')).toBe('false');
+    expect(toggle.textContent).toBe('Ouvrir');
     expect($(el, '.body').hidden).toBe(true);
     expect(el.hasAttribute('data-collapsed')).toBe(true);
+    toggle.click();
+    expect(toggle.getAttribute('aria-expanded')).toBe('true');
+    expect(toggle.textContent).toBe('Réduire');
+    expect($(el, '.body').hidden).toBe(false);
+    toggle.click();
+    expect($(el, '.body').hidden).toBe(true);
     toggle.click();
     expect($(el, '.body').hidden).toBe(false);
 
@@ -469,12 +477,138 @@ describe('<pogo-board mode="follow">', () => {
   });
 });
 
+describe('<pogo-board mode="follow"> as a panel', () => {
+  /** A legal move that does not end the game. */
+  const lasting = (s: State): Triple => {
+    for (const m of legal(s)) {
+      const t: Triple = [m.from_cell, m.num_pieces, m.to_cell];
+      if (!terminal(play(s, t), LC1_2)) return t;
+    }
+    throw new Error('every move ends the game');
+  };
+  /** Tells every observer watching `el` whether it is on screen. */
+  const onScreen = (el: Element, isIntersecting: boolean): void => {
+    for (const o of observersOf(el)) {
+      (o as unknown as { callback: IntersectionObserverCallback }).callback(
+        [{ target: el, isIntersecting } as IntersectionObserverEntry],
+        o as unknown as IntersectionObserver,
+      );
+    }
+  };
+  const toggleOf = (el: PogoBoard) => $<HTMLButtonElement>(el, '.bar .control');
+
+  it('a game from a figure’s « Jouer d’ici » opens it; one started on a board leaves it folded', async () => {
+    const el = await mount('fr', { mode: 'follow' });
+    store.newGame('White', 'normal');
+    await flush();
+    expect(toggleOf(el).getAttribute('aria-expanded')).toBe('false');
+    document.dispatchEvent(
+      new CustomEvent('pogo:playfrom', { detail: { state: replay(DEFAULT_GAME.slice(0, 2)).at(-1)!, label: 'coup 2' } }),
+    );
+    await flush();
+    expect(toggleOf(el).getAttribute('aria-expanded')).toBe('true');
+    expect($(el, '.body').hidden).toBe(false);
+  });
+
+  it('the reader’s choice holds through ten moves and the AI’s replies', async () => {
+    reply = (s) => lasting(s);
+    const el = await mount('fr', { mode: 'follow' });
+    store.newGame('White', 'normal');
+    await flush();
+    toggleOf(el).click();
+    for (let k = 0; k < 5; k++) {
+      store.play(lasting(store.current()!.states.at(-1)!));
+      await flush();
+      expect(toggleOf(el).getAttribute('aria-expanded')).toBe('true');
+    }
+    expect(store.current()!.moves).toHaveLength(10);
+    toggleOf(el).click();
+    store.play(lasting(store.current()!.states.at(-1)!));
+    await flush();
+    expect(toggleOf(el).getAttribute('aria-expanded')).toBe('false');
+  });
+
+  it('is hidden while an inline board is on screen, and comes back when it leaves', async () => {
+    const inline = await mount('fr');
+    const el = await mount('fr', { mode: 'follow' });
+    newGame(inline);
+    await flush();
+    expect(el.hasAttribute('data-yield')).toBe(false);
+    onScreen(inline, true);
+    expect(el.hasAttribute('data-yield')).toBe(true);
+    // Folded or open, it stays out of the way, and moves do not bring it back.
+    store.play(firstLegal(store.current()!.states.at(-1)!));
+    await flush();
+    expect(el.hasAttribute('data-yield')).toBe(true);
+    onScreen(inline, false);
+    expect(el.hasAttribute('data-yield')).toBe(false);
+    // It lets go of the inline board at disconnect.
+    el.remove();
+    expect(observersOf(inline)).toHaveLength(0);
+  });
+
+  it('with no inline board on the page, it simply follows', async () => {
+    const el = await mount('fr', { mode: 'follow' });
+    store.newGame('White', 'normal');
+    await flush();
+    expect(el.hasAttribute('data-idle')).toBe(false);
+    expect(el.hasAttribute('data-yield')).toBe(false);
+  });
+
+  it('Escape folds it when focus is inside, and hands focus to the toggle', async () => {
+    const el = await mount('fr', { mode: 'follow' });
+    store.newGame('White', 'normal');
+    await flush();
+    toggleOf(el).click();
+    const [from] = firstLegal(store.current()!.states[0]!);
+    cell(el, from).focus();
+    cell(el, from).click();
+    expect(marks(el, 'picked')).toEqual([from]);
+    // First the lifted stack goes down, then the panel folds.
+    key(cell(el, from), 'Escape');
+    expect(marks(el, 'picked')).toEqual([]);
+    expect(toggleOf(el).getAttribute('aria-expanded')).toBe('true');
+    key(cell(el, from), 'Escape');
+    expect(toggleOf(el).getAttribute('aria-expanded')).toBe('false');
+    expect(el.shadowRoot!.activeElement).toBe(toggleOf(el));
+    // Folded, Escape does nothing more.
+    key(toggleOf(el), 'Escape');
+    expect(toggleOf(el).getAttribute('aria-expanded')).toBe('false');
+  });
+
+  it('while it holds focus it does not hide, so hiding never moves focus', async () => {
+    const inline = await mount('fr');
+    const el = await mount('fr', { mode: 'follow' });
+    newGame(inline);
+    await flush();
+    toggleOf(el).focus();
+    onScreen(inline, true);
+    expect(el.hasAttribute('data-yield')).toBe(false);
+    toggleOf(el).blur();
+    await flush();
+    expect(el.hasAttribute('data-yield')).toBe(true);
+  });
+
+  it('its sheet: opaque and framed with the kit’s tokens, hidden by attribute, never animated', () => {
+    const css = readFileSync(resolve(process.cwd(), 'src/elements/pogo-board.css'), 'utf8');
+    const panel = /\.pb\[data-mode='follow'\] \{([^}]*)\}/.exec(css)![1]!;
+    expect(panel).toContain('background: var(--_ground);');
+    expect(panel).toContain('border: 3px solid var(--_ink);');
+    expect(panel).toContain('padding: 12px;');
+    expect(panel).toContain('max-width: 320px;');
+    expect(css).toMatch(/:host\(\[data-idle\]\),\s*:host\(\[data-yield\]\) \{\s*display: none;/);
+    expect(css).toMatch(/\.bar \{[^}]*min-height: 44px;/);
+    expect(css).not.toMatch(/animation|transition/);
+  });
+});
+
 describe('<pogo-board mode="follow"> is compact', () => {
   it('holds the board, the count and the bar only; « Nouvelle partie » once the game is over', async () => {
     reply = (_s, ply) => DEFAULT_GAME[ply]!;
     const el = await mount('fr', { mode: 'follow' });
     store.newGame('White', 'normal');
     await flush();
+    $<HTMLButtonElement>(el, '.bar .control').click();
     expect(el.shadowRoot!.querySelector('details.moves')).toBeNull();
     expect(el.shadowRoot!.querySelector('.note')).toBeNull();
     expect(el.shadowRoot!.querySelector('.setup')).toBeNull();

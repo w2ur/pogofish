@@ -104,6 +104,18 @@
         padding-bottom: 16px;
         border-bottom: 3px solid var(--pogo-ink);
       }
+      /* The hub's .pogo-follow (src/styles/pogo.css), copied for the harness. */
+      .follow-demo {
+        position: fixed;
+        right: max(12px, env(safe-area-inset-right));
+        bottom: max(12px, env(safe-area-inset-bottom));
+        z-index: 20;
+        width: min(320px, calc(100vw - 24px));
+        background: var(--pogo-ground);
+      }
+      .follow-demo:not(:defined) {
+        display: none;
+      }
       #played {
         font-size: 12.8px;
         color: var(--pogo-muted);

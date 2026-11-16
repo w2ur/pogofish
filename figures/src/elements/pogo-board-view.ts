@@ -19,6 +19,8 @@ export interface Ui {
   barStatus?: HTMLElement;
   toggle?: HTMLButtonElement;
   caption: HTMLElement;
+  /** The turn line, the retry and the result, in one reserved area. */
+  status: HTMLElement;
   turn: HTMLElement;
   retry: HTMLButtonElement;
   result: HTMLElement;
@@ -37,6 +39,8 @@ export interface Ui {
   summary: HTMLElement;
   /** The one « Nouvelle partie », below the board; asks once before abandoning a game. */
   newGame: HTMLButtonElement;
+  /** The setup, the summary and « Nouvelle partie », below the board. */
+  next: HTMLElement;
   movesSummary: HTMLElement;
   movesList: HTMLOListElement;
   live: HTMLElement;
@@ -187,6 +191,7 @@ export function buildView(lang: Lang, mode: 'inline' | 'follow', h: Handlers): U
     barStatus,
     toggle,
     caption,
+    status,
     turn,
     retry,
     result,
@@ -202,6 +207,7 @@ export function buildView(lang: Lang, mode: 'inline' | 'follow', h: Handlers): U
     setup,
     summary,
     newGame,
+    next,
     movesSummary,
     movesList,
     live,

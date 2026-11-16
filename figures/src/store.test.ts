@@ -2,7 +2,7 @@ import { readFileSync } from 'node:fs';
 import { resolve } from 'node:path';
 import { describe, expect, it, vi } from 'vitest';
 import { DEFAULT_GAME } from './default-game';
-import { initial, legal, replay, type State, type Triple } from './engine';
+import { LC1_2, initial, legal, play, replay, terminal, type State, type Triple } from './engine';
 import { STORAGE_KEY, createStore, rebuild, sessionStorageOrNull, type StorageLike } from './store';
 
 const read = (path: string): string => readFileSync(resolve(process.cwd(), path), 'utf8');
@@ -16,6 +16,15 @@ const LOOP: Triple[] = [
 function memory(): StorageLike & { data: Map<string, string> } {
   const data = new Map<string, string>();
   return { data, getItem: (k) => data.get(k) ?? null, setItem: (k, v) => void data.set(k, v) };
+}
+
+/** A legal move that does not end the game (lc1-2), so a test can play on. */
+function lasting(s: State): Triple {
+  for (const m of legal(s)) {
+    const t: Triple = [m.from_cell, m.num_pieces, m.to_cell];
+    if (!terminal(play(s, t), LC1_2)) return t;
+  }
+  throw new Error('every move ends the game');
 }
 
 const make = (storage: StorageLike | null = memory(), target?: EventTarget) =>
@@ -123,6 +132,71 @@ describe('the store', () => {
     // The finished game keeps the level it was played at.
     for (const m of DEFAULT_GAME.slice(1)) store.play(m);
     expect(store.lastFinished()).toMatchObject({ readerColour: 'White', level: 'normal' });
+  });
+});
+
+describe('the follow board’s open or folded', () => {
+  it('is folded by default; a game started on a board leaves it, a figure’s playFrom opens it', () => {
+    const store = make();
+    expect(store.followOpen()).toBe(false);
+    store.newGame('White', 'normal');
+    expect(store.followOpen()).toBe(false);
+    store.playFrom(replay(DEFAULT_GAME.slice(0, 2)).at(-1)!, 'coup 2');
+    expect(store.followOpen()).toBe(true);
+  });
+
+  it('the reader’s choice survives ten moves and the next game started on a board', () => {
+    const store = make();
+    store.newGame('White', 'normal');
+    store.setFollowOpen(true);
+    // Ten plies, each side's: moves and replies alike leave it.
+    for (let ply = 0; ply < 10; ply++) {
+      store.play(lasting(store.current()!.states.at(-1)!));
+      expect(store.followOpen()).toBe(true);
+    }
+    expect(store.current()!.finished).toBe(false);
+    store.newGame('Red', 'easy');
+    expect(store.followOpen()).toBe(true);
+    store.setFollowOpen(false);
+    store.playFrom(replay(DEFAULT_GAME.slice(0, 2)).at(-1)!, 'coup 2');
+    expect(store.followOpen()).toBe(true);
+  });
+
+  it('is kept in the storage record, and a record without it restores folded', async () => {
+    const storage = memory();
+    const first = make(storage);
+    first.newGame('White', 'normal');
+    first.setFollowOpen(true);
+    expect(JSON.parse(storage.data.get(STORAGE_KEY)!).followOpen).toBe(true);
+    const second = make(storage);
+    await second.ready();
+    expect(second.followOpen()).toBe(true);
+
+    first.setFollowOpen(false);
+    const third = make(storage);
+    await third.ready();
+    expect(third.followOpen()).toBe(false);
+
+    // A record written before the field existed: the game comes back, folded.
+    const old = JSON.parse(storage.data.get(STORAGE_KEY)!);
+    old.followOpen = undefined;
+    storage.setItem(STORAGE_KEY, JSON.stringify({ ...old, followOpen: undefined }));
+    expect(storage.data.get(STORAGE_KEY)).not.toContain('followOpen');
+    const fourth = make(storage);
+    await fourth.ready();
+    expect(fourth.current()).not.toBeNull();
+    expect(fourth.followOpen()).toBe(false);
+  });
+
+  it('opening it before ready() does not lose the saved game, and the choice wins over the record', async () => {
+    const storage = memory();
+    const first = make(storage);
+    first.newGame('White', 'normal');
+    const second = make(storage);
+    second.setFollowOpen(true);
+    await second.ready();
+    expect(second.current()).not.toBeNull();
+    expect(second.followOpen()).toBe(true);
   });
 });
 
