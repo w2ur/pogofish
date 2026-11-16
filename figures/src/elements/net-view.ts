@@ -136,9 +136,10 @@ export function rankedTable(lang: Lang, className: string, headers: readonly { t
 /** A row for a move that is not there: the same cells, so a blank row has a real row's height. */
 export function blankRow(cells: number): HTMLTableRowElement {
   const tr = el('tr');
-  const th = el('th', 'move num', 'a1-1-a1');
+  // A no-break space: the row keeps a real row's height, and no move name could show if the sheet failed.
+  const th = el('th', 'move num', '\u00a0');
   tr.append(th);
-  for (let k = 1; k < cells; k++) tr.append(barCell('0', 0));
+  for (let k = 1; k < cells; k++) tr.append(barCell('\u00a0', 0));
   return tr;
 }
 
