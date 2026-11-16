@@ -329,6 +329,18 @@ async function build(): Promise<void> {
     ),
   );
 
+  app.append(heading('<pogo-td-targets> · 640px stage'));
+  app.append(
+    figure(
+      'pogo-td-targets',
+      {},
+      l === 'fr'
+        ? 'Les valeurs cibles d’une partie, calculées depuis la fin et remontant position par position.'
+        : 'The target values of a game, computed from the end and climbing back position by position.',
+      '640px',
+    ),
+  );
+
   app.append(heading('<pogo-net kind="az"> · 640px stage'));
   app.append(
     figure(

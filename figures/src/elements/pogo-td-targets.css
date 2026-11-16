@@ -1,0 +1,228 @@
+/*
+ * <pogo-td-targets>: the game, the step's words (one grid cell for all, so the
+ * chart never moves), the chart of values and targets from White's view on
+ * −1…+1, its legend, the transport, then the values behind a disclosure. Ink
+ * only: a value is a hollow circle on a dashed line, a target a filled square
+ * on a solid one, the result a filled circle. No text inside the SVG.
+ */
+.td-targets {
+  container-type: inline-size;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.status {
+  display: grid;
+  align-items: end;
+}
+
+.said {
+  grid-area: 1 / 1;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.said[data-off] {
+  visibility: hidden;
+}
+
+.step-head {
+  font-size: 12.8px;
+  color: var(--_muted);
+}
+
+.step-text {
+  color: var(--_ink);
+}
+
+.calc {
+  color: var(--_ink);
+  font-weight: 600;
+}
+
+.plot {
+  display: grid;
+  grid-template-columns: 2.4em minmax(0, 1fr);
+  grid-template-rows: auto auto;
+  column-gap: 6px;
+}
+
+.td-chart {
+  display: block;
+  width: 100%;
+  height: auto;
+}
+
+.y-ends {
+  position: relative;
+  font-size: 12.8px;
+  color: var(--_muted);
+}
+
+/* The labels sit on the chart's +1, 0 and −1 lines: PAD_Y of H from each edge, by percentage. */
+.y-ends span {
+  position: absolute;
+  right: 0;
+  transform: translateY(-50%);
+  line-height: 1;
+}
+
+.y-ends span:nth-child(1) {
+  top: 5%;
+}
+
+.y-ends span:nth-child(2) {
+  top: 50%;
+}
+
+.y-ends span:nth-child(3) {
+  top: 95%;
+}
+
+.x-ends {
+  grid-column: 2;
+  display: flex;
+  justify-content: space-between;
+  font-size: 12.8px;
+  color: var(--_muted);
+}
+
+.td-chart .axis {
+  stroke: var(--_rule);
+  stroke-width: 1px;
+  vector-effect: non-scaling-stroke;
+}
+
+.td-chart .axis.zero {
+  stroke: var(--_edge);
+}
+
+.td-chart .cursor {
+  stroke: var(--_edge);
+  stroke-width: 1px;
+  stroke-dasharray: 3 3;
+  vector-effect: non-scaling-stroke;
+}
+
+.td-chart .cursor.off {
+  visibility: hidden;
+}
+
+.td-chart .notes-line {
+  fill: none;
+  stroke: var(--_ink-2);
+  stroke-width: 1px;
+  stroke-dasharray: 4 3;
+  vector-effect: non-scaling-stroke;
+}
+
+.td-chart .targets-line {
+  fill: none;
+  stroke: var(--_ink);
+  stroke-width: 2px;
+  vector-effect: non-scaling-stroke;
+}
+
+.td-chart .note {
+  fill: var(--_ground);
+  stroke: var(--_ink);
+  stroke-width: 1.5px;
+  vector-effect: non-scaling-stroke;
+}
+
+.td-chart .result {
+  fill: var(--_ink);
+}
+
+.td-chart .target {
+  fill: var(--_ink);
+  visibility: hidden;
+}
+
+.td-chart .target.known {
+  visibility: visible;
+}
+
+.legend {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px 16px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  font-size: 15px;
+  color: var(--_ink-2);
+}
+
+.legend li {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.swatch {
+  display: inline-block;
+  width: 10px;
+  height: 10px;
+}
+
+.swatch.note {
+  border: 1.5px solid var(--_ink);
+  border-radius: 50%;
+}
+
+.swatch.target {
+  background: var(--_ink);
+}
+
+.swatch.result {
+  background: var(--_ink);
+  border-radius: 50%;
+}
+
+.values summary {
+  font-size: 12.8px;
+  cursor: pointer;
+  min-height: 44px;
+  display: flex;
+  align-items: center;
+}
+
+.td-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 15px;
+}
+
+.td-table th,
+.td-table td {
+  padding: 4px 8px 4px 0;
+  border-bottom: 1px solid var(--_rule);
+  text-align: right;
+}
+
+.td-table th:first-child,
+.td-table td:nth-child(2) {
+  text-align: left;
+}
+
+.td-table thead th {
+  font-size: 12.8px;
+  color: var(--_muted);
+  border-bottom: 3px solid var(--_ink);
+}
+
+.td-table tbody th {
+  font-weight: 400;
+}
+
+.sr {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  clip-path: inset(50%);
+  white-space: nowrap;
+}
