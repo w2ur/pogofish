@@ -2,7 +2,7 @@ import { readFileSync } from 'node:fs';
 import { describe, expect, it } from 'vitest';
 import type { ReachData } from '../data';
 import { REACH_SOURCE } from '../reach';
-import { reachChart } from './reach-bars';
+import { reachChart, reachSteps } from './reach-bars';
 
 const reach = JSON.parse(readFileSync('public/data/reach.json', 'utf8')) as ReachData;
 
@@ -37,5 +37,33 @@ describe('reachChart', () => {
     expect(() => reachChart({ ...reach, reachable: reach.reachable + 1 })).toThrow();
     expect(() => reachChart({ ...reach, source: 'elsewhere.json' })).toThrow();
     expect(() => reachChart({ ...reach, firstSeenAtPly: [] })).toThrow();
+  });
+});
+
+describe('reachSteps', () => {
+  it('lands one level per step, in order, then the empty level that stops it, then the total', () => {
+    const c = reachChart(reach);
+    const steps = reachSteps(c);
+    expect(steps).toHaveLength(18);
+    expect(steps.slice(0, 16).map((s) => [s.kind, s.ply, s.landed])).toEqual([...Array(16).keys()].map((p) => ['level', p, p + 1]));
+    expect(steps[16]).toMatchObject({ kind: 'stop', ply: 16, landed: 16 });
+    expect(steps[17]).toMatchObject({ kind: 'total', ply: 16, landed: 16 });
+  });
+
+  it('each step’s reached count is the running sum of the levels landed, never a value between two', () => {
+    const steps = reachSteps(reachChart(reach));
+    let sum = 0;
+    steps.slice(0, 16).forEach((s, i) => {
+      sum += reach.firstSeenAtPly[i]!;
+      expect(s.reached).toBe(sum);
+    });
+    expect(steps[16]!.reached).toBe(reach.reachable);
+    expect(steps[17]!.reached).toBe(reach.reachable);
+  });
+
+  it('the unreached sliver is the possible count less the reachable, at its true share', () => {
+    const c = reachChart(reach);
+    expect(c.unreached).toBe(reach.positionsTotal - reach.reachable);
+    expect(c.unreached / c.possible).toBeCloseTo(0.01193, 5);
   });
 });
