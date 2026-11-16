@@ -296,6 +296,15 @@ async function build(): Promise<void> {
     ),
   );
 
+  for (const [program, fr, en] of [
+    ['qtab', 'Des parties du Q-learning à plusieurs étapes de son apprentissage.', 'Games of the Q-learning program at several stages of its training.'],
+    ['td', 'Des parties du programme TD(λ) à plusieurs étapes de son apprentissage.', 'Games of the TD(λ) program at several stages of its training.'],
+    ['az100', 'Des parties d’AlphaZero à plusieurs étapes de son apprentissage.', 'Games of AlphaZero at several stages of its training.'],
+  ] as const) {
+    app.append(heading(`<pogo-stages program="${program}"> · 640px stage`));
+    app.append(figure('pogo-stages', { program }, l === 'fr' ? fr : en, '640px'));
+  }
+
   app.append(heading('PogoFigure + Stepper · one per fidelity'));
   for (const tag of ['kit-demo-live', 'kit-demo-measured', 'kit-demo-illustrative']) {
     const el = document.createElement(tag);

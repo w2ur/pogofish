@@ -1,0 +1,54 @@
+/*
+ * <pogo-stages>: the stage picker, the chosen stage's readout (where in
+ * training, the score with its interval, what the score is, the game shown),
+ * then the shared replay (replay.css) and its transport. Every stage's readout
+ * shares one grid cell, and the replay's words hold the room of the longest
+ * any stage's game may say: choosing a stage never moves the board.
+ */
+.stages,
+.game {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.readout {
+  display: grid;
+}
+
+.stage-words {
+  grid-area: 1 / 1;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.stage-words[data-off] {
+  visibility: hidden;
+}
+
+.stage-words p {
+  margin: 0;
+}
+
+.where {
+  font-size: 12.8px;
+  color: var(--_muted);
+}
+
+/* In the label cut at 12.8px the narrow space all but closes: the number keeps its digits apart. */
+.where .sep {
+  padding-inline: 0.12em;
+}
+
+/* The measured score: data, so tabular figures, in ink at the figure's leading size. Never red. */
+.score {
+  font-size: 19px;
+  font-weight: 800;
+  color: var(--_ink);
+}
+
+.note,
+.shown {
+  color: var(--_ink-2);
+}

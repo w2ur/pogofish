@@ -132,6 +132,21 @@ const fr = {
   qEnd: 'fin',
   qRow: 'Position',
   qValue: 'Note',
+  stagesPick: 'Étape de l’entraînement',
+  stagesOfTraining: 'de l’entraînement',
+  stagesGames: 'parties',
+  stagesScore: 'Score contre le joueur glouton',
+  stagesScoreNote: 'Part des parties gagnées à son banc d’essai, avec son intervalle de confiance à 95 %.',
+  stagesShownIs: 'Partie montrée : le programme est',
+  stagesGreedyIs: 'le glouton',
+  stagesProgramWins: 'le programme gagne.',
+  stagesProgramLoses: 'le programme perd.',
+  stagesProgram: 'le programme',
+  stagesGreedy: 'le glouton',
+  stagesOpening: 'Ouverture tirée au sort',
+  progQtab: 'Q-learning',
+  progTd: 'TD(λ)',
+  progAz100: 'AlphaZero, 100 simulations',
 };
 
 export type StringKey = keyof typeof fr;
@@ -263,6 +278,21 @@ const en: Record<StringKey, string> = {
   qEnd: 'end',
   qRow: 'Position',
   qValue: 'Value',
+  stagesPick: 'Training stage',
+  stagesOfTraining: 'of training',
+  stagesGames: 'games',
+  stagesScore: 'Score against the greedy player',
+  stagesScoreNote: 'Share of its bench games won, with its 95% confidence interval.',
+  stagesShownIs: 'Game shown: the program is',
+  stagesGreedyIs: 'greedy',
+  stagesProgramWins: 'the program wins.',
+  stagesProgramLoses: 'the program loses.',
+  stagesProgram: 'the program',
+  stagesGreedy: 'greedy',
+  stagesOpening: 'Opening drawn at random',
+  progQtab: 'Q-learning',
+  progTd: 'TD(λ)',
+  progAz100: 'AlphaZero, 100 simulations',
 };
 
 export const STRINGS: Record<Lang, Record<StringKey, string>> = { fr, en };
