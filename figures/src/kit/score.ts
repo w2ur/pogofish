@@ -25,3 +25,9 @@ export function formatScore(lang: Lang, s: Pick<Score, 'score'> & { ci95: readon
     ? `${formatShare(lang, s.score)} [${number(lang, lo)} ; ${number(lang, hi)}]`
     : `${formatShare(lang, s.score)} [${number(lang, lo)}; ${number(lang, hi)}]`;
 }
+
+/** An interval said in words: « 82,3 à 88,7 % » in French, "82.3 to 88.7%" in English. */
+export function formatInterval(lang: Lang, ci95: readonly [number, number]): string {
+  const [lo, hi] = ci95;
+  return lang === 'fr' ? `${number(lang, lo)} à ${formatShare(lang, hi)}` : `${number(lang, lo)} to ${formatShare(lang, hi)}`;
+}

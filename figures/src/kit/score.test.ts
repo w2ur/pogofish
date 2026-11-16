@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { formatScore, formatShare, percent } from './score';
+import { formatInterval, formatScore, formatShare, percent } from './score';
 
 describe('formatScore', () => {
   it('prints a score as a percentage with one decimal, its interval in the same unit', () => {
@@ -24,5 +24,12 @@ describe('formatShare', () => {
     expect(formatShare('fr', 97 / 186)).toBe('52,2 %');
     expect(formatShare('en', 7 / 465)).toBe('1.5%');
     expect(formatShare('fr', 0.0315)).toBe('3,2 %');
+  });
+});
+
+describe('formatInterval', () => {
+  it('says an interval in words, the unit once, after the upper bound', () => {
+    expect(formatInterval('fr', [0.823, 0.887])).toBe('82,3 à 88,7 %');
+    expect(formatInterval('en', [0.823, 0.887])).toBe('82.3 to 88.7%');
   });
 });

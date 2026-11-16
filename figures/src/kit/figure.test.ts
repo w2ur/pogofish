@@ -47,18 +47,26 @@ class ByAttribute extends PogoFigure {
   }
   protected render(): void {}
 }
-/** Its source is a string of its data, known once render() has loaded it. */
+/** Its source, its date and a note are strings of its data, known once render() has loaded it. */
 class SourcedByData extends PogoFigure {
   static override fidelity = 'measured' as const;
   static override game = 'gameLc12' as const;
   private source: string | undefined;
+  private date: string | undefined;
   protected override sourceFile() {
     return this.source;
+  }
+  protected override dataDate() {
+    return this.date;
+  }
+  protected override precisions() {
+    return this.source ? ['Each square is a game.'] : [];
   }
   protected async render(): Promise<void> {
     await Promise.resolve();
     this.source = 'docs/experiments/v5/curves.json, seed 1';
-    this.refreshLabel();
+    this.date = '2026-11-11';
+    this.refreshPrecisions();
   }
 }
 class TwoSources extends PogoFigure {
@@ -120,7 +128,9 @@ function mount<T extends PogoFigure>(tag: string, lang = 'fr'): T {
 }
 
 const slot = (el: PogoFigure) => el.shadowRoot!.querySelector('slot')!;
-const fidelity = (el: PogoFigure) => el.shadowRoot!.querySelector('.fidelity')!.textContent;
+/** The sentences of « Précisions », in order. */
+const precisions = (el: PogoFigure) => [...el.shadowRoot!.querySelectorAll('.precisions .precisions-body p')].map((p) => p.textContent);
+const disclosure = (el: PogoFigure) => el.shadowRoot!.querySelector<HTMLDetailsElement>('details.precisions')!;
 
 beforeEach(() => {
   document.body.innerHTML = '';
@@ -246,25 +256,37 @@ describe('PogoFigure', () => {
     expect(el.lang).toBe('fr');
   });
 
-  it('ends with the fidelity label, in the language of the closest [lang]', () => {
+  it('ends with « Précisions », closed, in the language of the closest [lang]', () => {
     const fr = mount<Fine>('kit-fine', 'fr-FR');
     const en = mount<Fine>('kit-fine', 'en');
     expect(fr.lang).toBe('fr');
     expect(en.lang).toBe('en');
-    expect(fidelity(fr)).toBe('Calcul en direct');
-    expect(fidelity(en)).toBe('Computed live');
-    expect(fr.shadowRoot!.lastElementChild?.classList.contains('fidelity')).toBe(true);
+    expect(disclosure(fr).open).toBe(false);
+    expect(disclosure(fr).querySelector('summary')!.textContent).toBe('Précisions');
+    expect(disclosure(en).querySelector('summary')!.textContent).toBe('Details');
+    expect(precisions(fr)).toEqual(['Calculé dans votre navigateur par le moteur du jeu\u202f: rien n’est préenregistré.']);
+    expect(precisions(en)).toEqual(['Computed in your browser by the game’s engine: nothing is prerecorded.']);
+    expect(fr.shadowRoot!.lastElementChild).toBe(disclosure(fr));
+    // The kind and the source are the host's, never printed.
+    expect(fr.dataset.fidelity).toBe('live');
+    expect(fr.hasAttribute('data-source')).toBe(false);
     const m = mount<Measured>('kit-measured', 'en');
-    expect(fidelity(m)).toBe('Measured data · source: data/table.json');
+    expect(precisions(m)).toEqual(['Measured before publication: these numbers do not change when you play.']);
+    expect(m.dataset.source).toBe('data/table.json');
+    expect(m.shadowRoot!.textContent).not.toContain('data/table.json');
   });
 
-  it('names the game in the label, and keeps the source file in its own span', () => {
+  it('names the game in words, and keeps the source on the host', () => {
     const el = mount<MeasuredLc12>('kit-measured-lc12', 'fr');
-    expect(fidelity(el)).toBe('Données mesurées · règle des répétitions (lc1-2) · source : data/v5.json');
-    expect(el.shadowRoot!.querySelector('.fidelity .source')!.textContent).toBe('data/v5.json');
+    expect(precisions(el)).toEqual([
+      'Mesuré avant la publication\u202f: ces chiffres ne changent pas quand vous jouez.',
+      'Ici, le joueur qui répète une troisième fois une position perd la partie.',
+    ]);
+    expect(el.dataset.game).toBe('gameLc12');
+    expect(el.dataset.source).toBe('data/v5.json');
   });
 
-  it('names the game and the kind an instance reports, and adopts the element sheet after the kit sheet', () => {
+  it('says the game and the kind an instance reports, and adopts the element sheet after the kit sheet', () => {
     const wrapper = document.createElement('section');
     wrapper.setAttribute('lang', 'en');
     const a = document.createElement('kit-by-attribute');
@@ -273,8 +295,8 @@ describe('PogoFigure', () => {
     b.setAttribute('rules', 'lc1-2');
     wrapper.append(a, b);
     document.body.append(wrapper);
-    expect(fidelity(a as PogoFigure)).toBe('Computed live · game with no stopping rule');
-    expect(fidelity(b as PogoFigure)).toBe('Computed live · repetition rule (lc1-2)');
+    expect(precisions(a as PogoFigure)[1]).toBe('Here the game has no stopping rule: a game may never end.');
+    expect(precisions(b as PogoFigure)[1]).toBe('Here, the player who repeats a position a third time loses the game.');
     const sheets = a.shadowRoot!.adoptedStyleSheets;
     expect(sheets).toHaveLength(2);
     expect(sheets[1]).toBe(b.shadowRoot!.adoptedStyleSheets[1]);
@@ -283,24 +305,32 @@ describe('PogoFigure', () => {
     c.setAttribute('rules', 'A');
     c.setAttribute('measured', '');
     wrapper.append(c);
-    expect(fidelity(c as PogoFigure)).toBe('Measured data · game with no stopping rule · source: data/x.json');
-    expect(c.shadowRoot!.querySelector('.fidelity .source')!.textContent).toBe('data/x.json');
+    expect(precisions(c as PogoFigure)[0]).toBe('Measured before publication: these numbers do not change when you play.');
+    expect((c as PogoFigure).dataset.source).toBe('data/x.json');
   });
 
-  it('refreshLabel rewrites the label once the data names its source', async () => {
+  it('refreshPrecisions rewrites them once the data names its source and its date, and keeps the reader’s open', async () => {
     const el = mount<SourcedByData>('kit-sourced-by-data', 'en');
-    expect(fidelity(el)).toBe('Measured data · repetition rule (lc1-2)');
+    expect(precisions(el)).toEqual([
+      'Measured before publication: these numbers do not change when you play.',
+      'Here, the player who repeats a position a third time loses the game.',
+    ]);
+    expect(el.hasAttribute('data-source')).toBe(false);
+    disclosure(el).open = true;
     intersect(el);
     await flush();
-    expect(fidelity(el)).toBe('Measured data · repetition rule (lc1-2) · source: docs/experiments/v5/curves.json, seed 1');
-    expect(el.shadowRoot!.querySelectorAll('.fidelity .source .segment')).toHaveLength(4);
+    expect(precisions(el)).toEqual([
+      'Measured before publication: these numbers do not change when you play. Data as of 11 November 2026.',
+      'Here, the player who repeats a position a third time loses the game.',
+      'Each square is a game.',
+    ]);
+    expect(el.dataset.source).toBe('docs/experiments/v5/curves.json, seed 1');
+    expect(disclosure(el).open).toBe(true);
   });
 
-  it('two sources joined by « · » break between them, each path only after a slash', () => {
+  it('a figure citing two sources keeps both on the host, joined as they are', () => {
     const el = mount<TwoSources>('kit-two-sources', 'en');
-    expect(fidelity(el)).toBe('Measured data · source: data/a.json · docs/games/');
-    const segments = [...el.shadowRoot!.querySelectorAll('.fidelity .source .segment')].map((s) => s.textContent);
-    expect(segments).toEqual(['data/', 'a.json', 'docs/', 'games/']);
+    expect(el.dataset.source).toBe('data/a.json · docs/games/');
   });
 
   it('falls back to English with no [lang] ancestor', () => {

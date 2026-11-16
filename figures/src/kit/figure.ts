@@ -1,17 +1,23 @@
 // The base of every <pogo-…> element. It owns what all figures share: the
 // shadow frame, the theme sheet, rendering once on first approach, the
-// no-JavaScript fallback, the fidelity label, and clean-up at disconnect.
+// no-JavaScript fallback, the « Précisions » that end the figure, and clean-up
+// at disconnect.
 //
-// Every figure ends with its fidelity label. Two exceptions, deliberate:
-// <pogo-board mode="follow"> hides it (pogo-board.css), because it is a
-// compact second view of the game the inline board shows, and the inline
-// board carries the label; and <pogo-title> hides it (pogo-title.css),
-// because it is the page's <h1>, where a label would be read as part of the
-// title and the drawing is its signature, not a figure of the essay. A new
-// figure does not drop the label: only a second view of a figure already
-// labelled on the same page may.
+// Every figure ends with « Précisions », a disclosure closed by default: how the
+// figure is made (computed live, measured before publication with its date, or a
+// drawing), the game it is played in when that matters, then the figure's own
+// notes (precisions()). Nothing in it is a file path or a code name: the data
+// source a figure cites is an attribute of the host, data-source, for tests and
+// for anyone reading the page's markup. Two exceptions, deliberate:
+// <pogo-board mode="follow"> hides it (pogo-board.css), because it is a compact
+// second view of the game the inline board shows, and the inline board carries
+// it; and <pogo-title> hides it (pogo-title.css), because it is the page's <h1>,
+// where a disclosure would be read as part of the title and the drawing is its
+// signature, not a figure of the essay. A new figure does not drop it: only a
+// second view of a figure already explained on the same page may.
 import type { State } from '../engine';
-import { fidelityLabel, t, type Fidelity, type Lang } from './strings';
+import { formatDate } from './date';
+import { precisionLines, t, type Fidelity, type Lang } from './strings';
 import themeCss from './theme.css?raw';
 // The store listens for `pogo:playfrom` on the document. Each element is its own
 // chunk, loaded on approach: a figure that hands a position over may be on the page
@@ -52,9 +58,9 @@ export interface PlayFromDetail {
 
 export abstract class PogoFigure extends HTMLElement {
   static fidelity: Fidelity = 'illustrative';
-  /** File named under a `measured` label. */
+  /** The data file the figure is drawn from, given as the host's `data-source`. */
   static source?: string;
-  /** The game a figure is computed in, named in its fidelity label. */
+  /** The game a figure is played in, said in its « Précisions ». */
   static game?: 'gameA' | 'gameLc12';
   /** Height the stage keeps before rendering, so the figure does not shift the page. */
   static stageMinHeight = '0px';
@@ -64,7 +70,9 @@ export abstract class PogoFigure extends HTMLElement {
   /** Where `render()` draws. */
   protected stage!: HTMLDivElement;
   private fallback!: HTMLSlotElement;
-  private label!: HTMLParagraphElement;
+  private precisionsBox!: HTMLDetailsElement;
+  private precisionsSummary!: HTMLElement;
+  private precisionsBody!: HTMLDivElement;
   private observer: IntersectionObserver | undefined;
   private controller = new AbortController();
   private rendered = false;
@@ -87,17 +95,17 @@ export abstract class PogoFigure extends HTMLElement {
   }
 
   /**
-   * The game the fidelity label names: the class's by default. A figure whose game
-   * depends on an attribute overrides it; it is read when the frame is built, and again by refreshLabel().
+   * The game « Précisions » names: the class's by default. A figure whose game
+   * depends on an attribute overrides it; it is read when the frame is built, and again by refreshPrecisions().
    */
   protected game(): 'gameA' | 'gameLc12' | undefined {
     return (this.constructor as typeof PogoFigure).game;
   }
 
   /**
-   * What the label says the figure is, and its source file when measured: the class's
-   * by default. A figure whose kind depends on an attribute overrides both; they are
-   * read with game() when the frame is built, and again by refreshLabel().
+   * What « Précisions » says the figure is, and the data file it is drawn from: the
+   * class's by default. A figure whose kind depends on an attribute overrides both; they
+   * are read with game() when the frame is built, and again by refreshPrecisions().
    */
   protected fidelityKind(): Fidelity {
     return (this.constructor as typeof PogoFigure).fidelity;
@@ -105,6 +113,20 @@ export abstract class PogoFigure extends HTMLElement {
 
   protected sourceFile(): string | undefined {
     return (this.constructor as typeof PogoFigure).source;
+  }
+
+  /** The date the measured data was taken, as an ISO day (`2026-11-11`), once known; « Précisions » prints it. */
+  protected dataDate(): string | undefined {
+    return undefined;
+  }
+
+  /**
+   * The figure's own sentences in « Précisions », after the kit's (how it is made, its
+   * game): the notes a reader does not need to read the figure. Plain sentences, in
+   * the page's language; read when the frame is built and by refreshPrecisions().
+   */
+  protected precisions(): string[] {
+    return [];
   }
 
   protected reducedMotion(): boolean {
@@ -170,46 +192,47 @@ export abstract class PogoFigure extends HTMLElement {
     this.fallback = document.createElement('slot');
     frame.append(this.stage, this.fallback);
 
-    this.label = document.createElement('p');
-    this.label.className = 'fidelity';
-    this.writeLabel();
-    root.append(frame, this.label);
+    // « Précisions »: closed by default, after everything the figure shows.
+    this.precisionsBox = document.createElement('details');
+    this.precisionsBox.className = 'precisions';
+    this.precisionsSummary = document.createElement('summary');
+    this.precisionsBody = document.createElement('div');
+    this.precisionsBody.className = 'precisions-body';
+    this.precisionsBox.append(this.precisionsSummary, this.precisionsBody);
+    this.writePrecisions();
+    root.append(frame, this.precisionsBox);
   }
 
   /**
-   * Rewrites the fidelity label from fidelityKind(), sourceFile() and game(). For a
-   * figure whose source is a string of its data, known only once the data is loaded:
-   * call it from render() after the load.
+   * Rewrites « Précisions » and the host's data attributes from fidelityKind(),
+   * dataDate(), game(), sourceFile() and precisions(). For a figure whose notes
+   * depend on its data or on the reader's choice: call it once they are known.
+   * The disclosure stays open or closed as the reader left it.
    */
-  protected refreshLabel(): void {
-    this.writeLabel();
+  protected refreshPrecisions(): void {
+    this.writePrecisions();
   }
 
-  private writeLabel(): void {
-    const label = this.label;
+  private writePrecisions(): void {
+    const lang = this.lang;
     const kind = this.fidelityKind();
-    const text = fidelityLabel(this.lang, kind, this.sourceFile(), this.game());
-    const source = kind === 'measured' ? this.sourceFile() : undefined;
-    label.replaceChildren();
-    if (source) {
-      label.append(text.slice(0, -source.length));
-      const file = document.createElement('span');
-      file.className = 'source';
-      // Each path segment keeps its line; a long path may break after a slash, and only there.
-      // Several sources are joined by « · », where the line may break too.
-      source.split(SOURCES).forEach((path, k) => {
-        if (k > 0) file.append(SOURCES);
-        for (const part of path.match(/[^/]*\/|[^/]+$/g) ?? [path]) {
-          const segment = document.createElement('span');
-          segment.className = 'segment';
-          segment.textContent = part;
-          file.append(segment);
-        }
-      });
-      label.append(file);
-    } else {
-      label.textContent = text;
-    }
+    const game = this.game();
+    const source = this.sourceFile();
+    const iso = kind === 'measured' ? this.dataDate() : undefined;
+    this.dataset.fidelity = kind;
+    if (game) this.dataset.game = game;
+    else delete this.dataset.game;
+    if (source) this.dataset.source = source;
+    else delete this.dataset.source;
+    this.precisionsSummary.textContent = t(lang, 'precisions');
+    const lines = [...precisionLines(lang, kind, game, iso ? formatDate(lang, iso) : undefined), ...this.precisions()];
+    this.precisionsBody.replaceChildren(
+      ...lines.map((line) => {
+        const p = document.createElement('p');
+        p.textContent = line;
+        return p;
+      }),
+    );
   }
 
   private async run(signal: AbortSignal): Promise<void> {

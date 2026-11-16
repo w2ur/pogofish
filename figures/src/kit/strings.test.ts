@@ -1,4 +1,4 @@
-import { STRINGS, fidelityLabel, t, type StringKey } from './strings';
+import { STRINGS, precisionLines, t, type StringKey } from './strings';
 
 /** « tu » and its forms as whole words. Letter-aware: `\b` alone takes « ê » for a word break and fires on « arrête ». */
 const TU = /(?<!\p{L})(tu|te|ton|ta|tes|toi)(?!\p{L})/iu;
@@ -29,19 +29,29 @@ describe('strings', () => {
     for (const bad of ['tu joues', 'à toi de jouer', 'Te voilà', 'ta pile']) expect(bad).toMatch(TU);
   });
 
-  it('fidelity label text in both languages for the three kinds', () => {
-    expect(fidelityLabel('fr', 'live')).toBe('Calcul en direct');
-    expect(fidelityLabel('en', 'live')).toBe('Computed live');
-    expect(fidelityLabel('fr', 'illustrative')).toBe('Illustratif');
-    expect(fidelityLabel('en', 'illustrative')).toBe('Illustrative');
-    expect(fidelityLabel('fr', 'measured', 'data/table.json')).toBe(
-      'Données mesurées · source : data/table.json',
-    );
-    expect(fidelityLabel('en', 'measured', 'data/table.json')).toBe('Measured data · source: data/table.json');
-    expect(fidelityLabel('en', 'measured')).toBe('Measured data');
-    expect(fidelityLabel('fr', 'live', undefined, 'gameLc12')).toBe('Calcul en direct · règle des répétitions (lc1-2)');
-    expect(fidelityLabel('en', 'measured', 'data/v5.json', 'gameLc12')).toBe(
-      'Measured data · repetition rule (lc1-2) · source: data/v5.json',
-    );
+  it('the kit’s « Précisions » sentences: how the figure is made, its date when measured, its game', () => {
+    expect(precisionLines('fr', 'live')).toEqual(['Calculé dans votre navigateur par le moteur du jeu\u202f: rien n’est préenregistré.']);
+    expect(precisionLines('en', 'live')).toEqual(['Computed in your browser by the game’s engine: nothing is prerecorded.']);
+    expect(precisionLines('en', 'illustrative')).toEqual(['A drawing, not a computation.']);
+    expect(precisionLines('en', 'measured')).toEqual(['Measured before publication: these numbers do not change when you play.']);
+    expect(precisionLines('fr', 'measured', 'gameLc12', '11 novembre 2026')).toEqual([
+      'Mesuré avant la publication\u202f: ces chiffres ne changent pas quand vous jouez. Données arrêtées le 11 novembre 2026.',
+      'Ici, le joueur qui répète une troisième fois une position perd la partie.',
+    ]);
+    expect(precisionLines('en', 'live', 'gameA')).toEqual([
+      'Computed in your browser by the game’s engine: nothing is prerecorded.',
+      'Here the game has no stopping rule: a game may never end.',
+    ]);
+    // A date says when data was measured: a live figure has none to print.
+    expect(precisionLines('en', 'live', undefined, '11 November 2026')).toHaveLength(1);
+  });
+
+  it('no figure string names a file, a path or a code name', () => {
+    const code = /\.(json|bin|pfw|pfv|onnx)\b|[\w.-]\/[\w.]|\blc1-2\b|az-lc1|v4-td|\bseed\b/i;
+    for (const lang of ['fr', 'en'] as const) {
+      for (const value of Object.values(STRINGS[lang])) expect(value).not.toMatch(code);
+    }
+    // The control: the pattern sees what it is there to refuse.
+    for (const bad of ['source : data/v5.json', 'Réseau az-lc1-s1', 'règle des répétitions (lc1-2)', 'seed 1']) expect(bad).toMatch(code);
   });
 });

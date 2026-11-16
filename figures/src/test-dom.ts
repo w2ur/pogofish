@@ -99,3 +99,8 @@ export function shownText(el: Element): string {
   copy.querySelectorAll('.move-tip').forEach((x) => x.remove());
   return copy.textContent ?? '';
 }
+
+/** The sentences of a figure's « Précisions », in order. */
+export function precisionsOf(el: Element): string[] {
+  return [...el.shadowRoot!.querySelectorAll('.precisions .precisions-body p')].map((p) => p.textContent ?? '');
+}

@@ -106,8 +106,8 @@ slot[hidden],
   text-transform: uppercase;
 }
 
-.label,
-.fidelity {
+/* The label cut: control labels, column heads and tags of at most three words. A sentence is read: the read cut. */
+.label {
   font-family: var(--_font);
   font-stretch: 125%;
   font-weight: 800;
@@ -115,21 +115,56 @@ slot[hidden],
   text-transform: uppercase;
 }
 
-.fidelity {
+/*
+ * « Précisions », the disclosure that ends every figure (figure.ts): closed by
+ * default, its summary quiet (the read cut at the small size, muted), with the
+ * kit's own sign, a plus that turns to a minus. Inside, plain sentences.
+ */
+.precisions {
   margin: 8px 0 0;
+}
+
+.precisions > summary {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  min-height: 44px;
   font-size: 12.8px;
-  line-height: 1.3;
   color: var(--_muted);
+  cursor: pointer;
+  list-style: none;
 }
 
-/* A file name keeps its case, and breaks only after a slash: each segment keeps its line. */
-.fidelity .source {
-  text-transform: none;
+.precisions > summary::-webkit-details-marker {
+  display: none;
 }
 
-.fidelity .source .segment {
-  display: inline-block;
-  white-space: nowrap;
+.precisions > summary::before {
+  content: '+';
+  display: inline-grid;
+  place-items: center;
+  width: 16px;
+  height: 16px;
+  border: 1px solid var(--_edge);
+  font-size: 12.8px;
+  line-height: 1;
+}
+
+.precisions[open] > summary::before {
+  content: '−';
+}
+
+.precisions-body {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  max-width: 62ch;
+  padding-bottom: 8px;
+  color: var(--_ink-2);
+}
+
+.precisions-body p {
+  margin: 0;
 }
 
 .num {

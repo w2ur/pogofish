@@ -158,7 +158,7 @@ async function build(): Promise<void> {
   app.append(
     kitBox(
       html(`<div class="shout" style="font-size:72px">Pogo 232 792 560</div>
-        <p class="label" style="font-size:12.8px;margin:12px 0 0">${t(l, 'fidelityLive')} · ${t(l, 'gameLc12')}</p>
+        <p class="label" style="font-size:12.8px;margin:12px 0 0">${t(l, 'stagesPick')}</p>
         <p style="font-size:19px;max-width:62ch;margin:8px 0 0">${
           l === 'fr'
             ? 'Le Blanc joue le premier. Chaque pile peut sauter d’une, deux ou trois cases ; le haut de la pile la possède.'
