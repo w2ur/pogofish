@@ -8,7 +8,7 @@
 // main-thread search reads the page's parsed net, so the file is never
 // downloaded twice, whichever figure or board asked for it first.
 import { assetUrl, NET_FILE, WASM_FILE, workerUrl } from './assets';
-import { sharedAz, sharedAzBytes } from './nets-shared';
+import { dropAzBytes, sharedAz, sharedAzBytes } from './nets-shared';
 import type { Rules, State, Triple } from './engine';
 import type { SearchSnapshot } from './mcts';
 import type { SearchReply, SearchRequest, WorkerMessage } from './search-handler';
@@ -42,6 +42,8 @@ export interface ClientOptions {
   timeoutMs?: number;
   /** The net's bytes, sent to each new worker (default: the page's one fetch). */
   netBytes?: () => Promise<ArrayBuffer>;
+  /** Forgets a load of `netBytes` that outlived the timeout, so the next request loads again (default: the page's). */
+  dropNet?: () => void;
 }
 
 const abortError = (): DOMException => new DOMException('pogo-figures: search superseded or aborted', 'AbortError');
@@ -74,6 +76,7 @@ export class SearchClient {
   private readonly fallback: Fallback;
   private readonly timeoutMs: number;
   private readonly netBytes: () => Promise<ArrayBuffer>;
+  private readonly dropNet: () => void;
   /** The worker that has been sent the net's bytes. */
   private hasNet: WorkerLike | undefined;
 
@@ -82,6 +85,7 @@ export class SearchClient {
     this.fallback = o.fallback ?? mainThread;
     this.timeoutMs = o.timeoutMs ?? 30_000;
     this.netBytes = o.netBytes ?? sharedAzBytes;
+    this.dropNet = o.dropNet ?? (o.netBytes ? () => {} : dropAzBytes);
   }
 
   /** Where the next search will run, once known. */
@@ -150,6 +154,8 @@ export class SearchClient {
       };
       const timer = setTimeout(() => {
         done();
+        // A hung load is not waited on again: the reader's retry starts a fresh one.
+        this.dropNet();
         reject(new Error(`pogo-figures: the net did not load in ${this.timeoutMs} ms`));
       }, this.timeoutMs);
       signal.addEventListener('abort', onAbort, { once: true });
@@ -183,6 +189,8 @@ export class SearchClient {
       const timer = setTimeout(() => {
         signal.removeEventListener('abort', onAbort);
         controller.abort();
+        // The fallback may have hung on the net itself: a retry loads it afresh.
+        this.dropNet();
         reject(new Error(`pogo-figures: the search did not answer in ${this.timeoutMs} ms`));
       }, this.timeoutMs);
       signal.addEventListener('abort', onAbort, { once: true });
