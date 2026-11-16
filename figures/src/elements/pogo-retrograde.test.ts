@@ -1,7 +1,7 @@
 import { readFileSync } from 'node:fs';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import type { TableData } from '../data';
-import { intersect, resetMedia, shownText } from '../test-dom';
+import { precisionsOf, intersect, resetMedia, shownText } from '../test-dom';
 import { PogoRetrograde } from './pogo-retrograde';
 
 if (!customElements.get('pogo-retrograde')) customElements.define('pogo-retrograde', PogoRetrograde);
@@ -72,9 +72,14 @@ describe('<pogo-retrograde>', () => {
     expect([...lost2.querySelectorAll('.mark.target')].map((m) => m.getAttribute('data-cell'))).toEqual(['1', '5']);
   });
 
-  it('labels the table as its source, under game A', async () => {
+  it('cites the table on its host, and says in « Précisions » that the positions are examples, under game A', async () => {
     const el = await mount('en');
-    expect($(el, '.fidelity').textContent).toBe('Measured data · game with no stopping rule · source: v3-solve/table.bin');
+    expect(el.dataset.source).toBe('v3-solve/table.bin');
+    expect(precisionsOf(el)).toEqual([
+      'Measured before publication: these numbers do not change when you play.',
+      'Here the game has no stopping rule: a game may never end.',
+      'The positions shown are examples: at each step, the analysis marks every position concerned, not only these.',
+    ]);
   });
 
   it('a step file that breaks the analysis shows the fallback', async () => {

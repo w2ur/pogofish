@@ -6,7 +6,7 @@ import type { Triple } from '../engine';
 import { parseTd } from '../nets';
 import { lambdaReturns } from '../players';
 import { createStore, type Store } from '../store';
-import { REDUCED_MOTION, intersect, resetMedia, setMedia } from '../test-dom';
+import { precisionsOf, REDUCED_MOTION, intersect, resetMedia, setMedia } from '../test-dom';
 import { PogoTdTargets, stepWords } from './pogo-td-targets';
 import { signedNote } from './q-steps';
 import { TD_LAMBDA, tdGame, tdWalk } from './td-walk';
@@ -58,10 +58,14 @@ afterEach(() => {
 });
 
 describe('<pogo-td-targets>', () => {
-  it('is computed live under lc1-2 and names the net and its λ', async () => {
+  it('is computed live under lc1-2 and says in « Précisions » whose values these are, never the net’s code name', async () => {
     const el = await mount('en');
-    expect($(el, '.fidelity').textContent).toBe('Computed live · repetition rule (lc1-2)');
-    expect($(el, '.net-name').textContent).toBe('Net TD(λ) v4-td-lc1-s1 · λ = 0.7');
+    expect(precisionsOf(el)).toEqual([
+      'Computed in your browser by the game’s engine: nothing is prerecorded.',
+      'Here, the player who repeats a position a third time loses the game.',
+      'The TD(λ) program’s net trained for this essay has 24,705 adjustable numbers (weights and biases).',
+    ]);
+    expect(el.shadowRoot!.textContent).not.toContain('v4-td-lc1-s1');
   });
 
   it('pogo-td-targets uses lastFinished when there is one, DEFAULT_GAME otherwise, and says which', async () => {

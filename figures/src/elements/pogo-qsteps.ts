@@ -14,7 +14,7 @@ import { PogoFigure } from '../kit/figure';
 import { Stepper } from '../kit/stepper';
 import { colon, t, type Lang } from '../kit/strings';
 import qstepsCss from './pogo-qsteps.css?raw';
-import { ALPHA, noteText, qSteps, signedNote, type QFrame, type QWalk } from './q-steps';
+import { ALPHA, QSTEPS_GAMES, noteText, qSteps, signedNote, type QFrame, type QWalk } from './q-steps';
 import replayCss from './replay.css?raw';
 import { colourKey, resultWords } from './replay-view';
 
@@ -86,6 +86,12 @@ export class PogoQsteps extends PogoFigure {
 
   /** The engine; a test swaps it. */
   static deps: { engine: () => Promise<void> } = { engine: () => ready(assetUrl(WASM_FILE)) };
+
+  /** What the walk is: an endgame replayed for the illustration, not the program's training. */
+  protected override precisions(): string[] {
+    const lang = this.lang;
+    return [`${t(lang, 'qstepsReplay')} ${QSTEPS_GAMES} ${t(lang, 'qstepsReplayAfter')}`, t(lang, 'qstepsFrom')];
+  }
 
   protected async render(signal: AbortSignal): Promise<void> {
     await (this.constructor as typeof PogoQsteps).deps.engine();

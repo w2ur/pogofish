@@ -8,7 +8,6 @@
 // in the page: the TD net's value; AlphaZero's value and its preference for
 // each legal move. A value is the net's output on its −1…+1 scale, for the
 // player to move, and the figure says so: it is never a share of games won.
-import { NET_NAME, TD_NAME } from '../assets';
 import { key } from '../engine';
 import { labelledBoard } from '../kit/board-labels';
 import { drawBoard } from '../kit/board-svg';
@@ -21,7 +20,7 @@ import { formatCount } from './count-steps';
 import { azDiagram, tdDiagram, type Column, type NetDiagram } from './net-layers';
 import { netPosition, positionWords } from './net-position';
 import { azReadout } from './net-readout';
-import { el, netLine, policyView, positionLine, valueView } from './net-view';
+import { el, netSentence, policyView, positionLine, valueView } from './net-view';
 import netCss from './net.css?raw';
 
 export type NetKind = 'td' | 'az';
@@ -97,6 +96,19 @@ export class PogoNet extends PogoFigure {
   /** The game, the engine and the two nets; a test swaps them. */
   static deps: { store: Store; az: () => Promise<AzNet>; td: () => Promise<TdNet> } = { store, az: sharedAz, td: sharedTd };
 
+  /** The net's size once read, once loaded. */
+  private weights: number | undefined;
+
+  /** Which net this is and its size, what its value is not, and the preferences' scale. */
+  protected override precisions(): string[] {
+    const lang = this.lang;
+    const kind = this.getAttribute('kind') === 'az' ? 'az' : 'td';
+    const lines = this.weights === undefined ? [] : [netSentence(lang, kind, this.weights)];
+    lines.push(t(lang, 'netNotShare'));
+    if (kind === 'az') lines.push(t(lang, 'netPrefScale'));
+    return lines;
+  }
+
   protected async render(signal: AbortSignal): Promise<void> {
     const kind = parseKind(this.getAttribute('kind'));
     const deps = (this.constructor as typeof PogoNet).deps;
@@ -104,6 +116,8 @@ export class PogoNet extends PogoFigure {
     if (signal.aborted) return;
     const lang = this.lang;
     const diagram = kind === 'az' ? azDiagram(net.header) : tdDiagram(net.header);
+    this.weights = diagram.weights;
+    this.refreshPrecisions();
 
     const root = el('div', `net net-${kind}`);
     const where = positionLine(lang);
@@ -119,7 +133,7 @@ export class PogoNet extends PogoFigure {
       boardSlot.replaceChildren(labelledBoard(drawBoard(shown.state, { labelRoom: true, title: positionWords(lang, shown), marks })));
     };
     const policy = kind === 'az' ? policyView(lang, (m) => ({ show: () => drawPosition(m), hide: () => drawPosition() })) : null;
-    root.append(where.element, body, value.element, ...(policy ? [policy.element] : []), netLine(lang, kind === 'az' ? NET_NAME : TD_NAME, diagram.weights));
+    root.append(where.element, body, value.element, ...(policy ? [policy.element] : []));
 
     const update = (): void => {
       const p = netPosition(deps.store);

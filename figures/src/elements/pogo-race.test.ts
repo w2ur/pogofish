@@ -2,8 +2,8 @@ import { readFileSync } from 'node:fs';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import type { V5Data } from '../data';
 import { formatDate } from '../kit/date';
-import { formatScore } from '../kit/score';
-import { intersect, resetMedia } from '../test-dom';
+import { formatScore, formatShare } from '../kit/score';
+import { precisionsOf, intersect, resetMedia } from '../test-dom';
 import { PogoRace } from './pogo-race';
 import { RACE_PROGRAMS } from './race-chart';
 
@@ -38,10 +38,11 @@ afterEach(() => {
 describe('<pogo-race>', () => {
   it('is measured under lc1-2, citing the data’s own source, and prints the data’s date', async () => {
     const en = await mount('en');
-    expect($(en, '.fidelity').textContent).toBe(`Measured data · repetition rule (lc1-2) · source: ${v5.source}`);
-    expect($(en, '.as-of').textContent).toBe(`Data as of ${formatDate('en', v5.asOf)}`);
+    expect(en.dataset.source).toBe(v5.source);
+    expect(precisionsOf(en).slice(0, 2)).toEqual([`Measured before publication: these numbers do not change when you play. Data as of ${formatDate('en', v5.asOf)}.`, 'Here, the player who repeats a position a third time loses the game.']);
+    expect(en.shadowRoot!.querySelector('.as-of')).toBeNull();
     const fr = await mount('fr');
-    expect($(fr, '.as-of').textContent).toBe('Données arrêtées le 11 novembre 2026');
+    expect(precisionsOf(fr)[0]).toContain('Données arrêtées le 11 novembre 2026.');
   });
 
   it('names the file it asks for until the data loads, and for good when the load fails', async () => {
@@ -50,12 +51,12 @@ describe('<pogo-race>', () => {
     const error = vi.spyOn(console, 'error').mockImplementation(() => {});
     try {
       const el = await mount('en');
-      const label = 'Measured data · repetition rule (lc1-2) · source: data/v5.json';
-      expect($(el, '.fidelity').textContent).toBe(label);
+      expect(el.dataset.source).toBe('data/v5.json');
       fail(new Error('503'));
       await flush();
       expect(el.hasAttribute('data-failed')).toBe(true);
-      expect($(el, '.fidelity').textContent).toBe(label);
+      expect(el.dataset.source).toBe('data/v5.json');
+      expect(precisionsOf(el)[0]).toBe('Measured before publication: these numbers do not change when you play.');
       // The fallback, with its link to the video, is still there and shown.
       expect(el.querySelectorAll('p')).toHaveLength(2);
     } finally {
@@ -101,9 +102,13 @@ describe('<pogo-race>', () => {
       'AlphaZero, 100 simulations : au-dessus du glouton dès 500 parties.',
       'AlphaZero sans recherche : au-dessus du glouton dès 5 000 parties.',
       'TD(λ) : au-dessus du glouton dès 1 000 parties.',
-      `Q-learning : jamais au-dessus du glouton en 5 000 000 parties (${formatScore('fr', v5.programs.qtab.stages[7]!)} à la fin).`,
+      `Q-learning : jamais au-dessus du glouton en 5 000 000 parties (${formatShare('fr', v5.programs.qtab.stages[7]!.score)} à la fin).`,
     ]);
-    expect($(fr, '.rule').textContent).toContain(formatScore('fr', v5.references.greedy));
+    // The rule that decides it is in « Précisions », with greedy's own score.
+    expect(precisionsOf(fr).at(-1)).toBe(
+      `«\u00a0Au-dessus du glouton\u00a0»\u202f: la première étape mesurée dont tout l’intervalle à 95\u202f% dépasse le score du glouton contre lui-même, ${formatShare('fr', v5.references.greedy.score)}.`,
+    );
+    expect(fr.shadowRoot!.querySelector('.rule')).toBeNull();
   });
 
   it('nothing moves: no animation, no transition, no timer', async () => {

@@ -22,6 +22,10 @@ export class PogoReach extends PogoFigure {
   /** The data load; a test swaps it. */
   static deps: { reach: () => Promise<ReachData> } = { reach: fetchReach };
 
+  protected override precisions(): string[] {
+    return [t(this.lang, 'reachScale')];
+  }
+
   protected async render(signal: AbortSignal): Promise<void> {
     const data = await (this.constructor as typeof PogoReach).deps.reach();
     if (signal.aborted) return;
@@ -67,7 +71,6 @@ export class PogoReach extends PogoFigure {
     }
     table.append(thead, body);
 
-    const scale = el('p', 'scale', t(lang, 'reachScale'));
     const total = el('p', 'total');
     total.append(
       (() => {
@@ -85,7 +88,7 @@ export class PogoReach extends PogoFigure {
         return what;
       })(),
     );
-    root.append(table, scale, total);
+    root.append(table, total);
     this.stage.append(root);
   }
 }

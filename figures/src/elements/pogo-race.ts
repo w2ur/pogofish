@@ -13,10 +13,9 @@
 // board's coordinates), so type and markers keep their size from 280px to 640px
 // and no layout is read.
 import type { V5Data } from '../data';
-import { formatDate } from '../kit/date';
 import { keepCase } from '../kit/keep-case';
 import { PogoFigure } from '../kit/figure';
-import { formatScore } from '../kit/score';
+import { formatScore, formatShare } from '../kit/score';
 import { colon, t, type Lang, type StringKey } from '../kit/strings';
 import { V5_FILE, sharedV5 } from '../v5';
 import { countNodes, formatCount } from './count-steps';
@@ -89,27 +88,42 @@ export class PogoRace extends PogoFigure {
   static deps: { v5: () => Promise<V5Data> } = { v5: sharedV5 };
 
   private source: string | undefined;
+  private asOf: string | undefined;
+  /** Greedy's score against itself, once loaded: the line every program must pass. */
+  private greedy: number | undefined;
 
   /** The file the figure asks for until its data is loaded (and for good if that fails), then the data's own source. */
   protected override sourceFile(): string {
     return this.source ?? V5_FILE;
   }
 
+  protected override dataDate(): string | undefined {
+    return this.asOf;
+  }
+
+  /** What the strokes are, the 0 column, what the axis counts, and the rule that decides « above greedy ». */
+  protected override precisions(): string[] {
+    const lang = this.lang;
+    const lines = [t(lang, 'raceCi'), t(lang, 'raceZero'), t(lang, 'raceCompute')];
+    if (this.greedy !== undefined) lines.push(`${t(lang, 'raceRule')} ${formatShare(lang, this.greedy)}.`);
+    return lines;
+  }
+
   protected async render(signal: AbortSignal): Promise<void> {
     const data = await (this.constructor as typeof PogoRace).deps.v5();
     if (signal.aborted) return;
     const chart = raceChart(data);
-    const date = formatDate(this.lang, data.asOf);
     this.source = raceSource(data);
-    this.refreshLabel();
+    this.asOf = data.asOf;
+    this.greedy = data.references.greedy.score;
+    this.refreshPrecisions();
     const lang = this.lang;
 
     const root = el('div', 'race');
     const head = el('div', 'head');
     head.append(el('p', 'label title', t(lang, 'raceTitle')), el('p', 'unit', t(lang, 'raceUnit')));
-    root.append(head, this.plot(lang, chart), el('p', 'axis-note', t(lang, 'raceAxis')), el('p', 'axis-note', t(lang, 'raceCompute')));
-    root.append(this.passes(lang, chart, data), this.values(lang, chart, data));
-    root.append(el('p', 'label as-of num', `${t(lang, 'asOf')} ${date}`));
+    root.append(head, this.plot(lang, chart), el('p', 'axis-note', t(lang, 'raceAxis')));
+    root.append(this.passes(lang, chart), this.values(lang, chart, data));
     this.stage.append(root);
   }
 
@@ -187,7 +201,7 @@ export class PogoRace extends PogoFigure {
   }
 
   /** Where each program first passes greedy, in words, and the rule that decides it. */
-  private passes(lang: Lang, chart: RaceChart, data: V5Data): HTMLElement {
+  private passes(lang: Lang, chart: RaceChart): HTMLElement {
     const box = el('div', 'passes');
     box.append(el('p', 'label passes-title', t(lang, 'racePasses')));
     const list = el('ul', 'pass-list');
@@ -198,11 +212,11 @@ export class PogoRace extends PogoFigure {
       key.setAttribute('aria-hidden', 'true');
       const strong = el('strong', '', w.name);
       li.append(key, strong, w.rest, ...countNodes(lang, w.games), ` ${t(lang, 'stagesGames')}`);
-      if (!s.firstAbove) li.append(` (${formatScore(lang, s.points.at(-1)!)} ${t(lang, 'raceAtEnd')})`);
+      if (!s.firstAbove) li.append(` (${formatShare(lang, s.points.at(-1)!.score)} ${t(lang, 'raceAtEnd')})`);
       li.append('.');
       list.append(li);
     }
-    box.append(list, el('p', 'rule', `${t(lang, 'raceRule')} ${formatScore(lang, data.references.greedy)}.`));
+    box.append(list);
     return box;
   }
 

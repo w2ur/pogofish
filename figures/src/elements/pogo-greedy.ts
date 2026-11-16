@@ -3,8 +3,8 @@
 // Each move says the score that chose it, how many moves greedy weighed and,
 // when several tied, that the move was drawn among them. « Nouvelle partie »
 // draws the next seed and plays the new game; under reduced motion nothing
-// plays by itself and the reader steps. The seed is shown, so a game can be
-// found again (greedy.mjs game SEED draws the same one).
+// plays by itself and the reader steps. « Précisions » give the seed, so a game
+// can be found again (greedy.mjs game SEED draws the same one).
 import { announceMove } from '../board-state';
 import { WASM_FILE, assetUrl } from '../assets';
 import { ready } from '../engine';
@@ -69,6 +69,16 @@ export class PogoGreedy extends PogoFigure {
   /** The engine; a test swaps it. */
   static deps: { engine: () => Promise<void> } = { engine: () => ready(assetUrl(WASM_FILE)) };
 
+  /** The game shown, once drawn. */
+  private seed: number | undefined;
+
+  /** How greedy breaks a tie, and the number of the draw shown. */
+  protected override precisions(): string[] {
+    const lang = this.lang;
+    if (this.seed === undefined) return [t(lang, 'greedyDraw')];
+    return [`${t(lang, 'greedyDraw')} ${t(lang, 'greedySeedBefore')} ${this.seed}${colon(lang)} ${t(lang, 'greedySeedAfter')}`];
+  }
+
   protected async render(signal: AbortSignal): Promise<void> {
     const first = parseSeed(this.getAttribute('seed'));
     await (this.constructor as typeof PogoGreedy).deps.engine();
@@ -77,14 +87,12 @@ export class PogoGreedy extends PogoFigure {
 
     const root = document.createElement('div');
     root.className = 'greedy-figure';
-    const head = document.createElement('p');
-    head.className = 'label head num';
     const legend = document.createElement('p');
     legend.className = 'legend';
     legend.textContent = t(lang, 'greedyLegend');
     const body = document.createElement('div');
     body.className = 'game';
-    root.append(head, legend, body);
+    root.append(legend, body);
     const held = sizers(lang);
 
     // One game at a time: its stepper and timer go with it when the next is drawn, or with the figure.
@@ -112,7 +120,8 @@ export class PogoGreedy extends PogoFigure {
         counter: (i, n) => `${i} / ${n - 1}`,
         actions: [{ label: t(lang, 'newGame'), primary: true, onClick: () => load(nextSeed(seed), true) }],
       });
-      head.textContent = `${t(lang, 'greedySeed')}${colon(lang)} ${seed}`;
+      this.seed = seed;
+      this.refreshPrecisions();
       view.show(0);
       body.replaceChildren(view.status, view.slot, row, view.live);
       if (hadFocus) row.querySelector<HTMLButtonElement>('[data-role="action"]')?.focus();

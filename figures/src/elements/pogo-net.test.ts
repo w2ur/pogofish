@@ -6,7 +6,8 @@ import { key, type State } from '../engine';
 import { formatShare } from '../kit/score';
 import { parseAz, parseTd, type TdNet } from '../nets';
 import { createStore } from '../store';
-import { intersect, resetMedia, shownText } from '../test-dom';
+import { precisionsOf, intersect, resetMedia, shownText } from '../test-dom';
+import { formatCount } from './count-steps';
 import { PogoNet } from './pogo-net';
 import { signedNote } from './q-steps';
 
@@ -53,12 +54,22 @@ afterEach(() => {
 });
 
 describe('<pogo-net>', () => {
-  it('is computed live under lc1-2, and names the net it runs', async () => {
+  it('is computed live under lc1-2, and says in « Précisions » which net it runs and its size, never its code name', async () => {
     const td1 = await mount('td', 'en');
-    expect($(td1, '.fidelity').textContent).toBe('Computed live · repetition rule (lc1-2)');
-    expect($(td1, '.net-name').textContent).toBe('Net v4-td-lc1-s1 · 24,705 adjustable numbers (weights and biases).');
+    expect(precisionsOf(td1)).toEqual([
+      'Computed in your browser by the game’s engine: nothing is prerecorded.',
+      'Here, the player who repeats a position a third time loses the game.',
+      'The TD(λ) program’s net trained for this essay has 24,705 adjustable numbers (weights and biases).',
+      'A value on this scale, not a share of games won.',
+    ]);
+    expect(td1.shadowRoot!.textContent).not.toContain('v4-td-lc1-s1');
     const az1 = await mount('az', 'fr');
-    expect($(az1, '.net-name').textContent).toBe('Réseau az-lc1-s1 · 130 164 nombres réglables (poids et biais).');
+    expect(precisionsOf(az1).slice(2)).toEqual([
+      `Le réseau d’AlphaZero entraîné pour cet article compte ${formatCount('fr', 130164)} nombres réglables (poids et biais).`,
+      'Une note sur cette échelle, pas une part de parties gagnées.',
+      'Chaque barre va de 0 à 100\u202f%.',
+    ]);
+    expect(az1.shadowRoot!.textContent).not.toContain('az-lc1-s1');
   });
 
   it('layer sizes come from the header: TD 127 → 128 → 64 → 1, AZ 127 → 256 → 128 then 128 → 243 and 128 → 1', async () => {
@@ -120,7 +131,7 @@ describe('<pogo-net>', () => {
     expect($(el, '.value-number').textContent).toBe(signedNote('fr', DEFAULT.td));
     const words = $(el, '.value-view .note').textContent!;
     expect(words).toContain('De −1, la défaite, à +1, la victoire, pour le joueur au trait (Rouge).');
-    expect(words).toContain('pas une part de parties gagnées');
+    expect(precisionsOf(el)).toContain('Une note sur cette échelle, pas une part de parties gagnées.');
     expect($(el, '.value-view').textContent).not.toMatch(/%/);
     expect($(el, '.where-from').textContent).toBe('Position : l’erreur d’ouverture, après 3 coups.');
   });

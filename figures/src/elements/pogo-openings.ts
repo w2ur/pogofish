@@ -69,6 +69,10 @@ export class PogoOpenings extends PogoFigure {
   /** The move whose explanation is shown in the list: its stack and landing are marked on the board. */
   private preview: Triple | null = null;
 
+  protected override precisions(): string[] {
+    return [t(this.lang, 'openingsVerdicts')];
+  }
+
   protected async render(signal: AbortSignal): Promise<void> {
     const deps = (this.constructor as typeof PogoOpenings).deps;
     const [table] = await Promise.all([deps.table(), deps.engine()]);

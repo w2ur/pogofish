@@ -3,7 +3,7 @@ import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import type { TableData } from '../data';
 import { initial, key, play } from '../engine';
 import type { PlayFromDetail } from '../kit/figure';
-import { intersect, resetMedia, shownText } from '../test-dom';
+import { precisionsOf, intersect, resetMedia, shownText } from '../test-dom';
 import { PogoOpenings } from './pogo-openings';
 
 if (!customElements.get('pogo-openings')) customElements.define('pogo-openings', PogoOpenings);
@@ -135,9 +135,14 @@ describe('<pogo-openings>', () => {
     }
   });
 
-  it('names the table and game A in its label', async () => {
+  it('cites the table on its host, and says in « Précisions » what a verdict is, under game A', async () => {
     const el = await mount('en');
-    expect($(el, '.fidelity').textContent).toBe('Measured data · game with no stopping rule · source: v3-solve/table.bin');
+    expect(el.dataset.source).toBe('v3-solve/table.bin');
+    expect(precisionsOf(el)).toEqual([
+      'Measured before publication: these numbers do not change when you play.',
+      'Here the game has no stopping rule: a game may never end.',
+      'The verdicts come from the complete solution of the game and assume both players then play their best: “loses in 7” means the opponent can then force the win in 7 moves, counting both players’ moves.',
+    ]);
   });
 
   it('a table whose replies disagree with legal() shows the fallback', async () => {

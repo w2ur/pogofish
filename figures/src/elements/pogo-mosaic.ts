@@ -19,11 +19,10 @@
 // its eight stages stacked, each one SVG of four paths: no node per game.
 import type { V5Data } from '../data';
 import { choiceGroup, transport } from '../kit/controls';
-import { formatDate } from '../kit/date';
 import { keepCase } from '../kit/keep-case';
 import { PogoFigure } from '../kit/figure';
 import { Stepper } from '../kit/stepper';
-import { formatScore, formatShare } from '../kit/score';
+import { formatShare } from '../kit/score';
 import { colon, t, type Lang, type StringKey } from '../kit/strings';
 import { V5_FILE, sharedV5 } from '../v5';
 import { MOSAIC_COLUMNS, MOSAIC_PROGRAMS, mosaicSource, mosaicStages, type GameMark, type MosaicProgram, type MosaicSquare, type MosaicStage } from './mosaic-grid';
@@ -133,7 +132,7 @@ export function totalsWords(lang: Lang, s: MosaicStage): { wins: string; mistake
     wins: `${n(s.wins)} ${t(lang, 'mosaicWonOf')} ${n(s.games)}`,
     mistakes: `${t(lang, 'mosaicMistakes')}${colon(lang)} ${formatShare(lang, s.share)} ${t(lang, 'mosaicOfJudged')} (${n(s.mistakes)} ${t(lang, 'outOf')} ${n(s.judged)})`,
     games: `${n(s.mistakenGames)} ${t(lang, 'mosaicGamesMistaken')} · ${n(s.noneJudgedGames)} ${t(lang, 'mosaicGamesNoneJudged')}`,
-    bench: `${t(lang, 'mosaicBench')}${colon(lang)} ${formatScore(lang, s)}`,
+    bench: `${t(lang, 'mosaicBench')}${colon(lang)} ${formatShare(lang, s.score)}`,
   };
 }
 
@@ -148,6 +147,17 @@ export class PogoMosaic extends PogoFigure {
   static deps: { v5: () => Promise<V5Data> } = { v5: sharedV5 };
 
   private source: string | undefined;
+  private asOf: string | undefined;
+
+  protected override dataDate(): string | undefined {
+    return this.asOf;
+  }
+
+  /** What the hundred games are, what a mistake is. */
+  protected override precisions(): string[] {
+    const lang = this.lang;
+    return [t(lang, 'mosaicNewGames'), t(lang, 'mosaicSample'), t(lang, 'mosaicMistakeRule')];
+  }
 
   /** The file the figure asks for until its data is loaded (and for good if that fails), then the data's source and the mosaics' directory. */
   protected override sourceFile(): string {
@@ -159,24 +169,15 @@ export class PogoMosaic extends PogoFigure {
     if (signal.aborted) return;
     // Every program is read before anything is drawn: data that does not add up fails the figure.
     const all = Object.fromEntries(MOSAIC_PROGRAMS.map((p) => [p, mosaicStages(data, p)])) as Record<MosaicProgram, MosaicStage[]>;
-    const date = formatDate(this.lang, data.asOf);
     this.source = mosaicSource(data);
-    this.refreshLabel();
+    this.asOf = data.asOf;
+    this.refreshPrecisions();
     const lang = this.lang;
 
     const root = el('div', 'mosaics');
-    root.append(
-      el('p', 'label title', t(lang, 'mosaicTitle')),
-      el('p', 'note', t(lang, 'mosaicNewGames')),
-      this.legend(lang),
-      this.sweep(lang, data, all, signal),
-      // The table follows the program the second view shows, so it is built first.
-      ...(() => {
-        const values = this.valuesBox(lang, all);
-        return [this.allStages(lang, all), el('p', 'note', t(lang, 'mosaicSample')), el('p', 'note', t(lang, 'mosaicMistakeRule')), values];
-      })(),
-      el('p', 'label as-of num', `${t(lang, 'asOf')} ${date}`),
-    );
+    // The table follows the program the second view shows, so it is built first.
+    const values = this.valuesBox(lang, all);
+    root.append(el('p', 'label title', t(lang, 'mosaicTitle')), this.legend(lang), this.sweep(lang, data, all, signal), this.allStages(lang, all), values);
     this.stage.append(root);
   }
 

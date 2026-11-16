@@ -1,5 +1,5 @@
 import { afterEach, describe, expect, it } from 'vitest';
-import { intersect, resetMedia, shownText } from '../test-dom';
+import { precisionsOf, intersect, resetMedia, shownText } from '../test-dom';
 import { PogoMoves } from './pogo-moves';
 
 if (!customElements.get('pogo-moves')) customElements.define('pogo-moves', PogoMoves);
@@ -41,9 +41,12 @@ describe('<pogo-moves view="start">', () => {
 });
 
 describe('<pogo-moves view="moves">', () => {
-  it('names the game it plays in its label; the start position names none', async () => {
-    expect($(await mount('moves'), '.fidelity').textContent).toBe('Calcul en direct · jeu sans règle d’arrêt');
-    expect($(await mount('start'), '.fidelity').textContent).toBe('Calcul en direct');
+  it('names the game it plays in « Précisions »; the start position names none', async () => {
+    expect(precisionsOf(await mount('moves'))).toEqual([
+      'Calculé dans votre navigateur par le moteur du jeu\u202f: rien n’est préenregistré.',
+      'Ici le jeu n’a pas de règle d’arrêt\u202f: une partie peut ne jamais finir.',
+    ]);
+    expect(precisionsOf(await mount('start'))).toEqual(['Calculé dans votre navigateur par le moteur du jeu\u202f: rien n’est préenregistré.']);
   });
 
   it('lifting a1 shows its one-piece cells, then its two-piece cells', async () => {

@@ -73,7 +73,12 @@ export class PogoLine extends PogoFigure {
     return this.claim().source;
   }
 
-  /** The label names the game of the `rules` attribute; a bad one names none, and render fails. */
+  /** A line read from the solved table says where it comes from. */
+  protected override precisions(): string[] {
+    return this.claim().kind === 'measured' ? [t(this.lang, 'lineFromTable')] : [];
+  }
+
+  /** « Précisions » name the game of the `rules` attribute; a bad one names none, and render fails. */
   protected override game(): 'gameA' | 'gameLc12' | undefined {
     try {
       return parseRules(this.getAttribute('rules')) === null ? 'gameA' : 'gameLc12';

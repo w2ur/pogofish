@@ -1,11 +1,11 @@
 // <pogo-stages program="qtab|td|az100">: one learning program at the stages of
 // its training (public/data/v5.json, seed 1). The reader picks a stage; the
-// figure shows its measured score against the greedy player under lc1-2, with
-// its 95 % interval, as the data gives it, says which colour the program had
+// figure shows its measured score against the greedy player under lc1-2 (its
+// 95 % interval, as the data gives it, in « Précisions »), says which colour the program had
 // in the game shown and how that game ended, and replays it move by move
 // through the shared replay view. The game's first moves are the bench's
 // random opening (`openingPlies`, from the game file) and say so. Choosing a stage plays its game; under reduced
-// motion nothing plays by itself. The label names the file asked for, then the
+// motion nothing plays by itself. data-source names the file asked for, then the
 // data's own source and the directory of its games.
 import { announceMove } from '../board-state';
 import { WASM_FILE, assetUrl } from '../assets';
@@ -13,7 +13,7 @@ import type { V5Data, V5Stage } from '../data';
 import { moveName, ready, type Colour } from '../engine';
 import { choiceGroup, transport } from '../kit/controls';
 import { keepCase } from '../kit/keep-case';
-import { formatScore } from '../kit/score';
+import { formatInterval, formatShare } from '../kit/score';
 import { PogoFigure } from '../kit/figure';
 import { Stepper } from '../kit/stepper';
 import { colon, t, type Lang, type StringKey } from '../kit/strings';
@@ -35,7 +35,7 @@ export function stageWords(
   lang: Lang,
   program: StageProgram,
   stage: V5Stage,
-): { where: string; whereHead: string; whereTail: string; before: boolean; score: string; note: string; shown: string } {
+): { where: string; whereHead: string; whereTail: string; before: boolean; score: string; shown: string } {
   const c = colon(lang);
   const shown =
     `${t(lang, 'stagesShownIs')} ${t(lang, colourKey(stage.playerColour))}, ` +
@@ -51,8 +51,7 @@ export function stageWords(
     whereHead,
     whereTail,
     before,
-    score: `${t(lang, 'stagesScore')}${c} ${formatScore(lang, stage)}`,
-    note: t(lang, 'stagesScoreNote'),
+    score: `${t(lang, 'stagesScore')}${c} ${formatShare(lang, stage.score)}`,
     shown,
   };
 }
@@ -105,10 +104,26 @@ export class PogoStages extends PogoFigure {
   };
 
   private source: string | undefined;
+  private asOf: string | undefined;
+  /** The stage shown, once the data is loaded. */
+  private shownStage: V5Stage | undefined;
 
   /** The file the figure asks for until its data is loaded (and for good if that fails), then the data's own sources. */
   protected override sourceFile(): string {
     return this.source ?? V5_FILE;
+  }
+
+  protected override dataDate(): string | undefined {
+    return this.asOf;
+  }
+
+  /** What the score is measured on, and the shown stage's interval in words. */
+  protected override precisions(): string[] {
+    const lang = this.lang;
+    const lines = [t(lang, 'stagesBench')];
+    const s = this.shownStage;
+    if (s) lines.push(`${t(lang, 'stagesInterval')} ${formatInterval(lang, s.ci95)}.`);
+    return lines;
   }
 
   protected async render(signal: AbortSignal): Promise<void> {
@@ -125,7 +140,8 @@ export class PogoStages extends PogoFigure {
     // Every game is replayed before anything is drawn: one that ends otherwise than the data says fails the figure.
     const games = stages.map(stageFrames);
     this.source = stagesSource(data, stages);
-    this.refreshLabel();
+    this.asOf = data.asOf;
+    this.refreshPrecisions();
 
     const el = <K extends keyof HTMLElementTagNameMap>(tag: K, className: string, text = ''): HTMLElementTagNameMap[K] => {
       const node = document.createElement(tag);
@@ -143,7 +159,7 @@ export class PogoStages extends PogoFigure {
       const where = el('p', 'label where num');
       // The label cut all but closes a narrow space: the count's digit groups get room (countNodes).
       where.append(...keepCase(w.whereHead), ...(w.before ? whenNodes(lang, 0) : [...countNodes(lang, s.gamesTrained), w.whereTail]));
-      block.append(where, el('p', 'score num', w.score), el('p', 'note', w.note), el('p', 'shown', w.shown));
+      block.append(where, el('p', 'score num', w.score), el('p', 'shown', w.shown));
       readout.append(block);
       return block;
     });
@@ -167,6 +183,8 @@ export class PogoStages extends PogoFigure {
       const w = stageWords(lang, program, stage);
       announce.textContent = [w.where, w.score, w.shown].join('. ');
       picker.set(String(stage.pct));
+      this.shownStage = stage;
+      this.refreshPrecisions();
       const view = replayView({
         lang,
         steps: frames,

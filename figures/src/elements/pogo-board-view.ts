@@ -1,7 +1,6 @@
 // The DOM of <pogo-board>, built once per render: it holds no state and makes no
 // decision. pogo-board.ts owns the state and fills these nodes in update().
-import { NET_NAME } from '../assets';
-import { SCREEN_ORDER, formatStrength, longestResult } from '../board-state';
+import { SCREEN_ORDER, longestResult } from '../board-state';
 import { initial, type Colour } from '../engine';
 import { boardLabels } from '../kit/board-labels';
 import { drawBoard } from '../kit/board-svg';
@@ -148,7 +147,7 @@ export function buildView(lang: Lang, mode: 'inline' | 'follow', h: Handlers): U
   const level = choiceGroup<Level>({
     label: t(lang, 'level'),
     id: 'level-label',
-    choices: LEVELS.map((l) => ({ value: l, label: t(lang, l), ...(l === 'normal' ? { note: t(lang, 'measured') } : {}) })),
+    choices: LEVELS.map((l) => ({ value: l, label: t(lang, l) })),
     onChoose: h.level,
   });
   // Below the board: the full setup when no game is under way, one summary line
@@ -175,13 +174,8 @@ export function buildView(lang: Lang, mode: 'inline' | 'follow', h: Handlers): U
   live.setAttribute('aria-live', 'polite');
 
   body.append(status, play, count.element, caption, next);
-  // The follow board is the compact one: no move list, no footer.
-  if (mode === 'inline') {
-    body.append(
-      moves,
-      el('p', 'note', `${t(lang, 'net')} ${NET_NAME}. ${t(lang, 'netScore')} ${formatStrength(lang)} ${t(lang, 'netAgainst')}`),
-    );
-  }
+  // The follow board is the compact one: no move list. Who the opponent is, the inline board's « Précisions » say.
+  if (mode === 'inline') body.append(moves);
   root.append(body, live);
   root.addEventListener('keydown', h.key);
 

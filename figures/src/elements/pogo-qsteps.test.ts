@@ -1,5 +1,5 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
-import { REDUCED_MOTION, intersect, resetMedia, setMedia } from '../test-dom';
+import { precisionsOf, REDUCED_MOTION, intersect, resetMedia, setMedia } from '../test-dom';
 import { PogoQsteps, qWords } from './pogo-qsteps';
 import { qSteps } from './q-steps';
 
@@ -62,7 +62,12 @@ describe('qWords', () => {
 
 describe('<pogo-qsteps>', () => {
   it('is computed live, under the repetition rule', async () => {
-    expect($(await mount('en'), '.fidelity').textContent).toBe('Computed live · repetition rule (lc1-2)');
+    expect(precisionsOf(await mount('en'))).toEqual([
+      'Computed in your browser by the game’s engine: nothing is prerecorded.',
+      'Here, the player who repeats a position a third time loses the game.',
+      'For the illustration, the program replays the same endgame 6 times, with no random move; the real Q-learning plays millions of whole games.',
+      'This endgame comes from the game shown earlier, in which Red makes a mistake in the opening.',
+    ]);
   });
 
   it('starts on a blank notebook and changes one row per step', async () => {

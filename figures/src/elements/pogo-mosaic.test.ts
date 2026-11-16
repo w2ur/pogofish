@@ -1,8 +1,7 @@
 import { readFileSync } from 'node:fs';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import type { V5Data } from '../data';
-import { formatScore } from '../kit/score';
-import { intersect, resetMedia } from '../test-dom';
+import { precisionsOf, intersect, resetMedia } from '../test-dom';
 import { MOSAIC_PROGRAMS, mosaicStages } from './mosaic-grid';
 import { SWEEP_STEP_MS } from './mosaic-sweep';
 import { formatShare } from '../kit/score';
@@ -64,10 +63,9 @@ afterEach(() => {
 describe('<pogo-mosaic>', () => {
   it('is measured under lc1-2, citing the data’s source and the mosaics’ directory, with the data’s date', async () => {
     const el = await mount('en');
-    expect($(el, '.fidelity').textContent).toBe(
-      `Measured data · repetition rule (lc1-2) · source: ${v5.source} · docs/experiments/v5/mosaic/`,
-    );
-    expect($(el, '.as-of').textContent).toBe('Data as of 11 November 2026');
+    expect(el.dataset.source).toBe(`${v5.source} · docs/experiments/v5/mosaic/`);
+    expect(precisionsOf(el).slice(0, 2)).toEqual(['Measured before publication: these numbers do not change when you play. Data as of 11 November 2026.', 'Here, the player who repeats a position a third time loses the game.']);
+    expect(el.shadowRoot!.querySelector('.as-of')).toBeNull();
   });
 
   it('names the file it asks for until the data loads, and for good when the load fails', async () => {
@@ -76,12 +74,13 @@ describe('<pogo-mosaic>', () => {
     const error = vi.spyOn(console, 'error').mockImplementation(() => {});
     try {
       const el = await mount('en');
-      const label = 'Measured data · repetition rule (lc1-2) · source: data/v5.json';
-      expect($(el, '.fidelity').textContent).toBe(label);
+      expect(el.dataset.source).toBe('data/v5.json');
+      expect(precisionsOf(el)[0]).toBe('Measured before publication: these numbers do not change when you play.');
       fail(new Error('503'));
       await flush();
       expect(el.hasAttribute('data-failed')).toBe(true);
-      expect($(el, '.fidelity').textContent).toBe(label);
+      expect(el.dataset.source).toBe('data/v5.json');
+      expect(precisionsOf(el)[0]).toBe('Measured before publication: these numbers do not change when you play.');
     } finally {
       error.mockRestore();
     }
@@ -118,7 +117,7 @@ describe('<pogo-mosaic>', () => {
       '19 gagnées sur 100 · erreurs : 52,2 % des coups jugés (97 sur 186)',
     );
     expect(items[7]!.querySelector('.totals')!.textContent).toBe('90 gagnées sur 100 · erreurs : 1,5 % des coups jugés (7 sur 465)');
-    expect(items[7]!.querySelector('.bench')!.textContent).toBe(`score au banc d’essai : ${formatScore('fr', stages[7]!)}`);
+    expect(items[7]!.querySelector('.bench')!.textContent).toBe(`score sur toute la série\u202f: ${formatShare('fr', stages[7]!.score)}`);
     const az7 = v5.mosaics.az100[7]!.games;
     const mistaken = az7.filter((g) => g.mistakes > 0).length;
     const none = az7.filter((g) => g.judged === 0).length;
@@ -138,13 +137,16 @@ describe('<pogo-mosaic>', () => {
       'won',
       'lost',
       'at least one mistake by the program',
-      'no move judged (none played, or all played from a position already lost)',
+      'no move by the program judged',
     ]);
   });
 
-  it('says each stage is a hundred new games', async () => {
+  it('says in « Précisions » that each stage is a hundred new games, what they are, and what a mistake is', async () => {
     const el = await mount('fr');
-    expect($(el, '.mosaics > .note').textContent).toContain('cent nouvelles parties');
+    const notes = precisionsOf(el);
+    expect(notes[2]).toContain('cent nouvelles parties');
+    expect(notes[3]).toContain('100 premières parties');
+    expect(notes[4]).toMatch(/^Une erreur est un coup du programme/);
   });
 
   it('main view: three grids at stage 0, at rest, every square in its game’s state', async () => {

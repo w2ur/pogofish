@@ -17,7 +17,7 @@
 }
 
 /* An <h1> says its title and nothing else (see the header of kit/figure.ts). */
-.fidelity,
+.precisions,
 .failed {
   display: none;
 }

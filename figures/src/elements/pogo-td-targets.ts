@@ -6,10 +6,8 @@
 // lambdaReturns with the trainer's λ. Both are drawn from White's view on one
 // −1…+1 chart, where a target is λ × the next target + (1 − λ) × the next
 // value, the essay's sentence; each step writes that sum with its numbers.
-import { TD_NAME } from '../assets';
 import type { Colour } from '../engine';
 import { transport } from '../kit/controls';
-import { keepCase } from '../kit/keep-case';
 import { PogoFigure } from '../kit/figure';
 import { Stepper } from '../kit/stepper';
 import { colon, t, type Lang } from '../kit/strings';
@@ -17,7 +15,8 @@ import type { TdNet } from '../nets';
 import { sharedTd } from '../nets-shared';
 import { store, type GameRecord, type Store } from '../store';
 import { plies } from './net-position';
-import { colourName, el } from './net-view';
+import { tdDiagram } from './net-layers';
+import { colourName, el, netSentence } from './net-view';
 import netCss from './net.css?raw';
 import tdCss from './pogo-td-targets.css?raw';
 import { signedNote } from './q-steps';
@@ -127,10 +126,20 @@ export class PogoTdTargets extends PogoFigure {
   /** The game, the engine and the TD net; a test swaps them. */
   static deps: { store: Store; td: () => Promise<TdNet> } = { store, td: sharedTd };
 
+  /** The net's size once read, once loaded. */
+  private weights: number | undefined;
+
+  /** Whose values these are. */
+  protected override precisions(): string[] {
+    return this.weights === undefined ? [] : [netSentence(this.lang, 'td', this.weights)];
+  }
+
   protected async render(signal: AbortSignal): Promise<void> {
     const deps = (this.constructor as typeof PogoTdTargets).deps;
     const [net] = await Promise.all([deps.td(), deps.store.ready()]);
     if (signal.aborted) return;
+    this.weights = tdDiagram(net.header).weights;
+    this.refreshPrecisions();
     const lang = this.lang;
     const root = el('div', 'td-targets');
     this.stage.append(root);
@@ -161,8 +170,6 @@ export class PogoTdTargets extends PogoFigure {
     const hint = el('p', 'hint', t(lang, 'tdHint'));
     hint.toggleAttribute('data-off', g.source !== 'default');
     words.append(el('p', 'where-from', gameWords(lang, g)), hint);
-    const net = el('p', 'net-name');
-    net.append(...keepCase(`${t(lang, 'netName')} TD(λ) ${TD_NAME} · λ = ${String(TD_LAMBDA).replace('.', lang === 'fr' ? ',' : '.')}`));
 
     // Every step's words share one grid cell: the area keeps the room of the longest.
     const status = el('div', 'status');
@@ -211,7 +218,6 @@ export class PogoTdTargets extends PogoFigure {
 
     return [
       words,
-      el('p', 'note view', t(lang, 'tdView')),
       status,
       plot,
       legend,
@@ -219,7 +225,6 @@ export class PogoTdTargets extends PogoFigure {
       row,
       live,
       this.values(lang, g, w),
-      net,
     ];
   }
 

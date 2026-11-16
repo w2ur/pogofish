@@ -1,9 +1,10 @@
 import { readFileSync } from 'node:fs';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import type { V5Data } from '../data';
-import { REDUCED_MOTION, intersect, resetMedia, setMedia, shownText } from '../test-dom';
+import { precisionsOf, REDUCED_MOTION, intersect, resetMedia, setMedia, shownText } from '../test-dom';
 import { PogoStages } from './pogo-stages';
-import { formatScore } from '../kit/score';
+import { formatInterval, formatShare } from '../kit/score';
+import { formatDate } from '../kit/date';
 
 if (!customElements.get('pogo-stages')) customElements.define('pogo-stages', PogoStages);
 const v5 = JSON.parse(readFileSync('public/data/v5.json', 'utf8')) as V5Data;
@@ -39,9 +40,12 @@ afterEach(() => {
 describe('<pogo-stages>', () => {
   it('is measured under lc1-2, citing the data’s own source and the games’ directory', async () => {
     const el = await mount('td', 'en');
-    expect($(el, '.fidelity').textContent).toBe(
-      `Measured data · repetition rule (lc1-2) · source: ${v5.source} · docs/experiments/v5/games/`,
-    );
+    expect(el.dataset.source).toBe(`${v5.source} · docs/experiments/v5/games/`);
+    expect(precisionsOf(el).slice(0, 3)).toEqual([
+      `Measured before publication: these numbers do not change when you play. Data as of ${formatDate('en', v5.asOf)}.`,
+      'Here, the player who repeats a position a third time loses the game.',
+      'The score is measured over a long series of games against greedy, played from openings drawn at random; the game shown is one of them.',
+    ]);
   });
 
   it('names the file it asks for until the data loads, and for good when the load fails', async () => {
@@ -51,12 +55,12 @@ describe('<pogo-stages>', () => {
     const error = vi.spyOn(console, 'error').mockImplementation(() => {});
     try {
       const el = await mount('qtab', 'en');
-      const label = 'Measured data · repetition rule (lc1-2) · source: data/v5.json';
-      expect($(el, '.fidelity').textContent).toBe(label);
+      expect(el.dataset.source).toBe('data/v5.json');
       fail(new Error('503'));
       await flush();
       expect(el.hasAttribute('data-failed')).toBe(true);
-      expect($(el, '.fidelity').textContent).toBe(label);
+      expect(el.dataset.source).toBe('data/v5.json');
+      expect(precisionsOf(el)[0]).toBe('Measured before publication: these numbers do not change when you play.');
     } finally {
       PogoStages.deps = deps;
       error.mockRestore();
@@ -96,12 +100,14 @@ describe('<pogo-stages>', () => {
         for (const [k, stage] of v5.programs[program].stages.entries()) {
           choices(el)[k]!.click();
           const text = readout(el).querySelector('.score')!.textContent!;
-          expect(text).toContain(formatScore(lang, stage));
-          // The percentage on screen is the data's score, within the 0.05 point of its rounding, and so is the interval.
+          expect(text).toContain(formatShare(lang, stage.score));
+          // The percentage on screen is the data's score, within the 0.05 point of its rounding, and so is the interval in « Précisions ».
           const num = (x: string) => Number(x.replace(',', '.'));
-          const shown = num(text.match(/(\d+[.,]\d)\u202f?% \[/)![1]!);
+          const shown = num(text.match(/(\d+[.,]\d)\u202f?%$/)![1]!);
           expect(Math.abs(shown - stage.score * 100)).toBeLessThanOrEqual(0.05 + 1e-9);
-          const [lo, hi] = text.match(/\[(.+)\]/)![1]!.split(lang === 'fr' ? '\u202f; ' : '; ').map(num);
+          const interval = precisionsOf(el).at(-1)!;
+          expect(interval).toContain(formatInterval(lang, stage.ci95));
+          const [lo, hi] = interval.match(/(\d+[.,]\d) (?:à|to) (\d+[.,]\d)/)!.slice(1).map(num);
           expect(Math.abs(lo! - stage.ci95[0] * 100)).toBeLessThanOrEqual(0.05 + 1e-9);
           expect(Math.abs(hi! - stage.ci95[1] * 100)).toBeLessThanOrEqual(0.05 + 1e-9);
         }
@@ -114,8 +120,8 @@ describe('<pogo-stages>', () => {
     choices(el)[7]!.click();
     const r = readout(el).textContent!;
     expect(r).toContain('AlphaZero, 100 simulations · 100 % de l’entraînement : 10 000 parties');
-    expect(r).toContain('Score contre le joueur glouton\u202f: 89,1\u202f% [87,8\u202f; 90,3]');
-    expect(r).toContain('Part des parties gagnées');
+    expect(r).toContain('Score contre le joueur glouton\u202f: 89,1\u202f%');
+    expect(precisionsOf(el).at(-1)).toBe('À cette étape, l’intervalle à 95\u202f% de ce score va de 87,8 à 90,3\u202f%.');
     expect(r).toContain('Partie montrée : le programme est Blanc, le glouton Rouge ; le programme gagne.');
   });
 

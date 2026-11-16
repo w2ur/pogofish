@@ -6,7 +6,7 @@ import type { Colour, State } from '../engine';
 import { formatShare } from '../kit/score';
 import { moveTip, type TipHooks } from '../kit/move-tip';
 import { colon, t, type Lang } from '../kit/strings';
-import { countNodes } from './count-steps';
+import { countNodes, formatCount } from './count-steps';
 import { positionWords, type NetPosition } from './net-position';
 import type { PolicyRow } from './net-readout';
 import { signedNote } from './q-steps';
@@ -22,12 +22,9 @@ export function el<K extends keyof HTMLElementTagNameMap>(tag: K, className = ''
 
 export const colourName = (lang: Lang, c: Colour): string => t(lang, c === 'White' ? 'white' : 'red');
 
-/** « Réseau az-lc1-s1 · 130 164 nombres réglables (poids et biais). » */
-export function netLine(lang: Lang, name: string, weights: number): HTMLParagraphElement {
-  // The count's digit groups get room (countNodes): the narrow space all but vanishes at 12.8px.
-  const p = el('p', 'net-name');
-  p.append(`${t(lang, 'netName')} ${name} · `, ...countNodes(lang, weights), ` ${t(lang, 'netAdjustable')}.`);
-  return p;
+/** « Le réseau d’AlphaZero entraîné pour cet article compte 130 164 nombres réglables (poids et biais). », for « Précisions ». */
+export function netSentence(lang: Lang, kind: 'az' | 'td', weights: number): string {
+  return `${t(lang, kind === 'az' ? 'netAzIs' : 'netTdIs')} ${formatCount(lang, weights)} ${t(lang, 'netAdjustable')}.`;
 }
 
 /** Which position is shown, in words, and the hint to play one's own when it is the default. */
@@ -64,7 +61,7 @@ export function valueView(lang: Lang, title: string): { element: HTMLElement; up
     update(v, s) {
       number.textContent = signedNote(lang, v);
       marker.style.left = `${(((Math.max(-1, Math.min(1, v)) + 1) / 2) * 100).toFixed(3)}%`;
-      what.textContent = `${t(lang, 'netScaleFrom')} (${colourName(lang, s.to_move)}). ${t(lang, 'netNotShare')}`;
+      what.textContent = `${t(lang, 'netScaleFrom')} (${colourName(lang, s.to_move)}).`;
     },
   };
 }
@@ -153,7 +150,7 @@ export function policyView(lang: Lang, hooks?: (m: PolicyRow['move']) => TipHook
     { text: t(lang, 'netPreference'), cls: 'share' },
   ]);
   ranked.caption.textContent = t(lang, 'netPrefsTitle');
-  element.append(lede, ranked.element, el('p', 'note', t(lang, 'netPrefScale')));
+  element.append(lede, ranked.element);
   return {
     element,
     update(rows, actions) {

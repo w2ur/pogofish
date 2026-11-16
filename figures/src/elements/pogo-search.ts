@@ -8,7 +8,6 @@
 // search runs in a worker that returns only its last snapshot, so this one runs
 // on the main thread, on the page's one copy of the net. position="reader" is
 // the position <pogo-net> and <pogo-encoding> show, and follows the store.
-import { NET_NAME } from '../assets';
 import { LC1_2, key, legal, moveName, type Move, type State, type Triple } from '../engine';
 import { labelledBoard } from '../kit/board-labels';
 import { drawBoard } from '../kit/board-svg';
@@ -24,7 +23,8 @@ import { sharedAz } from '../nets-shared';
 import { store, type Store } from '../store';
 import { formatCount } from './count-steps';
 import { netPosition, positionWords } from './net-position';
-import { barCell, blankRow, colourName, el, rankedTable } from './net-view';
+import { azDiagram } from './net-layers';
+import { barCell, blankRow, colourName, el, netSentence, rankedTable } from './net-view';
 import netCss from './net.css?raw';
 import searchCss from './pogo-search.css?raw';
 import { signedNote } from './q-steps';
@@ -85,11 +85,28 @@ export class PogoSearch extends PogoFigure {
     search: (s: State, net: AzNet, o: Parameters<SearchRun>[0]) => Promise<SearchSnapshot>;
   } = { store, az: sharedAz, search: lazySearch };
 
+  /** The net's size once read, and the side to move in the position searched. */
+  private weights: number | undefined;
+  private toMove: State['to_move'] | undefined;
+
+  /** Where the position comes from, the net, how many simulations, and how to read the bars and the mean value. */
+  protected override precisions(): string[] {
+    const lang = this.lang;
+    const lines: string[] = [];
+    if (this.getAttribute('position') === 'puzzle5') lines.push(t(lang, 'searchFromPuzzle'));
+    if (this.weights !== undefined) lines.push(netSentence(lang, 'az', this.weights));
+    lines.push(`${t(lang, 'searchSimsBefore')} ${sims(lang, SEARCH_SIMS)}, ${t(lang, 'searchSimsAfter')}`);
+    lines.push(`${t(lang, 'searchBars')} ${formatCount(lang, SEARCH_SIMS)}.`);
+    lines.push(this.toMove ? `${t(lang, 'searchMeanWhat')} (${colourName(lang, this.toMove)}).` : `${t(lang, 'searchMeanWhat')}.`);
+    return lines;
+  }
+
   protected async render(signal: AbortSignal): Promise<void> {
     const which = parsePosition(this.getAttribute('position'));
     const deps = (this.constructor as typeof PogoSearch).deps;
     const [net] = await Promise.all([deps.az(), deps.store.ready()]);
     if (signal.aborted) return;
+    this.weights = azDiagram(net.header).weights;
     const lang = this.lang;
     const root = el('div', 'search');
     this.stage.append(root);
@@ -113,6 +130,8 @@ export class PogoSearch extends PogoFigure {
       const where = p ? positionWords(lang, p) : `${t(lang, 'position')}${colon(lang)} ${t(lang, 'searchPuzzle')}, ${colourName(lang, s.to_move)} ${t(lang, 'toMove')}.`;
       root.replaceChildren(...this.content(lang, s, where, net, before, current.signal));
       root.dataset.position = k;
+      this.toMove = s.to_move;
+      this.refreshPrecisions();
     };
     await draw();
     if (which === 'reader') {
@@ -196,7 +215,6 @@ export class PogoSearch extends PogoFigure {
     };
     show(before, false);
 
-    const scale = el('p', 'note', `${t(lang, 'searchBars')} ${formatCount(lang, SEARCH_SIMS)}. ${t(lang, 'searchMeanWhat')} (${colourName(lang, s.to_move)}).`);
 
     // The controls: « Lancer » and « Jouer d'ici » until the search has run, then its steps.
     const controls = el('div', 'search-controls');
@@ -238,6 +256,6 @@ export class PogoSearch extends PogoFigure {
       stepper.play();
     };
 
-    return [words, boardSlot, status, table, scale, controls, el('p', 'net-name', `${t(lang, 'netName')} ${NET_NAME} · ${sims(lang, SEARCH_SIMS)}.`)];
+    return [words, boardSlot, status, table, controls];
   }
 }

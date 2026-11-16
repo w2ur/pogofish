@@ -92,13 +92,13 @@ describe('<pogo-title>', () => {
     expect(observersOf(el)).toHaveLength(0);
   });
 
-  it('its sheet keeps the discs still under reduced motion and drops the fidelity line', () => {
+  it('its sheet keeps the discs still under reduced motion and drops « Précisions »', () => {
     const css = readFileSync(resolve(process.cwd(), 'src/elements/pogo-title.css'), 'utf8');
     const reduced = /@media \(prefers-reduced-motion: reduce\) \{([\s\S]*?)\n\}/.exec(css)![1]!;
     expect(reduced).toContain('animation: none');
     // A camp never breaks.
     expect(css).toMatch(/\.part\.camp \{\s*white-space: nowrap;/);
-    expect(css).toMatch(/\.fidelity,\s*\.failed \{\s*display: none;/);
+    expect(css).toMatch(/\.precisions,\s*\.failed \{\s*display: none;/);
     // Animation only under the attribute the visibility observer sets.
     expect(css).toMatch(/:host\(\[data-moving\]\) \.disc \{\s*animation: pogo/);
   });

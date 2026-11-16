@@ -40,6 +40,10 @@ export class PogoRetrograde extends PogoFigure {
     table: sharedTable,
   };
 
+  protected override precisions(): string[] {
+    return [t(this.lang, 'retroExamples')];
+  }
+
   protected async render(signal: AbortSignal): Promise<void> {
     const deps = (this.constructor as typeof PogoRetrograde).deps;
     const [table] = await Promise.all([deps.table(), deps.engine()]);

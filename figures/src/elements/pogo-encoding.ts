@@ -44,6 +44,12 @@ export class PogoEncoding extends PogoFigure {
   /** The game and the engine; a test swaps it. */
   static deps: { store: Store } = { store };
 
+  /** Why the height and the repetitions are divided. */
+  protected override precisions(): string[] {
+    const lang = this.lang;
+    return [`${t(lang, 'encDivideHeight')} ${HEIGHT_DIVISOR} ${t(lang, 'encDivideRep')} ${REPETITION_DIVISOR}, ${t(lang, 'encDivideWhy')}`];
+  }
+
   protected async render(signal: AbortSignal): Promise<void> {
     const deps = (this.constructor as typeof PogoEncoding).deps;
     await deps.store.ready();
