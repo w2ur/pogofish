@@ -44,6 +44,8 @@ export function retroSteps(table: TableData): RetroStepView[] {
     const before = steps[i - 1];
     const boards = step.positions.map((p): RetroBoard => {
       const letter = String.fromCharCode(65 + next++);
+      // The figure rings one lifted stack per board: moves from two stacks would be drawn wrong.
+      if (new Set((p.moves ?? []).map((m) => m.move[0])).size > 1) fail(`${o.label} ${letter}: its moves leave from more than one stack`);
       const moves = (p.moves ?? []).map(({ move, to }) => {
         const target = before?.boards[to] ?? fail(`${o.label} ${letter}: move ${moveName(move)} leads nowhere`);
         if (key(play(p.state, move)) !== key(target.state)) {

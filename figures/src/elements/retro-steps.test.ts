@@ -54,6 +54,10 @@ describe('retroSteps', () => {
     const wrongTarget = clone();
     wrongTarget.retro[1]!.positions[0]!.moves![0]!.to = 1;
     expect(() => retroSteps(wrongTarget)).toThrow();
+    // Moves from two stacks would be drawn with one ring: refused, not drawn wrong.
+    const twoStacks = clone();
+    twoStacks.retro[2]!.positions[0]!.moves![1]!.move = [1, 1, 4];
+    expect(() => retroSteps(twoStacks)).toThrow(/more than one stack/);
     const reordered = clone();
     reordered.retro.reverse();
     expect(() => retroSteps(reordered)).toThrow();
