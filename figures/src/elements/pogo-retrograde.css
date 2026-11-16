@@ -1,8 +1,8 @@
 /*
  * <pogo-retrograde>: three bands, one per step, each its name and rule over
- * its boards (beside them from 560px). A band still to come takes no room, so
- * the transport sits right under the last band shown: each step adds its band
- * above the transport, and nothing above the figure's foot moves.
+ * its boards (beside them from 560px), under the transport, which heads the
+ * figure: the picture grows downward, so the transport never moves. A band
+ * still to come keeps its room, so nothing on the page moves at any step.
  * The boards carry no coordinates: at their size the labels would reach the
  * pieces (board-labels.ts); each move is named under its board instead.
  */
@@ -21,7 +21,7 @@
 }
 
 .step[data-off] {
-  display: none;
+  visibility: hidden;
 }
 
 .step[data-current] {

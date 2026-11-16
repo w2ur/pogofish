@@ -33,8 +33,14 @@ afterEach(() => {
 });
 
 describe('<pogo-retrograde>', () => {
-  it('steps lost 0 → won 1 → lost 2, each band keeping its room before its turn', async () => {
+  it('steps lost 0 → won 1 → lost 2, each band keeping its room before its turn, the transport heading the figure', async () => {
     const el = await mount('fr');
+    // The transport is the figure's first block: the bands grow below it, so it never moves.
+    expect($(el, '.retro')!.firstElementChild!.classList.contains('controls')).toBe(true);
+    // A band to come keeps its room: hidden, never taken out of the flow.
+    const css = readFileSync('src/elements/pogo-retrograde.css', 'utf8');
+    expect(css).toMatch(/\.step\[data-off\] \{\s*visibility: hidden;\s*\}/);
+    expect(css).not.toMatch(/display: none/);
     expect($$(el, '.head').map((h) => h.textContent)).toEqual(['Perdue en 0', 'Gagnée en 1', 'Perdue en 2']);
     expect(shown(el)).toEqual([true, false, false]);
     expect($(el, '[role="status"]').textContent).toContain('Perdue en 0');
