@@ -6,7 +6,7 @@
 // figure and no search waits on it for good. The parser is imported on demand,
 // so it stays out of the eager bundle.
 import { NET_FILE, TD_FILE, assetUrl } from './assets';
-import type { AzNet, TdNet } from './nets';
+import type { Anatomy, AzNet, TdNet } from './nets';
 
 /** How long a net may take to arrive, body included, before its fetch is aborted; also SearchClient's default timeout. */
 export const NET_TIMEOUT_MS = 30_000;
@@ -75,13 +75,13 @@ export function dropAzBytes(): void {
 }
 
 /** The AlphaZero net the board plays, parsed once from `sharedAzBytes`. */
-export const sharedAz = once(async (): Promise<AzNet> => {
+export const sharedAz = once(async (): Promise<AzNet & Anatomy> => {
   const [bytes, { parseAz }] = await Promise.all([sharedAzBytes(), import('./nets')]);
   return parseAz(bytes);
 });
 
 /** The TD(λ) value net (`TD_FILE`). */
-export const sharedTd = once(async (): Promise<TdNet> => {
+export const sharedTd = once(async (): Promise<TdNet & Anatomy> => {
   const [bytes, { parseTd }] = await Promise.all([fetchBytes(assetUrl(TD_FILE)), import('./nets')]);
   return parseTd(bytes);
 });
