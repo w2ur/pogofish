@@ -120,18 +120,34 @@ export class SearchClient {
   /** The fallback, bounded by the same timeout as the worker: a hung fetch must not think forever. */
   private onMainThread(req: SearchRequest, signal: AbortSignal): Promise<SearchReply> {
     const controller = new AbortController();
-    const onAbort = (): void => controller.abort();
-    signal.addEventListener('abort', onAbort, { once: true });
     return new Promise<SearchReply>((resolve, reject) => {
+      // An abort settles at once, with the AbortError, whatever the fallback does.
+      const onAbort = (): void => {
+        clearTimeout(timer);
+        controller.abort();
+        reject(abortError());
+      };
       const timer = setTimeout(() => {
+        signal.removeEventListener('abort', onAbort);
         controller.abort();
         reject(new Error(`pogo-figures: the search did not answer in ${this.timeoutMs} ms`));
       }, this.timeoutMs);
-      this.fallback(req, controller.signal).then(
-        (reply) => (signal.aborted ? reject(abortError()) : resolve(reply)),
-        (error: unknown) => reject(signal.aborted ? abortError() : error),
-      ).finally(() => clearTimeout(timer));
-    }).finally(() => signal.removeEventListener('abort', onAbort));
+      signal.addEventListener('abort', onAbort, { once: true });
+      // Aborted while the worker was being given up on: 'abort' has already fired.
+      if (signal.aborted) {
+        onAbort();
+        return;
+      }
+      this.fallback(req, controller.signal)
+        .then(
+          (reply) => (signal.aborted ? reject(abortError()) : resolve(reply)),
+          (error: unknown) => reject(signal.aborted ? abortError() : error),
+        )
+        .finally(() => {
+          clearTimeout(timer);
+          signal.removeEventListener('abort', onAbort);
+        });
+    });
   }
 
   /** Stops the worker; the next request starts a new one. */

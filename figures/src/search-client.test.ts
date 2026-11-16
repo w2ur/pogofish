@@ -99,6 +99,33 @@ describe('the search client', () => {
     expect(seen!.aborted).toBe(true);
   });
 
+  it('an aborted main-thread search rejects with an AbortError at once, without waiting out the timeout', async () => {
+    vi.useFakeTimers();
+    try {
+      const client = new SearchClient({
+        createWorker: () => {
+          throw new Error('no worker');
+        },
+        // A fallback deaf to its signal: only the client can end the wait.
+        fallback: () => new Promise(() => {}),
+        timeoutMs: 30_000,
+      });
+      const controller = new AbortController();
+      const run = client.bestMove(initial(), 5, LC1_2, controller.signal);
+      const settled = vi.fn();
+      run.catch(settled);
+      await vi.advanceTimersByTimeAsync(0);
+      controller.abort();
+      await vi.advanceTimersByTimeAsync(0);
+      expect(settled).toHaveBeenCalledTimes(1);
+      expect(settled.mock.calls[0]![0]).toMatchObject({ name: 'AbortError' });
+      // Nothing is left waiting on the 30 s timer.
+      expect(vi.getTimerCount()).toBe(0);
+    } finally {
+      vi.useRealTimers();
+    }
+  });
+
   it('falls back when the worker never answers', async () => {
     const client = new SearchClient({ createWorker: () => new FakeWorker('silent'), fallback: mainThread, timeoutMs: 20 });
     expect((await client.bestMove(initial(), 5, LC1_2)).via).toBe('main');
