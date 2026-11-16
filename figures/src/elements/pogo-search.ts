@@ -377,7 +377,8 @@ export class PogoSearch extends PogoFigure {
           if (flies && target) {
             const a = note.getBoundingClientRect();
             const b = target.mean.getBoundingClientRect();
-            const dx = b.left + b.width / 2 - (a.left + a.width / 2);
+            // It lands right-aligned with the row's mean, so it never leaves the figure's box.
+            const dx = b.right - a.right;
             const dy = b.top + b.height / 2 - (a.top + a.height / 2);
             const flight = note.animate(
               [
