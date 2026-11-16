@@ -208,6 +208,11 @@ async function build(): Promise<void> {
   follow.style.maxWidth = '320px';
   app.append(follow);
 
+  app.append(heading('<pogo-moves view="start"> · 640px stage'));
+  app.append(figure('pogo-moves', { view: 'start' }, l === 'fr' ? 'Le plateau de trois cases sur trois au départ.' : 'The three-by-three board at the start.', '640px'));
+  app.append(heading('<pogo-moves view="moves"> · 640px stage'));
+  app.append(figure('pogo-moves', { view: 'moves' }, l === 'fr' ? 'Les coups possibles depuis une pile.' : 'The possible moves from a stack.', '640px'));
+
   app.append(heading('<pogo-count> · full band'));
   app.append(figure('pogo-count', {}, l === 'fr' ? 'Le décompte des positions du Pogo, étape par étape.' : 'The count of Pogo positions, step by step.'));
 

@@ -1,5 +1,6 @@
 import { PogoBoard } from './elements/pogo-board';
 import { PogoCount } from './elements/pogo-count';
+import { PogoMoves } from './elements/pogo-moves';
 import { PogoTitle } from './elements/pogo-title';
 
 export { manifest } from './manifest';
@@ -7,6 +8,7 @@ export { manifest } from './manifest';
 const ELEMENTS: [string, CustomElementConstructor][] = [
   ['pogo-board', PogoBoard],
   ['pogo-title', PogoTitle],
+  ['pogo-moves', PogoMoves],
   ['pogo-count', PogoCount],
 ];
 

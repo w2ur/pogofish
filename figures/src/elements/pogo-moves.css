@@ -1,0 +1,47 @@
+/*
+ * <pogo-moves>: a board at up to 400px, the count chooser, one line saying
+ * what the board shows, and « Recommencer ». The playable board's cells and
+ * count chooser come from the kit sheet.
+ */
+.moves {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+/* The start view's board: the drawing fills its frame, the coordinates stay 12.8px. */
+.moves > .board-frame {
+  width: min(100%, 400px);
+}
+
+.moves > .board-frame > .board {
+  width: 100%;
+  height: auto;
+}
+
+.line {
+  margin: 0;
+  min-height: calc(2 * 1.55em);
+  color: var(--_ink-2);
+}
+
+/* The key to the two sides, under the start position. */
+.legend {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px 24px;
+  margin: 0;
+  font-size: 12.8px;
+  color: var(--_ink);
+}
+
+.key {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.legend .key-disc {
+  display: inline-block;
+  max-width: none;
+}

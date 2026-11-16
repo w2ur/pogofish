@@ -65,6 +65,21 @@ const fr = {
   countTurn: 'joueurs au trait',
   countTotal: 'positions possibles',
   countSteps: 'Le calcul',
+  piece: 'pièce',
+  piecesUnit: 'pièces',
+  liftWhite: 'Touchez une pile au sommet blanc.',
+  liftRed: 'Touchez une pile au sommet rouge.',
+  startPosition: 'Position de départ',
+  startDescription:
+    'Position de départ : deux pièces blanches sur chacune des cases a1, b1 et c1, deux pièces rouges sur chacune des cases a3, b3 et c3.',
+  ply: 'demi-coup',
+  seenFor: 'Cette position pour la',
+  seenTime: 'fois',
+  loopAgain: 'De retour à la position de départ : la partie ne finit jamais.',
+  lineShortestWin: 'la victoire la plus courte',
+  lineLoop: 'la boucle',
+  lineCentreLoss: 'le coup au centre',
+  lineOpeningWin: 'l’erreur d’ouverture',
 };
 
 export type StringKey = keyof typeof fr;
@@ -130,6 +145,20 @@ const en: Record<StringKey, string> = {
   countTurn: 'players to move',
   countTotal: 'possible positions',
   countSteps: 'The count',
+  piece: 'piece',
+  piecesUnit: 'pieces',
+  liftWhite: 'Tap a stack with White on top.',
+  liftRed: 'Tap a stack with Red on top.',
+  startPosition: 'Starting position',
+  startDescription: 'Starting position: two White pieces on each of a1, b1 and c1, two Red pieces on each of a3, b3 and c3.',
+  ply: 'ply',
+  seenFor: 'This position for the',
+  seenTime: 'time',
+  loopAgain: 'Back to the starting position: the game never ends.',
+  lineShortestWin: 'the shortest win',
+  lineLoop: 'the loop',
+  lineCentreLoss: 'the move to the centre',
+  lineOpeningWin: 'the opening mistake',
 };
 
 export const STRINGS: Record<Lang, Record<StringKey, string>> = { fr, en };
