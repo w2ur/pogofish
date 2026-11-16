@@ -5,6 +5,7 @@ import { initial, key, play } from '../engine';
 import type { PlayFromDetail } from '../kit/figure';
 import { precisionsOf, intersect, resetMedia, shownText } from '../test-dom';
 import { PogoOpenings } from './pogo-openings';
+import { STRINGS } from '../kit/strings';
 
 if (!customElements.get('pogo-openings')) customElements.define('pogo-openings', PogoOpenings);
 const table = JSON.parse(readFileSync('public/data/table.json', 'utf8')) as TableData;
@@ -141,7 +142,7 @@ describe('<pogo-openings>', () => {
     expect(precisionsOf(el)).toEqual([
       'Measured before publication: these numbers do not change when you play.',
       'Here the game has no stopping rule: a game may never end.',
-      'The verdicts come from the complete solution of the game and assume both players then play their best: “loses in 7” means the opponent can then force the win in 7 moves, counting both players’ moves.',
+      'The verdicts come from the complete solution of the game. “Loses in 12”: twelve moves until the loss, both players’ moves counted, this one included, if each then plays their best.',
     ]);
   });
 
@@ -162,5 +163,28 @@ describe('<pogo-openings>', () => {
     el.parentElement!.removeChild(el);
     button.click();
     expect(line.textContent).toBe('Touchez une pile, ou choisissez un coup dans la liste.');
+  });
+
+  it('its example of a verdict is one the table holds, counted as the table counts: from the move itself', () => {
+    // Every verdict the table gives, by kind (TableData's `plies` counts the move that was chosen).
+    const plies = { 'loses-in': new Set<number>(), 'wins-in': new Set<number>() };
+    JSON.stringify(table).replace(/"kind":"(loses-in|wins-in)","plies":(\d+)/g, (_, k: 'loses-in' | 'wins-in', n: string) => {
+      plies[k].add(Number(n));
+      return '';
+    });
+    // The control: the scan finds verdicts of both kinds.
+    expect(plies['loses-in'].size).toBeGreaterThan(5);
+    expect(plies['wins-in'].size).toBeGreaterThan(3);
+    // Counted from the move itself, a loss takes an even number of moves (the loser moves first and last but one).
+    for (const n of plies['loses-in']) expect(n % 2).toBe(0);
+    for (const [lang, said, included] of [
+      ['fr', /«\u00a0Perd en (\d+)\u00a0»/, 'celui-ci compris'],
+      ['en', /“Loses in (\d+)”/, 'this one included'],
+    ] as const) {
+      const text = STRINGS[lang].openingsVerdicts;
+      const n = Number(said.exec(text)![1]);
+      expect(plies['loses-in'].has(n)).toBe(true);
+      expect(text).toContain(included);
+    }
   });
 });
