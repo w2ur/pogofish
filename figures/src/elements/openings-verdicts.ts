@@ -1,9 +1,10 @@
-// What <pogo-openings> reads, apart from the DOM: White's sixteen first moves
-// and, after one of them, every reply Red has, each with the solved table's
-// verdict for the side that plays it. Each list is checked against legal() in
-// its position, so the figure never offers a move the board would refuse or
-// hides one it would allow. Counts are taken from the list, never typed: not
-// every opening leaves Red sixteen replies.
+// What <pogo-openings> reads, apart from the DOM: after one first move of
+// White's, every reply Red has, each with the solved table's verdict for the
+// side that plays it, the replies that keep the draw set apart from those
+// that lose, the latter from the fastest loss to the slowest. Each list is
+// checked against legal() in its position, so the figure never shows a move
+// the board would refuse or hides one it would allow. Counts are taken from
+// the lists, never typed.
 import type { TableData, Verdict, VerdictMove } from '../data';
 import { initial, legal, moveName, play, type Colour, type State, type Triple } from '../engine';
 import { t, type Lang } from '../kit/strings';
@@ -33,42 +34,54 @@ export function replyChoices(table: TableData, opening: Triple): Choices {
   return checked(play(initial(), opening), replies, `the replies to ${name}`);
 }
 
-/** The list the reader chooses from: the openings, or the replies after `opening`. */
-export function choicesAfter(table: TableData, opening: Triple | null): Choices {
-  return opening ? replyChoices(table, opening) : openingChoices(table);
-}
-
-export const sameMove = (a: Triple, b: Triple): boolean => a[0] === b[0] && a[1] === b[1] && a[2] === b[2];
-
 /** « garde la nulle » / « perd en 12 » / « gagne en 21 », for the side that played the move. */
 export function verdictText(lang: Lang, v: Verdict): string {
   if (v.kind === 'keeps-draw') return t(lang, 'holdsDraw');
   return `${t(lang, v.kind === 'wins-in' ? 'wins' : 'loses')} ${t(lang, 'verdictIn')} ${v.plies}`;
 }
 
-/** How many moves of the list win, keep the draw and lose, for the side that plays them. */
-export function outcomes(moves: readonly VerdictMove[]): { wins: number; draws: number; losses: number } {
-  const count = (kind: Verdict['kind']): number => moves.filter((m) => m.verdict.kind === kind).length;
-  return { wins: count('wins-in'), draws: count('keeps-draw'), losses: count('loses-in') };
+/** The first move the figure shows the replies to: c1-1-b1, the one the letter's picture showed. */
+export const SHOWN_OPENING: Triple = [2, 1, 1];
+
+export interface ReplyCard {
+  move: Triple;
+  verdict: Verdict;
+  /** The position once the reply is played. */
+  after: State;
+}
+
+export interface ReplyGrid {
+  opening: Triple;
+  /** After the opening: the position Red replies in. */
+  position: State;
+  /** Every reply the table lists, as many as legal() gives. */
+  total: number;
+  /** The replies that keep the draw, in the table's order. */
+  keeps: ReplyCard[];
+  /** The replies that lose, from the fastest loss to the slowest; equal ones in the table's order. */
+  loses: ReplyCard[];
 }
 
 /**
- * « Premiers coups des Blancs · 6 gardent la nulle, 10 perdent » / « Réponses des Rouges à b1-2-b3 · 2 gagnent, 8 perdent »:
- * every outcome the list holds, wins, then draws, then losses, a zero one left out.
+ * Red's replies to `opening`, sorted for the figure. It refuses an opening that
+ * loses the draw itself and a reply that wins: the figure's two heads, « gardent
+ * la nulle » and « perdent », would then leave a board out.
  */
-export function headLine(lang: Lang, table: TableData, opening: Triple | null): string {
-  const what = opening ? `${t(lang, 'openingsRepliesTo')} ${moveName(opening)}` : t(lang, 'openingsFirst');
-  return `${what} · ${outcomeText(lang, choicesAfter(table, opening).moves)}`;
-}
-
-/** « 2 gagnent, 8 perdent » / "1 wins, 1 holds the draw, 14 lose". */
-export function outcomeText(lang: Lang, moves: readonly VerdictMove[]): string {
-  const o = outcomes(moves);
-  const parts = [
-    [o.wins, 'wins', 'winsPlural'],
-    [o.draws, 'holdsDraw', 'holdDrawPlural'],
-    [o.losses, 'loses', 'losesPlural'],
-  ] as const;
-  const said = parts.filter(([n]) => n > 0).map(([n, one, many]) => `${n} ${t(lang, n === 1 ? one : many)}`);
-  return said.join(', ');
+export function replyGrid(table: TableData, opening: Triple = SHOWN_OPENING): ReplyGrid {
+  const name = moveName(opening);
+  const first = openingChoices(table).moves.find((m) => moveName(m.move) === name);
+  if (!first) throw new Error(`pogo-openings: ${name} is not a first move`);
+  if (first.verdict.kind !== 'keeps-draw') throw new Error(`pogo-openings: ${name} does not keep the draw`);
+  const c = replyChoices(table, opening);
+  const cards = c.moves.map((m): ReplyCard => ({ move: m.move, verdict: m.verdict, after: play(c.position, m.move) }));
+  if (cards.some((x) => x.verdict.kind === 'wins-in')) throw new Error(`pogo-openings: a reply to ${name} wins`);
+  const plies = (x: ReplyCard): number => (x.verdict.kind === 'loses-in' ? x.verdict.plies : 0);
+  return {
+    opening,
+    position: c.position,
+    total: cards.length,
+    keeps: cards.filter((x) => x.verdict.kind === 'keeps-draw'),
+    // Array.prototype.sort is stable: equal losses keep the table's order.
+    loses: cards.filter((x) => x.verdict.kind === 'loses-in').sort((a, b) => plies(a) - plies(b)),
+  };
 }

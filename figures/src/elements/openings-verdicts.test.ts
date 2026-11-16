@@ -1,8 +1,8 @@
 import { readFileSync } from 'node:fs';
 import { describe, expect, it } from 'vitest';
-import type { TableData, VerdictMove } from '../data';
-import { initial, legal, moveName, parseMoveName, play } from '../engine';
-import { choicesAfter, headLine, openingChoices, outcomes, outcomeText, replyChoices, verdictText } from './openings-verdicts';
+import type { TableData } from '../data';
+import { initial, key, legal, moveName, parseMoveName, play } from '../engine';
+import { SHOWN_OPENING, openingChoices, replyChoices, replyGrid, verdictText } from './openings-verdicts';
 
 const table = JSON.parse(readFileSync('public/data/table.json', 'utf8')) as TableData;
 const names = (xs: { move: number[] }[]) => xs.map((x) => moveName(x.move as [number, number, number])).sort();
@@ -16,7 +16,6 @@ describe('openingChoices', () => {
     expect(draws).toEqual(table.openings.filter((o) => o.verdict.kind === 'keeps-draw').map((o) => moveName(o.move)));
     // The essay: « seuls les six qui consistent à jouer sur sa propre rangée ».
     for (const d of draws) expect(parseMoveName(d)[2]).toBeLessThan(3);
-    expect(outcomes(c.moves).draws).toBe(6);
     expect(c.mover).toBe('White');
   });
 
@@ -34,18 +33,6 @@ describe('replyChoices', () => {
     }
   });
 
-  it('not every opening has sixteen replies: 10 after b1-2-b3, 11 after a1-2-a3 and c1-2-c3', () => {
-    const count = (n: string) => replyChoices(table, parseMoveName(n)).moves.length;
-    expect(count('b1-2-b3')).toBe(10);
-    expect(count('a1-2-a3')).toBe(11);
-    expect(count('c1-2-c3')).toBe(11);
-    expect(count('c1-1-b1')).toBe(16);
-  });
-
-  it('after c1-1-b1, two replies of sixteen keep the draw', () => {
-    expect(outcomes(replyChoices(table, parseMoveName('c1-1-b1')).moves).draws).toBe(2);
-  });
-
   it('refuses an opening the table has no replies for, and a list that disagrees with legal()', () => {
     expect(() => replyChoices({ ...table, replies: {} }, parseMoveName('a1-1-b1'))).toThrow();
     const short = { ...table, openings: table.openings.slice(1) };
@@ -53,10 +40,52 @@ describe('replyChoices', () => {
   });
 });
 
-describe('choicesAfter', () => {
-  it('is the openings with nothing played, the replies after one opening', () => {
-    expect(choicesAfter(table, null).mover).toBe('White');
-    expect(choicesAfter(table, parseMoveName('a1-1-b1')).moves).toHaveLength(16);
+describe('replyGrid', () => {
+  it('shows the replies to c1-1-b1, a first move that keeps the draw', () => {
+    expect(moveName(SHOWN_OPENING)).toBe('c1-1-b1');
+    const g = replyGrid(table);
+    expect(key(g.position)).toBe(key(play(initial(), SHOWN_OPENING)));
+    expect(g.position.to_move).toBe('Red');
+  });
+
+  it('is what the letter’s picture showed: 2 replies of 16 keep the draw, 14 lose, in 8 to 22', () => {
+    const g = replyGrid(table);
+    // Recounted from the file itself, then compared.
+    const raw = table.replies['c1-1-b1']!;
+    expect(raw.filter((m) => m.verdict.kind === 'keeps-draw')).toHaveLength(2);
+    expect(raw.filter((m) => m.verdict.kind === 'loses-in')).toHaveLength(14);
+    expect(g.total).toBe(16);
+    expect(g.keeps.map((x) => moveName(x.move))).toEqual(['a3-1-b3', 'c3-1-b3']);
+    expect(g.loses).toHaveLength(14);
+    const plies = g.loses.map((x) => (x.verdict.kind === 'loses-in' ? x.verdict.plies : NaN));
+    expect(plies).toEqual([8, 10, 12, 12, 12, 12, 12, 14, 14, 16, 16, 18, 18, 22]);
+  });
+
+  it('orders the losses from the fastest to the slowest, equal ones as the table lists them', () => {
+    const g = replyGrid(table);
+    const order = table.replies['c1-1-b1']!.map((m) => moveName(m.move));
+    for (let i = 1; i < g.loses.length; i++) {
+      const [a, b] = [g.loses[i - 1]!, g.loses[i]!];
+      const pa = a.verdict.kind === 'loses-in' ? a.verdict.plies : NaN;
+      const pb = b.verdict.kind === 'loses-in' ? b.verdict.plies : NaN;
+      expect(pa).toBeLessThanOrEqual(pb);
+      if (pa === pb) expect(order.indexOf(moveName(a.move))).toBeLessThan(order.indexOf(moveName(b.move)));
+    }
+  });
+
+  it('every card holds the position its reply leads to, and every legal reply has its card', () => {
+    const g = replyGrid(table);
+    const cards = [...g.keeps, ...g.loses];
+    expect(names(cards)).toEqual(legal(g.position).map(moveName).sort());
+    for (const c of cards) expect(key(c.after)).toBe(key(play(g.position, c.move)));
+  });
+
+  it('refuses a first move that loses, one whose replies include a win, and a move that is not a first move', () => {
+    expect(() => replyGrid(table, parseMoveName('b1-2-b3'))).toThrow(/does not keep the draw/);
+    const wins = JSON.parse(JSON.stringify(table)) as TableData;
+    wins.replies['c1-1-b1']![0]!.verdict = { kind: 'wins-in', plies: 3 };
+    expect(() => replyGrid(wins)).toThrow(/wins/);
+    expect(() => replyGrid(table, parseMoveName('a3-1-b3'))).toThrow(/not a first move/);
   });
 });
 
@@ -67,32 +96,5 @@ describe('words', () => {
     expect(verdictText('fr', { kind: 'wins-in', plies: 21 })).toBe('gagne en 21');
     expect(verdictText('en', { kind: 'loses-in', plies: 22 })).toBe('loses in 22');
     expect(verdictText('en', { kind: 'keeps-draw' })).toBe('holds the draw');
-  });
-
-  it('heads each list with every outcome it holds, wins, draws, losses, a zero one left out', () => {
-    // The counts, recomputed from table.json itself before the words are checked.
-    const count = (list: VerdictMove[]) => ({
-      wins: list.filter((m) => m.verdict.kind === 'wins-in').length,
-      draws: list.filter((m) => m.verdict.kind === 'keeps-draw').length,
-      losses: list.filter((m) => m.verdict.kind === 'loses-in').length,
-    });
-    expect(count(table.openings)).toEqual({ wins: 0, draws: 6, losses: 10 });
-    expect(count(table.replies['b1-2-b3']!)).toEqual({ wins: 2, draws: 0, losses: 8 });
-    expect(count(table.replies['c1-1-b1']!)).toEqual({ wins: 0, draws: 2, losses: 14 });
-    expect(headLine('fr', table, null)).toBe('Premiers coups des Blancs · 6 gardent la nulle, 10 perdent');
-    expect(headLine('fr', table, parseMoveName('b1-2-b3'))).toBe('Réponses des Rouges à b1-2-b3 · 2 gagnent, 8 perdent');
-    expect(headLine('fr', table, parseMoveName('c1-1-b1'))).toBe('Réponses des Rouges à c1-1-b1 · 2 gardent la nulle, 14 perdent');
-    expect(headLine('en', table, parseMoveName('b1-2-b3'))).toBe('Red’s replies to b1-2-b3 · 2 win, 8 lose');
-    expect(headLine('en', table, parseMoveName('a1-2-b2'))).toBe('Red’s replies to a1-2-b2 · 3 win, 2 hold the draw, 11 lose');
-  });
-
-  it('says one in the singular, in both languages', () => {
-    const one: VerdictMove[] = [
-      { move: [0, 1, 1], verdict: { kind: 'wins-in', plies: 3 } },
-      { move: [0, 1, 3], verdict: { kind: 'keeps-draw' } },
-      { move: [0, 2, 2], verdict: { kind: 'loses-in', plies: 4 } },
-    ];
-    expect(outcomeText('fr', one)).toBe('1 gagne, 1 garde la nulle, 1 perd');
-    expect(outcomeText('en', one)).toBe('1 wins, 1 holds the draw, 1 loses');
   });
 });
