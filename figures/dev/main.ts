@@ -272,6 +272,18 @@ async function build(): Promise<void> {
     ),
   );
 
+  app.append(heading('<pogo-greedy> · 52ch column'));
+  app.append(
+    figure(
+      'pogo-greedy',
+      {},
+      l === 'fr'
+        ? 'Une partie entre deux programmes gloutons, chacun choisissant le coup qui maximise l’écart entre son nombre de piles et celui de son adversaire.'
+        : 'A game between two greedy programs, each choosing the move that maximises the gap between its number of stacks and its opponent’s.',
+      '52ch',
+    ),
+  );
+
   app.append(heading('PogoFigure + Stepper · one per fidelity'));
   for (const tag of ['kit-demo-live', 'kit-demo-measured', 'kit-demo-illustrative']) {
     const el = document.createElement(tag);

@@ -105,6 +105,15 @@ const fr = {
   openingsPick: 'Touchez une pile, ou choisissez un coup dans la liste.',
   openingsName: 'les premiers coups',
   leadsTo: 'mène à la',
+  greedySeed: 'Graine du tirage',
+  greedyLegend: 'Score d’un coup : les piles du joueur moins celles de l’adversaire, une fois le coup joué.',
+  moveScore: 'Score du coup',
+  bestOf: 'le meilleur des',
+  onlyMove: 'le seul coup possible',
+  movesUnit: 'coups',
+  drawnAmong: 'tiré au sort parmi',
+  tiedUnit: 'à égalité',
+  unfinished: 'Partie arrêtée, sans fin après',
 };
 
 export type StringKey = keyof typeof fr;
@@ -209,6 +218,15 @@ const en: Record<StringKey, string> = {
   openingsPick: 'Tap a stack, or choose a move from the list.',
   openingsName: 'the first moves',
   leadsTo: 'leads to',
+  greedySeed: 'Random seed',
+  greedyLegend: 'Score of a move: the mover’s stacks minus the opponent’s, once the move is played.',
+  moveScore: 'Score of the move',
+  bestOf: 'the best of',
+  onlyMove: 'the only legal move',
+  movesUnit: 'moves',
+  drawnAmong: 'drawn at random among',
+  tiedUnit: 'tied',
+  unfinished: 'Game stopped, no end after',
 };
 
 export const STRINGS: Record<Lang, Record<StringKey, string>> = { fr, en };

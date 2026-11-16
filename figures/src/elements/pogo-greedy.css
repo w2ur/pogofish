@@ -1,0 +1,24 @@
+/*
+ * <pogo-greedy>: the seed and what a score is, then the shared replay (the
+ * words over the board, replay.css), then the transport. The words hold the
+ * room of the longest any game may say, so a new game never moves the board.
+ */
+.greedy-figure,
+.game {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.greedy-figure p {
+  margin: 0;
+}
+
+.head {
+  font-size: 12.8px;
+  color: var(--_muted);
+}
+
+.legend {
+  color: var(--_ink-2);
+}
