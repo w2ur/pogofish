@@ -43,7 +43,7 @@ export function reachCounter(lang: Lang, step: ReachStep, end: number): string {
 export class PogoReach extends PogoFigure {
   /** The exploration stops at finished games and knows no repetition rule: game A's. */
   static override styles = reachCss;
-  static override stageMinHeight = '720px';
+  static override stageMinHeight = '700px';
 
   /** The data load; a test swaps it. */
   static deps: { reach: () => Promise<ReachData> } = { reach: fetchReach };

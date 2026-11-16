@@ -135,7 +135,7 @@ interface Plot {
 
 export class PogoRace extends PogoFigure {
   static override styles = raceCss;
-  static override stageMinHeight = '640px';
+  static override stageMinHeight = '860px';
 
   /** The data; a test swaps it. */
   static deps: { v5: () => Promise<V5Data> } = { v5: sharedV5 };
