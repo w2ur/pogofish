@@ -36,6 +36,9 @@ export interface MosaicStage extends Score {
   squares: MosaicSquare[];
   games: number;
   wins: number;
+  /** Games with at least one mistake by the program, and games with none of its moves judged. */
+  mistakenGames: number;
+  noneJudgedGames: number;
   mistakes: number;
   judged: number;
   /** mistakes / judged. */
@@ -75,6 +78,8 @@ export function mosaicStages(d: Pick<V5Data, 'stagesPct' | 'mosaics' | 'programs
       squares,
       games: GAMES,
       wins,
+      mistakenGames: squares.filter((q) => q.mark === 'mistake').length,
+      noneJudgedGames: squares.filter((q) => q.mark === 'none-judged').length,
       mistakes,
       judged,
       share: mistakes / judged,

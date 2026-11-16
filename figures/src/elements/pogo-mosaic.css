@@ -124,6 +124,7 @@
   font-weight: 700;
 }
 
+.games-count,
 .bench {
   font-size: 12.8px;
   color: var(--_ink-2);

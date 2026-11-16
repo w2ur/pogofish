@@ -32,6 +32,8 @@ describe('mosaicStages', () => {
         expect(s.games).toBe(100);
         expect([s.mistakes, s.judged]).toEqual([mistakes, judged]);
         expect(s.share).toBe(mistakes / judged);
+        expect(s.mistakenGames).toBe(games.filter((g) => g.mistakes > 0).length);
+        expect(s.noneJudgedGames).toBe(games.filter((g) => g.judged === 0).length);
       });
     }
     // The totals the tools printed (docs/experiments/v5-video.md, addendum 2 results): AlphaZero 19 won, 52 %

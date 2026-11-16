@@ -75,12 +75,16 @@ export function mosaicSvg(squares: readonly Pick<MosaicSquare, 'result' | 'mark'
   return svg;
 }
 
-/** The stage's totals in words: « 90 gagnées sur 100 », « erreurs : 1,5 % des coups jugés (7 sur 465) ». */
-export function totalsWords(lang: Lang, s: MosaicStage): { wins: string; mistakes: string; bench: string } {
+/**
+ * The stage's totals in words: « 90 gagnées sur 100 », « erreurs : 1,5 % des coups jugés (7 sur 465) »,
+ * « 7 parties avec au moins une erreur · 10 sans coup jugé ».
+ */
+export function totalsWords(lang: Lang, s: MosaicStage): { wins: string; mistakes: string; games: string; bench: string } {
   const n = (x: number): string => new Intl.NumberFormat(lang === 'fr' ? 'fr-FR' : 'en-GB').format(x);
   return {
     wins: `${n(s.wins)} ${t(lang, 'mosaicWonOf')} ${n(s.games)}`,
     mistakes: `${t(lang, 'mosaicMistakes')}${colon(lang)} ${formatShare(lang, s.share)} ${t(lang, 'mosaicOfJudged')} (${n(s.mistakes)} ${t(lang, 'outOf')} ${n(s.judged)})`,
+    games: `${n(s.mistakenGames)} ${t(lang, 'mosaicGamesMistaken')} · ${n(s.noneJudgedGames)} ${t(lang, 'mosaicGamesNoneJudged')}`,
     bench: `${t(lang, 'mosaicBench')}${colon(lang)} ${formatScore(lang, s)}`,
   };
 }
@@ -187,10 +191,10 @@ export class PogoMosaic extends PogoFigure {
     head.append(`${pctText(lang, s.pct)} · ${t(lang, 'mosaicAfter')} `, ...countNodes(lang, s.gamesTrained), ` ${t(lang, 'stagesGames')}`);
     const svg = mosaicSvg(s.squares);
     svg.setAttribute('role', 'img');
-    svg.setAttribute('aria-label', `${w.wins}. ${w.mistakes}.`);
+    svg.setAttribute('aria-label', `${w.wins}. ${w.mistakes}. ${w.games}.`);
     const totals = el('p', 'totals num');
     totals.append(el('strong', '', w.wins), ` · ${w.mistakes}`);
-    li.append(head, svg, totals, el('p', 'bench num', w.bench));
+    li.append(head, svg, totals, el('p', 'games-count num', w.games), el('p', 'bench num', w.bench));
     return li;
   }
 

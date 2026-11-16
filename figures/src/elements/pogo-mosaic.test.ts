@@ -95,6 +95,12 @@ describe('<pogo-mosaic>', () => {
     );
     expect(items[7]!.querySelector('.totals')!.textContent).toBe('90 gagnées sur 100 · erreurs : 1,5 % des coups jugés (7 sur 465)');
     expect(items[7]!.querySelector('.bench')!.textContent).toBe(`score au banc d’essai : ${formatScore('fr', stages[7]!)}`);
+    const az7 = v5.mosaics.az100[7]!.games;
+    const mistaken = az7.filter((g) => g.mistakes > 0).length;
+    const none = az7.filter((g) => g.judged === 0).length;
+    const games = `${mistaken} parties avec au moins une erreur · ${none} sans coup jugé`;
+    expect(items[7]!.querySelector('.games-count')!.textContent).toBe(games);
+    expect(items[7]!.querySelector('svg')!.getAttribute('aria-label')).toContain(games);
     expect(items[1]!.querySelector('.where')!.textContent).toBe('1 % · après 100 parties');
     const rows = $$(el, '.table tbody tr').map((r) => [...r.children].map((c) => c.textContent));
     expect(rows).toHaveLength(8);
