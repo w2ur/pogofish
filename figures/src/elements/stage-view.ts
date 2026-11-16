@@ -17,14 +17,6 @@ export function parseProgram(attr: string | null): StageProgram {
   return found;
 }
 
-/**
- * The shown game opens on the bench arena's first opening: four random moves
- * that do not end the game, then the program plays White against greedy
- * (docs/experiments/v5-video.md, « The game shown »). The data does not carry
- * the count, hence this constant.
- */
-export const OPENING_PLIES = 4;
-
 /** « 25 % » with a narrow no-break space in French, "25%" in English. */
 export function pctText(lang: Lang, pct: number): string {
   return lang === 'fr' ? `${pct} %` : `${pct}%`;
@@ -32,9 +24,15 @@ export function pctText(lang: Lang, pct: number): string {
 
 /**
  * The stage's game, one frame per move, under lc1-2. Throws unless the game ends
- * exactly at its last move, won by the program when the data says `win`.
+ * exactly at its last move, won by the program when the data says `win`, and its
+ * random opening (`openingPlies`, from the game file) is a whole number of moves
+ * that leaves the program at least one of its own.
  */
 export function stageFrames(stage: V5Stage): Frame[] {
+  const opening = stage.openingPlies;
+  if (!Number.isInteger(opening) || opening < 0 || opening >= stage.game.length) {
+    throw new Error(`pogo-stages: stage ${stage.pct} has an opening of ${opening} moves in a game of ${stage.game.length}`);
+  }
   const { frames } = lineFrames(stage.game, LC1_2);
   const end = frames.at(-1)!;
   const code = stage.playerColour === 'White' ? 'W' : 'R';

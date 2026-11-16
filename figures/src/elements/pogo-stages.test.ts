@@ -85,7 +85,9 @@ describe('<pogo-stages>', () => {
     expect(role(el, 'counter').textContent).toBe(`0 / ${stage.game.length}`);
     role(el, 'next').click();
     expect(said(el)).toContain('Ouverture tirée au sort');
-    for (let i = 0; i < 4; i++) role(el, 'next').click();
+    for (let i = 1; i < stage.openingPlies; i++) role(el, 'next').click();
+    expect(said(el)).toContain('Ouverture tirée au sort');
+    role(el, 'next').click();
     expect(said(el)).toMatch(/^Blanc \(le programme\) joue/);
     while (!role(el, 'next').disabled) role(el, 'next').click();
     expect(said(el)).toContain('Rouge gagne');

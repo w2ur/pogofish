@@ -44,6 +44,8 @@ export interface V5Stage extends Score {
   /** The seed-1 bench against greedy and the game it kept, as repo-relative paths. */
   source: { bench: string; game: string };
   game: Triple[];
+  /** The first moves of `game` are the bench arena's random opening, played for neither side. */
+  openingPlies: number;
   playerColour: Colour;
   result: 'win' | 'loss';
 }

@@ -45,6 +45,10 @@ function packStage(key, stage) {
   check(game.player_result === stage.game.result, `${name}: game file says ${game.player_result}, curves.json ${stage.game.result}`);
   check(game.moves.length === stage.game.plies, `${name}: game file has ${game.moves.length} plies, curves.json ${stage.game.plies}`);
   check(game.player_result === 'win' || game.player_result === 'loss', `${name}: result ${game.player_result}`);
+  check(
+    Number.isInteger(game.opening_plies) && game.opening_plies >= 0 && game.opening_plies < game.moves.length,
+    `${name}: opening_plies ${game.opening_plies}`,
+  );
   return {
     pct: stage.pct,
     gamesTrained: stage.games_trained,
@@ -52,6 +56,7 @@ function packStage(key, stage) {
     ci95: stage.ci95,
     source: { bench: `${V5}${stage.file}`, game: `${V5}${stage.game.file}` },
     game: game.moves,
+    openingPlies: game.opening_plies,
     playerColour: game.player_colour,
     result: game.player_result,
   };

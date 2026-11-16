@@ -4,7 +4,7 @@
 // its 95 % interval, as the data gives it, says which colour the program had
 // in the game shown and how that game ended, and replays it move by move
 // through the shared replay view. The game's first moves are the bench's
-// random opening and say so. Choosing a stage plays its game; under reduced
+// random opening (`openingPlies`, from the game file) and say so. Choosing a stage plays its game; under reduced
 // motion nothing plays by itself. The label names the data's own source.
 import { announceMove } from '../board-state';
 import { WASM_FILE, assetUrl } from '../assets';
@@ -21,7 +21,7 @@ import { seenText, type Frame } from './line-frames';
 import stagesCss from './pogo-stages.css?raw';
 import replayCss from './replay.css?raw';
 import { colourKey, replayView, resultWords, type Line, type Spoken } from './replay-view';
-import { OPENING_PLIES, parseProgram, pctText, stageFrames, type StageProgram } from './stage-view';
+import { parseProgram, pctText, stageFrames, type StageProgram } from './stage-view';
 
 const PROGRAM_KEY: Record<StageProgram, StringKey> = { qtab: 'progQtab', td: 'progTd', az100: 'progAz100' };
 
@@ -52,11 +52,11 @@ export function stageWords(
 }
 
 /** One move of the stage's game: who plays, the program or greedy, and whether it is the random opening. */
-function say(lang: Lang, f: Frame, programColour: Colour): Spoken {
+function say(lang: Lang, f: Frame, programColour: Colour, openingPlies: number): Spoken {
   let move = t(lang, 'startPosition');
   let note = '';
   if (f.move && f.mover) {
-    const opening = f.ply <= OPENING_PLIES;
+    const opening = f.ply <= openingPlies;
     const who = f.mover === programColour ? t(lang, 'stagesProgram') : t(lang, 'stagesGreedy');
     move = opening ? announceMove(lang, f.mover, f.move) : `${t(lang, colourKey(f.mover))} (${who}) ${t(lang, 'plays')} ${moveName(f.move)}`;
     if (opening) note = t(lang, 'stagesOpening');
@@ -163,7 +163,7 @@ export class PogoStages extends PogoFigure {
       picker.set(String(stage.pct));
       const view = replayView({
         steps: frames,
-        spoken: frames.map((f) => say(lang, f, stage.playerColour)),
+        spoken: frames.map((f) => say(lang, f, stage.playerColour, stage.openingPlies)),
         sizers: held,
         reducedMotion: () => this.reducedMotion(),
       });

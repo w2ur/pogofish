@@ -37,4 +37,11 @@ describe('stageFrames', () => {
     expect(() => stageFrames({ ...stage, result: stage.result === 'win' ? 'loss' : 'win' })).toThrow();
     expect(() => stageFrames({ ...stage, game: stage.game.slice(0, -1) })).toThrow();
   });
+
+  it('uses the opening the data gives, and refuses one that is not a part of the game', () => {
+    const stage = v5.programs.qtab.stages[0]!;
+    expect(stage.openingPlies).toBe(4);
+    for (const bad of [-1, 1.5, stage.game.length, Number.NaN]) expect(() => stageFrames({ ...stage, openingPlies: bad })).toThrow();
+    expect(stageFrames({ ...stage, openingPlies: 0 })).toHaveLength(stage.game.length + 1);
+  });
 });

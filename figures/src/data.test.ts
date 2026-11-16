@@ -232,6 +232,8 @@ describe('the round-5 data', () => {
         );
         expect(stage.source.bench).toContain(`${key}-s1-`);
         expect(stage.source.game).toContain(`${key}-s1-`);
+        const file = json<{ opening_plies: number }>(`../${stage.source.game}`);
+        expect(stage.openingPlies, `${key} ${stage.pct}`).toBe(file.opening_plies);
       }
     }
   });
