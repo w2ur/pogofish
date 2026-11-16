@@ -92,9 +92,8 @@ export class PogoNet extends PogoFigure {
   static override fidelity = 'live' as const;
   static override game = 'gameLc12' as const;
   static override styles = netCss;
-  /** The TD figure at 640px, measured (it is taller at 390px, and the AlphaZero one is taller still: their policy list comes last). */
+  /** A floor only: net.css keeps each kind's measured room, by width (`:host([kind])`). */
   static override stageMinHeight = '600px';
-
   /** The game, the engine and the two nets; a test swaps them. */
   static deps: { store: Store; az: () => Promise<AzNet>; td: () => Promise<TdNet> } = { store, az: sharedAz, td: sharedTd };
 

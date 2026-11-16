@@ -9,6 +9,7 @@ import { countNodes } from './count-steps';
 import { positionWords, type NetPosition } from './net-position';
 import type { PolicyRow } from './net-readout';
 import { signedNote } from './q-steps';
+import { VISIBLE_MOVES, splitRows } from './ranked-rows';
 import { pctText } from './stage-view';
 
 export function el<K extends keyof HTMLElementTagNameMap>(tag: K, className = '', text = ''): HTMLElementTagNameMap[K] {
@@ -67,42 +68,111 @@ export function valueView(lang: Lang, title: string): { element: HTMLElement; up
   };
 }
 
-/** The net's preference for each legal move, on one 0–100 % scale, the strongest first. */
+export interface RankedTable {
+  element: HTMLElement;
+  caption: HTMLElement;
+  /**
+   * Shows the rows of `order` (ten at most, `keep` always among them), pads with blank
+   * rows to ten, and puts the rest behind « Les N autres coups », with their share of
+   * the net's preference.
+   */
+  update(order: readonly number[], keep: number | null, row: (i: number) => HTMLTableRowElement, blank: () => HTMLTableRowElement, prior: (i: number) => number): void;
+}
+
+/**
+ * A table of moves that keeps one height whatever the position: room for ten rows,
+ * the others in a closed disclosure whose line is always there (unseen when empty).
+ * The page below does not move as the reader plays.
+ */
+export function rankedTable(lang: Lang, className: string, headers: readonly { text: string; cls: string }[]): RankedTable {
+  const element = el('div', `ranked ${className}`);
+  const head = (): HTMLTableSectionElement => {
+    const thead = el('thead');
+    const tr = el('tr');
+    for (const h of headers) {
+      const th = el('th', `label ${h.cls}`, h.text);
+      th.scope = 'col';
+      tr.append(th);
+    }
+    thead.append(tr);
+    return thead;
+  };
+  const table = el('table', `bars ${className}-table`);
+  const caption = el('caption', 'label');
+  const body = el('tbody');
+  table.append(caption, head(), body);
+  const others = el('details', 'others');
+  const summary = el('summary', 'others-summary num');
+  const hiddenTable = el('table', `bars ${className}-table`);
+  const hiddenBody = el('tbody');
+  hiddenTable.append(head(), hiddenBody);
+  others.append(summary, hiddenTable);
+  element.append(table, others);
+  return {
+    element,
+    caption,
+    update(order, keep, row, blank, prior) {
+      const { shown, hidden } = splitRows(order, keep);
+      body.replaceChildren(...shown.map(row));
+      for (let k = shown.length; k < VISIBLE_MOVES; k++) {
+        const b = blank();
+        b.classList.add('blank');
+        b.setAttribute('aria-hidden', 'true');
+        body.append(b);
+      }
+      hiddenBody.replaceChildren(...hidden.map(row));
+      const share = hidden.reduce((a, i) => a + prior(i), 0);
+      const n = hidden.length;
+      const who = n === 1 ? t(lang, 'movesOtherOne') : `${t(lang, 'movesOthersBefore')} ${n} ${t(lang, 'movesOthersAfter')}`;
+      summary.textContent = `${who}, ${formatShare(lang, share)} ${t(lang, 'movesOthersShare')}`;
+      // No other move: the line keeps its room, unseen and out of the reading order.
+      others.toggleAttribute('data-none', n === 0);
+      if (n === 0) others.open = false;
+      others.setAttribute('aria-hidden', String(n === 0));
+    },
+  };
+}
+
+/** A row for a move that is not there: the same cells, so a blank row has a real row's height. */
+export function blankRow(cells: number): HTMLTableRowElement {
+  const tr = el('tr');
+  const th = el('th', 'move num', 'a1-1-a1');
+  tr.append(th);
+  for (let k = 1; k < cells; k++) tr.append(barCell('0', 0));
+  return tr;
+}
+
+/** The net's preference for each legal move, on one 0–100 % scale, the strongest first; ten shown at most. */
 export function policyView(lang: Lang): { element: HTMLElement; update(rows: PolicyRow[], actions: number): void } {
   const element = el('div', 'policy');
   const lede = el('p', 'note');
-  const table = el('table', 'bars');
-  table.append(el('caption', 'label', t(lang, 'netPrefsTitle')));
-  const head = el('tr');
-  for (const [key, cls] of [
-    ['netMove', 'move'],
-    ['netPreference', 'share'],
-  ] as const) {
-    const th = el('th', `label ${cls}`, t(lang, key));
-    th.scope = 'col';
-    head.append(th);
-  }
-  const thead = el('thead');
-  thead.append(head);
-  const body = el('tbody');
-  table.append(thead, body);
-  element.append(lede, table, el('p', 'note', t(lang, 'netPrefScale')));
+  const ranked = rankedTable(lang, 'policy', [
+    { text: t(lang, 'netMove'), cls: 'move' },
+    { text: t(lang, 'netPreference'), cls: 'share' },
+  ]);
+  ranked.caption.textContent = t(lang, 'netPrefsTitle');
+  element.append(lede, ranked.element, el('p', 'note', t(lang, 'netPrefScale')));
   return {
     element,
     update(rows, actions) {
       const illegal = actions - rows.length;
       lede.textContent =
         `${t(lang, 'netLegalBefore')} ${rows.length} ${t(lang, 'netLegalShare')} ${pctText(lang, 100)}` +
-        (illegal > 0 ? `${lang === 'fr' ? ' ;' : ';'} ${t(lang, 'netIllegalBefore')} ${illegal} ${t(lang, 'netIllegalZero')}.` : '.');
-      body.replaceChildren(
-        ...rows.map((r) => {
+        (illegal > 0 ? `${lang === 'fr' ? '\u202f;' : ';'} ${t(lang, 'netIllegalBefore')} ${illegal} ${t(lang, 'netIllegalZero')}.` : '.');
+      ranked.update(
+        rows.map((_, i) => i),
+        null,
+        (i) => {
+          const r = rows[i]!;
           const tr = el('tr');
           tr.dataset.move = r.name;
           const th = el('th', 'move num', r.name);
           th.scope = 'row';
           tr.append(th, barCell(formatShare(lang, r.prior), r.prior));
           return tr;
-        }),
+        },
+        () => blankRow(2),
+        (i) => rows[i]!.prior,
       );
     },
   };

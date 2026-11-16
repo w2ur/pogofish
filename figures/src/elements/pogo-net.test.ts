@@ -138,3 +138,40 @@ describe('<pogo-net>', () => {
     expect(off()).toBe(false);
   });
 });
+
+describe('<pogo-net kind="az">, ten moves at most', () => {
+  /** A position with three legal moves, Red to move. */
+  const FEW: State = {
+    cells: [[], ['Red'], [], ['White', 'White', 'Red', 'White', 'Red', 'Red', 'White', 'White', 'Red', 'Red', 'White'], [], [], [], [], []],
+    to_move: 'Red',
+    move_count: 0,
+    history: [],
+  };
+  const shown = (el: Element) => $$(el, '.ranked > table > tbody > tr');
+
+  it('16 legal moves: ten rows, the six others behind « Les 6 autres coups » with their share', async () => {
+    const s = makeStore();
+    PogoNet.deps = { ...PogoNet.deps, store: s };
+    s.newGame('White', 'normal');
+    const el = await mount('az');
+    expect(shown(el)).toHaveLength(10);
+    expect(shown(el).every((r) => !r.classList.contains('blank'))).toBe(true);
+    expect($$(el, '.others tbody tr')).toHaveLength(6);
+    // The hidden moves' share, from the net itself.
+    const { priors } = az.evaluate(s.current()!.states[0]!);
+    const sorted = [...priors.values()].sort((a, b) => b - a);
+    const share = sorted.slice(10).reduce((a, b) => a + b, 0);
+    expect($(el, '.others-summary').textContent).toBe(`Les 6 autres coups, ${formatShare('fr', share)} de la préférence du réseau`);
+    expect(($(el, '.others') as HTMLDetailsElement).open).toBe(false);
+  });
+
+  it('3 legal moves: three rows and seven blank ones, the disclosure kept but unseen', async () => {
+    const s = makeStore();
+    PogoNet.deps = { ...PogoNet.deps, store: s };
+    s.playFrom(FEW, 'test');
+    const el = await mount('az');
+    expect(shown(el)).toHaveLength(10);
+    expect(shown(el).filter((r) => r.classList.contains('blank'))).toHaveLength(7);
+    expect($(el, '.others').hasAttribute('data-none')).toBe(true);
+  });
+});

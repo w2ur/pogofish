@@ -9,6 +9,7 @@ import { createStore, type Store } from '../store';
 import { REDUCED_MOTION, intersect, resetMedia, setMedia } from '../test-dom';
 import { PogoSearch } from './pogo-search';
 import { PUZZLE5, STOPS } from './search-steps';
+import { formatShare } from '../kit/score';
 
 if (!customElements.get('pogo-search')) customElements.define('pogo-search', PogoSearch);
 
@@ -177,5 +178,44 @@ describe('<pogo-search>', () => {
     const fromRust = await search(s.current()!.states[1]!, az);
     const shown = visits(el);
     for (const r of fromRust.root) expect(shown.get(moveName(r.move))).toBe(r.visits);
+  });
+
+  it('puzzle 5 shows ten moves by the net’s preference, the five others behind the disclosure with their share', async () => {
+    const el = await mount('puzzle5');
+    const shown = $$(el, '.ranked > table > tbody > tr');
+    expect(shown).toHaveLength(10);
+    const hidden = $$(el, '.others tbody tr').map((r) => r.dataset.move);
+    expect(hidden).toEqual(['b2-2-c1', 'b2-3-b3', 'b3-1-a3', 'b3-1-b2', 'b3-1-c3']);
+    const fx = fixture.positions.find((p) => p.label === 'puzzle 5')! as unknown as { priors: number[]; legal: number[][] };
+    const share = fx.legal.reduce((a, [x, n, y], i) => (hidden.includes(moveName([x!, n!, y!])) ? a + fx.priors[i]! : a), 0);
+    expect($(el, '.others-summary').textContent).toBe(`Les 5 autres coups, ${formatShare('fr', share)} de la préférence du réseau`);
+    expect(($(el, '.others') as HTMLDetailsElement).open).toBe(false);
+  });
+
+  it('the move the search would play stays visible, in the last place, even when the net ranks it below tenth', async () => {
+    // A stand-in search whose visits all go to the net's least preferred move.
+    const fake = async (st: State, net: AzNet, o: { onSnapshot: (x: SearchSnapshot) => void; signal: AbortSignal }) => {
+      const base = (await search(st, net, { sims: 1 })).root;
+      const order = base.map((_, i) => i).sort((a, b) => base[a]!.prior - base[b]!.prior);
+      const last = order[0]!;
+      let snap: SearchSnapshot = { sim: 0, root: base };
+      for (let n = 1; n <= 100; n++) {
+        snap = { sim: n, root: base.map((r, i) => ({ ...r, visits: i === last ? n : 0, meanValue: i === last ? 0.5 : 0 })) };
+        o.onSnapshot(snap);
+      }
+      return snap;
+    };
+    use(makeStore(), fake);
+    const el = await mount('puzzle5', 'en');
+    role(el, 'run').click();
+    await until(() => !!el.shadowRoot!.querySelector('[data-role="counter"]'));
+    const shown = $$(el, '.ranked > table > tbody > tr').map((r) => r.dataset.move);
+    expect(shown).toHaveLength(10);
+    expect(shown.at(-1)).toBe('b3-1-c3');
+    expect($(el, 'tr.played').dataset.move).toBe('b3-1-c3');
+    // The tenth by preference gives up its place; the disclosure holds it and the four after it, not the move played.
+    const hidden = $$(el, '.others tbody tr').map((r) => r.dataset.move);
+    expect(hidden).toEqual(['b2-2-c3', 'b2-2-c1', 'b2-3-b3', 'b3-1-a3', 'b3-1-b2']);
+    expect($(el, '.others-summary').textContent).toMatch(/^The other 5 moves, /);
   });
 });

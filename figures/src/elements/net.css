@@ -4,6 +4,35 @@
  * tables of bars. Ink only. The signal red is the Red pieces' and nothing
  * else's: no layer, value, preference or visit is red.
  */
+/*
+ * <pogo-net> keeps, before it renders, the room it will take, per kind and per
+ * width (measured 2026-11-16 on the harness: stage height = rendered figure less
+ * the label and the fallback it replaces). The host is the container, so the
+ * room follows the figure's own width. The table of moves holds ten rows
+ * whatever the position, so this room does not change as the reader plays.
+ */
+:host(pogo-net) {
+  container-type: inline-size;
+}
+
+:host(pogo-net[kind='td']) .stage {
+  min-height: 747px;
+}
+
+:host(pogo-net[kind='az']) .stage {
+  min-height: 1669px;
+}
+
+@container (min-width: 560px) {
+  :host(pogo-net[kind='td']) .stage {
+    min-height: 464px;
+  }
+
+  :host(pogo-net[kind='az']) .stage {
+    min-height: 1218px;
+  }
+}
+
 .net,
 .encoding,
 .search {
@@ -266,4 +295,27 @@ p {
   display: flex;
   flex-direction: column;
   gap: 8px;
+}
+
+/* A table of moves keeps room for ten rows: the blank ones hold their height unseen. */
+.bars tr.blank {
+  visibility: hidden;
+}
+
+.others {
+  margin-top: 4px;
+}
+
+.others-summary {
+  display: flex;
+  align-items: center;
+  min-height: 44px;
+  font-size: 15px;
+  color: var(--_ink-2);
+  cursor: pointer;
+}
+
+/* No other move: the line keeps its room, unseen. */
+.others[data-none] {
+  visibility: hidden;
 }

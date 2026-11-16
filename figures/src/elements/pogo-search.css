@@ -5,6 +5,30 @@
  * on the scale the figure states: the preference on 0–100 %, the visits on
  * 0–100 simulations. The move played is marked in ink, never in red.
  */
+/*
+ * The room the figure keeps before it renders, per position and width, measured
+ * on the harness (2026-11-16): the table holds ten rows whatever the position,
+ * so this room does not change as the reader plays.
+ */
+:host {
+  container-type: inline-size;
+}
+
+:host([position='puzzle5']) .stage {
+  min-height: 1095px;
+}
+
+:host([position='reader']) .stage {
+  min-height: 1071px;
+}
+
+@container (min-width: 560px) {
+  :host([position='puzzle5']) .stage,
+  :host([position='reader']) .stage {
+    min-height: 951px;
+  }
+}
+
 .status {
   display: grid;
 }
@@ -40,7 +64,8 @@
   text-transform: none;
 }
 
-.search-table th.move {
+.search-table th.move,
+.search-table tbody th {
   width: 5.4em;
 }
 
@@ -99,8 +124,19 @@
   background: var(--_rule);
 }
 
+/*
+ * The controls keep the room of the steps' row from the start: under 560px that
+ * row (two arrows, the counter, play, « Jouer d’ici ») takes two lines where
+ * « Lancer » took one, and the figure must not grow when the search runs.
+ */
 .search-controls {
-  min-height: 44px;
+  min-height: 96px;
+}
+
+@container (min-width: 560px) {
+  .search-controls {
+    min-height: 44px;
+  }
 }
 
 /* A move's name never breaks at its hyphens. */

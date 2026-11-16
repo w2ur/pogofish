@@ -23,7 +23,7 @@ import { sharedAz } from '../nets-shared';
 import { store, type Store } from '../store';
 import { formatCount } from './count-steps';
 import { netPosition, positionWords } from './net-position';
-import { barCell, colourName, el } from './net-view';
+import { barCell, blankRow, colourName, el, rankedTable } from './net-view';
 import netCss from './net.css?raw';
 import searchCss from './pogo-search.css?raw';
 import { signedNote } from './q-steps';
@@ -147,31 +147,26 @@ export class PogoSearch extends PogoFigure {
     said.setAttribute('aria-live', 'polite');
     status.append(...sizers, said);
 
-    const table = el('table', 'bars search-table');
-    const caption = el('caption', 'label');
-    table.append(caption);
-    const head = el('tr');
-    for (const [k, cls] of [
-      ['netMove', 'move'],
-      ['searchPrior', 'share'],
-      ['searchVisits', 'visits'],
-      ['searchMean', 'mean'],
-    ] as const) {
-      const th = el('th', `label ${cls}`, t(lang, k));
-      th.scope = 'col';
-      head.append(th);
-    }
-    const thead = el('thead');
-    thead.append(head);
-    const body = el('tbody');
-    table.append(thead, body);
+    const ranked = rankedTable(
+      lang,
+      'search',
+      ([
+        ['netMove', 'move'],
+        ['searchPrior', 'share'],
+        ['searchVisits', 'visits'],
+        ['searchMean', 'mean'],
+      ] as const).map(([k, cls]) => ({ text: t(lang, k), cls })),
+    );
+    const table = ranked.element;
 
     const show = (snap: SearchSnapshot, final: boolean): void => {
       said.replaceChildren(...withMoves(snapshotWords(lang, snap, final)));
-      caption.textContent = `${t(lang, 'searchMoves')} ${sims(lang, snap.sim)}`;
+      ranked.caption.textContent = `${t(lang, 'searchMoves')} ${sims(lang, snap.sim)}`;
       const best = played(snap);
-      body.replaceChildren(
-        ...order.map((i) => {
+      ranked.update(
+        order,
+        best < 0 ? null : best,
+        (i) => {
           const r = snap.root[i]!;
           const tr = el('tr');
           tr.dataset.move = moveName(r.move);
@@ -189,7 +184,13 @@ export class PogoSearch extends PogoFigure {
             el('td', 'mean num', r.visits === 0 ? '—' : signedNote(lang, r.meanValue)),
           );
           return tr;
-        }),
+        },
+        () => {
+          const tr = blankRow(3);
+          tr.append(el('td', 'mean num', '—'));
+          return tr;
+        },
+        (i) => snap.root[i]!.prior,
       );
     };
     show(before, false);
