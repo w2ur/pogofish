@@ -12,11 +12,6 @@
   display: none;
 }
 
-/* Collapsed to its bar, it drops its fidelity line too. */
-:host([data-collapsed]) .fidelity {
-  display: none;
-}
-
 .pb {
   display: flex;
   flex-direction: column;
@@ -114,7 +109,10 @@
   display: none;
 }
 
-/* An exception to "every figure ends with its fidelity label" (kit/figure.ts): the inline board carries it. */
+/*
+ * An exception to "every figure ends with its fidelity label" (kit/figure.ts):
+ * the inline board carries it. Folded or open, nothing hangs below the frame.
+ */
 :host([mode='follow']) .fidelity {
   display: none;
 }

@@ -655,6 +655,9 @@ describe('<pogo-board mode="follow"> as a panel', () => {
     expect(css).toMatch(/:host\(\[data-idle\]\),\s*:host\(\[data-yield\]\) \{\s*display: none;/);
     expect(css).toMatch(/\.bar \{[^}]*min-height: 44px;/);
     expect(css).not.toMatch(/animation|transition/);
+    // No fidelity line in either state: one rule on the mode, none on the folded state alone.
+    expect(css).toMatch(/:host\(\[mode='follow'\]\) \.fidelity \{\s*display: none;/);
+    expect(css).not.toMatch(/data-collapsed/);
   });
 });
 
