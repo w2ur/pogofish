@@ -113,9 +113,13 @@ slot[hidden],
   color: var(--_muted);
 }
 
-/* A file name keeps its case and its line. */
+/* A file name keeps its case, and breaks only after a slash: each segment keeps its line. */
 .fidelity .source {
   text-transform: none;
+}
+
+.fidelity .source .segment {
+  display: inline-block;
   white-space: nowrap;
 }
 

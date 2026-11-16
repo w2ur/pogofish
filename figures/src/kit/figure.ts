@@ -169,7 +169,13 @@ export abstract class PogoFigure extends HTMLElement {
       label.append(text.slice(0, -source.length));
       const file = document.createElement('span');
       file.className = 'source';
-      file.textContent = source;
+      // Each path segment keeps its line; a long path may break after a slash, and only there.
+      for (const part of source.match(/[^/]*\/|[^/]+$/g) ?? [source]) {
+        const segment = document.createElement('span');
+        segment.className = 'segment';
+        segment.textContent = part;
+        file.append(segment);
+      }
       label.append(file);
     } else {
       label.textContent = text;
