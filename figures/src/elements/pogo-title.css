@@ -77,8 +77,19 @@ slot[hidden] {
 }
 
 /* The bangs in the Red side's red: display-size type, the red itself. */
-.bang {
+.bang,
+.letter.red {
   color: var(--_red);
+}
+
+/*
+ * A camp (a letter and its O's) never breaks; the title breaks at the <wbr>
+ * between parts. The bangs break only as a last resort, through the h1's own
+ * overflow-wrap, when their run alone is wider than the line. The class is
+ * `.part`, not `.group`: the kit's `.group` is a row of choice buttons.
+ */
+.part.camp {
+  white-space: nowrap;
 }
 
 /* Out of step: each disc enters its jump at its own phase of one up-and-down. */

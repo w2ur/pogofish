@@ -126,18 +126,27 @@ async function build(): Promise<void> {
   const app = document.getElementById('app')!;
   app.replaceChildren();
 
-  app.append(heading('<pogo-title> · inside an h1, over the same h1 without the element (the box must match)'));
-  const title = l === 'fr' ? 'POOOOOOGOOOOOO' + '\u00a0!'.repeat(8) : 'POOOOOOGOOOOOO' + '!'.repeat(8);
+  app.append(heading('<pogo-title> · inside an h1, over the same h1 without the element (the box must match) · ?titleSize=72px overrides the size'));
+  // The page's text: a <wbr> before the G and before the bangs; French glues each « ! » with U+202F.
+  const parts = ['POOOOOO', 'GOOOOOO', l === 'fr' ? '\u202f!'.repeat(8) : '!'.repeat(8)];
+  const fill = (target: HTMLElement): void => {
+    parts.forEach((part, k) => {
+      if (k > 0) target.append(document.createElement('wbr'));
+      target.append(part);
+    });
+  };
+  const size = new URLSearchParams(location.search).get('titleSize');
   const h1 = document.createElement('h1');
   h1.className = 'pogo-title-demo';
   h1.id = 'title-upgraded';
   const signature = document.createElement('pogo-title');
-  signature.textContent = title;
+  fill(signature);
   h1.append(signature);
   const plain = document.createElement('h1');
   plain.className = 'pogo-title-demo';
   plain.id = 'title-plain';
-  plain.textContent = title;
+  fill(plain);
+  if (size) for (const h of [h1, plain]) h.style.fontSize = size;
   app.append(h1, plain);
 
   app.append(heading('Type cuts'));

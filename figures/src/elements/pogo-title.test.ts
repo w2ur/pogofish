@@ -49,6 +49,30 @@ describe('<pogo-title>', () => {
     expect([...el.shadowRoot!.querySelectorAll('.bang')].map((b) => b.textContent).join('')).toBe('!'.repeat(8));
   });
 
+  it('tolerates the page’s <wbr> in its light DOM, and draws its groups with a <wbr> between them', async () => {
+    resetMedia();
+    const h1 = document.createElement('h1');
+    const el = document.createElement('pogo-title') as PogoTitle;
+    el.append('POOOOOO', document.createElement('wbr'), 'GOOOOOO', document.createElement('wbr'), '\u202f!'.repeat(8));
+    h1.append(el);
+    document.body.append(h1);
+    intersect(el);
+    await flush();
+    const text = 'POOOOOOGOOOOOO' + '\u202f!'.repeat(8);
+    expect(el.textContent).toBe(text);
+    expect(el.querySelectorAll('wbr')).toHaveLength(2);
+    const drawn = el.shadowRoot!.querySelector('.drawn')!;
+    expect(drawn.textContent).toBe(text);
+    expect([...drawn.children].map((c) => c.localName + (c.className ? '.' + c.className.replace(' ', '.') : ''))).toEqual([
+      'span.part.camp',
+      'wbr',
+      'span.part.camp',
+      'wbr',
+      'span.part.bangs',
+    ]);
+    expect([...el.shadowRoot!.querySelectorAll('.letter.red')].map((x) => x.textContent)).toEqual(['G']);
+  });
+
   it('jumps only while on screen, and stops for good at disconnect', async () => {
     const el = await mount();
     onScreen(el, true);
@@ -65,6 +89,8 @@ describe('<pogo-title>', () => {
     const css = readFileSync(resolve(process.cwd(), 'src/elements/pogo-title.css'), 'utf8');
     const reduced = /@media \(prefers-reduced-motion: reduce\) \{([\s\S]*?)\n\}/.exec(css)![1]!;
     expect(reduced).toContain('animation: none');
+    // A camp never breaks.
+    expect(css).toMatch(/\.part\.camp \{\s*white-space: nowrap;/);
     expect(css).toMatch(/\.fidelity,\s*\.failed \{\s*display: none;/);
     // Animation only under the attribute the visibility observer sets.
     expect(css).toMatch(/:host\(\[data-moving\]\) \.disc \{\s*animation: pogo/);
