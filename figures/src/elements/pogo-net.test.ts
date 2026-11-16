@@ -127,6 +127,24 @@ describe('<pogo-net>', () => {
     expect($(el, '.hint').hasAttribute('data-off')).toBe(true);
   });
 
+  it('kind="az" with a net that fails reserves no room: one line and its fallback', async () => {
+    const error = vi.spyOn(console, 'error').mockImplementation(() => {});
+    try {
+      PogoNet.deps = { ...PogoNet.deps, az: () => Promise.reject(new Error('pogo-figures: nets/az-lc1-s1.pfw did not load in 30000 ms')) };
+      const el = await mount('az', 'en');
+      expect(el.hasAttribute('data-failed')).toBe(true);
+      const stage = $(el, '.stage');
+      expect(stage.textContent).toBe('This figure could not be computed.');
+      expect(stage.style.getPropertyValue('--_stage-min')).toBe('0px');
+      // net.css's own reserve for kind="az" is a :host rule on .stage, which the kit overrides when failed.
+      const css = readFileSync(resolve(process.cwd(), 'src/elements/net.css'), 'utf8');
+      expect(css).toMatch(/:host\(pogo-net\[kind='az'\]\) \.stage \{\s*min-height: \d+px;/);
+      expect(css).not.toMatch(/min-height: \d+px !important/);
+    } finally {
+      error.mockRestore();
+    }
+  });
+
   it('stops following the store once disconnected', async () => {
     const s = makeStore();
     const on = vi.spyOn(s, 'on');
@@ -172,6 +190,8 @@ describe('<pogo-net kind="az">, ten moves at most', () => {
     const el = await mount('az');
     expect(shown(el)).toHaveLength(10);
     expect(shown(el).filter((r) => r.classList.contains('blank'))).toHaveLength(7);
+    // A blank row holds no move name and no number, should its stylesheet not load.
+    for (const r of shown(el).filter((x) => x.classList.contains('blank'))) expect(r.textContent!.trim()).toBe('');
     expect($(el, '.others').hasAttribute('data-none')).toBe(true);
   });
 });

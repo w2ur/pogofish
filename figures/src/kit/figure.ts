@@ -149,6 +149,8 @@ export abstract class PogoFigure extends HTMLElement {
     this.stage.replaceChildren();
     this.fallback.hidden = false;
     this.removeAttribute('data-failed');
+    // It renders afresh when it comes back: its reserve with it.
+    this.stage.style.setProperty('--_stage-min', (this.constructor as typeof PogoFigure).stageMinHeight);
   }
 
   private buildFrame(): void {
@@ -222,6 +224,9 @@ export abstract class PogoFigure extends HTMLElement {
       if (signal.aborted) return;
       console.error(`${this.localName}: render failed`, error);
       this.setAttribute('data-failed', '');
+      // A failed figure reserves no room: one line and its fallback, never a blank band.
+      // theme.css overrides every element's own reserve for this state.
+      this.stage.style.setProperty('--_stage-min', '0px');
       const message = document.createElement('p');
       message.className = 'failed';
       message.textContent = t(this.lang, 'failed');

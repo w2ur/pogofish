@@ -1,6 +1,11 @@
 import { initial, type State } from '../engine';
 import { REDUCED_MOTION, intersect, observersOf, observing, resetMedia, setMedia } from '../test-dom';
 import { PogoFigure } from './figure';
+import { readFileSync } from 'node:fs';
+import { resolve } from 'node:path';
+
+/** The kit's sheet as written (vitest hands `?raw` CSS over empty, and happy-dom does not cascade :host rules). */
+const themeCss = readFileSync(resolve(process.cwd(), 'src/kit/theme.css'), 'utf8');
 
 class Fine extends PogoFigure {
   static override fidelity = 'live' as const;
@@ -149,6 +154,26 @@ describe('PogoFigure', () => {
     expect(slot(el).hidden).toBe(false);
     expect(error).toHaveBeenCalledTimes(1);
     error.mockRestore();
+  });
+
+  it('a failed figure reserves no room: its stage takes the height of its message', async () => {
+    const error = vi.spyOn(console, 'error').mockImplementation(() => {});
+    try {
+      const el = mount<Rejected>('kit-rejected', 'en');
+      const stage = el.shadowRoot!.querySelector<HTMLElement>('.stage')!;
+      stage.style.setProperty('--_stage-min', '900px');
+      intersect(el);
+      await flush();
+      expect(el.hasAttribute('data-failed')).toBe(true);
+      expect(stage.style.getPropertyValue('--_stage-min')).toBe('0px');
+      // An element's own reserve (a :host rule on .stage) is overridden by the kit for the failed state.
+      expect(themeCss.replace(/\/\*[\s\S]*?\*\//g, '').replace(/\s+/g, ' ')).toContain(':host([data-failed]) .stage { min-height: 0 !important; }');
+      // Moved in the page, it renders afresh with its reserve back.
+      el.parentElement!.removeChild(el);
+      expect(stage.style.getPropertyValue('--_stage-min')).toBe(Rejected.stageMinHeight);
+    } finally {
+      error.mockRestore();
+    }
   });
 
   it('a rejected async render() leaves the fallback visible too', async () => {

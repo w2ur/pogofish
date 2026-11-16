@@ -78,6 +78,15 @@
   min-height: var(--_stage-min, 0);
 }
 
+/*
+ * A failed figure reserves nothing: its stage is its one line of failure, and the
+ * fallback below it. !important, so that it beats every element's own reserve
+ * (pogo-net, pogo-search keep theirs on .stage by :host rules).
+ */
+:host([data-failed]) .stage {
+  min-height: 0 !important;
+}
+
 slot[hidden],
 .stage[hidden] {
   display: none;
