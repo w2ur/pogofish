@@ -31,13 +31,15 @@ LC1-2 (Sudden Death) and LC3-29 (Classic) AlphaZero models ship as ONNX under `a
 
 ### `figures/` — article figures
 
-A TypeScript package that will hold the `<pogo-…>` custom elements of the article page, built with Vite library mode into `figures/dist/` (`pogo-figures.js`, `search-worker.js`, the chunks they share, `manifest.json`, the engine `.wasm`), base `/pogo/`. `src/engine.ts` wraps the committed `wasm-pkg/` build (`pogofish-wasm`, a `file:` dependency); every other module goes through it.
+A TypeScript package holding the `<pogo-…>` custom elements of the article page, built with Vite library mode into `figures/dist/` (`pogo-figures.js`, the entry a page imports; `search-worker.js`; one chunk per element and the chunks they share, all at the root of `dist/`; `manifest.json`, the list of tags; the engine `.wasm`; the nets under `nets/` and the data files under `data/`). `src/engine.ts` wraps the committed `wasm-pkg/` build (`pogofish-wasm`, a `file:` dependency); every other module goes through it.
 
 ```bash
 cd figures
 npm ci
-npm test             # vitest + happy-dom
+npm test             # vitest + happy-dom: the unit tests under src/
 npm run build        # tsc, then vite build -> dist/
+./scripts/check-dist.sh   # the built worker and binaries stay separate files (exit 2: no build)
+npm run budget       # size caps and package shape, read from dist/ (exit 2: no build)
 npm run dev          # the kit harness: open http://localhost:5173/pogo/dev/
 ```
 
@@ -70,6 +72,33 @@ node scripts/table-extract.mjs   # -> public/data/table.json; exit 1 = a control
 # From figures/. Needs only the committed docs/experiments/ files.
 node scripts/pack-v5.mjs         # -> public/data/v5.json and public/data/reach.json
 ```
+
+`table-extract.mjs` reads the solved table through the `pogoq` binary and checks each extracted fact against its controls before writing anything. `pack-v5.mjs` packs the round-5 bench files of `docs/experiments/v5/` and `docs/experiments/v3-solve/reach.json`; the date the round-5 charts print is the commit date (UTC day) of `docs/experiments/v5/curves.json` (`scripts/v5-date.mjs`), the closest date the repository records for those scores. It refuses a shallow clone (its last commit seen is not the file's) and a `curves.json` with uncommitted changes. That is why `figures.yml` checks out the full history (`fetch-depth: 0`): `src/data.test.ts` recomputes the date.
+
+#### Lazy definition
+
+The entry holds only what every page needs to start: the tag list (`src/manifest.ts`), one loader per tag (`src/registry.ts`, a dynamic `import()` of the element's module, typed over the tags so a missing loader fails `tsc`) and the lazy-definition logic (`src/lazy-plan.ts`, pure, decides what to import; `src/lazy-define.ts` observes). `defineAll()` watches the document: a tag's module is imported, then its class defined, when its first instance comes within one viewport of the screen (`rootMargin: 100%`, twice the kit's own render margin, so definition never delays a render); at once when `IntersectionObserver` is missing; and for instances added to the document later (a `MutationObserver`). An instance inside a hidden container (`hidden`, `display: none`) has no box, so its tag is imported when the container is shown. `<pogo-title>` and `<pogo-board mode="follow">` are imported without waiting for the viewport: the first is the page's `h1`, the second waits out of the page until a game starts and must be defined to see it start. Two instances share one import. A failed import warns once on the console, is never retried, and leaves the element's light-DOM fallback in place for good. Instances inside another element's shadow root are not watched: no element creates one today. Until its class is defined, an element shows its light-DOM children, which the page styles under `:not(:defined)`; upgrading keeps the same nodes in the fallback slot.
+
+Each element is its own chunk, so the kit (`src/kit/figure.ts`) imports the store: a figure can hand a position over (`pogo:playfrom`) before any board module is loaded, and the store must already be listening. `loadAll()` imports and defines every element at once; it is the eager path for tests, not for pages.
+
+#### Size budget
+
+`figures/budget.json` is the ledger of caps, in gzip bytes as Node's `zlib.gzipSync` counts them: under `js`, the entry, the eager load (the entry and what it imports statically, the engine glue), any other single JS file, and all JS together; under `data`, each data file. Each JS cap carries its measured size and its reason; raising one needs a one-line reason there. `npm run budget` runs `scripts/budget.test.mjs` with node (not vitest, which runs only `src/`), after a build: the caps, then the package's shape — the entry imports statically only the engine chunk, never an element, the wasm, a net or a data file; every tag of `manifest.json` has a loader in the entry pointing at its own chunk, which exports the class; and there are as many tags as element modules (`src/elements/*.ts` that extend `PogoFigure`). A missing `dist/` exits 2, never a pass. CI runs it after `check-dist.sh`. `src/data.test.ts` also holds the data files to their caps, from `public/data/`, without a build.
+
+#### URLs, and how the build reaches the site
+
+Everything in `dist/` resolves relative to the module that asks: the entry imports its chunks by relative specifier (`import("./pogo-board-….js")`), and `src/engine.ts` and `src/assets.ts` build the wasm, worker, net and data URLs with `new URL(name, import.meta.url)`; every chunk sits at the root of `dist/`, so a copy of `dist/` served under any path works without rebuilding (checked in a browser under `/pogo/`, 2026-11-16). `configureAssets({ base, worker })` exists for the dev harness only, which serves the binaries from `public/` at `/pogo/` and the worker from its source; Vite's `base: '/pogo/'` matters only to that dev server.
+
+This repository never writes into the site. The hub owns the sync: a script there copies `figures/dist/` to its `public/pogo/` and refuses a build without `manifest.json`, and its page loads `import('/pogo/pogo-figures.js').then((f) => f.defineAll())`.
+
+#### Adding an element
+
+1. The module, `src/elements/pogo-<name>.ts`, a class extending `PogoFigure` (its CSS in `pogo-<name>.css`, its pure logic in a sibling module with its own tests).
+2. The tag in `TAGS` (`src/manifest.ts`) and its loader in `LOADERS` (`src/registry.ts`); `tsc` fails while one is missing.
+3. Its strings in both languages in `src/kit/strings.ts`.
+4. Its tag in the harness (`dev/main.ts`), with a fallback sentence in each language.
+5. Its tests: `src/elements/pogo-<name>.test.ts` defines the class itself; `src/index.test.ts` and the budget fail until the module, the tag and the loader agree.
+6. `npm run build && npm run budget`: the new chunk must fit the largest-chunk cap and the total; raising a cap needs its reason in `budget.json`.
 
 ## The game itself
 

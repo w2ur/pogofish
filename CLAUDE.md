@@ -17,6 +17,9 @@ Pogofish is a browser-based Pogo board game with AI opponents trained via AlphaZ
 
 ### Figures (`figures/`)
 - TypeScript + Vite library mode: the `<pogo-…>` custom elements of an article page; `src/engine.ts` is the only module that talks to the committed `wasm-pkg/` build, and it maps game A (a `null` rule set) to the WASM's `"Uncapped"` because passing null poisons the instance
+- Each element is its own chunk, defined lazily: the entry (`src/index.ts`) holds only the tag list (`src/manifest.ts`), one loader per tag (`src/registry.ts`) and the lazy-definition logic. Never import an element module statically from the entry; adding an element is the checklist in `docs/development.md`
+- Every user-facing string lives in `src/kit/strings.ts`, in French and English; red (`--pogo-red`) means the Red side only, never a control (the hub's `DESIGN.md`, C16)
+- `figures/budget.json` is the ledger of size caps (JS and data files), each with its reason; raising one needs that reason, never a silent edit
 
 ### Web app (`app/`)
 - Vite
@@ -258,7 +261,7 @@ code, reference only: never import from it.
 
 - Rust workspace: `cargo test --workspace` (engine, search, train)
 - Web app: `cd app && npx vitest run` (the board entry's tests are `src/board/embed.test.ts` and `src/ai/assets.test.ts`)
-- Figures package: `cd figures && npm test && npm run build` (engine wrapper tests; the build must write a separate `.wasm`, never base64); `.github/workflows/figures.yml` runs it with the Rust engine tests on every push or PR touching `figures/`, `wasm-pkg/` or `crates/`
+- Figures package: `cd figures && npm test && npm run build && ./scripts/check-dist.sh && npm run budget` (unit tests of the engine wrapper, the kit and every element; then the built package: the worker and the wasm stay separate files, never inlined, and the caps of `budget.json`); `.github/workflows/figures.yml` runs all four with the Rust engine tests on every push or PR touching `figures/`, `wasm-pkg/`, `crates/` or the experiment sources the data files are packed from
 - Property tests: engine invariants via proptest (piece conservation, no stalemate, legal moves apply)
 
 ## Build Warning Exceptions
