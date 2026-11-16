@@ -137,7 +137,7 @@ describe('the words of the board', () => {
     for (const m of [...loop, ...loop]) store.play(m);
     expect(resultText('en', store.current()!)).toEqual({
       who: 'White wins',
-      how: 'Red produced a position for the third time and loses, under the repetition rule.',
+      how: 'Red repeated a position three times.',
       you: 'You win.',
     });
     store.newGame('White', 'normal');

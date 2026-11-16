@@ -250,10 +250,11 @@ describe('<pogo-board> inline', () => {
     }
     expect(store.lastFinished()).toMatchObject({ finished: true, result: 'W', endedByRepetition: false });
     expect($(el, '.result:not(.sizer)').hidden).toBe(false);
-    expect($(el, '.result:not(.sizer) .who').textContent).toBe('Blanc gagne');
+    // Two lines: the stamp, then how.
+    expect($(el, '.result:not(.sizer) .who').textContent).toBe('Vous gagnez');
     expect($(el, '.result:not(.sizer) .who').classList.contains('shout')).toBe(true);
     expect($(el, '.result:not(.sizer) .how').textContent).toBe('Toutes les piles ont un sommet blanc.');
-    expect($(el, '.result:not(.sizer) .you').textContent).toBe('Vous gagnez.');
+    expect($(el, '.result:not(.sizer)').children).toHaveLength(2);
     expect(live(el)).toContain('Blanc gagne');
     expect(marks(el, 'target')).toEqual([]);
     expect($<HTMLDetailsElement>(el, 'details.moves').open).toBe(false);
@@ -286,8 +287,8 @@ describe('<pogo-board> inline', () => {
       await flush();
     }
     expect(store.current()).toMatchObject({ finished: true, endedByRepetition: true, result: 'W' });
-    expect($(el, '.result:not(.sizer) .how').textContent).toBe('Red produced a position for the third time and loses, under the repetition rule.');
-    expect($(el, '.result:not(.sizer) .you').textContent).toBe('The AI wins.');
+    expect($(el, '.result:not(.sizer) .how').textContent).toBe('Red repeated a position three times.');
+    expect($(el, '.result:not(.sizer) .who').textContent).toBe('The AI wins');
   });
 
   it('a figure’s playFrom shows the position on every board, with its label, the reader on the side to move', async () => {
@@ -414,7 +415,7 @@ describe('<pogo-board> inline', () => {
     const el = await mount('en');
     const sizer = $(el, '.status .sizer');
     expect(sizer.getAttribute('aria-hidden')).toBe('true');
-    expect($(el, '.status .sizer .how').textContent).toBe('White produced a position for the third time and loses, under the repetition rule.');
+    expect($(el, '.status .sizer .how').textContent).toBe('White repeated a position three times.');
     // The visible variants share the sizer's grid cell (pogo-board.css), and the result is not inside the board's frame.
     expect($(el, '.status').nextElementSibling).toBe($(el, '.play'));
   });

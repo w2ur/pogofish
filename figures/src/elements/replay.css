@@ -39,9 +39,10 @@
   font-weight: 800;
 }
 
+/* The result as the flyer's stamp, on one line of its own over the sentence that says how. */
 .who {
-  font-size: clamp(28px, 3.4vw, 44px);
-  overflow-wrap: anywhere;
+  font-size: 26px;
+  white-space: nowrap;
 }
 
 .board-slot .board-frame {
@@ -61,4 +62,13 @@
   overflow: hidden;
   clip-path: inset(50%);
   white-space: nowrap;
+}
+
+/* The words under the board start under the transport. */
+.status.after {
+  align-items: start;
+}
+
+.status.after:empty {
+  display: none;
 }

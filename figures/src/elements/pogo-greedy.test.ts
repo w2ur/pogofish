@@ -26,6 +26,8 @@ const $ = (el: PogoGreedy, s: string) => el.shadowRoot!.querySelector<HTMLElemen
 const role = (el: PogoGreedy, r: string) => $(el, `[data-role="${r}"]`) as HTMLButtonElement;
 const currentBlock = (el: PogoGreedy) => el.shadowRoot!.querySelector('.said:not([data-off]):not(.sizer)')!;
 const current = (el: PogoGreedy) => shownText(currentBlock(el));
+/** The words under the board, after the transport: the score that chose the move. */
+const below = (el: PogoGreedy) => shownText(el.shadowRoot!.querySelector('.status.after .said:not([data-off]):not(.sizer)')!);
 const counter = (el: PogoGreedy) => role(el, 'counter').textContent;
 const toEnd = (el: PogoGreedy) => {
   while (!role(el, 'next').disabled) role(el, 'next').click();
@@ -53,18 +55,21 @@ describe('<pogo-greedy>', () => {
     expect(current(el)).toBe('Position de départ');
     role(el, 'next').click();
     expect(currentBlock(el).querySelector('.move-name [role="tooltip"]')!.textContent).toMatch(/^De [abc][123], [123] pièces?, vers [abc][123]\.$/);
-    expect(current(el)).toMatch(/^Blanc joue [abc][123]-[123]-[abc][123]Score du coup : [+−]?\d+, le meilleur des 16 coups/);
+    expect(current(el)).toMatch(/^Blanc joue [abc][123]-[123]-[abc][123]$/);
+    expect(below(el)).toMatch(/^Score du coup\u202f: [+−]?\d+, le meilleur des 16 coups/);
+    // Under the board, after the transport.
+    expect(el.shadowRoot!.querySelector('.controls')!.nextElementSibling!.classList.contains('after')).toBe(true);
   });
 
   it('the winning move’s score is the word « gagne », never the sentinel', async () => {
     const el = await mount('fr', '1');
     toEnd(el);
-    expect(current(el)).toContain('Score du coup : gagne');
+    expect(below(el)).toContain('Score du coup\u202f: gagne');
     expect(current(el)).toContain('Blanc gagne');
     expect(el.shadowRoot!.textContent).not.toMatch(/2147483647|2147483646/);
     const en = await mount('en', '2');
     toEnd(en);
-    expect(current(en)).toContain('Score of the move: wins');
+    expect(below(en)).toContain('Score of the move: wins');
   });
 
   it('« Nouvelle partie » draws the next seed and plays it; under reduced motion it waits for the reader', async () => {

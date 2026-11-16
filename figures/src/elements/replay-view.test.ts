@@ -62,7 +62,7 @@ describe('resultWords', () => {
       how: 'Toutes les piles ont un sommet blanc.',
     });
     expect(resultWords('en', { winner: 'W', byRepetition: true }).how).toBe(
-      'Red produced a position for the third time and loses, under the repetition rule.',
+      'Red repeated a position three times.',
     );
   });
 });

@@ -1,7 +1,11 @@
 // One replay of a list of positions, shared by the figures that step through a
 // game (<pogo-line>, <pogo-greedy>, <pogo-stages>): the words of every step
 // stacked in one grid cell with only the current one seen, so the area keeps
-// the height of its longest words and the board below never moves; the board
+// the height of its longest words and the board below never moves. Over the
+// board a step says two lines at most: what happens (a move), or at the end the
+// result as the flyer's stamp, then one sentence (how it ended, or a note). What
+// a step says beyond that goes under the board, after the transport (`after`),
+// stacked the same way. The board
 // redrawn at each step with the move that led there, its moved pieces
 // travelling on a step forward; and a polite live region that reads the step.
 // Every move name in the words carries its explanation (kit/move-tip.ts), so
@@ -28,7 +32,10 @@ export interface Line {
 }
 
 export interface Spoken {
+  /** Over the board: two lines at most. */
   lines: Line[];
+  /** Under the board, after the transport: what a step says beyond its two lines. */
+  after?: Line[];
   /** The board's text alternative. */
   title: string;
   /** What the live region says when the step is shown. */
@@ -46,6 +53,8 @@ export interface ReplayOptions {
    * may not say but another one will (a figure that swaps games keeps its board still).
    */
   sizers?: readonly Line[][];
+  /** The same, for the words under the board. */
+  afterSizers?: readonly Line[][];
   /** Whether showing `to` after `from` is a step forward, whose pieces travel (default: `to === from + 1`). */
   forward?: (from: number, to: number) => boolean;
   reducedMotion: () => boolean;
@@ -54,6 +63,8 @@ export interface ReplayOptions {
 export interface ReplayView {
   /** The stacked words, the current step's alone visible; assistive tech also hears `live`. */
   status: HTMLElement;
+  /** The words under the board, stacked as `status` is; the figure puts it after its transport. Empty when no step has any. */
+  after: HTMLElement;
   /** Where the board is drawn. */
   slot: HTMLElement;
   live: HTMLElement;
@@ -89,6 +100,9 @@ export function replayView(o: ReplayOptions): ReplayView {
     return b;
   };
   status.append(...(o.sizers ?? []).map(sizer), ...blocks);
+  const after = el('div', 'status after');
+  const afterBlocks = o.spoken.map((s) => block(o.lang, s.after ?? []));
+  if (o.spoken.some((s) => s.after?.length)) after.append(...(o.afterSizers ?? []).map(sizer), ...afterBlocks);
   const live = el('p', 'sr');
   live.setAttribute('role', 'status');
   live.setAttribute('aria-live', 'polite');
@@ -101,6 +115,7 @@ export function replayView(o: ReplayOptions): ReplayView {
     const step = o.steps[i]!;
     const said = o.spoken[i]!;
     blocks.forEach((b, k) => b.toggleAttribute('data-off', k !== i));
+    afterBlocks.forEach((b, k) => b.toggleAttribute('data-off', k !== i));
     live.textContent = said.live;
     const move = step.move;
     const next = drawBoard(step.state, {
@@ -115,7 +130,7 @@ export function replayView(o: ReplayOptions): ReplayView {
     shown = i;
   };
 
-  return { status, slot, live, show };
+  return { status, after, slot, live, show };
 }
 
 export const colourKey = (c: Colour): StringKey => (c === 'White' ? 'white' : 'red');

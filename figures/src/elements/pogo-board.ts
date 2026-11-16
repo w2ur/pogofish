@@ -30,7 +30,7 @@ import { colon, t, type Lang } from '../kit/strings';
 import { SearchClient } from '../search-client';
 import { LEVELS, LEVEL_SIMS, store, type Level, type Store } from '../store';
 import boardCss from './pogo-board.css?raw';
-import { buildView, colourKey, type CountValue, type Ui } from './pogo-board-view';
+import { buildView, colourKey, stamp, type CountValue, type Ui } from './pogo-board-view';
 
 let sheet: CSSStyleSheet | undefined;
 function boardSheet(): CSSStyleSheet {
@@ -313,9 +313,8 @@ export class PogoBoard extends PogoFigure {
     ui.result.hidden = result === null;
     ui.turn.parentElement!.hidden = result !== null;
     if (result) {
-      ui.who.textContent = result.who;
+      ui.who.textContent = stamp(result.you);
       ui.how.textContent = result.how;
-      ui.you.textContent = result.you;
     }
     let line = '';
     if (!g) line = t(lang, 'chooseSide');
@@ -347,8 +346,8 @@ export class PogoBoard extends PogoFigure {
     ui.newGame.hidden = this.mode === 'follow' && !g?.finished;
     // An empty row still costs its gap: the compact board drops what it does not show.
     if (this.mode === 'follow') {
-      ui.status.hidden = ui.retry.hidden;
-      ui.next.hidden = ui.newGame.hidden;
+      ui.status.hidden = true;
+      ui.next.hidden = ui.newGame.hidden && ui.retry.hidden;
     }
 
     // Follow bar: whose turn, and the reader's open or folded, which no move changes.

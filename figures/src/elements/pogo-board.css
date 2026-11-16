@@ -98,9 +98,10 @@
   display: none;
 }
 
+/* The result as the flyer's stamp, on one line over the sentence that says how. */
 .result .who {
-  font-size: clamp(28px, 3.4vw, 44px);
-  overflow-wrap: anywhere;
+  font-size: 26px;
+  white-space: nowrap;
 }
 
 /* The follow board is compact: its bar carries the turn and the result. */

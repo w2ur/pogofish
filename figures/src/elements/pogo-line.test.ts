@@ -109,7 +109,7 @@ describe('<pogo-line>', () => {
     role(el, 'play').click();
     vi.advanceTimersByTime(1100 * 4);
     expect(counter(el)).toBe('4 / 4');
-    expect(current(el)).toContain('De retour à la position de départ');
+    expect(current(el)).toContain('Retour au départ');
     vi.advanceTimersByTime(1100 * 3);
     expect(counter(el)).toBe('3 / 4');
     expect(role(el, 'play').getAttribute('aria-label')).toBe('Pause');
@@ -122,9 +122,9 @@ describe('<pogo-line>', () => {
     expect(current(el)).toContain('This position for the 2nd time');
     for (let i = 0; i < 4; i++) role(el, 'next').click();
     expect(counter(el)).toBe('8 / 8');
-    expect(current(el)).toContain('This position for the 3rd time');
-    expect(current(el)).toContain('White wins');
-    expect(current(el)).toContain('Red produced a position for the third time');
+    // The end says two lines over the board: the stamp, and how; the live region says the move and the count too.
+    expect(current(el)).toBe('White winsRed repeated a position three times.');
+    expect(el.shadowRoot!.querySelector('[role="status"]')!.textContent).toContain('This position for the 3rd time');
   });
 
   it('« Jouer d’ici » hands the shown position to the board, named by line and ply', async () => {

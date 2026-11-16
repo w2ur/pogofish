@@ -68,11 +68,18 @@ function say(lang: Lang, f: Frame, programColour: Colour, openingPlies: number):
     else if (f.seen !== null && f.seen > 1) note = seenText(lang, f.seen);
   }
   const { who, how } = f.result ? resultWords(lang, f.result) : { who: '', how: '' };
-  const lines = [
-    { className: 'move', text: move },
-    { className: 'note', text: note },
-    { className: 'result', text: [who, how].filter(Boolean).map((p) => (p.endsWith('.') ? p : `${p}.`)).join(' ') },
-  ].filter((l) => l.text !== '');
+  // Two lines over the board: the move and its note, or at the end the stamp and how it ended.
+  const lines = (
+    f.result
+      ? [
+          { className: 'shout who', text: who },
+          { className: 'how', text: how },
+        ]
+      : [
+          { className: 'move', text: move },
+          { className: 'note', text: note },
+        ]
+  ).filter((l) => l.text !== '');
   const sentences = [move, note, who, how].filter(Boolean).map((p) => (p.endsWith('.') ? p : `${p}.`));
   return { lines, title: sentences.slice(0, 3).join(' '), live: sentences.join(' ') };
 }
@@ -80,15 +87,17 @@ function say(lang: Lang, f: Frame, programColour: Colour, openingPlies: number):
 /** The longest words any stage's game may say, so a new stage never moves the board. */
 function sizers(lang: Lang): Line[][] {
   const move = { className: 'move', text: `${t(lang, 'red')} (${t(lang, 'stagesProgram')}) ${t(lang, 'plays')} a1-3-c3` };
-  const notes = [t(lang, 'stagesOpening'), seenText(lang, 2)].map((text) => ({ className: 'note', text }));
-  return notes.flatMap((note) =>
-    (['W', 'R'] as const).flatMap((winner) =>
-      [false, true].map((byRepetition) => {
-        const { who, how } = resultWords(lang, { winner, byRepetition });
-        return [move, note, { className: 'result', text: `${who}. ${how}` }];
-      }),
-    ),
+  const notes = [t(lang, 'stagesOpening'), seenText(lang, 2)].map((text) => [move, { className: 'note', text }]);
+  const ends = (['W', 'R'] as const).flatMap((winner) =>
+    [false, true].map((byRepetition) => {
+      const { who, how } = resultWords(lang, { winner, byRepetition });
+      return [
+        { className: 'shout who', text: who },
+        { className: 'how', text: how },
+      ];
+    }),
   );
+  return [...notes, ...ends];
 }
 
 export class PogoStages extends PogoFigure {

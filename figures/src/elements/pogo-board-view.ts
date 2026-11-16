@@ -18,14 +18,13 @@ export interface Ui {
   barStatus?: HTMLElement;
   toggle?: HTMLButtonElement;
   caption: HTMLElement;
-  /** The turn line, the retry and the result, in one reserved area. */
+  /** The turn line, or the result, in one area two lines high. */
   status: HTMLElement;
   turn: HTMLElement;
   retry: HTMLButtonElement;
   result: HTMLElement;
   who: HTMLElement;
   how: HTMLElement;
-  you: HTMLElement;
   play: HTMLElement;
   svg: SVGSVGElement;
   cells: HTMLButtonElement[];
@@ -61,6 +60,9 @@ export interface Handlers {
   toggle(): void;
 }
 
+/** « Vous gagnez. » as the stamp says it: the sentence without its full stop. */
+export const stamp = (you: string): string => you.replace(/\.$/, '');
+
 export function buildView(lang: Lang, mode: 'inline' | 'follow', h: Handlers): Ui {
   const el = <K extends keyof HTMLElementTagNameMap>(tag: K, className = '', text = ''): HTMLElementTagNameMap[K] => {
     const node = document.createElement(tag);
@@ -86,30 +88,30 @@ export function buildView(lang: Lang, mode: 'inline' | 'follow', h: Handlers): U
   }
 
   const caption = el('p', 'caption');
-  // The status area: the turn line, or the result, over an invisible copy of the
-  // longest result, so it keeps one height and the board below never moves.
+  // The status area, two lines: the turn line, or the result as the flyer's stamp
+  // (« Vous gagnez ») over the sentence that says how. It lies over an invisible
+  // copy of the longest result, so it keeps one height and the board below never
+  // moves. The retry, when a search fails, is under the board with « Nouvelle partie ».
   const status = el('div', 'status');
   const turnBox = el('div', 'turn-box');
   const turn = el('p', 'turn');
+  turnBox.append(turn);
   const retry = controlButton(t(lang, 'retry'), h.retry, true);
   retry.classList.add('retry');
-  turnBox.append(turn, retry);
-  const resultBlock = (): { box: HTMLElement; who: HTMLElement; how: HTMLElement; you: HTMLElement } => {
+  const resultBlock = (): { box: HTMLElement; who: HTMLElement; how: HTMLElement } => {
     const box = el('div', 'result');
     const who = el('p', 'shout who');
     const how = el('p', 'how');
-    const you = el('p', 'you');
-    box.append(who, how, you);
-    return { box, who, how, you };
+    box.append(who, how);
+    return { box, who, how };
   };
-  const { box: result, who, how, you } = resultBlock();
+  const { box: result, who, how } = resultBlock();
   const sizer = resultBlock();
   sizer.box.className = 'result sizer';
   sizer.box.setAttribute('aria-hidden', 'true');
   const widest = longestResult(lang);
-  sizer.who.textContent = widest.who;
+  sizer.who.textContent = stamp(widest.you);
   sizer.how.textContent = widest.how;
-  sizer.you.textContent = widest.you;
   status.append(sizer.box, turnBox, result);
 
   const play = el('div', 'play');
@@ -160,7 +162,7 @@ export function buildView(lang: Lang, mode: 'inline' | 'follow', h: Handlers): U
   newGame.addEventListener('blur', h.cancelAbandon);
   const next = el('div', 'next');
   const row = el('div', 'controls');
-  row.append(newGame);
+  row.append(retry, newGame);
   if (mode === 'inline') next.append(setup, summary);
   next.append(row);
 
@@ -191,7 +193,6 @@ export function buildView(lang: Lang, mode: 'inline' | 'follow', h: Handlers): U
     result,
     who,
     how,
-    you,
     play,
     svg,
     cells,

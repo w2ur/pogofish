@@ -32,12 +32,21 @@ function say(lang: Lang, f: GreedyFrame, stopped: boolean): Spoken {
   const move = f.move && f.mover ? announceMove(lang, f.mover, f.move) : t(lang, 'startPosition');
   const note = f.score !== undefined ? scoreLine(lang, f.score, f.weighed!, f.tied!) : '';
   const { who, how } = f.result ? resultWords(lang, f.result) : { who: '', how: stopped ? unfinishedLine(lang) : '' };
-  const lines = [
-    { className: 'move', text: move },
-    { className: 'note', text: note },
-    { className: 'result', text: [who, how].filter(Boolean).map((p) => (p.endsWith('.') ? p : `${p}.`)).join(' ') },
-  ].filter((l) => l.text !== '');
-  return { lines, title: sentences([move, note, who]), live: sentences([move, note, who, how]) };
+  // Over the board, two lines: the move, or at the end the stamp and how it ended (or that it was stopped).
+  // The score that chose the move goes under the board, after the transport.
+  const lines = (
+    f.result
+      ? [
+          { className: 'shout who', text: who },
+          { className: 'how', text: how },
+        ]
+      : [
+          { className: 'move', text: move },
+          { className: 'how', text: how },
+        ]
+  ).filter((l) => l.text !== '');
+  const after = note ? [{ className: 'note', text: note }] : [];
+  return { lines, after, title: sentences([move, note, who]), live: sentences([move, note, who, how]) };
 }
 
 /** Parts read as sentences: « Blanc joue b1-2-b3. Score du coup : +1, … » */
@@ -47,17 +56,22 @@ const sentences = (parts: string[]): string =>
     .map((p) => (p.endsWith('.') ? p : `${p}.`))
     .join(' ');
 
-/** The longest words any game may say, so a new game never moves the board. */
-function sizers(lang: Lang): Line[][] {
+/** The longest words any game may say, over the board and under it, so a new game never moves the board. */
+function sizers(lang: Lang): { over: Line[][]; under: Line[][] } {
   const move = { className: 'move', text: announceMove(lang, 'White', [0, 3, 8]) };
-  const note = { className: 'note', text: scoreLine(lang, -88, 88, 88) };
   const ends = (['W', 'R'] as const).flatMap((winner) =>
     [false, true].map((byRepetition) => {
       const { who, how } = resultWords(lang, { winner, byRepetition });
-      return [move, note, { className: 'result', text: `${who}. ${how}` }];
+      return [
+        { className: 'shout who', text: who },
+        { className: 'how', text: how },
+      ];
     }),
   );
-  return [...ends, [move, note, { className: 'result', text: unfinishedLine(lang) }]];
+  return {
+    over: [...ends, [move, { className: 'how', text: unfinishedLine(lang) }]],
+    under: [[{ className: 'note', text: scoreLine(lang, -88, 88, 88) }]],
+  };
 }
 
 export class PogoGreedy extends PogoFigure {
@@ -110,7 +124,8 @@ export class PogoGreedy extends PogoFigure {
         lang,
         steps: frames,
         spoken: frames.map((f, i) => say(lang, f, !finished && i === last)),
-        sizers: held,
+        sizers: held.over,
+        afterSizers: held.under,
         reducedMotion: () => this.reducedMotion(),
       });
       const stepper = new Stepper(frames.length, view.show, { signal: current.signal, interval: 1100 });
@@ -123,7 +138,7 @@ export class PogoGreedy extends PogoFigure {
       this.seed = seed;
       this.refreshPrecisions();
       view.show(0);
-      body.replaceChildren(view.status, view.slot, row, view.live);
+      body.replaceChildren(view.status, view.slot, row, view.after, view.live);
       if (hadFocus) row.querySelector<HTMLButtonElement>('[data-role="action"]')?.focus();
       if (autoplay) stepper.play();
     };

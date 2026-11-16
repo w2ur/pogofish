@@ -32,12 +32,18 @@ function say(lang: Lang, f: Frame, endless: boolean): Spoken {
   if (endless) note = t(lang, 'loopAgain');
   else if (f.seen !== null && f.seen > 1) note = seenText(lang, f.seen);
   const { who, how } = f.result ? resultWords(lang, f.result) : { who: '', how: '' };
-  const lines = [
-    { className: 'move', text: move },
-    { className: 'note', text: note },
-    { className: 'shout who', text: who },
-    { className: 'how', text: how },
-  ].filter((l) => l.text !== '');
+  // Two lines over the board: the move and its note, or at the end the stamp and how it ended.
+  const lines = (
+    f.result
+      ? [
+          { className: 'shout who', text: who },
+          { className: 'how', text: how },
+        ]
+      : [
+          { className: 'move', text: move },
+          { className: 'note', text: note },
+        ]
+  ).filter((l) => l.text !== '');
   return {
     lines,
     title: [move, note, who].filter(Boolean).join('. '),
