@@ -127,7 +127,7 @@ async function build(): Promise<void> {
   app.replaceChildren();
 
   app.append(heading('<pogo-title> · inside an h1, over the same h1 without the element (the box must match)'));
-  const title = l === 'fr' ? 'POGOOOOOOOOOO' + '\u00a0!'.repeat(11) : 'POGOOOOOOOOOO' + '!'.repeat(11);
+  const title = l === 'fr' ? 'POOOOOOGOOOOOO' + '\u00a0!'.repeat(8) : 'POOOOOOGOOOOOO' + '!'.repeat(8);
   const h1 = document.createElement('h1');
   h1.className = 'pogo-title-demo';
   h1.id = 'title-upgraded';

@@ -1,6 +1,7 @@
 // <pogo-title>: the page's signature, inside its <h1>. The light-DOM text is the
 // title and stays its accessible name; the element draws the same text over it,
-// aria-hidden, with every O a piece that jumps. The drawing is the text itself,
+// aria-hidden: every O a piece that jumps (the first half White, the second Red,
+// the two camps facing each other) and every « ! » in red. The drawing is the text itself,
 // set in the inherited font with each O kept as a transparent glyph, so the
 // box is the fallback's box at any size and wraps where it wraps: no layout is
 // read, nothing shifts. Still under reduced motion, and still off screen.
@@ -17,6 +18,13 @@ export class PogoTitle extends PogoFigure {
     drawn.className = 'drawn';
     drawn.setAttribute('aria-hidden', 'true');
     for (const g of titleGlyphs(this.textContent ?? '')) {
+      if ('bang' in g) {
+        const bang = document.createElement('span');
+        bang.className = 'bang';
+        bang.textContent = g.text;
+        drawn.append(bang);
+        continue;
+      }
       if (!('disc' in g)) {
         drawn.append(g.text);
         continue;

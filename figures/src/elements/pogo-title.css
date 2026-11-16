@@ -55,11 +55,30 @@ slot[hidden] {
   aspect-ratio: 1;
   translate: 0 -50%;
   border-radius: 50%;
-  background: var(--_ink);
+  background: var(--_white);
 }
 
 .disc.red {
   background: var(--_red);
+}
+
+/*
+ * Every piece outlined in ink, as the board draws it (theme.css, .board .ring):
+ * multiplied onto the disc, the ring is black on the light ground, where a
+ * white piece on paper would vanish, and all but invisible on the dark one.
+ */
+.disc::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  border-radius: 50%;
+  box-shadow: inset 0 0 0 max(1.5px, 0.02em) var(--_ink);
+  mix-blend-mode: multiply;
+}
+
+/* The bangs in the Red side's red: display-size type, the red itself. */
+.bang {
+  color: var(--_red);
 }
 
 /* Out of step: each disc enters its jump at its own phase of one up-and-down. */

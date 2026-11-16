@@ -1,34 +1,40 @@
 import { describe, expect, it } from 'vitest';
 import { titleGlyphs, type Disc, type Glyph } from './title-glyphs';
 
-const FR = 'POGOOOOOOOOOO' + ' !'.repeat(11);
-const EN = 'POGOOOOOOOOOO' + '!'.repeat(11);
+const FR = 'POOOOOOGOOOOOO' + ' !'.repeat(8);
+const EN = 'POOOOOOGOOOOOO' + '!'.repeat(8);
 const discs = (g: Glyph[]): Disc[] => g.flatMap((x) => ('disc' in x ? [x.disc] : []));
+const colours = (title: string): string => discs(titleGlyphs(title)).map((d) => d.colour[0]).join('');
 
 describe('titleGlyphs', () => {
   it('keeps every character of the title, in order', () => {
-    for (const title of [FR, EN, 'Pogo', '']) {
+    for (const title of [FR, EN, 'POGOOOOOOOOOO ! !', 'Pogo', '']) {
       expect(titleGlyphs(title).map((g) => g.text).join('')).toBe(title);
     }
   });
 
-  it('turns every O into a piece and nothing else', () => {
+  it('turns every O into a piece and every « ! » into a red bang, nothing else', () => {
     const g = titleGlyphs(FR);
-    expect(discs(g)).toHaveLength(11);
+    expect(discs(g)).toHaveLength(12);
+    expect(g.filter((x) => 'bang' in x)).toHaveLength(8);
     for (const x of g) {
       if ('disc' in x) expect(x.text).toBe('O');
-      else expect(x.text).not.toMatch(/[Oo]/);
+      else if ('bang' in x) expect(x.text).toBe('!');
+      else expect(x.text).not.toMatch(/[Oo!]/);
     }
-    expect(g.filter((x) => !('disc' in x)).map((x) => x.text)).toEqual(['P', 'G', ' !'.repeat(11)]);
-    expect(discs(titleGlyphs('Pogo'))).toHaveLength(2);
+    expect(g.filter((x) => !('disc' in x) && !('bang' in x)).map((x) => x.text)).toEqual(['P', 'G', ...Array(8).fill(' ')]);
   });
 
-  it('draws most pieces in ink, a few red, never two red side by side', () => {
-    const colours = discs(titleGlyphs(EN)).map((d) => d.colour);
-    const red = colours.filter((c) => c === 'red').length;
-    expect(red).toBeGreaterThan(0);
-    expect(red).toBeLessThan(colours.length / 2);
-    expect(colours.join(' ')).not.toContain('red red');
+  it('twelve O’s are the two camps: six White, then six Red', () => {
+    expect(colours(FR)).toBe('wwwwwwrrrrrr');
+    expect(colours(EN)).toBe('wwwwwwrrrrrr');
+  });
+
+  it('another count splits the same way, the odd one out White', () => {
+    expect(colours('POGOOOOOOOOOO')).toBe('wwwwwwrrrrr');
+    expect(colours('Pogo')).toBe('wr');
+    expect(colours('O')).toBe('w');
+    expect(colours('!!!')).toBe('');
   });
 
   it('sets the pieces out of step: distinct phases in [0, 1), lifts in [0.6, 1]', () => {

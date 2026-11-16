@@ -6,7 +6,7 @@ import { PogoTitle } from './pogo-title';
 
 if (!customElements.get('pogo-title')) customElements.define('pogo-title', PogoTitle);
 
-const FR = 'POGOOOOOOOOOO' + ' !'.repeat(11);
+const FR = 'POOOOOOGOOOOOO' + '\u00a0!'.repeat(8);
 const flush = () => new Promise((r) => setTimeout(r, 0));
 
 async function mount(text = FR): Promise<PogoTitle> {
@@ -43,8 +43,10 @@ describe('<pogo-title>', () => {
     expect(drawn.getAttribute('aria-hidden')).toBe('true');
     expect(drawn.textContent).toBe(FR);
     expect(el.textContent).toBe(FR);
-    expect(el.shadowRoot!.querySelectorAll('.o .disc')).toHaveLength(11);
-    expect(el.shadowRoot!.querySelectorAll('.disc.red').length).toBeGreaterThan(0);
+    expect(el.shadowRoot!.querySelectorAll('.o .disc')).toHaveLength(12);
+    expect(el.shadowRoot!.querySelectorAll('.o .disc.white')).toHaveLength(6);
+    expect(el.shadowRoot!.querySelectorAll('.o .disc.red')).toHaveLength(6);
+    expect([...el.shadowRoot!.querySelectorAll('.bang')].map((b) => b.textContent).join('')).toBe('!'.repeat(8));
   });
 
   it('jumps only while on screen, and stops for good at disconnect', async () => {
