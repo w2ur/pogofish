@@ -51,7 +51,7 @@ export function stageWords(
     whereHead,
     whereTail,
     before,
-    score: `${t(lang, 'stagesScore')}${c} ${formatShare(lang, stage.score)}`,
+    score: `${formatShare(lang, stage.score)} ${t(lang, 'stagesScoreWhat')}`,
     shown,
   };
 }

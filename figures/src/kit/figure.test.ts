@@ -74,7 +74,17 @@ class TwoSources extends PogoFigure {
   static override source = 'data/a.json · docs/games/';
   protected render(): void {}
 }
+/** Says how it is made in its own words. */
+class OwnWords extends PogoFigure {
+  static override fidelity = 'live' as const;
+  static override game = 'gameLc12' as const;
+  protected override made() {
+    return 'Computed here; the strength quoted was measured before.';
+  }
+  protected render(): void {}
+}
 class Broken extends PogoFigure {
+  static override fidelity = 'measured' as const;
   protected render(): void {
     throw new Error('no engine');
   }
@@ -109,6 +119,7 @@ customElements.define('kit-fine', Fine);
 customElements.define('kit-flaky', Flaky);
 customElements.define('kit-measured', Measured);
 customElements.define('kit-broken', Broken);
+customElements.define('kit-own-words', OwnWords);
 customElements.define('kit-measured-lc12', MeasuredLc12);
 customElements.define('kit-rejected', Rejected);
 customElements.define('kit-by-attribute', ByAttribute);
@@ -184,6 +195,36 @@ describe('PogoFigure', () => {
     } finally {
       error.mockRestore();
     }
+  });
+
+  it('a failed figure shows no « Précisions », and shows them again when it renders afresh', async () => {
+    const error = vi.spyOn(console, 'error').mockImplementation(() => {});
+    try {
+      const el = mount<Broken>('kit-broken');
+      expect(disclosure(el).hidden).toBe(false);
+      intersect(el);
+      await flush();
+      expect(el.hasAttribute('data-failed')).toBe(true);
+      expect(disclosure(el).hidden).toBe(true);
+      el.remove();
+      expect(disclosure(el).hidden).toBe(false);
+    } finally {
+      error.mockRestore();
+    }
+  });
+
+  it('a figure may say how it is made in its own words, in place of the kit’s first sentence', () => {
+    const el = mount<OwnWords>('kit-own-words', 'en');
+    expect(precisions(el)).toEqual([
+      'Computed here; the strength quoted was measured before.',
+      'Here, the player who repeats a position a third time loses the game.',
+    ]);
+  });
+
+  it('the disclosure’s sign is drawn with an empty alternative text, so it is not read as part of its name', () => {
+    const css = themeCss.replace(/\/\*[\s\S]*?\*\//g, '');
+    expect(css).toMatch(/\.precisions > summary::before \{[^}]*content: '\+' \/ '';/);
+    expect(css).toMatch(/\.precisions\[open\] > summary::before \{[^}]*content: '−' \/ '';/);
   });
 
   it('a rejected async render() leaves the fallback visible too', async () => {

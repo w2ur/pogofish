@@ -121,6 +121,15 @@ export abstract class PogoFigure extends HTMLElement {
   }
 
   /**
+   * How the figure is made, when the kit's sentence for its kind would not say it
+   * truly (a live board quoting a measured strength, a figure read from the solved
+   * table): replaces that first sentence. Undefined keeps the kit's.
+   */
+  protected made(): string | undefined {
+    return undefined;
+  }
+
+  /**
    * The figure's own sentences in « Précisions », after the kit's (how it is made, its
    * game): the notes a reader does not need to read the figure. Plain sentences, in
    * the page's language; read when the frame is built and by refreshPrecisions().
@@ -175,6 +184,7 @@ export abstract class PogoFigure extends HTMLElement {
     this.stage.replaceChildren();
     this.fallback.hidden = false;
     this.removeAttribute('data-failed');
+    this.precisionsBox.hidden = false;
     // It renders afresh when it comes back: its reserve with it.
     this.stage.style.setProperty('--_stage-min', (this.constructor as typeof PogoFigure).stageMinHeight);
   }
@@ -225,7 +235,10 @@ export abstract class PogoFigure extends HTMLElement {
     if (source) this.dataset.source = source;
     else delete this.dataset.source;
     this.precisionsSummary.textContent = t(lang, 'precisions');
-    const lines = [...precisionLines(lang, kind, game, iso ? formatDate(lang, iso) : undefined), ...this.precisions()];
+    const kit = precisionLines(lang, kind, game, iso ? formatDate(lang, iso) : undefined);
+    const made = this.made();
+    if (made !== undefined) kit[0] = made;
+    const lines = [...kit, ...this.precisions()];
     this.precisionsBody.replaceChildren(
       ...lines.map((line) => {
         const p = document.createElement('p');
@@ -251,6 +264,8 @@ export abstract class PogoFigure extends HTMLElement {
       if (signal.aborted) return;
       console.error(`${this.localName}: render failed`, error);
       this.setAttribute('data-failed', '');
+      // A failed figure shows nothing it could not make: no « Précisions » over its fallback.
+      this.precisionsBox.hidden = true;
       // A failed figure reserves no room: one line and its fallback, never a blank band.
       // theme.css overrides every element's own reserve for this state.
       this.stage.style.setProperty('--_stage-min', '0px');

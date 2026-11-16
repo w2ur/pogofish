@@ -103,7 +103,7 @@ describe('<pogo-stages>', () => {
           expect(text).toContain(formatShare(lang, stage.score));
           // The percentage on screen is the data's score, within the 0.05 point of its rounding, and so is the interval in « Précisions ».
           const num = (x: string) => Number(x.replace(',', '.'));
-          const shown = num(text.match(/(\d+[.,]\d)\u202f?%$/)![1]!);
+          const shown = num(text.match(/^(\d+[.,]\d)\u202f?% (?:de parties gagnées contre le glouton|of games won against greedy)$/)![1]!);
           expect(Math.abs(shown - stage.score * 100)).toBeLessThanOrEqual(0.05 + 1e-9);
           const interval = precisionsOf(el).at(-1)!;
           expect(interval).toContain(formatInterval(lang, stage.ci95));
@@ -120,7 +120,7 @@ describe('<pogo-stages>', () => {
     choices(el)[7]!.click();
     const r = readout(el).textContent!;
     expect(r).toContain('AlphaZero, 100 simulations · 100 % de l’entraînement : 10 000 parties');
-    expect(r).toContain('Score contre le joueur glouton\u202f: 89,1\u202f%');
+    expect(r).toContain('89,1\u202f% de parties gagnées contre le glouton');
     expect(precisionsOf(el).at(-1)).toBe('À cette étape, l’intervalle à 95\u202f% de ce score va de 87,8 à 90,3\u202f%.');
     expect(r).toContain('Partie montrée : le programme est Blanc, le glouton Rouge ; le programme gagne.');
   });

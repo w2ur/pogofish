@@ -69,6 +69,10 @@ export class PogoOpenings extends PogoFigure {
   /** The move whose explanation is shown in the list: its stack and landing are marked on the board. */
   private preview: Triple | null = null;
 
+  protected override made(): string {
+    return t(this.lang, 'madeSolved');
+  }
+
   protected override precisions(): string[] {
     return [t(this.lang, 'openingsVerdicts')];
   }

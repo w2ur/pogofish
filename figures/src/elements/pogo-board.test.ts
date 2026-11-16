@@ -114,7 +114,7 @@ describe('<pogo-board> inline', () => {
   it('says in « Précisions », in words, who the opponent is, what the levels change and its measured strength', async () => {
     const el = await mount('fr');
     expect(precisionsOf(el)).toEqual([
-      'Calculé dans votre navigateur par le moteur du jeu\u202f: rien n’est préenregistré.',
+      'La partie se calcule dans votre navigateur\u202f: chaque coup de l’ordinateur y est cherché pendant que vous jouez. Sa force, citée plus bas, a été mesurée avant la publication.',
       'Ici, le joueur qui répète une troisième fois une position perd la partie.',
       'Vous jouez contre AlphaZero, un programme qui a appris le Pogo en jouant contre lui-même\u202f; la deuxième partie de l’article raconte comment.',
       'Avant chaque coup, il examine un nombre fixe de suites possibles de la partie, selon le niveau\u202f: facile, 25\u202f; normal, 100\u202f; difficile, 400.',

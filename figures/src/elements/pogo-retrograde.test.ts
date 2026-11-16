@@ -82,7 +82,7 @@ describe('<pogo-retrograde>', () => {
     const el = await mount('en');
     expect(el.dataset.source).toBe('v3-solve/table.bin');
     expect(precisionsOf(el)).toEqual([
-      'Measured before publication: these numbers do not change when you play.',
+      'Established before publication by the complete solution of the game: nothing here depends on what you play.',
       'Here the game has no stopping rule: a game may never end.',
       'The positions shown are examples: at each step, the analysis marks every position concerned, not only these.',
     ]);

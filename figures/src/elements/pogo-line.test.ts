@@ -49,11 +49,7 @@ describe('<pogo-line>', () => {
   it('labels the table’s lines as measured under game A only: the table says nothing of lc1-2', async () => {
     for (const line of ['centreLoss', 'openingWin']) {
       const a = await mount(line, 'A', 'en');
-      expect(precisionsOf(a)).toEqual([
-        'Measured before publication: these numbers do not change when you play.',
-        'Here the game has no stopping rule: a game may never end.',
-        'This game comes from the complete solution of the game that the essay describes.',
-      ]);
+      expect(precisionsOf(a)).toEqual(['Established before publication by the complete solution of the game: nothing here depends on what you play.', 'Here the game has no stopping rule: a game may never end.']);
       expect(a.dataset.source).toBe('v3-solve/table.bin');
       const lc = await mount(line, 'lc1-2', 'en');
       expect(precisionsOf(lc)).toEqual(['Computed in your browser by the game’s engine: nothing is prerecorded.', 'Here, the player who repeats a position a third time loses the game.']);

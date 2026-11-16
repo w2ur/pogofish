@@ -80,6 +80,11 @@ export class PogoBoard extends PogoFigure {
     return (this.constructor as typeof PogoBoard).deps;
   }
 
+  /** Computed here, but quoting a strength measured before: both said truly. */
+  protected override made(): string {
+    return t(this.lang, 'boardMade');
+  }
+
   /** Who the opponent is, what the levels change, and its measured strength, said for a reader of the essay's first part. */
   protected override precisions(): string[] {
     const lang = this.lang;

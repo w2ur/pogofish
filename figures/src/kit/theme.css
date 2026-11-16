@@ -139,8 +139,10 @@ slot[hidden],
   display: none;
 }
 
+/* The sign is drawn, not read: its text has an empty alternative where browsers take one. */
 .precisions > summary::before {
   content: '+';
+  content: '+' / '';
   display: inline-grid;
   place-items: center;
   width: 16px;
@@ -152,6 +154,7 @@ slot[hidden],
 
 .precisions[open] > summary::before {
   content: '−';
+  content: '−' / '';
 }
 
 .precisions-body {

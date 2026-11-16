@@ -41,6 +41,10 @@ export class PogoRetrograde extends PogoFigure {
     table: sharedTable,
   };
 
+  protected override made(): string {
+    return t(this.lang, 'madeSolved');
+  }
+
   protected override precisions(): string[] {
     return [t(this.lang, 'retroExamples')];
   }
