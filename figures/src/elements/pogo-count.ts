@@ -1,13 +1,42 @@
 // <pogo-count>: the number of Pogo positions, computed here in three steps
 // (count-steps.ts) and shown one factor at a time, with the running product.
-// The rows still to come keep their room, so a step never moves the page.
+// The rows still to come keep their room, so a step never moves the page. It
+// counts by itself once on screen (kit/autoplay.ts); under reduced motion it
+// shows the total. Each combination is written C with its index and exponent.
 import { Stepper } from '../kit/stepper';
 import { transport } from '../kit/controls';
 import { autoplay } from '../kit/autoplay';
 import { PogoFigure } from '../kit/figure';
-import { t, type StringKey } from '../kit/strings';
+import { t, type Lang, type StringKey } from '../kit/strings';
 import { countSteps, formatCount, type CountPart } from './count-steps';
 import countCss from './pogo-count.css?raw';
+
+/**
+ * C(n, k) written the French way, C with n as its index and k as its exponent
+ * (C₁₂⁶), real <sub> and <sup>, hidden from assistive tech, which reads the
+ * words instead: « 6 parmi 12 », "12 choose 6".
+ */
+export function binomialNotation(lang: Lang, n: number, k: number): HTMLElement {
+  const box = document.createElement('span');
+  box.className = 'binomial';
+  const notation = document.createElement('span');
+  notation.className = 'notation';
+  notation.setAttribute('aria-hidden', 'true');
+  const scripts = document.createElement('span');
+  scripts.className = 'scripts';
+  const sup = document.createElement('sup');
+  sup.textContent = String(k);
+  const sub = document.createElement('sub');
+  sub.textContent = String(n);
+  scripts.append(sup, sub);
+  notation.append('C', scripts);
+  const words = document.createElement('span');
+  words.className = 'sr';
+  const choose = t(lang, 'choose');
+  words.textContent = lang === 'fr' ? [k, choose, n].join(' ') : [n, choose, k].join(' ');
+  box.append(notation, words);
+  return box;
+}
 
 const LABEL: Record<CountPart, StringKey> = { colours: 'countColours', stacks: 'countStacks', turn: 'countTurn' };
 
@@ -45,7 +74,7 @@ export class PogoCount extends PogoFigure {
       const li = el('li', 'factor');
       const n = number('shout num value', i === 0 ? '' : '× ', s.factor);
       const what = el('span', 'what', t(lang, LABEL[s.part]));
-      if (s.binomial) what.append(' ', el('span', 'binomial', `C(${s.binomial[0]}, ${s.binomial[1]})`));
+      if (s.binomial) what.append(' ', binomialNotation(lang, ...s.binomial));
       li.append(n, what);
       list.append(li);
       return li;

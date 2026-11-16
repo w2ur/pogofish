@@ -56,6 +56,33 @@
   white-space: nowrap;
 }
 
+/* C, then k over n: the exponent and the index stacked in one column after it. */
+.binomial .scripts {
+  display: inline-flex;
+  flex-direction: column;
+  margin-left: 0.08em;
+  font-size: 0.72em;
+  line-height: 1;
+  vertical-align: -0.3em;
+}
+
+.binomial sup,
+.binomial sub {
+  font-size: inherit;
+  line-height: 1;
+  vertical-align: baseline;
+}
+
+/* Read by assistive technology, not drawn. */
+.sr {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  clip-path: inset(50%);
+  white-space: nowrap;
+}
+
 /* A digit-group separator, narrow no-break space or comma, given room to be seen. */
 .sep {
   padding-inline: 0.06em;

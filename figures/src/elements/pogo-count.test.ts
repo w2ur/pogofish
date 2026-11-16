@@ -61,6 +61,21 @@ describe('<pogo-count>', () => {
     expect($(el, '.total .what').hasAttribute('data-off')).toBe(false);
   });
 
+  it('writes each combination the French way, C with n below and k above, read as « 6 parmi 12 »', async () => {
+    const fr = await mount('fr');
+    const b = $$(fr, '.binomial');
+    expect(b.map((x) => [x.querySelector('sub')!.textContent, x.querySelector('sup')!.textContent])).toEqual([
+      ['12', '6'],
+      ['20', '8'],
+    ]);
+    // Drawn for the eye, said in words for the ear.
+    for (const x of b) expect(x.querySelector('.notation')!.getAttribute('aria-hidden')).toBe('true');
+    expect(b.map((x) => x.querySelector('.sr')!.textContent)).toEqual(['6 parmi 12', '8 parmi 20']);
+    expect(b[0]!.textContent).not.toContain('C(');
+    const en = await mount('en');
+    expect($$(en, '.binomial .sr').map((x) => x.textContent)).toEqual(['12 choose 6', '20 choose 8']);
+  });
+
   it('writes English numbers with commas', async () => {
     const el = await mount('en');
     $(el, '[data-role="next"]').click();
