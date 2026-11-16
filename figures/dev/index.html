@@ -82,16 +82,23 @@
         text-transform: uppercase;
         color: var(--pogo-muted);
       }
-      /* The hub's .pogo-title (src/styles/pogo.css), copied for the harness. */
+      /* The hub's .pogo-head-main and .pogo-title (src/styles/pogo.css), copied for the harness. */
+      .pogo-title-head {
+        min-width: 0;
+        container-type: inline-size;
+      }
+      .pogo-title-demo pogo-title {
+        display: block;
+      }
       .pogo-title-demo {
         margin: 0 0 16px;
         font-family: var(--pogo-font-display);
-        font-size: clamp(96px, 21vw, 340px);
+        font-size: clamp(40px, calc(100cqi / 3.9), 340px);
         font-stretch: 62%;
         font-weight: 900;
         line-height: 0.82;
         letter-spacing: -0.01em;
-        word-spacing: 0.12em;
+        word-spacing: 0;
         text-transform: uppercase;
         overflow-wrap: anywhere;
         padding-bottom: 16px;

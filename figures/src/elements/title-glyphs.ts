@@ -8,8 +8,10 @@
 //
 // Groups say where the title may break. A letter and the O's that follow it
 // are one group that never breaks (« POOOOOO », « GOOOOOO »); the run of
-// bangs, with the no-break spaces glued to them, is another, broken only as a
-// last resort; a breakable space stands alone between groups.
+// bangs, with the no-break spaces between them, is another, broken only as a
+// last resort; a breakable space stands alone between groups. The no-break
+// space French sets before the first « ! » ends the group before the run, as
+// the page writes it (« GOOOOOO&nbsp;<wbr>! »): a line of bangs starts on a bang.
 
 export interface Disc {
   /** The side the piece belongs to. */
@@ -71,12 +73,15 @@ export function titleGroups(title: string): TitleGroup[] {
       n++;
       return;
     }
-    // A bang, or a no-break space that glues the bang after it: the bang run.
+    if (ch === '!') {
+      (cur?.kind === 'bangs' ? cur : open('bangs')).glyphs.push({ text: ch, bang: true });
+      return;
+    }
+    // A no-break space before a bang: inside the run it glues two bangs; before the run
+    // it ends the group it follows, so the run, wherever it breaks, starts on its first « ! ».
     const next = chars.slice(i).find((c) => !isGlue(c));
-    if (ch === '!' || (isGlue(ch) && next === '!')) {
-      const g = cur?.kind === 'bangs' ? cur : open('bangs');
-      if (ch === '!') g.glyphs.push({ text: ch, bang: true });
-      else text(g, ch, false);
+    if (isGlue(ch) && next === '!') {
+      text(cur ?? open('bangs'), ch, false);
       return;
     }
     if (isBreakSpace(ch)) {

@@ -127,8 +127,9 @@ async function build(): Promise<void> {
   app.replaceChildren();
 
   app.append(heading('<pogo-title> · inside an h1, over the same h1 without the element (the box must match) · ?titleSize=72px overrides the size'));
-  // The page's text: a <wbr> before the G and before the bangs; French glues each « ! » with U+202F.
-  const parts = ['POOOOOO', 'GOOOOOO', l === 'fr' ? '\u202f!'.repeat(8) : '!'.repeat(8)];
+  // The page's text: a <wbr> before the G and before the bangs. French sets a no-break space
+  // before each « ! »; the one before the first stays with the camp, before the <wbr>.
+  const parts = ['POOOOOO', l === 'fr' ? 'GOOOOOO\u00a0' : 'GOOOOOO', l === 'fr' ? '!' + '\u00a0!'.repeat(7) : '!'.repeat(8)];
   const fill = (target: HTMLElement): void => {
     parts.forEach((part, k) => {
       if (k > 0) target.append(document.createElement('wbr'));
@@ -147,7 +148,11 @@ async function build(): Promise<void> {
   plain.id = 'title-plain';
   fill(plain);
   if (size) for (const h of [h1, plain]) h.style.fontSize = size;
-  app.append(h1, plain);
+  // Sized as the page sizes it: a camp fills the line of its container (hub, pogo.css).
+  const head = document.createElement('div');
+  head.className = 'pogo-title-head';
+  head.append(h1, plain);
+  app.append(head);
 
   app.append(heading('Type cuts'));
   app.append(

@@ -53,12 +53,13 @@ describe('<pogo-title>', () => {
     resetMedia();
     const h1 = document.createElement('h1');
     const el = document.createElement('pogo-title') as PogoTitle;
-    el.append('POOOOOO', document.createElement('wbr'), 'GOOOOOO', document.createElement('wbr'), '\u202f!'.repeat(8));
+    // The page's markup: the no-break space stays with the camp, before the <wbr>.
+    el.append('POOOOOO', document.createElement('wbr'), 'GOOOOOO\u00a0', document.createElement('wbr'), '!' + '\u00a0!'.repeat(7));
     h1.append(el);
     document.body.append(h1);
     intersect(el);
     await flush();
-    const text = 'POOOOOOGOOOOOO' + '\u202f!'.repeat(8);
+    const text = 'POOOOOOGOOOOOO' + '\u00a0!'.repeat(8);
     expect(el.textContent).toBe(text);
     expect(el.querySelectorAll('wbr')).toHaveLength(2);
     const drawn = el.shadowRoot!.querySelector('.drawn')!;
@@ -69,6 +70,12 @@ describe('<pogo-title>', () => {
       'span.part.camp',
       'wbr',
       'span.part.bangs',
+    ]);
+    // Each drawn group ends where the page's <wbr> stands: the line of bangs starts on a bang.
+    expect([...drawn.querySelectorAll('.part')].map((p) => p.textContent)).toEqual([
+      'POOOOOO',
+      'GOOOOOO\u00a0',
+      '!' + '\u00a0!'.repeat(7),
     ]);
     expect([...el.shadowRoot!.querySelectorAll('.letter.red')].map((x) => x.textContent)).toEqual(['G']);
   });

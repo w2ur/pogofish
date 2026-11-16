@@ -1,3 +1,4 @@
+import fc from 'fast-check';
 import { describe, expect, it } from 'vitest';
 import { titleGlyphs, titleGroups, type Disc, type Glyph } from './title-glyphs';
 
@@ -69,11 +70,25 @@ describe('titleGroups', () => {
       const groups = titleGroups(title);
       expect(groups.map((g) => g.kind)).toEqual(['camp', 'camp', 'bangs']);
       expect(groups[0]!.glyphs.map((x) => ('disc' in x ? x.disc.colour : x.text))).toEqual(['P', ...Array(6).fill('white')]);
-      expect(groups[1]!.glyphs.map((x) => ('disc' in x ? x.disc.colour : x.text))).toEqual(['G', ...Array(6).fill('red')]);
+      expect(groups[1]!.glyphs.map((x) => ('disc' in x ? x.disc.colour : x.text)).filter((x) => x.trim())).toEqual(['G', ...Array(6).fill('red')]);
       expect(groups[2]!.glyphs.filter((x) => 'bang' in x)).toHaveLength(8);
     }
-    // The no-break space before each French bang belongs to the bang run, never to the Red camp.
-    expect(shape(FR_PAGE)[2]!.text).toBe(' !'.repeat(8));
+  });
+
+  it('the line of bangs starts on a bang: the space before the first « ! » ends the Red camp', () => {
+    const NB = '\u00a0';
+    expect(shape('POOOOOOGOOOOOO' + (NB + '!').repeat(8)).map((g) => g.text)).toEqual([
+      'POOOOOO',
+      'GOOOOOO' + NB,
+      '!' + (NB + '!').repeat(7),
+    ]);
+    expect(shape('POOOOOOGOOOOOO' + '!'.repeat(8)).map((g) => g.text)).toEqual(['POOOOOO', 'GOOOOOO', '!!!!!!!!']);
+    // The narrow no-break space goes the same way.
+    expect(shape(FR_PAGE).map((g) => g.text)).toEqual(['POOOOOO', 'GOOOOOO\u202f', '!' + '\u202f!'.repeat(7)]);
+    // The camp keeps the space as plain text after its last piece, never as a piece or a bang.
+    expect(titleGroups(FR_PAGE)[1]!.glyphs.at(-1)).toEqual({ text: '\u202f' });
+    // A title that opens on a glued bang still keeps it.
+    expect(shape(NB + '!')).toEqual([{ kind: 'bangs', text: NB + '!' }]);
   });
 
   it('a letter takes the colour of the camp it leads: G red, P ink', () => {
@@ -103,5 +118,17 @@ describe('titleGroups', () => {
     for (const title of [FR_PAGE, 'POGOOO !', 'a b c ! !', 'Oo!o']) {
       expect(shape(title).map((g) => g.text).join('')).toBe(title);
     }
+  });
+
+  it('loses no character and starts every bang run on a « ! », for any title', () => {
+    const chars = fc.constantFrom('P', 'G', 'O', 'o', '!', ' ', '\u00a0', '\u202f', 'x');
+    fc.assert(
+      fc.property(fc.array(chars, { maxLength: 40 }), (cs) => {
+        const title = cs.join('');
+        const groups = shape(title);
+        expect(groups.map((g) => g.text).join('')).toBe(title);
+        for (const g of groups) if (g.kind === 'bangs' && groups.indexOf(g) > 0) expect(g.text[0]).toBe('!');
+      }),
+    );
   });
 });
