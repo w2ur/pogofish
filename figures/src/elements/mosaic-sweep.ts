@@ -4,8 +4,12 @@
 // change one by one in the order of the games, square k at k × SWEEP_STEP_MS,
 // so the three grids, swept together, run in step. Under reduced motion every
 // change is at 0. The element hands each square its delay as a CSS custom
-// property and lets a zero-length transition do the timing: a stage change
-// mid-sweep re-targets every square, which `stateAt` and `applySweep` model.
+// property and lets a zero-length transition do the timing. A stage change
+// mid-sweep plans against the target already given to each square, not
+// against what is on screen: only the squares whose previous target differs
+// get a new delay and state, and a square still waiting on its delay is left
+// to CSS, which runs its pending change to that same target. `stateAt` and
+// `applySweep` model the grid between and after two targets.
 import type { GameMark } from './mosaic-grid';
 
 /** Milliseconds between one game's square and the next: 100 squares sweep in under half a second. */
