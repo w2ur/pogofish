@@ -1,10 +1,11 @@
 /*
- * <pogo-openings>: the list's head, the board (with its count chooser) and
- * the list of moves with their verdicts, side by side from 560px, then the
- * line that reads the chosen move, then the controls. The head and that line
- * each keep the height of their longest text, and the list keeps eight rows,
- * so nothing moves when a level or a choice changes. The playable board's
- * cells and count chooser come from the kit sheet.
+ * <pogo-openings>: the list's head, then the board, its count chooser, the
+ * line that reads the chosen move and the controls, then the list of moves
+ * with their verdicts: under them in one column, beside them from 560px. The
+ * head and the readout each keep the height of their longest text; the list,
+ * the one block whose height varies, comes last and keeps no empty room, so
+ * nothing above or beside it moves when a level or a choice changes. The
+ * playable board's cells and count chooser come from the kit sheet.
  */
 .openings {
   container-type: inline-size;
@@ -51,14 +52,14 @@
 .board-col {
   display: flex;
   flex-direction: column;
-  gap: 8px;
+  gap: 12px;
 }
 
-/* The list: two columns, eight rows kept whatever the number of moves. */
+/* The list: two columns, as many rows as its moves need. */
 .list {
   display: grid;
   grid-template-columns: repeat(2, minmax(0, 1fr));
-  grid-template-rows: repeat(8, minmax(52px, auto));
+  grid-auto-rows: minmax(52px, auto);
   gap: 6px;
 }
 

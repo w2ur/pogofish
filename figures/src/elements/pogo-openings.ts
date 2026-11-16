@@ -142,12 +142,6 @@ export class PogoOpenings extends PogoFigure {
     });
     count.element.classList.add('counts');
 
-    const boardCol = el('div', 'board-col');
-    boardCol.append(play_, count.element);
-    const listSlot = el('div', 'list-slot');
-    const body = el('div', 'body');
-    body.append(boardCol, listSlot);
-
     const level = controlButton('', () => this.switchLevel());
     level.dataset.role = 'level';
     const playHere = controlButton(t(lang, 'playFromHere'), () => this.playHere(), true);
@@ -155,7 +149,16 @@ export class PogoOpenings extends PogoFigure {
     const row = el('div', 'controls');
     row.append(level, playHere);
 
-    root.append(head.box, body, readout.box, row);
+    // The list is the one block whose height varies (16 openings, 10 to 16 replies): it comes
+    // last, under everything else in one column and in its own column beside them, so nothing
+    // above or beside it moves when it changes, and it keeps no empty room.
+    const boardCol = el('div', 'board-col');
+    boardCol.append(play_, count.element, readout.box, row);
+    const listSlot = el('div', 'list-slot');
+    const body = el('div', 'body');
+    body.append(boardCol, listSlot);
+
+    root.append(head.box, body);
     this.ui = {
       head: head.line,
       svg,
