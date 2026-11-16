@@ -8,7 +8,7 @@
 // main-thread search reads the page's parsed net, so the file is never
 // downloaded twice, whichever figure or board asked for it first.
 import { assetUrl, NET_FILE, WASM_FILE, workerUrl } from './assets';
-import { dropAzBytes, sharedAz, sharedAzBytes } from './nets-shared';
+import { NET_TIMEOUT_MS, dropAzBytes, sharedAz, sharedAzBytes } from './nets-shared';
 import type { Rules, State, Triple } from './engine';
 import type { SearchSnapshot } from './mcts';
 import type { SearchReply, SearchRequest, WorkerMessage } from './search-handler';
@@ -37,7 +37,7 @@ export interface ClientOptions {
   /**
    * A worker that has not answered after this long is dropped for the main thread; a
    * main-thread search that has not answered after this long fails, and so does a net
-   * that has not loaded (default 30 s).
+   * that has not loaded (default `NET_TIMEOUT_MS`).
    */
   timeoutMs?: number;
   /** The net's bytes, sent to each new worker (default: the page's one fetch). */
@@ -83,7 +83,7 @@ export class SearchClient {
   constructor(o: ClientOptions = {}) {
     this.createWorker = o.createWorker ?? defaultWorker;
     this.fallback = o.fallback ?? mainThread;
-    this.timeoutMs = o.timeoutMs ?? 30_000;
+    this.timeoutMs = o.timeoutMs ?? NET_TIMEOUT_MS;
     this.netBytes = o.netBytes ?? sharedAzBytes;
     this.dropNet = o.dropNet ?? (o.netBytes ? () => {} : dropAzBytes);
   }

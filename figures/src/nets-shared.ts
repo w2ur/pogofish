@@ -8,7 +8,7 @@
 import { NET_FILE, TD_FILE, assetUrl } from './assets';
 import type { AzNet, TdNet } from './nets';
 
-/** How long a net may take to arrive, body included, before its fetch is aborted (SearchClient's default timeout). */
+/** How long a net may take to arrive, body included, before its fetch is aborted; also SearchClient's default timeout. */
 export const NET_TIMEOUT_MS = 30_000;
 
 /** The file's bytes, or a rejection once `NET_TIMEOUT_MS` has passed, the fetch aborted. */
