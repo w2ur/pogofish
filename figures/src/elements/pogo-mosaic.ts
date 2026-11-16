@@ -4,9 +4,9 @@
 // seed 1; mosaic-grid.ts), in the order they were played. Ink only: a won game
 // is a filled square, a lost one an outlined square; a slash inside marks a
 // game in which at least one of the program's moves was a mistake, a short
-// bar one in which none of its moves could be judged (all played from a
-// position already lost). Beside each mosaic, its totals in words, the stage's
-// bench score, and under them all the same totals as a table.
+// bar one in which none of its moves could be judged (it played none, or all
+// from a position already lost). Beside each mosaic, its totals in words, the
+// stage's bench score, and under them all the same totals as a table.
 //
 // Each stage is one SVG of four paths (won squares, lost squares, and the marks
 // on each), scaled as a whole: no text inside it, and no node per game.

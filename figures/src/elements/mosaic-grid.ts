@@ -3,9 +3,10 @@
 // one square per game in the data's order, 20 to a row, and the stage's
 // totals summed from those games. A game's mark says what was judged of the
 // program's moves: at least one mistake; none (every judged move kept the
-// exact value); or nothing judged (every move was played from a position
-// already lost). The mistake share is mistakes over judged moves, the rule of
-// scripts/pack-v5.mjs and tools/article-visuals/v5sheets.mjs.
+// exact value); or nothing judged (the program played no move, greedy having
+// won first, or every move it played was from a position already lost). The
+// mistake share is mistakes over judged moves, the rule of scripts/pack-v5.mjs
+// and tools/article-visuals/v5sheets.mjs.
 import type { Score, V5Data, V5Mosaic } from '../data';
 import { SOURCES } from '../kit/figure';
 

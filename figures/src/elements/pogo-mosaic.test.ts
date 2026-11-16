@@ -107,7 +107,7 @@ describe('<pogo-mosaic>', () => {
       'won',
       'lost',
       'at least one mistake by the program',
-      'no move judged: the position was already lost',
+      'no move judged (none played, or all played from a position already lost)',
     ]);
   });
 
