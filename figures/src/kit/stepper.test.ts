@@ -215,3 +215,35 @@ describe('Stepper', () => {
     expect(mediaListeners(REDUCED_MOTION)).toBe(0);
   });
 });
+
+describe('Stepper hold', () => {
+  it('holds each step as long as `hold` says before the next, in automatic play', () => {
+    const seen: number[] = [];
+    const s = new Stepper(4, (i) => seen.push(i), { interval: 900, hold: (i) => [100, 2000, 300, 0][i]! });
+    s.play();
+    vi.advanceTimersByTime(99);
+    expect(seen).toEqual([]);
+    vi.advanceTimersByTime(1);
+    expect(seen).toEqual([1]);
+    vi.advanceTimersByTime(1999);
+    expect(seen).toEqual([1]);
+    vi.advanceTimersByTime(1);
+    expect(seen).toEqual([1, 2]);
+    vi.advanceTimersByTime(300);
+    expect(seen).toEqual([1, 2, 3]);
+    expect(s.playing).toBe(false);
+  });
+
+  it('a loop’s rest is added to its last step’s hold', () => {
+    const seen: number[] = [];
+    const s = new Stepper(2, (i) => seen.push(i), { hold: (i) => (i === 0 ? 100 : 200), wrapTo: 0, rest: 50 });
+    s.play();
+    vi.advanceTimersByTime(100);
+    expect(seen).toEqual([1]);
+    vi.advanceTimersByTime(249);
+    expect(seen).toEqual([1]);
+    vi.advanceTimersByTime(1);
+    expect(seen).toEqual([1, 0]);
+    s.destroy();
+  });
+});

@@ -13,6 +13,11 @@ const REDUCED_MOTION = '(prefers-reduced-motion: reduce)';
 export interface StepperOptions {
   /** Milliseconds between automatic steps (default 900). */
   interval?: number;
+  /**
+   * For a figure whose steps last unequally: the milliseconds step `i` is shown before
+   * the next, in automatic play (default `interval` for every step).
+   */
+  hold?: (i: number) => number;
   /** Called when automatic play reaches the last step. */
   onEnd?: () => void;
   /**
@@ -31,6 +36,7 @@ export class Stepper {
   private timer: ReturnType<typeof setTimeout> | undefined;
   private readonly media: MediaQueryList;
   private readonly interval: number;
+  private readonly hold: ((i: number) => number) | undefined;
   private readonly rest: number;
   private readonly onEnd: (() => void) | undefined;
   private readonly wrapTo: number | undefined;
@@ -49,6 +55,7 @@ export class Stepper {
     options: StepperOptions = {},
   ) {
     this.interval = options.interval ?? 900;
+    this.hold = options.hold;
     this.rest = options.rest ?? 0;
     this.onEnd = options.onEnd;
     this.wrapTo = options.wrapTo;
@@ -148,11 +155,12 @@ export class Stepper {
     return true;
   }
 
-  /** One step after `interval`; on a loop's last step, after `interval + rest`. */
+  /** One step after `interval` (or the step's `hold`); on a loop's last step, after that plus `rest`. */
   private schedule(): void {
     const last = this.steps - 1;
     const wrapTo = this.wrapTo;
-    const wait = wrapTo !== undefined && this.i === last ? this.interval + this.rest : this.interval;
+    const shown = this.hold ? this.hold(this.i) : this.interval;
+    const wait = wrapTo !== undefined && this.i === last ? shown + this.rest : shown;
     // The timer stays set while the step is shown, so subscribers hear it as playing.
     const timer = setTimeout(() => {
       if (wrapTo !== undefined && this.i === last) this.go(wrapTo);
