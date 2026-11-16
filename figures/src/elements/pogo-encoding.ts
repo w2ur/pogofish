@@ -35,20 +35,15 @@ import { store, type Store } from '../store';
 import { encodingDemo } from './encoding-demo';
 import { encodingDiff, pieceColour, type Encoded } from './encoding-diff';
 import { CELLS, HEIGHT_DIVISOR, INPUTS, PER_CELL, REPETITION_DIVISOR, SLOTS, encodingRows } from './encoding-rows';
+import { inputText } from './input-text';
 import encodingCss from './pogo-encoding.css?raw';
+
+export { inputText };
 
 /** Milliseconds a position of the demonstration is held: time to see the grid turn over and read it. */
 export const DEMO_INTERVAL = 2800;
 
 type CountValue = '1' | '2' | '3';
-
-/** An input as the table writes it: « +1 », « −1 », « 0 », « 0,25 ». */
-export function inputText(lang: Lang, x: number): string {
-  if (x === 0) return '0';
-  if (Number.isInteger(x)) return x > 0 ? `+${x}` : `−${-x}`;
-  const text = x.toFixed(2).replace(/0$/, '');
-  return lang === 'fr' ? text.replace('.', ',') : text;
-}
 
 /** « Aux Rouges de jouer : +1 = pièce rouge, −1 = pièce blanche, 0 = pas de pièce. », in its two parts. */
 export function keyWords(lang: Lang, s: State): { turn: string; meaning: string } {

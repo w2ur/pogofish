@@ -1,0 +1,370 @@
+/*
+ * <pogo-net>: a position, the net as nodes and links on one canvas, and what
+ * comes out. Narrow: the three stacked, in the order the signal travels. From
+ * 560px the position stands beside the net, the output under them. From 900px
+ * (the wide box) the output stands at the right, where the signal arrives.
+ *
+ * Red is a positive number and ink a negative one, on the canvas as in the
+ * legend; the stronger, the plainer. Nothing here is a control: controls are
+ * never red.
+ */
+:host {
+  container-type: inline-size;
+}
+
+/* The room each kind takes, kept before it renders (measured 2026-11-16 on the harness, by width). */
+:host([kind='td']) .stage {
+  min-height: 1095px;
+}
+
+:host([kind='az']) .stage {
+  min-height: 1333px;
+}
+
+@container (min-width: 560px) {
+  :host([kind='td']) .stage {
+    min-height: 835px;
+  }
+
+  :host([kind='az']) .stage {
+    min-height: 913px;
+  }
+}
+
+@container (min-width: 900px) {
+  :host([kind='td']) .stage {
+    min-height: 626px;
+  }
+
+  :host([kind='az']) .stage {
+    min-height: 704px;
+  }
+}
+
+p,
+ol {
+  margin: 0;
+  padding: 0;
+}
+
+.net {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.net-body {
+  display: grid;
+  gap: 16px;
+  justify-items: center;
+}
+
+.board-slot {
+  width: min(100%, 220px);
+}
+
+.board-slot .board-frame,
+.board-slot .board {
+  display: block;
+  width: 100%;
+  height: auto;
+}
+
+.net-draw {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  width: 100%;
+  min-width: 0;
+}
+
+.canvas-wrap {
+  position: relative;
+  /* Room for 128 nodes in one column at the least pitch. */
+  height: 440px;
+  touch-action: pan-y;
+}
+
+.canvas-wrap canvas {
+  position: absolute;
+  inset: 0;
+  display: block;
+  width: 100%;
+  height: 100%;
+}
+
+.canvas-wrap:focus-visible {
+  outline-offset: 0;
+}
+
+/* The canvas reads its colours here: the tokens, resolved by the theme in force. */
+.swatches {
+  position: absolute;
+  width: 0;
+  height: 0;
+  overflow: hidden;
+}
+
+.sw-red {
+  color: var(--_red);
+}
+
+.sw-ink {
+  color: var(--_ink);
+}
+
+.sw-ground {
+  color: var(--_ground);
+}
+
+.sw-rule {
+  color: var(--_rule);
+}
+
+.sw-edge {
+  color: var(--_edge);
+}
+
+/* Each layer's count, under its column (above it for the preference head). */
+.col-labels {
+  position: relative;
+  height: 32px;
+}
+
+.col-label {
+  position: absolute;
+  top: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  transform: translateX(-50%);
+  font-size: 11.5px;
+  line-height: 1.2;
+  white-space: nowrap;
+  color: var(--_ink-2);
+}
+
+.col-label .n {
+  font-size: 15px;
+  font-weight: 800;
+  color: var(--_ink);
+}
+
+.legend {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 2px 14px;
+  font-size: 12.8px;
+  line-height: 1.4;
+  color: var(--_ink-2);
+}
+
+.legend-item {
+  white-space: nowrap;
+}
+
+.drawn {
+  flex-basis: 100%;
+  text-align: center;
+}
+
+.dot {
+  display: inline-block;
+  width: 9px;
+  height: 9px;
+  margin-right: 5px;
+  border-radius: 50%;
+}
+
+.dot.positive {
+  background: var(--_red);
+}
+
+.dot.negative {
+  background: var(--_ink);
+}
+
+/* What the pointed node is and holds. Two lines' room, so nothing moves when it speaks. */
+.probe {
+  min-height: 2.8em;
+  font-size: 12.8px;
+  line-height: 1.4;
+  text-align: center;
+  color: var(--_muted);
+}
+
+.probe[data-on] {
+  color: var(--_ink);
+  font-weight: 800;
+}
+
+/* The output. */
+.net-out {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 16px 32px;
+  width: 100%;
+}
+
+.note,
+.moves {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  width: 100%;
+  max-width: 220px;
+  min-width: 0;
+}
+
+.out-title {
+  font-size: 12.8px;
+  color: var(--_muted);
+}
+
+.note-number {
+  font-size: 56px;
+}
+
+.note[data-sign='positive'] .note-number {
+  color: var(--_red-text);
+}
+
+.scale {
+  position: relative;
+  height: 14px;
+}
+
+.scale .axis {
+  position: absolute;
+  top: 6px;
+  right: 0;
+  left: 0;
+  height: 2px;
+  background: var(--_ink);
+}
+
+.scale .zero {
+  position: absolute;
+  top: 2px;
+  left: calc(50% - 1px);
+  width: 2px;
+  height: 10px;
+  background: var(--_ink);
+}
+
+.scale .marker {
+  position: absolute;
+  top: 0;
+  width: 6px;
+  height: 14px;
+  margin-left: -3px;
+  background: var(--_ink);
+}
+
+.note[data-sign='positive'] .marker {
+  background: var(--_red);
+}
+
+.scale-ends {
+  display: flex;
+  justify-content: space-between;
+  font-size: 12.8px;
+  color: var(--_ink-2);
+}
+
+.note-for {
+  font-size: 12.8px;
+  color: var(--_ink-2);
+}
+
+.move-list {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  list-style: none;
+}
+
+.move-row {
+  display: grid;
+  grid-template-columns: 5.4em 4.2em minmax(0, 1fr);
+  align-items: center;
+  gap: 6px;
+  font-size: 15px;
+}
+
+.move-row .share {
+  text-align: right;
+}
+
+.move-row .bar {
+  height: 10px;
+  width: calc(var(--share) * 100%);
+  min-width: 1px;
+  background: var(--_ink);
+}
+
+.others {
+  min-height: 1.4em;
+  font-size: 12.8px;
+  color: var(--_ink-2);
+}
+
+/* While the signal is on its way, what comes out is not there yet; its room is. */
+.net[data-flow='running'] .late {
+  visibility: hidden;
+}
+
+.controls-slot .controls {
+  justify-content: center;
+}
+
+.sr {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  clip-path: inset(50%);
+  white-space: nowrap;
+}
+
+@container (min-width: 560px) {
+  .net-body {
+    grid-template-columns: 190px minmax(0, 1fr);
+    align-items: center;
+  }
+
+  .net-out {
+    grid-column: 1 / -1;
+  }
+
+  .probe {
+    min-height: 1.4em;
+  }
+}
+
+@container (min-width: 900px) {
+  .net-body {
+    grid-template-columns: 220px minmax(0, 1fr) 210px;
+    gap: 24px;
+  }
+
+  .net-out {
+    grid-column: auto;
+    flex-direction: column;
+    align-self: center;
+  }
+
+  .canvas-wrap {
+    height: 460px;
+  }
+
+  .net-az .canvas-wrap {
+    height: 500px;
+  }
+
+  .col-label {
+    font-size: 12.8px;
+  }
+}
