@@ -1,0 +1,95 @@
+/*
+ * <pogo-retrograde>: three bands, one per step, each its name and rule over
+ * its boards (beside them from 560px). A band still to come keeps its room.
+ * The boards carry no coordinates: at their size the labels would reach the
+ * pieces (board-labels.ts); each move is named under its board instead.
+ */
+.retro {
+  container-type: inline-size;
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.step {
+  display: grid;
+  gap: 8px 16px;
+  padding-top: 12px;
+  border-top: 1px solid var(--_rule);
+}
+
+.step[data-off] {
+  visibility: hidden;
+}
+
+.step[data-current] {
+  border-top: 3px solid var(--_ink);
+  padding-top: 10px;
+}
+
+@container (min-width: 560px) {
+  .step {
+    grid-template-columns: minmax(0, 1fr) minmax(0, 2fr);
+  }
+}
+
+.text p {
+  margin: 0;
+}
+
+.head {
+  font-size: clamp(28px, 7cqi, 44px);
+}
+
+.rule {
+  margin-top: 6px;
+  color: var(--_ink-2);
+}
+
+.boards {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 180px));
+  gap: 12px;
+}
+
+.pos {
+  margin: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.pos .board {
+  width: 100%;
+  height: auto;
+}
+
+.caption {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  font-size: 12.8px;
+  line-height: 1.35;
+}
+
+.letter {
+  color: var(--_ink);
+}
+
+.move {
+  color: var(--_ink-2);
+}
+
+/* Read by assistive technology, not drawn. */
+.sr {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  clip-path: inset(50%);
+  white-space: nowrap;
+}
+
+.nowrap {
+  white-space: nowrap;
+}

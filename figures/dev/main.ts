@@ -239,6 +239,18 @@ async function build(): Promise<void> {
     ),
   );
 
+  app.append(heading('<pogo-retrograde> · 640px stage'));
+  app.append(
+    figure(
+      'pogo-retrograde',
+      {},
+      l === 'fr'
+        ? 'L’analyse rétrograde : en partant des fins de partie, les positions sont marquées gagnées ou perdues, tour après tour, en remontant vers le départ.'
+        : 'Retrograde analysis: starting from the ends of games, positions are marked won or lost, round after round, climbing back towards the start.',
+      '640px',
+    ),
+  );
+
   app.append(heading('PogoFigure + Stepper · one per fidelity'));
   for (const tag of ['kit-demo-live', 'kit-demo-measured', 'kit-demo-illustrative']) {
     const el = document.createElement(tag);

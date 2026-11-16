@@ -1,0 +1,89 @@
+import { readFileSync } from 'node:fs';
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
+import type { TableData } from '../data';
+import { intersect, resetMedia } from '../test-dom';
+import { PogoRetrograde } from './pogo-retrograde';
+
+if (!customElements.get('pogo-retrograde')) customElements.define('pogo-retrograde', PogoRetrograde);
+const table = JSON.parse(readFileSync('public/data/table.json', 'utf8')) as TableData;
+
+async function mount(lang: string): Promise<PogoRetrograde> {
+  resetMedia();
+  const section = document.createElement('section');
+  section.setAttribute('lang', lang);
+  const el = document.createElement('pogo-retrograde') as PogoRetrograde;
+  el.innerHTML = '<p>fallback</p>';
+  section.append(el);
+  document.body.append(section);
+  intersect(el);
+  await new Promise((r) => setTimeout(r, 0));
+  return el;
+}
+
+const $ = (el: PogoRetrograde, s: string) => el.shadowRoot!.querySelector<HTMLElement>(s)!;
+const $$ = (el: PogoRetrograde, s: string) => [...el.shadowRoot!.querySelectorAll<HTMLElement>(s)];
+const shown = (el: PogoRetrograde) => $$(el, '.step').map((s) => !s.hasAttribute('data-off'));
+
+beforeEach(() => {
+  PogoRetrograde.deps = { engine: () => Promise.resolve(), table: () => Promise.resolve(table) };
+});
+afterEach(() => {
+  vi.useRealTimers();
+  document.body.innerHTML = '';
+});
+
+describe('<pogo-retrograde>', () => {
+  it('steps lost 0 → won 1 → lost 2, each band keeping its room before its turn', async () => {
+    const el = await mount('fr');
+    expect($$(el, '.head').map((h) => h.textContent)).toEqual(['Perdue en 0', 'Gagnée en 1', 'Perdue en 2']);
+    expect(shown(el)).toEqual([true, false, false]);
+    expect($(el, '[role="status"]').textContent).toContain('Perdue en 0');
+    $(el, '[data-role="next"]').click();
+    expect(shown(el)).toEqual([true, true, false]);
+    $(el, '[data-role="next"]').click();
+    expect(shown(el)).toEqual([true, true, true]);
+    expect($(el, '[role="status"]').textContent).toBe(
+      'Perdue en 2. Tous les coups mènent à une position gagnée en 1 pour l’adversaire.',
+    );
+  });
+
+  it('names each move and the position it leads to, under its board and in its title', async () => {
+    const el = await mount('en');
+    const captions = $$(el, '.caption').map((c) => c.textContent);
+    expect(captions[0]).toBe('A · White to move');
+    expect(captions[4]).toBe('E · White to moveWhite plays c1-1-b1 → CWhite plays c1-1-c2 → D');
+    const title = $$(el, 'svg.board title')[4]!.textContent;
+    expect(title).toContain('Position E, lost in 2: White to move');
+    expect(title).toContain('White plays c1-1-c2, leads to position D');
+    // The lifted stack is ringed and both destinations dashed.
+    const lost2 = $$(el, 'svg.board')[4]!;
+    expect([...lost2.querySelectorAll('.mark.picked')].map((m) => m.getAttribute('data-cell'))).toEqual(['2']);
+    expect([...lost2.querySelectorAll('.mark.target')].map((m) => m.getAttribute('data-cell'))).toEqual(['1', '5']);
+  });
+
+  it('labels the table as its source, under game A', async () => {
+    const el = await mount('en');
+    expect($(el, '.fidelity').textContent).toBe('Measured data · game with no stopping rule · source: v3-solve/table.bin');
+  });
+
+  it('a step file that breaks the analysis shows the fallback', async () => {
+    const error = vi.spyOn(console, 'error').mockImplementation(() => {});
+    const broken = JSON.parse(JSON.stringify(table)) as TableData;
+    broken.retro[2]!.positions[0]!.moves!.pop();
+    PogoRetrograde.deps = { engine: () => Promise.resolve(), table: () => Promise.resolve(broken) };
+    const el = await mount('fr');
+    expect(el.hasAttribute('data-failed')).toBe(true);
+    error.mockRestore();
+  });
+
+  it('an aborted signal stops a running stepper', async () => {
+    const el = await mount('fr');
+    vi.useFakeTimers();
+    $(el, '[data-role="play"]').click();
+    const bands = $$(el, '.step');
+    el.parentElement!.removeChild(el);
+    vi.advanceTimersByTime(10_000);
+    expect(bands.map((s) => !s.hasAttribute('data-off'))).toEqual([true, false, false]);
+    expect(vi.getTimerCount()).toBe(0);
+  });
+});

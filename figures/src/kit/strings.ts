@@ -102,6 +102,7 @@ const fr = {
   openingsBack: 'Premiers coups',
   openingsPick: 'Touchez une pile, ou choisissez un coup dans la liste.',
   openingsName: 'les premiers coups',
+  leadsTo: 'mène à la',
 };
 
 export type StringKey = keyof typeof fr;
@@ -203,6 +204,7 @@ const en: Record<StringKey, string> = {
   openingsBack: 'First moves',
   openingsPick: 'Tap a stack, or choose a move from the list.',
   openingsName: 'the first moves',
+  leadsTo: 'leads to',
 };
 
 export const STRINGS: Record<Lang, Record<StringKey, string>> = { fr, en };
