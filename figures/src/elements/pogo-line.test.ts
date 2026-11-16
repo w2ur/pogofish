@@ -127,7 +127,7 @@ describe('<pogo-line>', () => {
     role(el, 'next').click();
     role(el, 'action').click();
     expect(got).toHaveLength(1);
-    expect(got[0]!.label).toBe('l’erreur d’ouverture, demi-coup 2');
+    expect(got[0]!.label).toBe('l’erreur d’ouverture, coup 2');
     expect(key(got[0]!.state)).toBe(key(replay(table.lines.openingWin.slice(0, 2)).at(-1)!));
   });
 

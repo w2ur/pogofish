@@ -72,7 +72,7 @@ const fr = {
   startPosition: 'Position de départ',
   startDescription:
     'Position de départ : deux pièces blanches sur chacune des cases a1, b1 et c1, deux pièces rouges sur chacune des cases a3, b3 et c3.',
-  ply: 'demi-coup',
+  ply: 'coup',
   seenFor: 'Cette position pour la',
   seenTime: 'fois',
   loopAgain: 'De retour à la position de départ : rien n’arrête la partie.',
@@ -176,7 +176,7 @@ const en: Record<StringKey, string> = {
   liftRed: 'Tap a stack with Red on top.',
   startPosition: 'Starting position',
   startDescription: 'Starting position: two White pieces on each of a1, b1 and c1, two Red pieces on each of a3, b3 and c3.',
-  ply: 'ply',
+  ply: 'move',
   seenFor: 'This position for the',
   seenTime: 'time',
   loopAgain: 'Back to the starting position: nothing stops the game.',
