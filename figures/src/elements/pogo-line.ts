@@ -7,9 +7,7 @@
 import { announceMove } from '../board-state';
 import { WASM_FILE, assetUrl } from '../assets';
 import type { TableData } from '../data';
-import { LC1_2, ready, terminal, type Colour } from '../engine';
-import { labelledBoard } from '../kit/board-labels';
-import { animateMove, drawBoard } from '../kit/board-svg';
+import { LC1_2, ready, terminal } from '../engine';
 import { transport } from '../kit/controls';
 import { PogoFigure } from '../kit/figure';
 import { Stepper } from '../kit/stepper';
@@ -17,6 +15,8 @@ import { t, type Fidelity, type Lang, type StringKey } from '../kit/strings';
 import { sharedTable } from '../table';
 import { lineFidelity, lineFrames, parseLine, parseRules, seenText, type Frame, type LineName } from './line-frames';
 import lineCss from './pogo-line.css?raw';
+import replayCss from './replay.css?raw';
+import { replayView, resultWords, type Spoken } from './replay-view';
 
 const LINE_KEY: Record<LineName, StringKey> = {
   shortestWin: 'lineShortestWin',
@@ -25,37 +25,29 @@ const LINE_KEY: Record<LineName, StringKey> = {
   openingWin: 'lineOpeningWin',
 };
 
-const colourKey = (c: Colour): StringKey => (c === 'White' ? 'white' : 'red');
-
-interface Said {
-  move: string;
-  note: string;
-  who: string;
-  how: string;
-}
-
 /** The words of one frame, in `lang`. `endless` marks the last frame of a loop under game A. */
-function say(lang: Lang, f: Frame, endless: boolean): Said {
+function say(lang: Lang, f: Frame, endless: boolean): Spoken {
   const move = f.move && f.mover ? announceMove(lang, f.mover, f.move) : t(lang, 'startPosition');
   let note = '';
   if (endless) note = t(lang, 'loopAgain');
   else if (f.seen !== null && f.seen > 1) note = seenText(lang, f.seen);
-  if (!f.result) return { move, note, who: '', how: '' };
-  const winner: Colour = f.result.winner === 'W' ? 'White' : 'Red';
-  const loser: Colour = winner === 'White' ? 'Red' : 'White';
+  const { who, how } = f.result ? resultWords(lang, f.result) : { who: '', how: '' };
+  const lines = [
+    { className: 'move', text: move },
+    { className: 'note', text: note },
+    { className: 'shout who', text: who },
+    { className: 'how', text: how },
+  ].filter((l) => l.text !== '');
   return {
-    move,
-    note,
-    who: `${t(lang, colourKey(winner))} ${t(lang, 'wins')}`,
-    how: f.result.byRepetition
-      ? `${t(lang, colourKey(loser))} ${t(lang, 'byRepetition')}`
-      : t(lang, winner === 'White' ? 'byStacksWhite' : 'byStacksRed'),
+    lines,
+    title: [move, note, who].filter(Boolean).join('. '),
+    live: [move, note, who, how].filter(Boolean).join('. '),
   };
 }
 
 export class PogoLine extends PogoFigure {
   static override fidelity = 'live' as const;
-  static override styles = lineCss;
+  static override styles = replayCss + lineCss;
   static override stageMinHeight = '480px';
 
   /** The engine and the table; a test swaps them. */
@@ -99,54 +91,22 @@ export class PogoLine extends PogoFigure {
     const lang = this.lang;
     const { frames, cyclic } = lineFrames(table.lines[name], rules);
     const last = frames.length - 1;
-    const words = frames.map((f, i) => say(lang, f, cyclic && i === last));
-
-    const el = <K extends keyof HTMLElementTagNameMap>(tag: K, className: string, text = ''): HTMLElementTagNameMap[K] => {
-      const node = document.createElement(tag);
-      node.className = className;
-      if (text) node.textContent = text;
-      return node;
-    };
-
-    const root = el('div', 'line-figure');
-    // Every frame's words share one grid cell, only the current one seen: the area
-    // keeps the height of the longest, so the board below never moves.
-    const status = el('div', 'status');
-    status.setAttribute('aria-hidden', 'true');
-    const blocks = words.map((w) => {
-      const block = el('div', 'said');
-      block.append(el('p', 'move', w.move));
-      if (w.note) block.append(el('p', 'note', w.note));
-      if (w.who) block.append(el('p', 'shout who', w.who), el('p', 'how', w.how));
-      status.append(block);
-      return block;
-    });
-    const live = el('p', 'sr');
-    live.setAttribute('role', 'status');
-    live.setAttribute('aria-live', 'polite');
-    const slot = el('div', 'board-slot');
-
-    let svg: SVGSVGElement | undefined;
-    let shown = -1;
-    const show = (i: number): void => {
-      const f = frames[i]!;
-      const w = words[i]!;
-      blocks.forEach((b, k) => b.toggleAttribute('data-off', k !== i));
-      live.textContent = [w.move, w.note, w.who, w.how].filter(Boolean).join('. ');
-      const next = drawBoard(f.state, {
-        labelRoom: true,
-        title: [w.move, w.note, w.who].filter(Boolean).join('. '),
-        ...(f.move ? { from: f.move[0], to: f.move[2], moving: f.move[1] } : {}),
-      });
-      const before = svg;
-      slot.replaceChildren(labelledBoard(next));
-      svg = next;
+    const spoken = frames.map((f, i) => say(lang, f, cyclic && i === last));
+    const root = document.createElement('div');
+    root.className = 'line-figure';
+    const view = replayView({
+      steps: frames,
+      spoken,
       // A step forward, or the loop wrapping from its last frame to its first move, which is one too.
-      const forward = i === shown + 1 || (cyclic && shown === last && i === 1);
-      if (before && f.move && forward && !this.reducedMotion()) animateMove(before, next, f.move);
-      shown = i;
+      forward: (from, to) => to === from + 1 || (cyclic && from === last && to === 1),
+      reducedMotion: () => this.reducedMotion(),
+    });
+
+    const show = (i: number): void => {
+      view.show(i);
       // A finished position cannot be played on: under either rule set the board would have nothing to do.
       if (playHere) {
+        const f = frames[i]!;
         const focused = this.shadowRoot?.activeElement === playHere;
         playHere.disabled = f.result !== null || terminal(f.state, LC1_2);
         if (focused && playHere.disabled) row.querySelector<HTMLButtonElement>('[data-role="previous"]')?.focus();
@@ -170,7 +130,7 @@ export class PogoLine extends PogoFigure {
     });
     const playHere = row.querySelector<HTMLButtonElement>('[data-role="action"]');
     show(0);
-    root.append(status, slot, row, live);
+    root.append(view.status, view.slot, row, view.live);
     this.stage.append(root);
   }
 }
