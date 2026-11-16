@@ -1,0 +1,89 @@
+/*
+ * <pogo-qsteps>: the step's words (game and path, what happens, the formula)
+ * over the board and the notebook, over the transport. Every step's words
+ * share one grid cell (replay.css), so the board and the notebook never move.
+ * The board and the notebook sit side by side from 520px, else stacked.
+ */
+.qsteps {
+  container-type: inline-size;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.where {
+  font-size: 12.8px;
+  color: var(--_muted);
+}
+
+/* The position shown: ink, underlined, never red. */
+.where .here {
+  color: var(--_ink);
+  text-decoration: underline;
+  text-decoration-thickness: 2px;
+  text-underline-offset: 3px;
+}
+
+.calc {
+  color: var(--_ink);
+  font-weight: 600;
+}
+
+.body {
+  display: grid;
+  gap: 16px;
+  align-items: start;
+}
+
+@container (min-width: 520px) {
+  .body {
+    grid-template-columns: minmax(0, 3fr) minmax(0, 2fr);
+  }
+}
+
+.board-slot .board-frame {
+  width: min(100%, 360px);
+}
+
+.notebook {
+  border-collapse: collapse;
+  width: 100%;
+  max-width: 280px;
+}
+
+.notebook caption {
+  caption-side: top;
+  margin-bottom: 8px;
+  font-size: 12.8px;
+  text-align: left;
+  color: var(--_muted);
+}
+
+.notebook th,
+.notebook td {
+  padding: 6px 8px;
+  border-bottom: 1px solid var(--_rule);
+  text-align: left;
+}
+
+.notebook thead th {
+  font-size: 12.8px;
+  color: var(--_muted);
+  border-bottom: 3px solid var(--_ink);
+}
+
+.notebook .value {
+  text-align: right;
+}
+
+.notebook .name {
+  font-weight: 800;
+  font-stretch: 125%;
+}
+
+/* The row the step changed: heavy figures on a band of photocopy grey; never red. */
+.notebook tr.on th,
+.notebook tr.on td {
+  font-weight: 800;
+  background: var(--_rule);
+}

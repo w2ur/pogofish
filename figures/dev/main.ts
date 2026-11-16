@@ -284,6 +284,18 @@ async function build(): Promise<void> {
     ),
   );
 
+  app.append(heading('<pogo-qsteps> · 640px stage'));
+  app.append(
+    figure(
+      'pogo-qsteps',
+      {},
+      l === 'fr'
+        ? 'Le Q-learning pas à pas : les notes des positions, toutes à 0 au départ, mises à jour coup après coup.'
+        : 'Q-learning step by step: the values of the positions, all 0 at the start, updated move after move.',
+      '640px',
+    ),
+  );
+
   app.append(heading('PogoFigure + Stepper · one per fidelity'));
   for (const tag of ['kit-demo-live', 'kit-demo-measured', 'kit-demo-illustrative']) {
     const el = document.createElement(tag);
