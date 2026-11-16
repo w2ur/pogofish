@@ -112,3 +112,29 @@ export function drawBoard(s: State, o: BoardOptions = {}): SVGSVGElement {
 
   return svg;
 }
+
+/** How long a piece takes to travel in a figure (DESIGN.md, « Motion »). */
+export const MOVE_MS = 240;
+
+/**
+ * The moved discs travel from where they stood in `before` to where they land in
+ * `after`, both drawn by drawBoard (`after` with `to`/`moving`). The caller checks
+ * reduced motion first; without the Web Animations API nothing moves.
+ */
+export function animateMove(before: SVGSVGElement, after: SVGSVGElement, [from, n]: readonly number[]): void {
+  const left = [...before.querySelectorAll<SVGCircleElement>(`.stack[data-cell="${from}"] .disc`)].slice(-n!);
+  const landed = [...after.querySelectorAll<SVGCircleElement>('.disc.moved')];
+  landed.forEach((disc, k) => {
+    const old = left[k];
+    if (!old || typeof disc.animate !== 'function') return;
+    const dx = Number(old.getAttribute('cx')) - Number(disc.getAttribute('cx'));
+    const dy = Number(old.getAttribute('cy')) - Number(disc.getAttribute('cy'));
+    // The cut-out before the disc and the ink ring after it travel with it.
+    for (const node of [disc.previousElementSibling, disc, disc.nextElementSibling]) {
+      (node as SVGElement | null)?.animate(
+        [{ transform: `translate(${dx}px, ${dy}px)` }, { transform: 'translate(0px, 0px)' }],
+        { duration: MOVE_MS, easing: 'ease-out' },
+      );
+    }
+  });
+}

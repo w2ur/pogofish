@@ -10,6 +10,11 @@ export interface StepperOptions {
   interval?: number;
   /** Called when automatic play reaches the last step. */
   onEnd?: () => void;
+  /**
+   * For a figure whose last step shows its first position again (a loop): automatic
+   * play never ends, and after the last step goes on at this one. By hand it still stops.
+   */
+  wrapTo?: number;
   /** Aborting it destroys the stepper: a figure passes its own, aborted at disconnect. */
   signal?: AbortSignal;
 }
@@ -20,6 +25,7 @@ export class Stepper {
   private readonly media: MediaQueryList;
   private readonly interval: number;
   private readonly onEnd: (() => void) | undefined;
+  private readonly wrapTo: number | undefined;
   private readonly listeners = new Set<() => void>();
   private destroyed = false;
   private readonly onMedia = (): void => {
@@ -34,6 +40,7 @@ export class Stepper {
   ) {
     this.interval = options.interval ?? 900;
     this.onEnd = options.onEnd;
+    this.wrapTo = options.wrapTo;
     this.media = matchMedia(REDUCED_MOTION);
     if (options.signal?.aborted) {
       this.destroyed = true;
@@ -64,10 +71,16 @@ export class Stepper {
 
   play(): void {
     if (this.destroyed || !this.auto || this.playing || this.steps < 2) return;
-    if (this.i === this.steps - 1) this.go(0);
+    const last = this.steps - 1;
+    const wrapTo = this.wrapTo;
+    if (this.i === last && wrapTo === undefined) this.go(0);
     this.timer = setInterval(() => {
+      if (wrapTo !== undefined && this.i === last) {
+        this.go(wrapTo);
+        return;
+      }
       this.go(this.i + 1);
-      if (this.i === this.steps - 1) {
+      if (wrapTo === undefined && this.i === last) {
         this.pause();
         this.onEnd?.();
       }

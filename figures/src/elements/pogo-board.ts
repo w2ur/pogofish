@@ -19,7 +19,7 @@ import {
 } from '../board-state';
 import { createDriver, type Driver } from '../driver';
 import { initial, legal, moveName, type Move, type State, type Triple } from '../engine';
-import { drawBoard } from '../kit/board-svg';
+import { animateMove, drawBoard } from '../kit/board-svg';
 import { PogoFigure, kitSheet } from '../kit/figure';
 import { colon, t, type Lang } from '../kit/strings';
 import { SearchClient } from '../search-client';
@@ -40,8 +40,6 @@ function boardSheet(): CSSStyleSheet {
 const announced = new WeakMap<State, number>();
 
 let pageDriver: Driver | undefined;
-
-const MOVE_MS = 240;
 
 export class PogoBoard extends PogoFigure {
   static override fidelity = 'live' as const;
@@ -333,26 +331,7 @@ export class PogoBoard extends PogoFigure {
     const before = ui.svg;
     before.replaceWith(svg);
     ui.svg = svg;
-    if (moved && last && !this.reducedMotion()) this.animateMove(before, svg, last);
-  }
-
-  /** The moved discs travel from where they stood to where they land. */
-  private animateMove(before: SVGSVGElement, after: SVGSVGElement, [from, n]: Triple): void {
-    const left = [...before.querySelectorAll<SVGCircleElement>(`.stack[data-cell="${from}"] .disc`)].slice(-n);
-    const landed = [...after.querySelectorAll<SVGCircleElement>('.disc.moved')];
-    landed.forEach((disc, k) => {
-      const old = left[k];
-      if (!old || typeof disc.animate !== 'function') return;
-      const dx = Number(old.getAttribute('cx')) - Number(disc.getAttribute('cx'));
-      const dy = Number(old.getAttribute('cy')) - Number(disc.getAttribute('cy'));
-      // The cut-out before the disc and the ink ring after it travel with it.
-      for (const node of [disc.previousElementSibling, disc, disc.nextElementSibling]) {
-        (node as SVGElement | null)?.animate(
-          [{ transform: `translate(${dx}px, ${dy}px)` }, { transform: 'translate(0px, 0px)' }],
-          { duration: MOVE_MS, easing: 'ease-out' },
-        );
-      }
-    });
+    if (moved && last && !this.reducedMotion()) animateMove(before, svg, last);
   }
 
   private drawCells(s: State, moves: Move[]): void {

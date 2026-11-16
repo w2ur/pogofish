@@ -26,6 +26,26 @@ describe('Stepper', () => {
     expect(vi.getTimerCount()).toBe(0);
   });
 
+  it('with wrapTo, automatic play never ends: past the last step it goes on at wrapTo', () => {
+    const seen: number[] = [];
+    const onEnd = vi.fn();
+    const s = new Stepper(5, (i) => seen.push(i), { onEnd, wrapTo: 1 });
+    s.play();
+    vi.advanceTimersByTime(900 * 7);
+    expect(seen).toEqual([1, 2, 3, 4, 1, 2, 3]);
+    expect(s.playing).toBe(true);
+    expect(onEnd).not.toHaveBeenCalled();
+    // Started from the last step, it goes on at wrapTo rather than rewinding to 0.
+    s.pause();
+    s.go(4);
+    seen.length = 0;
+    s.play();
+    vi.advanceTimersByTime(900);
+    expect(seen).toEqual([1]);
+    s.destroy();
+    expect(vi.getTimerCount()).toBe(0);
+  });
+
   it('honours the interval option', () => {
     const seen: number[] = [];
     const s = new Stepper(5, (i) => seen.push(i), { interval: 100 });
