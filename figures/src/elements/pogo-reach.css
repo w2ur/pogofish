@@ -109,3 +109,8 @@ tbody th.ply {
 .reachable .sep {
   padding-inline: 0.1em;
 }
+
+/* In the label cut at 12.8px the narrow space all but closes: the number there keeps its digits apart. */
+.what .sep {
+  padding-inline: 0.12em;
+}

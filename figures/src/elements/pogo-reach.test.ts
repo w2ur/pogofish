@@ -55,6 +55,13 @@ describe('<pogo-reach>', () => {
     expect($(el, '.scale').textContent).toContain('Linear scale');
   });
 
+  it('keeps the digit groups of the summary’s second number apart in the label cut', async () => {
+    const el = await mount('fr');
+    expect($$(el, '.what .sep')).toHaveLength(2);
+    const css = readFileSync('src/elements/pogo-reach.css', 'utf8');
+    expect(css).toMatch(/\.what \.sep \{\s*padding-inline: 0\.12em;/);
+  });
+
   it('names reach.json’s own source and game A in its label', async () => {
     const el = await mount('fr');
     expect($(el, '.fidelity').textContent).toBe(
