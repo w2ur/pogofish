@@ -251,6 +251,18 @@ async function build(): Promise<void> {
     ),
   );
 
+  app.append(heading('<pogo-openings> · 640px stage'));
+  app.append(
+    figure(
+      'pogo-openings',
+      {},
+      l === 'fr'
+        ? 'Les seize premiers coups possibles et leur issue : seuls les six qui restent sur la rangée de départ évitent la défaite.'
+        : 'The sixteen possible first moves and their outcome: only the six that stay on the starting row avoid defeat.',
+      '640px',
+    ),
+  );
+
   app.append(heading('PogoFigure + Stepper · one per fidelity'));
   for (const tag of ['kit-demo-live', 'kit-demo-measured', 'kit-demo-illustrative']) {
     const el = document.createElement(tag);

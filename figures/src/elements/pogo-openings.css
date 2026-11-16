@@ -1,0 +1,105 @@
+/*
+ * <pogo-openings>: the list's head, the board (with its count chooser) and
+ * the list of moves with their verdicts, side by side from 560px, then the
+ * line that reads the chosen move, then the controls. The head and that line
+ * each keep the height of their longest text, and the list keeps eight rows,
+ * so nothing moves when a level or a choice changes. The playable board's
+ * cells and count chooser come from the kit sheet.
+ */
+.openings {
+  container-type: inline-size;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+/* A text area over an invisible copy of its longest text, in one grid cell. */
+.held {
+  display: grid;
+}
+
+.held > p {
+  grid-area: 1 / 1;
+  margin: 0;
+}
+
+.held > .sizer {
+  visibility: hidden;
+}
+
+.head {
+  font-size: 12.8px;
+  color: var(--_ink);
+}
+
+.readout {
+  color: var(--_ink);
+}
+
+.body {
+  display: grid;
+  gap: 12px 16px;
+  align-items: start;
+}
+
+@container (min-width: 560px) {
+  .body {
+    grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+  }
+}
+
+.board-col {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+/* The list: two columns, eight rows kept whatever the number of moves. */
+.list {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  grid-template-rows: repeat(8, minmax(52px, auto));
+  gap: 6px;
+}
+
+.list > .label,
+.sr {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  clip-path: inset(50%);
+  white-space: nowrap;
+}
+
+.list .choice {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  justify-content: center;
+  gap: 2px;
+  min-height: 0;
+  height: 100%;
+  padding: 4px 10px;
+  text-align: left;
+}
+
+.list .mv {
+  font-size: 12.8px;
+  text-transform: none;
+  white-space: nowrap;
+}
+
+/* The verdict is read, in words: the read cut, and the moves that do not lose set heavier. */
+.list .verdict {
+  font-size: 14px;
+  font-stretch: 100%;
+  font-weight: 400;
+  letter-spacing: 0;
+  line-height: 1.2;
+  text-transform: none;
+}
+
+.list .verdict[data-holds] {
+  font-weight: 800;
+}
