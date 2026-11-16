@@ -1,0 +1,377 @@
+/*
+ * <pogo-race>: the scores of four programs against games trained. Ink only:
+ * a program is its line style and its marker shape, named at its line's end;
+ * the references are thin long-dashed lines in the muted tint, named over
+ * them where no program runs. The SVG is stretched to its box (strokes keep their width);
+ * words and markers are HTML over it, at fixed sizes.
+ */
+.race {
+  container-type: inline-size;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.race p {
+  margin: 0;
+}
+
+.title {
+  font-size: 12.8px;
+  color: var(--_ink);
+}
+
+.unit,
+.axis-note,
+.rule {
+  font-size: 12.8px;
+  color: var(--_ink-2);
+}
+
+.head {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+/*
+ * y labels · zero column · break · log axis. The break is empty: the gridlines
+ * stop on each side of it, so stage 0 reads as apart from the axis.
+ */
+.plot {
+  --_plot-h: 300px;
+  display: grid;
+  grid-template-columns: 28px 36px 12px minmax(0, 1fr);
+  grid-template-rows: var(--_plot-h) 24px;
+  margin-top: 40px;
+}
+
+@container (min-width: 480px) {
+  .plot {
+    --_plot-h: 360px;
+    grid-template-columns: 36px 48px 18px minmax(0, 1fr);
+  }
+}
+
+.y-axis {
+  grid-area: 1 / 1;
+  position: relative;
+}
+
+.box {
+  position: relative;
+}
+
+.zero {
+  grid-area: 1 / 2;
+}
+
+.log {
+  grid-area: 1 / 4;
+}
+
+.zero-axis {
+  grid-area: 2 / 2;
+}
+
+.log-axis {
+  grid-area: 2 / 4;
+}
+
+.x-axis {
+  position: relative;
+}
+
+.lines {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  overflow: visible;
+}
+
+.lines line,
+.lines polyline {
+  fill: none;
+  vector-effect: non-scaling-stroke;
+}
+
+.lines .grid {
+  stroke: var(--_rule);
+  stroke-width: 1px;
+}
+
+.lines .base {
+  stroke: var(--_edge);
+  stroke-width: 1px;
+}
+
+/* The references: thin, long dashes, the muted tint; never a programme's ink. */
+.lines .ref {
+  stroke: var(--_muted);
+  stroke-width: 1.5px;
+  stroke-dasharray: 12 6;
+}
+
+/* Each point's 95 % interval: a vertical stroke in the muted tint, under the lines. */
+.lines .ci {
+  stroke: var(--_muted);
+  stroke-width: 2px;
+}
+
+.lines .run {
+  stroke: var(--_ink);
+  stroke-linejoin: miter;
+}
+
+.lines .run-az100 {
+  stroke-width: 3px;
+}
+
+.lines .run-az0 {
+  stroke-width: 1.5px;
+}
+
+.lines .run-td {
+  stroke-width: 2px;
+  stroke-dasharray: 7 4;
+}
+
+.lines .run-qtab {
+  stroke-width: 2px;
+  stroke-dasharray: 2 3;
+}
+
+.marks,
+.names {
+  position: absolute;
+  inset: 0;
+}
+
+/* Markers: square, open square, diamond, triangle. Radius 0: only a piece is round. */
+.mark {
+  position: absolute;
+  width: 9px;
+  height: 9px;
+  transform: translate(-50%, -50%);
+  background: var(--_ink);
+}
+
+.mark-az0 {
+  background: var(--_ground);
+  border: 2px solid var(--_ink);
+}
+
+.mark-td {
+  width: 9px;
+  height: 9px;
+  transform: translate(-50%, -50%) rotate(45deg);
+}
+
+.mark-qtab {
+  width: 12px;
+  height: 11px;
+  clip-path: polygon(50% 0, 100% 100%, 0 100%);
+}
+
+/*
+ * A line's name at its end, on the ground so a reference line under it does
+ * not cross the words. Placed against the end point, by program: AlphaZero
+ * with search above it (its line ends just under the table's), the two that
+ * end mid-axis to its right, Q-learning above and left (it ends at the edge).
+ */
+.name {
+  position: absolute;
+  max-width: 9em;
+  padding: 0 3px;
+  font-size: 12.8px;
+  font-weight: 700;
+  line-height: 1.2;
+  color: var(--_ink);
+  background: var(--_ground);
+  transform: translate(8px, -50%);
+}
+
+/* Lifted clear of the table's name, which sits just under it at the left. */
+.name-az100 {
+  white-space: normal;
+  transform: translate(-4px, calc(-100% - 24px));
+}
+
+.name-qtab {
+  white-space: nowrap;
+  transform: translate(calc(-100% + 4px), calc(-100% - 10px));
+}
+
+/*
+ * A reference's name: just above its line, in the line's muted tint. Each sits
+ * where round 5's lines leave room, checked at 280 and 640px: the table's and
+ * greedy's at the axis's left end (at 280px AlphaZero's climb grazes the end
+ * of « glouton », hence the ground behind it), random's in the gap between
+ * AlphaZero without search's climb and Q-learning's flat start.
+ */
+.ref-name {
+  max-width: none;
+  padding: 0;
+  font-weight: 400;
+  font-style: italic;
+  white-space: nowrap;
+  color: var(--_muted);
+  transform: translateY(calc(-100% - 2px));
+}
+
+.ref-name-table {
+  left: 0;
+}
+
+.ref-name-greedy {
+  left: 0;
+}
+
+.ref-name-random {
+  left: 31%;
+}
+
+.tick {
+  position: absolute;
+  font-size: 12.8px;
+  line-height: 1;
+  white-space: nowrap;
+  color: var(--_muted);
+}
+
+.y-axis .tick {
+  right: 6px;
+  transform: translateY(-50%);
+}
+
+.x-axis .tick {
+  top: 6px;
+  transform: translateX(-50%);
+}
+
+/* At phone width every other decade keeps its gridline and drops its number. */
+@container (max-width: 479px) {
+  .log-axis .minor {
+    display: none;
+  }
+}
+
+.passes {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  padding-top: 12px;
+  border-top: 1px solid var(--_rule);
+}
+
+.passes-title {
+  font-size: 12.8px;
+}
+
+.pass-list {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.pass {
+  display: block;
+  padding-left: 22px;
+  text-indent: -22px;
+  color: var(--_ink);
+}
+
+.pass .key {
+  position: static;
+  display: inline-block;
+  margin-right: 10px;
+  vertical-align: 0.05em;
+  transform: none;
+}
+
+.pass .key.mark-td {
+  transform: rotate(45deg);
+}
+
+.pass strong {
+  font-weight: 700;
+}
+
+/* The label cut all but closes a narrow space: a count's digit groups get room (countNodes). */
+.sep {
+  padding-inline: 0.06em;
+}
+
+.values summary {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  min-height: 44px;
+  font-size: 12.8px;
+  color: var(--_ink);
+  cursor: pointer;
+  list-style: none;
+}
+
+.values summary::-webkit-details-marker {
+  display: none;
+}
+
+/* The disclosure's own sign, a plus that turns to a minus: the marker the flex summary drops. */
+.values summary::before {
+  content: '+';
+  display: inline-grid;
+  place-items: center;
+  width: 20px;
+  height: 20px;
+  border: 2px solid var(--_action);
+  font-size: 15px;
+  line-height: 1;
+}
+
+.values[open] summary::before {
+  content: '−';
+}
+
+.table {
+  width: 100%;
+  margin: 8px 0 16px;
+  border-collapse: collapse;
+  font-size: 15px;
+}
+
+.table caption {
+  padding-bottom: 4px;
+  font-size: 12.8px;
+  text-align: left;
+}
+
+.table th,
+.table td {
+  padding: 2px 0;
+  text-align: right;
+  font-weight: 400;
+}
+
+.table th:first-child {
+  text-align: left;
+}
+
+.table thead th {
+  font-size: 12.8px;
+  color: var(--_muted);
+  border-bottom: 1px solid var(--_rule);
+}
+
+.table tbody th {
+  color: var(--_ink-2);
+}
+
+.as-of {
+  font-size: 12.8px;
+  color: var(--_muted);
+}

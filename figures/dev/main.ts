@@ -305,6 +305,20 @@ async function build(): Promise<void> {
     app.append(figure('pogo-stages', { program }, l === 'fr' ? fr : en, '640px'));
   }
 
+  app.append(heading('<pogo-race> · 640px stage'));
+  const race = figure(
+    'pogo-race',
+    {},
+    l === 'fr'
+      ? 'Le nombre de parties d’entrainement qu’il faut à chaque programme pour dépasser le glouton.'
+      : 'The number of training games each program needs to pass greedy.',
+    '640px',
+  );
+  const video = document.createElement('p');
+  video.textContent = 'https://youtu.be/ARDa8YljkWE';
+  race.append(video);
+  app.append(race);
+
   app.append(heading('PogoFigure + Stepper · one per fidelity'));
   for (const tag of ['kit-demo-live', 'kit-demo-measured', 'kit-demo-illustrative']) {
     const el = document.createElement(tag);

@@ -5,6 +5,7 @@ import { PogoLine } from './elements/pogo-line';
 import { PogoMoves } from './elements/pogo-moves';
 import { PogoOpenings } from './elements/pogo-openings';
 import { PogoQsteps } from './elements/pogo-qsteps';
+import { PogoRace } from './elements/pogo-race';
 import { PogoReach } from './elements/pogo-reach';
 import { PogoRetrograde } from './elements/pogo-retrograde';
 import { PogoStages } from './elements/pogo-stages';
@@ -24,6 +25,7 @@ const ELEMENTS: [string, CustomElementConstructor][] = [
   ['pogo-greedy', PogoGreedy],
   ['pogo-qsteps', PogoQsteps],
   ['pogo-stages', PogoStages],
+  ['pogo-race', PogoRace],
 ];
 
 /** Registers every `<pogo-…>` element; safe to call twice. */
