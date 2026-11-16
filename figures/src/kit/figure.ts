@@ -2,16 +2,20 @@
 // shadow frame, the theme sheet, rendering once on first approach, the
 // no-JavaScript fallback, the fidelity label, and clean-up at disconnect.
 //
-// Every figure ends with its fidelity label. One exception, deliberate:
+// Every figure ends with its fidelity label. Two exceptions, deliberate:
 // <pogo-board mode="follow"> hides it (pogo-board.css), because it is a
 // compact second view of the game the inline board shows, and the inline
-// board carries the label. A new figure does not drop the label: only a
-// second view of a figure already labelled on the same page may.
+// board carries the label; and <pogo-title> hides it (pogo-title.css),
+// because it is the page's <h1>, where a label would be read as part of the
+// title and the drawing is its signature, not a figure of the essay. A new
+// figure does not drop the label: only a second view of a figure already
+// labelled on the same page may.
 import type { State } from '../engine';
 import { fidelityLabel, t, type Fidelity, type Lang } from './strings';
 import themeCss from './theme.css?raw';
 
 let sheet: CSSStyleSheet | undefined;
+const elementSheets = new Map<string, CSSStyleSheet>();
 
 /** The kit's stylesheet, built once and adopted by every shadow root. */
 export function kitSheet(): CSSStyleSheet {
@@ -20,6 +24,17 @@ export function kitSheet(): CSSStyleSheet {
     sheet.replaceSync(themeCss);
   }
   return sheet;
+}
+
+/** An element's own stylesheet, built once per text and shared by every instance. */
+function elementSheet(css: string): CSSStyleSheet {
+  let s = elementSheets.get(css);
+  if (!s) {
+    s = new CSSStyleSheet();
+    s.replaceSync(css);
+    elementSheets.set(css, s);
+  }
+  return s;
 }
 
 /** Detail of the `pogo:playfrom` event a figure dispatches; the store listens for it. */
@@ -36,6 +51,8 @@ export abstract class PogoFigure extends HTMLElement {
   static game?: 'gameA' | 'gameLc12';
   /** Height the stage keeps before rendering, so the figure does not shift the page. */
   static stageMinHeight = '0px';
+  /** The element's own CSS, adopted after the kit sheet. */
+  static styles?: string;
 
   /** Where `render()` draws. */
   protected stage!: HTMLDivElement;
@@ -59,6 +76,14 @@ export abstract class PogoFigure extends HTMLElement {
 
   override set lang(value: string) {
     this.setAttribute('lang', value);
+  }
+
+  /**
+   * The game the fidelity label names: the class's by default. A figure whose game
+   * depends on an attribute overrides it; it is read once, when the frame is built.
+   */
+  protected game(): 'gameA' | 'gameLc12' | undefined {
+    return (this.constructor as typeof PogoFigure).game;
   }
 
   protected reducedMotion(): boolean {
@@ -112,7 +137,7 @@ export abstract class PogoFigure extends HTMLElement {
   private buildFrame(): void {
     const ctor = this.constructor as typeof PogoFigure;
     const root = this.attachShadow({ mode: 'open' });
-    root.adoptedStyleSheets = [kitSheet()];
+    root.adoptedStyleSheets = ctor.styles ? [kitSheet(), elementSheet(ctor.styles)] : [kitSheet()];
 
     const frame = document.createElement('div');
     frame.className = 'frame';
@@ -124,7 +149,7 @@ export abstract class PogoFigure extends HTMLElement {
 
     const label = document.createElement('p');
     label.className = 'fidelity';
-    const text = fidelityLabel(this.lang, ctor.fidelity, ctor.source, ctor.game);
+    const text = fidelityLabel(this.lang, ctor.fidelity, ctor.source, this.game());
     const source = ctor.fidelity === 'measured' ? ctor.source : undefined;
     if (source) {
       label.append(text.slice(0, -source.length));

@@ -27,6 +27,15 @@ class MeasuredLc12 extends PogoFigure {
   static override game = 'gameLc12' as const;
   protected async render(): Promise<void> {}
 }
+/** Its game read from an attribute, with a sheet of its own. */
+class ByAttribute extends PogoFigure {
+  static override fidelity = 'live' as const;
+  static override styles = '.stage { outline: 1px solid; }';
+  protected override game() {
+    return this.getAttribute('rules') === 'lc1-2' ? ('gameLc12' as const) : ('gameA' as const);
+  }
+  protected render(): void {}
+}
 class Broken extends PogoFigure {
   protected render(): void {
     throw new Error('no engine');
@@ -64,6 +73,7 @@ customElements.define('kit-measured', Measured);
 customElements.define('kit-broken', Broken);
 customElements.define('kit-measured-lc12', MeasuredLc12);
 customElements.define('kit-rejected', Rejected);
+customElements.define('kit-by-attribute', ByAttribute);
 
 const flush = () => new Promise((r) => setTimeout(r, 0));
 
@@ -200,6 +210,23 @@ describe('PogoFigure', () => {
     const el = mount<MeasuredLc12>('kit-measured-lc12', 'fr');
     expect(fidelity(el)).toBe('Données mesurées · règle des répétitions (lc1-2) · source : data/v5.json');
     expect(el.shadowRoot!.querySelector('.fidelity .source')!.textContent).toBe('data/v5.json');
+  });
+
+  it('names the game an instance reports, and adopts the element sheet after the kit sheet', () => {
+    const wrapper = document.createElement('section');
+    wrapper.setAttribute('lang', 'en');
+    const a = document.createElement('kit-by-attribute');
+    a.setAttribute('rules', 'A');
+    const b = document.createElement('kit-by-attribute');
+    b.setAttribute('rules', 'lc1-2');
+    wrapper.append(a, b);
+    document.body.append(wrapper);
+    expect(fidelity(a as PogoFigure)).toBe('Computed live · game with no stopping rule');
+    expect(fidelity(b as PogoFigure)).toBe('Computed live · repetition rule (lc1-2)');
+    const sheets = a.shadowRoot!.adoptedStyleSheets;
+    expect(sheets).toHaveLength(2);
+    expect(sheets[1]).toBe(b.shadowRoot!.adoptedStyleSheets[1]);
+    expect(mount<Fine>('kit-fine').shadowRoot!.adoptedStyleSheets).toHaveLength(1);
   });
 
   it('falls back to English with no [lang] ancestor', () => {

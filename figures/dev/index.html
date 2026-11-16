@@ -4,6 +4,7 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
     <title>pogo-figures · harness</title>
+    <link rel="icon" href="data:," />
     <!--
       Dev harness only (npm run dev); never part of dist/. Archivo comes from
       Google Fonts here for convenience: the real page self-hosts it.
@@ -80,6 +81,21 @@
         font-weight: 800;
         text-transform: uppercase;
         color: var(--pogo-muted);
+      }
+      /* The hub's .pogo-title (src/styles/pogo.css), copied for the harness. */
+      .pogo-title-demo {
+        margin: 0 0 16px;
+        font-family: var(--pogo-font-display);
+        font-size: clamp(96px, 21vw, 340px);
+        font-stretch: 62%;
+        font-weight: 900;
+        line-height: 0.82;
+        letter-spacing: -0.01em;
+        word-spacing: 0.12em;
+        text-transform: uppercase;
+        overflow-wrap: anywhere;
+        padding-bottom: 16px;
+        border-bottom: 3px solid var(--pogo-ink);
       }
       #played {
         font-size: 12.8px;

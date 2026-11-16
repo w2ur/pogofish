@@ -113,6 +113,20 @@ async function build(): Promise<void> {
   const app = document.getElementById('app')!;
   app.replaceChildren();
 
+  app.append(heading('<pogo-title> · inside an h1, over the same h1 without the element (the box must match)'));
+  const title = l === 'fr' ? 'POGOOOOOOOOOO' + '\u00a0!'.repeat(11) : 'POGOOOOOOOOOO' + '!'.repeat(11);
+  const h1 = document.createElement('h1');
+  h1.className = 'pogo-title-demo';
+  h1.id = 'title-upgraded';
+  const signature = document.createElement('pogo-title');
+  signature.textContent = title;
+  h1.append(signature);
+  const plain = document.createElement('h1');
+  plain.className = 'pogo-title-demo';
+  plain.id = 'title-plain';
+  plain.textContent = title;
+  app.append(h1, plain);
+
   app.append(heading('Type cuts'));
   app.append(
     kitBox(

@@ -1,0 +1,83 @@
+/*
+ * <pogo-title>: the title as the page sets it, every O a piece. The host takes
+ * the <h1>'s font, size, colour and line instead of the kit's figure defaults,
+ * and the frame steps out of the layout, so the drawn text sits where the
+ * fallback text sat. Sizes are in em of that font: nothing is measured.
+ */
+:host {
+  display: inline;
+  font: inherit;
+  color: inherit;
+  background: none;
+}
+
+.frame,
+.stage {
+  display: contents;
+}
+
+/* An <h1> says its title and nothing else (see the header of kit/figure.ts). */
+.fidelity,
+.failed {
+  display: none;
+}
+
+/*
+ * Drawn, the title is aria-hidden: the light-DOM text stays the accessible name,
+ * read by assistive technology and not drawn.
+ */
+slot[hidden] {
+  display: block;
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  clip-path: inset(50%);
+  white-space: nowrap;
+}
+
+/* The O keeps its advance and its line, and gives its ink to the disc. */
+.o {
+  position: relative;
+  color: transparent;
+}
+
+/*
+ * The disc fills the O's advance, centred on the middle of the font's
+ * content box (ascent over descent), which sits within a few hundredths of an
+ * em of the capitals' middle in Archivo and in the system fallback.
+ */
+.disc {
+  position: absolute;
+  left: 0.04em;
+  right: 0.04em;
+  top: 50%;
+  aspect-ratio: 1;
+  translate: 0 -50%;
+  border-radius: 50%;
+  background: var(--_ink);
+}
+
+.disc.red {
+  background: var(--_red);
+}
+
+/* Out of step: each disc enters its jump at its own phase of one up-and-down. */
+:host([data-moving]) .disc {
+  animation: pogo 0.62s cubic-bezier(0.3, 0, 0.5, 1) calc(var(--phase) * -1.24s) infinite alternate;
+}
+
+@keyframes pogo {
+  from {
+    transform: translateY(0);
+  }
+  to {
+    transform: translateY(calc(var(--lift) * -0.2em));
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  :host([data-moving]) .disc {
+    animation: none;
+  }
+}
