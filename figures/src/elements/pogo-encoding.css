@@ -1,0 +1,196 @@
+/*
+ * <pogo-encoding>: the board above the table, at every width: beside it in a 640px
+ * stage the 12 slots shrank to 14px and their « +1 » touched. The
+ * table is one row per cell; its 12 slots sit on the row's line when the table
+ * has 400px, else on a line of their own under the cell's name, top and
+ * height. A slot holding a piece takes that piece's colour (the Red pieces'
+ * red, the White pieces' white, outlined in ink); an empty slot is a hairline.
+ */
+.board-box .play {
+  width: min(100%, 240px);
+}
+
+.enc-body {
+  display: grid;
+  gap: 16px;
+  align-items: start;
+}
+
+
+.enc-table-side {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  min-width: 0;
+}
+
+.enc-wrap {
+  container-type: inline-size;
+}
+
+.enc-table {
+  display: flex;
+  flex-direction: column;
+}
+
+.enc-row {
+  display: grid;
+  grid-template-columns: 48px minmax(0, 1fr) minmax(0, 1fr);
+  grid-template-areas:
+    'name top height'
+    'slots slots slots';
+  gap: 2px 8px;
+  align-items: center;
+  padding: 4px 0;
+  border-bottom: 1px solid var(--_rule);
+}
+
+@container (min-width: 400px) {
+  .enc-row {
+    grid-template-columns: 48px minmax(0, 1fr) 3.6em 6.4em;
+    grid-template-areas: 'name slots top height';
+  }
+}
+
+.enc-head {
+  font-size: 12.8px;
+  color: var(--_muted);
+  border-bottom-color: var(--_ink);
+}
+
+/* The headers in the reading cut: the label cut's width would not hold « hauteur ÷ 12 » over its column. */
+.enc-head .label {
+  font-size: 12.8px;
+  font-stretch: 100%;
+  font-weight: 600;
+  letter-spacing: 0;
+  text-transform: none;
+}
+
+.c-name {
+  grid-area: name;
+}
+
+.c-slots {
+  grid-area: slots;
+}
+
+.c-top {
+  grid-area: top;
+}
+
+.c-height {
+  grid-area: height;
+}
+
+.c-top,
+.c-height {
+  font-size: 12.8px;
+  text-align: right;
+}
+
+.slots {
+  display: grid;
+  grid-template-columns: repeat(12, minmax(0, 1fr));
+  gap: 2px;
+}
+
+.slot {
+  display: grid;
+  place-items: center;
+  min-height: 22px;
+  font-size: 12px;
+  line-height: 1;
+}
+
+.slot.none {
+  color: var(--_muted);
+  box-shadow: inset 0 0 0 1px var(--_rule);
+}
+
+.slot.red {
+  background: var(--_red);
+  color: var(--_on-red);
+  font-weight: 800;
+}
+
+.slot.white {
+  background: var(--_white);
+  color: var(--_on-red);
+  font-weight: 800;
+  box-shadow: inset 0 0 0 1px var(--_ink);
+}
+
+/* A row's name is the button that marks it, on the board too. */
+.cell-name {
+  appearance: none;
+  min-width: 44px;
+  min-height: 32px;
+  margin: 0;
+  padding: 0 4px;
+  border: 0;
+  border-radius: 0;
+  background: transparent;
+  color: var(--_ink);
+  font-family: var(--_font);
+  font-size: 12.8px;
+  font-stretch: 125%;
+  font-weight: 800;
+  letter-spacing: 0.02em;
+  text-align: left;
+  cursor: pointer;
+  text-decoration: underline;
+  text-decoration-color: var(--_edge);
+  text-underline-offset: 3px;
+}
+
+.enc-row.on {
+  background: var(--_rule);
+}
+
+/* On the band an empty slot keeps an outline that can be seen. */
+.enc-row.on .slot.none {
+  box-shadow: inset 0 0 0 1px var(--_edge);
+}
+
+.enc-row.on .cell-name {
+  text-decoration-color: var(--_ink);
+  text-decoration-thickness: 2px;
+}
+
+.cell-button[aria-pressed='true'] {
+  cursor: pointer;
+}
+
+.cell-button {
+  cursor: pointer;
+}
+
+/* The 127th input, under the nine rows. */
+.enc-rep {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  gap: 4px 8px;
+  padding-top: 6px;
+  border-top: 3px solid var(--_ink);
+  font-size: 15px;
+}
+
+.rep-name {
+  font-size: 12.8px;
+}
+
+.rep-value {
+  font-weight: 800;
+}
+
+.rep-what {
+  flex-basis: 100%;
+  color: var(--_ink-2);
+}
+
+.total {
+  font-size: 12.8px;
+  color: var(--_muted);
+}

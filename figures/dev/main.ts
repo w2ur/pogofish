@@ -317,6 +317,18 @@ async function build(): Promise<void> {
     ),
   );
 
+  app.append(heading('<pogo-encoding> · 640px stage'));
+  app.append(
+    figure(
+      'pogo-encoding',
+      {},
+      l === 'fr'
+        ? 'La même position traduite en 127 nombres : 14 pour chacune des neuf cases, puis le nombre de répétitions de la position.'
+        : 'The same position as 127 numbers: 14 for each of the nine cells, then the number of repetitions of the position.',
+      '640px',
+    ),
+  );
+
   app.append(heading('<pogo-net kind="az"> · 640px stage'));
   app.append(
     figure(

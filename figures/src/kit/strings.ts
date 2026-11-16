@@ -222,6 +222,18 @@ const fr = {
   netMove: 'Coup',
   netPreference: 'Préférence',
   netPrefScale: 'Chaque barre va de 0 à 100 %.',
+  encKeyRed: 'Rouge au trait : +1 = pièce rouge, −1 = pièce blanche, 0 = pas de pièce.',
+  encKeyWhite: 'Blanc au trait : +1 = pièce blanche, −1 = pièce rouge, 0 = pas de pièce.',
+  encCell: 'Case',
+  encStack: 'pile, du bas vers le haut',
+  encTop: 'sommet',
+  encHeight: 'hauteur ÷ 12',
+  encRepetition: 'Répétitions',
+  encRepetitionWhat: 'fois où la position est déjà apparue dans la partie, ÷ 2',
+  encCells: 'cases',
+  encNumbers: 'nombres',
+  encPick: 'Touchez une case du plateau ou une ligne du tableau : l’une montre l’autre.',
+  encTable: 'Les 127 entrées du réseau',
 };
 
 export type StringKey = keyof typeof fr;
@@ -443,6 +455,18 @@ const en: Record<StringKey, string> = {
   netMove: 'Move',
   netPreference: 'Preference',
   netPrefScale: 'Each bar runs from 0 to 100%.',
+  encKeyRed: 'Red to move: +1 = a Red piece, −1 = a White piece, 0 = no piece.',
+  encKeyWhite: 'White to move: +1 = a White piece, −1 = a Red piece, 0 = no piece.',
+  encCell: 'Cell',
+  encStack: 'stack, bottom to top',
+  encTop: 'top',
+  encHeight: 'height ÷ 12',
+  encRepetition: 'Repetitions',
+  encRepetitionWhat: 'times the position has already occurred in the game, ÷ 2',
+  encCells: 'cells',
+  encNumbers: 'numbers',
+  encPick: 'Tap a cell on the board or a row of the table: each shows the other.',
+  encTable: 'The net’s 127 inputs',
 };
 
 export const STRINGS: Record<Lang, Record<StringKey, string>> = { fr, en };

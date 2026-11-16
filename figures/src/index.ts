@@ -1,5 +1,6 @@
 import { PogoBoard } from './elements/pogo-board';
 import { PogoCount } from './elements/pogo-count';
+import { PogoEncoding } from './elements/pogo-encoding';
 import { PogoGreedy } from './elements/pogo-greedy';
 import { PogoLine } from './elements/pogo-line';
 import { PogoMosaic } from './elements/pogo-mosaic';
@@ -30,6 +31,7 @@ const ELEMENTS: [string, CustomElementConstructor][] = [
   ['pogo-race', PogoRace],
   ['pogo-mosaic', PogoMosaic],
   ['pogo-net', PogoNet],
+  ['pogo-encoding', PogoEncoding],
 ];
 
 /** Registers every `<pogo-…>` element; safe to call twice. */
