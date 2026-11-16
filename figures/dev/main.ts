@@ -319,6 +319,18 @@ async function build(): Promise<void> {
   race.append(video);
   app.append(race);
 
+  app.append(heading('<pogo-mosaic> · 640px stage'));
+  app.append(
+    figure(
+      'pogo-mosaic',
+      {},
+      l === 'fr'
+        ? 'Des mosaïques qui montrent, pour chaque programme, l’évolution de ses résultats au fil de l’entrainement.'
+        : 'Mosaics that show, for each program, how its results change over training.',
+      '640px',
+    ),
+  );
+
   app.append(heading('PogoFigure + Stepper · one per fidelity'));
   for (const tag of ['kit-demo-live', 'kit-demo-measured', 'kit-demo-illustrative']) {
     const el = document.createElement(tag);

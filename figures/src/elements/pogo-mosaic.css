@@ -1,0 +1,210 @@
+/*
+ * <pogo-mosaic>: the program picker, the key, then one block per stage: where
+ * in training, 100 squares, the totals in words. Ink only: a won game is a
+ * filled square, a lost one an outlined square; a mark inside is ground on a
+ * filled square and ink on an outlined one. The SVG scales as a whole; it
+ * holds no text, and its strokes keep their width.
+ */
+.mosaics {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.mosaics p {
+  margin: 0;
+}
+
+.title {
+  font-size: 12.8px;
+}
+
+.note {
+  font-size: 12.8px;
+  color: var(--_ink-2);
+}
+
+.mosaic {
+  display: block;
+  width: 100%;
+  max-width: 420px;
+  height: auto;
+}
+
+.mosaic path {
+  vector-effect: non-scaling-stroke;
+}
+
+.mosaic .won {
+  fill: var(--_ink);
+}
+
+.mosaic .lost {
+  fill: none;
+  stroke: var(--_ink);
+  stroke-width: 1px;
+}
+
+.mosaic .mark {
+  fill: none;
+  stroke-width: 1.5px;
+  stroke-linecap: square;
+}
+
+.mosaic .on-won {
+  stroke: var(--_ground);
+}
+
+.mosaic .on-lost {
+  stroke: var(--_ink);
+}
+
+.key {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.legend {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px 16px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  font-size: 12.8px;
+  color: var(--_ink);
+}
+
+.legend li {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+/* A key square is the size of a square in a 420px mosaic. */
+.legend .mosaic {
+  width: auto;
+  height: 21px;
+  flex: none;
+}
+
+.stage-list {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.stage-item {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  padding-top: 8px;
+  border-top: 1px solid var(--_rule);
+}
+
+.where {
+  font-size: 12.8px;
+  color: var(--_muted);
+}
+
+/* In the label cut at 12.8px the narrow space all but closes: the count keeps its digits apart. */
+.where .sep {
+  padding-inline: 0.12em;
+}
+
+.totals {
+  color: var(--_ink);
+}
+
+.totals strong {
+  font-weight: 700;
+}
+
+.bench {
+  font-size: 12.8px;
+  color: var(--_ink-2);
+}
+
+.sr {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  clip-path: inset(50%);
+  white-space: nowrap;
+}
+
+.values summary {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  min-height: 44px;
+  font-size: 12.8px;
+  color: var(--_ink);
+  cursor: pointer;
+  list-style: none;
+}
+
+.values summary::-webkit-details-marker {
+  display: none;
+}
+
+/* The disclosure's own sign, a plus that turns to a minus: the marker the flex summary drops. */
+.values summary::before {
+  content: '+';
+  display: inline-grid;
+  place-items: center;
+  width: 20px;
+  height: 20px;
+  border: 2px solid var(--_action);
+  font-size: 15px;
+  line-height: 1;
+}
+
+.values[open] summary::before {
+  content: '−';
+}
+
+.table {
+  width: 100%;
+  margin: 8px 0 0;
+  border-collapse: collapse;
+  font-size: 15px;
+}
+
+.table caption {
+  padding-bottom: 4px;
+  font-size: 12.8px;
+  text-align: left;
+}
+
+.table th,
+.table td {
+  padding: 2px 0 2px 8px;
+  text-align: right;
+  font-weight: 400;
+}
+
+.table th:first-child {
+  padding-left: 0;
+  text-align: left;
+}
+
+.table thead th {
+  font-size: 12.8px;
+  color: var(--_muted);
+  border-bottom: 1px solid var(--_rule);
+}
+
+.table tbody th {
+  color: var(--_ink-2);
+}
+
+.as-of {
+  font-size: 12.8px;
+  color: var(--_muted);
+}
