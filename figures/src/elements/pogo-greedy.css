@@ -1,24 +1,189 @@
 /*
- * <pogo-greedy>: the seed and what a score is, then the shared replay (the
- * words over the board, replay.css), then the transport. The words hold the
- * room of the longest any game may say, so a new game never moves the board.
+ * <pogo-greedy>: the board, and beside it from 560px (under it below) the
+ * panel that tells a move: whose turn, the move, the scoreboard, the gap the
+ * move leaves and how many moves did as well, then the result. Every line of
+ * the panel keeps its room when it has nothing to say yet, so neither the
+ * board nor the transport under them moves during the game.
  */
-.greedy-figure,
-.game {
-  display: flex;
-  flex-direction: column;
-  gap: 12px;
+:host {
+  container-type: inline-size;
 }
 
-.greedy-figure p {
+/* The room the figure keeps before it renders, measured on the harness (2026-11-16). */
+.stage {
+  min-height: 690px;
+}
+
+@container (min-width: 560px) {
+  .stage {
+    min-height: 440px;
+  }
+}
+
+.greedy {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.greedy p {
   margin: 0;
 }
 
-.head {
-  font-size: 12.8px;
-  color: var(--_muted);
+.greedy > .controls {
+  justify-content: center;
 }
 
-.legend {
+.game {
+  display: grid;
+  gap: 16px 32px;
+  justify-content: center;
+  grid-template-columns: minmax(0, 400px);
+}
+
+@container (min-width: 560px) {
+  .game {
+    grid-template-columns: minmax(0, 360px) minmax(220px, 300px);
+    align-items: center;
+  }
+}
+
+.board-slot {
+  display: flex;
+  justify-content: center;
+}
+
+.board-slot .board-frame {
+  width: 100%;
+}
+
+.board-slot .board {
+  width: 100%;
+  height: auto;
+}
+
+.panel {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+/* A line with nothing to say yet keeps its room, out of sight and out of the reading order. */
+[data-off] {
+  visibility: hidden;
+}
+
+.move {
+  min-height: 1.55em;
+  color: var(--_ink);
+}
+
+/* The scoreboard: the flyer's rule over and under, a row per colour. */
+.scoreboard {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  padding-block: 10px;
+  border-block: 3px solid var(--_ink);
+}
+
+.count {
+  display: grid;
+  grid-template-columns: auto 2ch minmax(0, 1fr);
+  align-items: center;
+  column-gap: 10px;
+}
+
+.count .what {
+  white-space: nowrap;
+}
+
+.what {
+  font-size: 12.8px;
+  line-height: 1.2;
   color: var(--_ink-2);
+}
+
+.number {
+  font-size: 34px;
+  text-align: center;
+  color: var(--_ink);
+}
+
+.pieces {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 3px;
+  min-height: 14px;
+}
+
+/* A stack owned, as one piece of its colour: the page's only round thing, and its only red. */
+.piece {
+  flex: none;
+  width: 14px;
+  height: 14px;
+  border: 1.5px solid var(--_ink);
+  border-radius: 50%;
+}
+
+.piece.white {
+  background: var(--_white);
+}
+
+.piece.red {
+  background: var(--_red);
+}
+
+/* The count that has just changed: the number inverted, the flyer's stamp, for as long as the move is told. */
+.count[data-changed] .number {
+  background: var(--_ink);
+  color: var(--_ground);
+}
+
+.lead {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  align-items: end;
+  column-gap: 10px;
+}
+
+.value {
+  font-size: 56px;
+  min-width: 2ch;
+  /* The shout cut sits tight on its box: room so the last digit is never cut. */
+  padding-right: 3px;
+  text-align: right;
+  white-space: nowrap;
+}
+
+.why {
+  min-height: 3.1em;
+  color: var(--_ink-2);
+}
+
+.result {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  min-height: 4.4em;
+}
+
+/* The result as the flyer's stamp, on one line of its own over the sentence that says how. */
+.who {
+  font-size: 26px;
+  white-space: nowrap;
+}
+
+.how {
+  color: var(--_ink-2);
+}
+
+/* Read by assistive technology, not drawn. */
+.sr {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  clip-path: inset(50%);
+  white-space: nowrap;
 }
