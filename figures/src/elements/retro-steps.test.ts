@@ -2,7 +2,7 @@ import { readFileSync } from 'node:fs';
 import { describe, expect, it } from 'vitest';
 import type { TableData } from '../data';
 import { key, legal, moveName, play, terminal, winner } from '../engine';
-import { retroSteps } from './retro-steps';
+import { nextMarks, retroSteps } from './retro-steps';
 
 const table = JSON.parse(readFileSync('public/data/table.json', 'utf8')) as TableData;
 const clone = (): TableData => JSON.parse(JSON.stringify(table)) as TableData;
@@ -16,10 +16,7 @@ describe('retroSteps', () => {
       ['won', 1],
       ['lost', 2],
     ]);
-  });
-
-  it('letters the positions A to E across the three steps', () => {
-    expect(retroSteps(table).map((s) => s.boards.map((b) => b.letter))).toEqual([['A', 'B'], ['C', 'D'], ['E']]);
+    expect(steps.map((s) => s.boards.length)).toEqual([2, 2, 1]);
   });
 
   it('lost-0: every stack is the other side’s, with the loser to move', () => {
@@ -34,7 +31,7 @@ describe('retroSteps', () => {
     for (const b of won1!.boards) {
       expect(b.moves).toHaveLength(1);
       const m = b.moves[0]!;
-      expect(m.toLetter).toBe(lost0!.boards[m.to]!.letter);
+      expect(m.mover).toBe(b.state.to_move);
       expect(key(play(b.state, m.move))).toBe(key(lost0!.boards[m.to]!.state));
     }
   });
@@ -47,6 +44,33 @@ describe('retroSteps', () => {
     for (const m of b.moves) expect(key(play(b.state, m.move))).toBe(key(won1!.boards[m.to]!.state));
   });
 
+  it('the sentences of the figure hold on the engine: who owns the stacks, one move, every move', () => {
+    const [lost0, won1, lost2] = retroSteps(table);
+    // « Toutes les piles appartiennent à l’adversaire ».
+    for (const b of lost0!.boards) {
+      const tops = b.state.cells.filter((c) => c.length > 0).map((c) => c.at(-1));
+      expect(tops.length).toBeGreaterThan(0);
+      expect(tops.every((c) => c !== b.state.to_move)).toBe(true);
+    }
+    const lost0Keys = lost0!.boards.map((b) => key(b.state));
+    const won1Keys = won1!.boards.map((b) => key(b.state));
+    // « Un coup mène à une position perdue pour l’adversaire »: at least one legal move does.
+    for (const b of won1!.boards) expect(legal(b.state).some((m) => lost0Keys.includes(key(play(b.state, m))))).toBe(true);
+    // « Tous les coups mènent à une position gagnée pour l’adversaire »: every legal move does.
+    for (const b of lost2!.boards) expect(legal(b.state).every((m) => won1Keys.includes(key(play(b.state, m))))).toBe(true);
+    // The side to move changes along every arrow: « pour l’adversaire ».
+    for (const b of [...won1!.boards, ...lost2!.boards]) {
+      for (const m of b.moves) expect(play(b.state, m.move).to_move).not.toBe(b.state.to_move);
+    }
+  });
+
+  it('« et ainsi de suite »: the next two marks are won in 3, then lost in 4', () => {
+    expect(nextMarks(retroSteps(table))).toEqual([
+      { outcome: 'won', plies: 3 },
+      { outcome: 'lost', plies: 4 },
+    ]);
+  });
+
   it('refuses data that would draw a false step', () => {
     const missing = clone();
     missing.retro[2]!.positions[0]!.moves!.pop();
@@ -54,10 +78,10 @@ describe('retroSteps', () => {
     const wrongTarget = clone();
     wrongTarget.retro[1]!.positions[0]!.moves![0]!.to = 1;
     expect(() => retroSteps(wrongTarget)).toThrow();
-    // Moves from two stacks would be drawn with one ring: refused, not drawn wrong.
-    const twoStacks = clone();
-    twoStacks.retro[2]!.positions[0]!.moves![1]!.move = [1, 1, 4];
-    expect(() => retroSteps(twoStacks)).toThrow(/more than one stack/);
+    // A final position no arrow reaches would stand alone in the tree.
+    const orphan = clone();
+    orphan.retro[0]!.positions.push(orphan.retro[0]!.positions[0]!);
+    expect(() => retroSteps(orphan)).toThrow(/reached by no move/);
     const reordered = clone();
     reordered.retro.reverse();
     expect(() => retroSteps(reordered)).toThrow();

@@ -1,18 +1,20 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { REDUCED_MOTION, intersect, leave, playState, resetMedia, setMedia, shownText } from '../test-dom';
-import { greedyGame, nextSeed } from './greedy-game';
-import { PogoGreedy } from './pogo-greedy';
+import { greedyGame } from './greedy-game';
+import { BEATS, MOVE_MS, PogoGreedy, spoken, whyText } from './pogo-greedy';
 
 if (!customElements.get('pogo-greedy')) customElements.define('pogo-greedy', PogoGreedy);
 PogoGreedy.deps = { engine: () => Promise.resolve() };
 
 const flush = () => new Promise((r) => setTimeout(r, 0));
+const NNBSP = ' ';
+const game = greedyGame();
+const last = game.frames.length - 1;
 
-async function mount(lang = 'fr', seed?: string): Promise<PogoGreedy> {
+async function mount(lang = 'fr'): Promise<PogoGreedy> {
   const section = document.createElement('section');
   section.setAttribute('lang', lang);
   const el = document.createElement('pogo-greedy') as PogoGreedy;
-  if (seed) el.setAttribute('seed', seed);
   el.innerHTML = '<p>fallback</p>';
   section.append(el);
   document.body.append(section);
@@ -23,14 +25,14 @@ async function mount(lang = 'fr', seed?: string): Promise<PogoGreedy> {
 
 const $ = (el: PogoGreedy, s: string) => el.shadowRoot!.querySelector<HTMLElement>(s)!;
 const role = (el: PogoGreedy, r: string) => $(el, `[data-role="${r}"]`) as HTMLButtonElement;
-const currentBlock = (el: PogoGreedy) => el.shadowRoot!.querySelector('.said:not([data-off]):not(.sizer)')!;
-const current = (el: PogoGreedy) => shownText(currentBlock(el));
-/** The words under the board, after the transport: the score that chose the move. */
-const below = (el: PogoGreedy) => shownText(el.shadowRoot!.querySelector('.status.after .said:not([data-off]):not(.sizer)')!);
 const counter = (el: PogoGreedy) => role(el, 'counter').textContent;
-const toEnd = (el: PogoGreedy) => {
-  while (!role(el, 'next').disabled) role(el, 'next').click();
-};
+/** A line's words when it is shown, null while it keeps its room unseen. */
+const line = (el: PogoGreedy, s: string) => ($(el, s).hasAttribute('data-off') ? null : shownText($(el, s)));
+const numbers = (el: PogoGreedy) => [...el.shadowRoot!.querySelectorAll('.count .number')].map((n) => n.textContent);
+const pieces = (el: PogoGreedy) => [...el.shadowRoot!.querySelectorAll('.count')].map((c) => c.querySelectorAll('.piece').length);
+const changed = (el: PogoGreedy) => [...el.shadowRoot!.querySelectorAll('.count')].map((c) => c.hasAttribute('data-changed'));
+const moved = (el: PogoGreedy) => el.shadowRoot!.querySelectorAll('.board .disc.moved').length;
+const remove = (el: PogoGreedy) => el.parentElement!.removeChild(el);
 
 beforeEach(() => resetMedia());
 afterEach(() => {
@@ -48,85 +50,185 @@ describe('<pogo-greedy>', () => {
     expect(playState(el)).toBe('play');
     intersect(el);
     expect(playState(el)).toBe('pause');
-    el.remove();
+    remove(el);
   });
 
   it('a reader’s pause holds when it comes back on screen', async () => {
     const el = await mount('fr');
     intersect(el);
-    el.shadowRoot!.querySelector<HTMLButtonElement>('[data-role="play"]')!.click();
+    role(el, 'play').click();
     leave(el);
     intersect(el);
     expect(playState(el)).toBe('play');
-    el.remove();
+    remove(el);
   });
 
-  it('steps through its game, each move with its score', async () => {
-    const el = await mount('fr', '17');
-    expect(el.shadowRoot!.querySelector('.head')).toBeNull();
-    const plies = greedyGame(17).frames.length - 1;
-    expect(counter(el)).toBe(`coup 0 sur ${plies}`);
-    expect(current(el)).toBe('Position de départ');
+  it('opens on the start: three stacks each, no move and no gap yet', async () => {
+    const el = await mount();
+    expect(counter(el)).toBe(`coup 0 sur ${last}`);
+    expect(line(el, '.turn')).toBe('Position de départ');
+    expect(line(el, '.move')).toBeNull();
+    expect(numbers(el)).toEqual(['3', '3']);
+    expect(pieces(el)).toEqual([3, 3]);
+    expect([...el.shadowRoot!.querySelectorAll('.count .what')].map((n) => n.textContent)).toEqual(['Piles blanches', 'Piles rouges']);
+    expect(line(el, '.lead')).toBeNull();
+    expect(line(el, '.why')).toBeNull();
+    expect(line(el, '.result')).toBeNull();
+    // One fixed game: nothing draws another, and no attribute chooses one.
+    expect(el.shadowRoot!.querySelector('[data-role="action"]')).toBeNull();
+  });
+
+  it('tells a move as a cause, in order: whose turn, the move, the scoreboard, then the gap', async () => {
+    const el = await mount();
+    vi.useFakeTimers();
+    // The second move: Red lands on a white stack, and both counts change.
     role(el, 'next').click();
-    expect(currentBlock(el).querySelector('.move-name [role="tooltip"]')!.textContent).toMatch(/^De [abc][123], [123] pièces?, vers [abc][123]\.$/);
-    expect(current(el)).toMatch(/^Blanc joue [abc][123]-[123]-[abc][123]$/);
-    expect(below(el)).toMatch(/^Score du coup\u202f: [+−]?\d+, le meilleur des 16 coups/);
-    // Under the board, after the transport.
-    expect(el.shadowRoot!.querySelector('.controls')!.nextElementSibling!.classList.contains('after')).toBe(true);
+    role(el, 'next').click();
+    const f = game.frames[2]!;
+    expect(f.choice!.mover).toBe('Red');
+    expect(game.frames[1]!.stacks).toEqual({ white: 4, red: 3 });
+    expect(f.stacks).toEqual({ white: 3, red: 4 });
+    // Beat 1: whose turn; the board, the count and the gap are still those before the move.
+    expect(line(el, '.turn')).toBe('Aux Rouges de jouer');
+    expect(line(el, '.move')).toBeNull();
+    expect(moved(el)).toBe(1);
+    expect(numbers(el)).toEqual(['4', '3']);
+    expect(line(el, '.lead')).toBeNull();
+    // Beat 2: the move.
+    vi.advanceTimersByTime(BEATS.move);
+    expect(line(el, '.move')).toBe('Rouge joue c3-1-c2');
+    expect(el.shadowRoot!.querySelector('.board .to')!.getAttribute('data-cell')).toBe('5');
+    expect(numbers(el)).toEqual(['4', '3']);
+    expect(line(el, '.lead')).toBeNull();
+    // Beat 3: the scoreboard changes, and says which count did.
+    vi.advanceTimersByTime(BEATS.score - BEATS.move);
+    expect(numbers(el)).toEqual(['3', '4']);
+    expect(pieces(el)).toEqual([3, 4]);
+    expect(changed(el)).toEqual([true, true]);
+    expect(line(el, '.lead')).toBeNull();
+    // Beat 4: the gap, from the mover's side, and how many moves did as well.
+    vi.advanceTimersByTime(BEATS.gap - BEATS.score);
+    expect(line(el, '.lead')).toBe('Écart pour les Rouges+1');
+    expect(line(el, '.why')).toBe('Le seul coup à +1, sur 16 possibles.');
+    expect(line(el, '.result')).toBeNull();
+    remove(el);
   });
 
-  it('the winning move’s score is the word « gagne », never the sentinel', async () => {
-    const el = await mount('fr', '1');
-    toEnd(el);
-    expect(below(el)).toContain('Score du coup\u202f: gagne');
-    expect(current(el)).toContain('Blanc gagne');
-    expect(el.shadowRoot!.textContent).not.toMatch(/2147483647|2147483646/);
-    const en = await mount('en', '2');
-    toEnd(en);
-    expect(below(en)).toContain('Score of the move: wins');
+  it('holds each move at least three seconds, its last beat well before the next move', () => {
+    expect(MOVE_MS).toBeGreaterThanOrEqual(3000);
+    expect(BEATS.move).toBeLessThan(BEATS.score);
+    expect(BEATS.score).toBeLessThan(BEATS.gap);
+    expect(MOVE_MS - BEATS.gap).toBeGreaterThanOrEqual(1000);
   });
 
-  it('« Nouvelle partie » draws the next seed and plays it; under reduced motion it waits for the reader', async () => {
-    const el = await mount('fr', '1');
+  it('a step back, or a jump, shows the step settled at once, and drops the beats under way', async () => {
+    const el = await mount();
     vi.useFakeTimers();
-    role(el, 'action').click();
-    const seed = nextSeed(1);
-    expect(counter(el)).toBe(`coup 0 sur ${greedyGame(seed).frames.length - 1}`);
-    vi.advanceTimersByTime(1100);
-    expect(counter(el)).toMatch(/^coup 1 sur /);
+    role(el, 'next').click();
+    role(el, 'next').click();
+    role(el, 'next').click();
+    expect(vi.getTimerCount()).toBe(3);
+    role(el, 'previous').click();
+    expect(vi.getTimerCount()).toBe(0);
+    expect(counter(el)).toBe(`coup 2 sur ${last}`);
+    expect(line(el, '.move')).toBe('Rouge joue c3-1-c2');
+    expect(numbers(el)).toEqual(['3', '4']);
+    expect(changed(el)).toEqual([false, false]);
+    expect(line(el, '.lead')).toBe('Écart pour les Rouges+1');
+    remove(el);
+  });
 
+  it('does not pretend a tie was a choice: « un des N coups », counted from the game', async () => {
+    const first = game.frames[1]!.choice!;
+    expect(first.tied).toBeGreaterThan(1);
+    expect(whyText('fr', first)).toBe(`Un des ${first.tied} coups à +1, sur ${first.weighed} possibles.`);
+    expect(whyText('en', first)).toBe(`One of the ${first.tied} moves at +1, of ${first.weighed} possible.`);
+    expect(whyText('fr', { ...first, tied: 1, gap: -2 })).toBe(`Le seul coup à −2, sur ${first.weighed} possibles.`);
+    expect(whyText('fr', { ...first, weighed: 1, tied: 1 })).toBe('Le seul coup possible.');
+    expect(whyText('fr', { ...first, wins: true, tied: 2 })).toBe(`Un des 2 coups qui gagnent, sur ${first.weighed} possibles.`);
+    expect(whyText('fr', { ...first, wins: true, tied: 1 })).toBe(`Le seul coup qui gagne, sur ${first.weighed} possibles.`);
+  });
+
+  it('every step’s words are the game’s own numbers', async () => {
+    // Reduced motion: every step is shown settled.
     setMedia(REDUCED_MOTION, true);
-    role(el, 'action').click();
-    vi.advanceTimersByTime(1100 * 5);
-    expect(counter(el)).toMatch(/^coup 0 sur /);
-    expect(vi.getTimerCount()).toBe(0);
+    const el = await mount();
+    for (let i = 0; i < last; i++) role(el, 'previous').click();
+    for (let i = 1; i <= last; i++) role(el, 'next').click();
+    // Walk back through the settled steps and compare each with its frame.
+    for (let i = last; i >= 1; i--) {
+      const f = game.frames[i]!;
+      expect(numbers(el), `move ${i}`).toEqual([String(f.stacks.white), String(f.stacks.red)]);
+      expect($(el, '.lead .value').textContent).toBe(f.choice!.gap > 0 ? `+${f.choice!.gap}` : f.choice!.gap < 0 ? `−${-f.choice!.gap}` : '0');
+      expect(line(el, '.why')).toBe(whyText('fr', f.choice!));
+      role(el, 'previous').click();
+    }
+    expect(counter(el)).toBe(`coup 0 sur ${last}`);
   });
 
-  it('a new game leaves no timer of the old one running', async () => {
-    const el = await mount('fr', '1');
+  it('ends on the result, as the stamp and how, and the play control replays', async () => {
+    const el = await mount();
     vi.useFakeTimers();
     role(el, 'play').click();
-    role(el, 'action').click();
-    expect(vi.getTimerCount()).toBe(1);
+    vi.advanceTimersByTime(MOVE_MS * last + BEATS.gap);
+    expect(counter(el)).toBe(`coup ${last} sur ${last}`);
+    expect(playState(el)).toBe('replay');
+    expect(line(el, '.result')).toBe('Rouge gagneToutes les piles ont un sommet rouge.');
+    expect(numbers(el)).toEqual(['0', '3']);
+    expect(line(el, '.why')).toBe('Le seul coup qui gagne, sur 16 possibles.');
+    role(el, 'play').click();
+    expect(counter(el)).toBe(`coup 0 sur ${last}`);
+    expect(line(el, '.result')).toBeNull();
+    remove(el);
   });
 
-  it('an aborted signal stops a running replay', async () => {
-    const el = await mount('fr', '1');
+  it('reads each step whole to a screen reader, and titles the board with it', async () => {
+    const el = await mount();
+    expect($(el, '[role="status"]').textContent).toBe(`Position de départ. Piles blanches${NNBSP}: 3, piles rouges${NNBSP}: 3.`);
+    role(el, 'next').click();
+    role(el, 'next').click();
+    const said = `Rouge joue c3-1-c2. Piles blanches${NNBSP}: 3, piles rouges${NNBSP}: 4. Écart pour les Rouges${NNBSP}: +1. Le seul coup à +1, sur 16 possibles.`;
+    expect($(el, '[role="status"]').textContent).toBe(said);
+    expect(spoken('fr', game.frames[2]!)).toBe(said);
+    expect(spoken('en', game.frames[last]!)).toMatch(/Red wins\. Every stack has Red on top\.$/);
+  });
+
+  it('under reduced motion nothing plays by itself: the end of the game, settled, and a step shows at once', async () => {
+    setMedia(REDUCED_MOTION, true);
+    const el = await mount();
+    intersect(el);
+    expect(playState(el)).toBe('play');
+    expect(counter(el)).toBe(`coup ${last} sur ${last}`);
+    expect(line(el, '.result')).toBe('Rouge gagneToutes les piles ont un sommet rouge.');
+    vi.useFakeTimers();
+    role(el, 'previous').click();
+    role(el, 'next').click();
+    expect(vi.getTimerCount()).toBe(0);
+    expect(line(el, '.lead')).toBe('Écart pour les Rouges+3');
+    remove(el);
+  });
+
+  it('the move’s name carries its explanation', async () => {
+    const el = await mount('en');
+    role(el, 'next').click();
+    role(el, 'previous').click();
+    role(el, 'next').click();
+    vi.useFakeTimers();
+    role(el, 'next').click();
+    role(el, 'previous').click();
+    const name = $(el, '.move .move-name');
+    expect(name.textContent!.startsWith('c1-1-c2')).toBe(true);
+    expect(el.shadowRoot!.getElementById(name.getAttribute('aria-describedby')!)!.textContent).toBe('From c1, 1 piece, to c2.');
+    remove(el);
+  });
+
+  it('stops its beats and its stepper once disconnected', async () => {
+    const el = await mount();
     vi.useFakeTimers();
     role(el, 'play').click();
-    vi.advanceTimersByTime(1100);
-    const shown = role(el, 'counter');
-    expect(shown.textContent).toMatch(/^coup 1 sur /);
-    el.parentElement!.removeChild(el);
-    vi.advanceTimersByTime(1100 * 10);
-    expect(shown.textContent).toMatch(/^coup 1 sur /);
+    role(el, 'next').click();
+    expect(vi.getTimerCount()).toBeGreaterThan(0);
+    remove(el);
     expect(vi.getTimerCount()).toBe(0);
-  });
-
-  it('a bad seed shows the fallback', async () => {
-    const error = vi.spyOn(console, 'error').mockImplementation(() => {});
-    const el = await mount('fr', 'x');
-    expect(el.hasAttribute('data-failed')).toBe(true);
-    error.mockRestore();
   });
 });

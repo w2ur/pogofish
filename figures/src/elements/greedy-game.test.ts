@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest';
-import { LC1_2, initial, play, terminal, winner, type State } from '../engine';
-import { LOSS_SCORE, WIN_SCORE, greedyMove, mulberry32 } from '../players';
-import { greedyGame, nextSeed, parseSeed, scoreText } from './greedy-game';
+import { LC1_2, initial, legal, play, terminal, winner, type Colour, type State } from '../engine';
+import { greedyMove, mulberry32 } from '../players';
+import { GAME_SEED, SHORT_PLIES, gapText, greedyGame, positionKey, stacks, suits } from './greedy-game';
 
 // `node tools/article-visuals/greedy.mjs OUT moves SEED`, run on 2026-11-16: the tool's games.
 const GREEDY_MJS = {
@@ -10,7 +10,11 @@ const GREEDY_MJS = {
   17: [[2,1,5],[8,1,5],[1,2,5],[6,1,3],[0,1,3],[7,2,5],[2,1,5],[8,1,5],[3,2,5],[6,1,7],[5,3,8],[7,1,8],[5,3,8]],
 } as const;
 
-const moves = (seed: number) => greedyGame(seed).frames.slice(1).map((f) => f.move);
+const moves = (seed: number) => greedyGame(seed).frames.slice(1).map((f) => f.choice!.move);
+
+/** The stacks `colour` tops in `s`, counted here from the position alone. */
+const tops = (s: State, colour: Colour): number => s.cells.filter((c) => c.length > 0 && c.at(-1) === colour).length;
+const other = (c: Colour): Colour => (c === 'White' ? 'Red' : 'White');
 
 describe('greedyGame', () => {
   it('a seed gives the same greedy game twice and another seed another game', () => {
@@ -27,61 +31,92 @@ describe('greedyGame', () => {
     let s: State = initial();
     for (const f of greedyGame(17).frames.slice(1)) {
       const m = greedyMove(s, rng, LC1_2);
-      expect(f.move).toEqual([m.from_cell, m.num_pieces, m.to_cell]);
+      expect(f.choice!.move).toEqual([m.from_cell, m.num_pieces, m.to_cell]);
       s = play(s, m);
     }
   });
+});
 
-  it('each move carries the score that chose it, the number of moves weighed and of moves tied', () => {
-    const g = greedyGame(1);
-    const first = g.frames[1]!;
-    expect(first.mover).toBe('White');
-    expect(first.weighed).toBe(16);
-    expect(first.tied).toBeGreaterThanOrEqual(1);
-    const last = g.frames.at(-1)!;
-    expect(last.score).toBe(WIN_SCORE);
-    expect(g.finished).toBe(true);
+describe('the game the figure shows', () => {
+  const game = greedyGame();
+  const frames = game.frames;
+
+  it('is the default, and the first seed that suits: seed 1’s game is refused, and why', () => {
+    expect(game.seed).toBe(GAME_SEED);
+    expect(suits(game)).toBe(true);
+    for (let seed = 1; seed < GAME_SEED; seed++) expect(suits(greedyGame(seed)), `seed ${seed}`).toBe(false);
+    // Seed 1's game is refused for its length alone.
+    expect(greedyGame(1).frames.length - 1).toBeGreaterThan(SHORT_PLIES);
+    // The controls: a game that meets a position twice is refused, and so is one won by the repetition rule.
+    const twice = { ...game, frames: [...game.frames.slice(0, 3), game.frames[1]!, ...game.frames.slice(3)] };
+    expect(suits(twice)).toBe(false);
+    const last = game.frames.at(-1)!;
+    const byRule = { ...game, frames: [...game.frames.slice(0, -1), { ...last, result: { ...last.result!, byRepetition: true } }] };
+    expect(suits(byRule)).toBe(false);
+  });
+
+  it('is short and ends: a real win, every stack to the winner, nothing after it', () => {
+    expect(game.finished).toBe(true);
+    expect(frames.length - 1).toBeLessThanOrEqual(SHORT_PLIES);
+    const last = frames.at(-1)!;
     expect(terminal(last.state, LC1_2)).toBe(true);
+    // Won by the stacks, not by the repetition rule: the game is over under game A's rules too.
+    expect(terminal(last.state, null)).toBe(true);
     expect(last.result).toEqual({ winner: winner(last.state, LC1_2), byRepetition: false });
-    expect(g.frames.slice(0, -1).every((f) => f.result === null)).toBe(true);
+    const loser: Colour = last.result!.winner === 'W' ? 'Red' : 'White';
+    expect(tops(last.state, loser)).toBe(0);
+    expect(frames.slice(0, -1).every((f) => f.result === null && !terminal(f.state, LC1_2))).toBe(true);
+  });
+
+  it('never meets a position twice', () => {
+    const keys = frames.map((f) => positionKey(f.state));
+    expect(new Set(keys).size).toBe(keys.length);
+    // The control: the key tells two positions apart by the side to move alone.
+    expect(positionKey({ ...initial(), to_move: 'Red' })).not.toBe(positionKey(initial()));
+  });
+
+  it('every move is one the greedy rule allows: legal, and no legal move leaves a better gap', () => {
+    frames.slice(1).forEach((f, i) => {
+      const before = frames[i]!.state;
+      const c = f.choice!;
+      const mover = before.to_move;
+      expect(c.mover).toBe(mover);
+      const options = legal(before);
+      expect(c.weighed).toBe(options.length);
+      const mine = options.find((m) => m.from_cell === c.move[0] && m.num_pieces === c.move[1] && m.to_cell === c.move[2]);
+      expect(mine, `move ${i + 1} is legal`).toBeDefined();
+      // The gap of each legal move, recounted here from the position it leads to.
+      const gaps = options.map((m) => {
+        const next = play(before, m);
+        return { gap: tops(next, mover) - tops(next, other(mover)), ends: terminal(next, LC1_2), won: winner(next, LC1_2) === (mover === 'White' ? 'W' : 'R') };
+      });
+      const played = gaps[options.indexOf(mine!)]!;
+      expect(c.gap).toBe(played.gap);
+      expect(c.wins).toBe(played.ends && played.won);
+      if (c.wins) {
+        // A move that wins is taken before any gap: it ties only with the other winning moves.
+        expect(c.tied).toBe(gaps.filter((g) => g.ends && g.won).length);
+      } else {
+        // No move ends this game before its last: the best gap decides, and the ties are the moves that reach it.
+        expect(gaps.some((g) => g.ends)).toBe(false);
+        expect(played.gap).toBe(Math.max(...gaps.map((g) => g.gap)));
+        expect(c.tied).toBe(gaps.filter((g) => g.gap === played.gap).length);
+      }
+      expect(c.tied).toBeGreaterThanOrEqual(1);
+    });
+  });
+
+  it('each frame counts the stacks of its own position', () => {
+    for (const f of frames) expect(f.stacks).toEqual({ white: tops(f.state, 'White'), red: tops(f.state, 'Red') });
+    expect(frames[0]!.stacks).toEqual({ white: 3, red: 3 });
+    expect(stacks(initial())).toEqual({ white: 3, red: 3 });
   });
 });
 
-describe('scoreText', () => {
-  it('sentinels are shown as words, never as numbers', () => {
-    expect(scoreText('fr', WIN_SCORE)).toBe('gagne');
-    expect(scoreText('fr', LOSS_SCORE)).toBe('perd');
-    expect(scoreText('en', WIN_SCORE)).toBe('wins');
-    expect(scoreText('en', LOSS_SCORE)).toBe('loses');
-    for (const lang of ['fr', 'en'] as const) {
-      expect(scoreText(lang, WIN_SCORE)).not.toMatch(/\d/);
-      expect(scoreText(lang, LOSS_SCORE)).not.toMatch(/\d/);
-    }
-  });
-
-  it('a difference is signed, with a true minus', () => {
-    expect(scoreText('fr', 2)).toBe('+2');
-    expect(scoreText('fr', 0)).toBe('0');
-    expect(scoreText('fr', -3)).toBe('−3');
-  });
-});
-
-describe('seeds', () => {
-  it('« Nouvelle partie » draws the next seed from the current one, reproducibly, never the same', () => {
-    expect(nextSeed(1)).toBe(nextSeed(1));
-    let s = 1;
-    for (let i = 0; i < 50; i++) {
-      const n = nextSeed(s);
-      expect(n).not.toBe(s);
-      expect(Number.isInteger(n) && n >= 1 && n <= 9999).toBe(true);
-      s = n;
-    }
-  });
-
-  it('the seed attribute is a positive integer, 1 by default', () => {
-    expect(parseSeed(null)).toBe(1);
-    expect(parseSeed('17')).toBe(17);
-    expect(() => parseSeed('x')).toThrow();
-    expect(() => parseSeed('0')).toThrow();
+describe('gapText', () => {
+  it('a gap is signed, with a true minus', () => {
+    expect(gapText(2)).toBe('+2');
+    expect(gapText(0)).toBe('0');
+    expect(gapText(-3)).toBe('−3');
   });
 });

@@ -1,139 +1,214 @@
-// <pogo-greedy seed="1">: a game of the greedy player against itself under
-// lc1-2, drawn from a seed (greedy-game.ts) and replayed one move per step.
-// Each move says the score that chose it, how many moves greedy weighed and,
-// when several tied, that the move was drawn among them. « Nouvelle partie »
-// draws the next seed and plays the new game; under reduced motion nothing
-// plays by itself and the reader steps. The `seed` attribute names the game
-// (greedy.mjs game SEED draws the same one).
+// <pogo-greedy>: one short game of the greedy player against itself under
+// lc1-2 (greedy-game.ts), with no position met twice and a real win at the
+// end. Beside the board, a scoreboard counts the stacks each colour owns, and
+// each move is told as a cause, in this order: whose turn it is; the move,
+// its pieces travelling; the scoreboard changing; then the gap the move
+// leaves, which is what greedy maximises, and how many moves were as good.
+// A step forward plays these beats one after the other; any other change of
+// step, and reduced motion, show the step settled. It ends on the result,
+// and the transport then replays it.
 import { announceMove } from '../board-state';
 import { WASM_FILE, assetUrl } from '../assets';
-import { ready } from '../engine';
-import { progress, transport } from '../kit/controls';
+import { ready, type Colour } from '../engine';
 import { autoplay } from '../kit/autoplay';
+import { labelledBoard } from '../kit/board-labels';
+import { animateMove, drawBoard } from '../kit/board-svg';
+import { progress, transport } from '../kit/controls';
 import { PogoFigure } from '../kit/figure';
+import { moveText } from '../kit/move-tip';
 import { Stepper } from '../kit/stepper';
 import { colon, t, type Lang } from '../kit/strings';
-import { MAX_PLIES, greedyGame, nextSeed, parseSeed, scoreText, type GreedyFrame } from './greedy-game';
+import { gapText, greedyGame, type GreedyChoice, type GreedyFrame } from './greedy-game';
 import greedyCss from './pogo-greedy.css?raw';
-import replayCss from './replay.css?raw';
-import { replayView, resultWords, type Line, type Spoken } from './replay-view';
+import { resultWords } from './replay-view';
 
-/** « Score du coup : +1, le meilleur des 16 coups ; tiré au sort parmi 4 à égalité. » */
-function scoreLine(lang: Lang, score: number, weighed: number, tied: number): string {
-  const head = `${t(lang, 'moveScore')}${colon(lang)} ${scoreText(lang, score)}`;
-  const semi = lang === 'fr' ? ' ;' : ';';
-  const among = weighed === 1 ? t(lang, 'onlyMove') : `${t(lang, 'bestOf')} ${weighed} ${t(lang, 'movesUnit')}`;
-  const draw = tied > 1 ? `${semi} ${t(lang, 'drawnAmong')} ${tied} ${t(lang, 'tiedUnit')}` : '';
-  return `${head}, ${among}${draw}.`;
+/** How long a move is held, in ms, and when each of its beats falls. */
+export const MOVE_MS = 3800;
+export const BEATS = { move: 900, score: 1700, gap: 2500 } as const;
+
+/** « Un des 6 coups à +1, sur 16 possibles. » */
+export function whyText(lang: Lang, c: GreedyChoice): string {
+  const said = (() => {
+    if (c.weighed === 1) return t(lang, 'onlyMove');
+    const of = `, ${t(lang, 'greedyOf')} ${c.weighed} ${t(lang, 'greedyPossible')}`;
+    if (c.wins) {
+      return c.tied === 1 ? `${t(lang, 'greedyOnlyWin')}${of}` : `${t(lang, 'greedyOneOf')} ${c.tied} ${t(lang, 'movesUnit')} ${t(lang, 'greedyThatWin')}${of}`;
+    }
+    const gap = gapText(c.gap);
+    return c.tied === 1
+      ? `${t(lang, 'greedyOnlyAt')} ${gap}${of}`
+      : `${t(lang, 'greedyOneOf')} ${c.tied} ${t(lang, 'movesUnit')} ${t(lang, 'greedyAt')} ${gap}${of}`;
+  })();
+  return `${said[0]!.toUpperCase()}${said.slice(1)}.`;
 }
 
-const unfinishedLine = (lang: Lang): string => `${t(lang, 'unfinished')} ${MAX_PLIES} ${t(lang, 'movesUnit')}.`;
+const turnText = (lang: Lang, c: Colour): string => t(lang, c === 'White' ? 'greedyTurnWhite' : 'greedyTurnRed');
+const gapLabel = (lang: Lang, c: Colour): string => t(lang, c === 'White' ? 'greedyGapWhite' : 'greedyGapRed');
 
-function say(lang: Lang, f: GreedyFrame, stopped: boolean): Spoken {
-  const move = f.move && f.mover ? announceMove(lang, f.mover, f.move) : t(lang, 'startPosition');
-  const note = f.score !== undefined ? scoreLine(lang, f.score, f.weighed!, f.tied!) : '';
-  const { who, how } = f.result ? resultWords(lang, f.result) : { who: '', how: stopped ? unfinishedLine(lang) : '' };
-  // Over the board, two lines: the move, or at the end the stamp and how it ended (or that it was stopped).
-  // The score that chose the move goes under the board, after the transport.
-  const lines = (
-    f.result
-      ? [
-          { className: 'shout who', text: who },
-          { className: 'how', text: how },
-        ]
-      : [
-          { className: 'move', text: move },
-          { className: 'how', text: how },
-        ]
-  ).filter((l) => l.text !== '');
-  const after = note ? [{ className: 'note', text: note }] : [];
-  return { lines, after, title: sentences([move, note, who]), live: sentences([move, note, who, how]) };
-}
-
-/** Parts read as sentences: « Blanc joue b1-2-b3. Score du coup : +1, … » */
-const sentences = (parts: string[]): string =>
-  parts
-    .filter(Boolean)
-    .map((p) => (p.endsWith('.') ? p : `${p}.`))
-    .join(' ');
-
-/** The longest words any game may say, over the board and under it, so a new game never moves the board. */
-function sizers(lang: Lang): { over: Line[][]; under: Line[][] } {
-  const move = { className: 'move', text: announceMove(lang, 'White', [0, 3, 8]) };
-  const ends = (['W', 'R'] as const).flatMap((winner) =>
-    [false, true].map((byRepetition) => {
-      const { who, how } = resultWords(lang, { winner, byRepetition });
-      return [
-        { className: 'shout who', text: who },
-        { className: 'how', text: how },
-      ];
-    }),
-  );
-  return {
-    over: [...ends, [move, { className: 'how', text: unfinishedLine(lang) }]],
-    under: [[{ className: 'note', text: scoreLine(lang, -88, 88, 88) }]],
-  };
+/** What a screen reader hears for a step: the move, the count, the gap and why, then the end. */
+export function spoken(lang: Lang, f: GreedyFrame): string {
+  const count = `${t(lang, 'greedyStacksWhite')}${colon(lang)} ${f.stacks.white}, ${t(lang, 'greedyStacksRed').toLowerCase()}${colon(lang)} ${f.stacks.red}.`;
+  const c = f.choice;
+  if (!c) return `${t(lang, 'startPosition')}. ${count}`;
+  const end = f.result ? resultWords(lang, f.result) : null;
+  return [
+    `${announceMove(lang, c.mover, c.move)}.`,
+    count,
+    `${gapLabel(lang, c.mover)}${colon(lang)} ${gapText(c.gap)}.`,
+    whyText(lang, c),
+    ...(end ? [`${end.who}.`, end.how] : []),
+  ].join(' ');
 }
 
 export class PogoGreedy extends PogoFigure {
-  static override styles = replayCss + greedyCss;
-  static override stageMinHeight = '640px';
+  static override styles = greedyCss;
+  static override stageMinHeight = '700px';
 
   /** The engine; a test swaps it. */
   static deps: { engine: () => Promise<void> } = { engine: () => ready(assetUrl(WASM_FILE)) };
 
-
   protected async render(signal: AbortSignal): Promise<void> {
-    const first = parseSeed(this.getAttribute('seed'));
     await (this.constructor as typeof PogoGreedy).deps.engine();
     if (signal.aborted) return;
     const lang = this.lang;
-
-    const root = document.createElement('div');
-    root.className = 'greedy-figure';
-    const legend = document.createElement('p');
-    legend.className = 'legend';
-    legend.textContent = t(lang, 'greedyLegend');
-    const body = document.createElement('div');
-    body.className = 'game';
-    root.append(legend, body);
-    const held = sizers(lang);
-
-    // One game at a time: its stepper and timer go with it when the next is drawn, or with the figure.
-    let game: AbortController | undefined;
-    const stop = (): void => game?.abort();
-    signal.addEventListener('abort', stop, { once: true });
-
-    const load = (seed: number, start: boolean): void => {
-      game?.abort();
-      const current = new AbortController();
-      game = current;
-      const { frames, finished } = greedyGame(seed);
-      const last = frames.length - 1;
-      const view = replayView({
-        lang,
-        steps: frames,
-        spoken: frames.map((f, i) => say(lang, f, !finished && i === last)),
-        sizers: held.over,
-        afterSizers: held.under,
-        reducedMotion: () => this.reducedMotion(),
-      });
-      const stepper = new Stepper(frames.length, view.show, { signal: current.signal, interval: 1100 });
-      const hadFocus = this.shadowRoot?.activeElement?.closest('.game') === body;
-      const row = transport(stepper, {
-        lang,
-        counter: progress(lang, 'move', true),
-        actions: [{ label: t(lang, 'newGame'), onClick: () => load(nextSeed(seed), true) }],
-      });
-      view.show(0);
-      body.replaceChildren(view.status, view.slot, row, view.after, view.live);
-      if (hadFocus) row.querySelector<HTMLButtonElement>('[data-role="action"]')?.focus();
-      // The first game starts by itself on screen (under reduced motion it shows its end); a new one plays at once.
-      autoplay(this, stepper, { signal: current.signal, ...(start ? {} : { still: () => stepper.go(last) }) });
-      if (start) stepper.play();
+    const { frames } = greedyGame();
+    const el = <K extends keyof HTMLElementTagNameMap>(tag: K, className: string, text = ''): HTMLElementTagNameMap[K] => {
+      const node = document.createElement(tag);
+      node.className = className;
+      if (text) node.textContent = text;
+      return node;
     };
 
-    load(first, false);
+    const root = el('div', 'greedy');
+    const slot = el('div', 'board-slot');
+
+    // Whose turn, then the move: two lines, each keeping its room.
+    const turn = el('p', 'turn say');
+    const move = el('p', 'move');
+
+    // The scoreboard: a row per colour, its stacks counted as pieces and as a number.
+    const row = (colour: Colour): { row: HTMLElement; set(n: number, changed: boolean): void } => {
+      const line = el('div', 'count');
+      line.dataset.colour = colour;
+      const number = el('span', 'shout num number');
+      const pieces = el('span', 'pieces');
+      pieces.setAttribute('aria-hidden', 'true');
+      line.append(el('span', 'label what', t(lang, colour === 'White' ? 'greedyStacksWhite' : 'greedyStacksRed')), number, pieces);
+      return {
+        row: line,
+        set(n, changed) {
+          number.textContent = String(n);
+          pieces.replaceChildren(...Array.from({ length: n }, () => el('span', `piece ${colour === 'White' ? 'white' : 'red'}`)));
+          line.toggleAttribute('data-changed', changed);
+        },
+      };
+    };
+    const white = row('White');
+    const red = row('Red');
+    const board = el('div', 'scoreboard');
+    board.append(white.row, red.row);
+
+    // What greedy maximises, from the mover's side, and how many moves did as well.
+    const gap = el('div', 'lead');
+    const gapWhat = el('span', 'label what');
+    const gapValue = el('span', 'shout num value');
+    gap.append(gapWhat, gapValue);
+    const why = el('p', 'why');
+
+    // The end: who wins, as the flyer's stamp, and how.
+    const result = el('div', 'result');
+    const who = el('p', 'shout who');
+    const how = el('p', 'how');
+    result.append(who, how);
+
+    const panel = el('div', 'panel');
+    panel.append(turn, move, board, gap, why, result);
+    const live = el('p', 'sr');
+    live.setAttribute('role', 'status');
+    live.setAttribute('aria-live', 'polite');
+
+    let svg: SVGSVGElement | undefined;
+    const draw = (i: number, travel: boolean): void => {
+      const f = frames[i]!;
+      const m = f.choice?.move;
+      const next = drawBoard(f.state, { labelRoom: true, title: spoken(lang, f), ...(m ? { from: m[0], to: m[2], moving: m[1] } : {}) });
+      const before = svg;
+      slot.replaceChildren(labelledBoard(next));
+      svg = next;
+      if (travel && before && m) animateMove(before, next, m);
+    };
+    const count = (i: number, flash: boolean): void => {
+      const [now, was] = [frames[i]!.stacks, frames[Math.max(0, i - 1)]!.stacks];
+      white.set(now.white, flash && now.white !== was.white);
+      red.set(now.red, flash && now.red !== was.red);
+    };
+    const said = (i: number): void => {
+      const c = frames[i]!.choice;
+      move.replaceChildren(...(c ? moveText(lang, announceMove(lang, c.mover, c.move)) : []));
+      move.toggleAttribute('data-off', !c);
+    };
+    const reason = (i: number): void => {
+      const f = frames[i]!;
+      const c = f.choice;
+      gap.toggleAttribute('data-off', !c);
+      why.toggleAttribute('data-off', !c);
+      if (c) {
+        gapWhat.textContent = gapLabel(lang, c.mover);
+        gapValue.textContent = gapText(c.gap);
+        why.textContent = whyText(lang, c);
+      }
+      const end = f.result ? resultWords(lang, f.result) : null;
+      result.toggleAttribute('data-off', !end);
+      who.textContent = end?.who ?? '';
+      how.textContent = end?.how ?? '';
+    };
+    /** Step `i` once everything has happened. */
+    const settle = (i: number): void => {
+      const f = frames[i]!;
+      turn.textContent = f.choice ? turnText(lang, f.choice.mover) : t(lang, 'startPosition');
+      said(i);
+      draw(i, false);
+      count(i, false);
+      reason(i);
+    };
+
+    // The beats of the move under way: dropped when another step is shown, or with the figure.
+    let timers: ReturnType<typeof setTimeout>[] = [];
+    const drop = (): void => {
+      timers.forEach(clearTimeout);
+      timers = [];
+    };
+    signal.addEventListener('abort', drop, { once: true });
+    let shown = -1;
+    const show = (i: number): void => {
+      drop();
+      const forward = i === shown + 1 && i > 0;
+      shown = i;
+      live.textContent = spoken(lang, frames[i]!);
+      if (!forward || this.reducedMotion()) {
+        settle(i);
+        return;
+      }
+      // The position before the move, and whose turn it is; then the move; then the count; then the gap.
+      settle(i - 1);
+      turn.textContent = turnText(lang, frames[i]!.choice!.mover);
+      for (const node of [move, gap, why, result]) node.toggleAttribute('data-off', true);
+      timers = [
+        setTimeout(() => {
+          said(i);
+          draw(i, true);
+        }, BEATS.move),
+        setTimeout(() => count(i, true), BEATS.score),
+        setTimeout(() => reason(i), BEATS.gap),
+      ];
+    };
+
+    const stepper = new Stepper(frames.length, show, { signal, interval: MOVE_MS });
+    show(0);
+    const body = el('div', 'game');
+    body.append(slot, panel);
+    root.append(body, transport(stepper, { lang, counter: progress(lang, 'move', true) }), live);
+    autoplay(this, stepper, { signal, still: () => stepper.go(stepper.steps - 1) });
     this.stage.append(root);
   }
 }

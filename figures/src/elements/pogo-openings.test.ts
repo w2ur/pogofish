@@ -1,17 +1,18 @@
 import { readFileSync } from 'node:fs';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import type { TableData } from '../data';
-import { initial, key, play } from '../engine';
+import { initial, key, moveName, play } from '../engine';
 import type { PlayFromDetail } from '../kit/figure';
-import { intersect, resetMedia, shownText } from '../test-dom';
+import { IntersectionObserverMock, REDUCED_MOTION, intersect, observersOf, resetMedia, setMedia, shownText } from '../test-dom';
 import { PogoOpenings } from './pogo-openings';
 
 if (!customElements.get('pogo-openings')) customElements.define('pogo-openings', PogoOpenings);
 const table = JSON.parse(readFileSync('public/data/table.json', 'utf8')) as TableData;
 const NNBSP = ' ';
 
-async function mount(lang = 'fr'): Promise<PogoOpenings> {
+async function mount(lang = 'fr', reduced = false): Promise<PogoOpenings> {
   resetMedia();
+  if (reduced) setMedia(REDUCED_MOTION, true);
   const section = document.createElement('section');
   section.setAttribute('lang', lang);
   const el = document.createElement('pogo-openings') as PogoOpenings;
@@ -25,11 +26,7 @@ async function mount(lang = 'fr'): Promise<PogoOpenings> {
 
 const $ = (el: PogoOpenings, s: string) => el.shadowRoot!.querySelector<HTMLElement>(s)!;
 const $$ = (el: PogoOpenings, s: string) => [...el.shadowRoot!.querySelectorAll<HTMLElement>(s)];
-const cell = (el: PogoOpenings, i: number) => $(el, `.cell-button[data-cell="${i}"]`) as HTMLButtonElement;
-const item = (el: PogoOpenings, name: string) => $(el, `.list .choice[data-value="${name}"]`) as HTMLButtonElement;
-const readout = (el: PogoOpenings) => shownText($(el, '.readout .line'));
-const head = (el: PogoOpenings) => $(el, '.head .line').textContent;
-const level = (el: PogoOpenings) => $(el, '[data-role="level"]') as HTMLButtonElement;
+const reply = (el: PogoOpenings, name: string) => $(el, `.reply[data-move="${name}"]`);
 
 beforeEach(() => {
   PogoOpenings.deps = { engine: () => Promise.resolve(), table: () => Promise.resolve(table) };
@@ -39,119 +36,137 @@ afterEach(() => {
 });
 
 describe('<pogo-openings>', () => {
-  it('lists the sixteen openings with each verdict in words, the six draws counted in its head', async () => {
+  it('opens on the position after c1-1-b1, White’s move marked on it, Red to play', async () => {
     const el = await mount();
-    expect(head(el)).toBe('Premiers coups des Blancs · 6 gardent la nulle, 10 perdent');
-    const items = $$(el, '.list .choice');
-    expect(items).toHaveLength(16);
-    expect(shownText(item(el, 'a1-1-b1'))).toBe('a1-1-b1, garde la nulle');
-    expect(shownText(item(el, 'a1-2-b2'))).toBe('a1-2-b2, perd en 12');
-    expect($$(el, '.list .verdict[data-holds]')).toHaveLength(6);
-    expect(level(el).disabled).toBe(true);
-    expect(readout(el)).toBe('Touchez une pile, ou choisissez un coup dans la liste.');
+    const start = $(el, '.card.start');
+    expect(shownText(start.querySelector('.caption')!)).toBe('Les Blancs ont joué c1-1-b1aux Rouges de jouer');
+    expect(start.querySelector('.board title')!.textContent).toBe(`Les Blancs ont joué c1-1-b1${NNBSP}: aux Rouges de jouer.`);
+    expect(start.querySelector('.board .from')!.getAttribute('data-cell')).toBe('2');
+    expect(start.querySelector('.board .to')!.getAttribute('data-cell')).toBe('1');
+    // The board is the position itself: three white pieces on b1, one on c1.
+    expect(start.querySelectorAll('.stack[data-cell="1"] .disc.white')).toHaveLength(3);
+    expect(start.querySelectorAll('.stack[data-cell="2"] .disc.white')).toHaveLength(1);
   });
 
-  it('each row carries its move’s explanation as its own tooltip, nothing focusable nested; hovering marks the move on the board', async () => {
+  it('sets apart the two replies that keep the draw, counted from the table', async () => {
     const el = await mount();
-    const row = item(el, 'b1-2-b3');
-    const tip = el.shadowRoot!.getElementById(row.getAttribute('aria-describedby')!.split(' ').at(-1)!)!;
-    expect(tip.getAttribute('role')).toBe('tooltip');
-    expect(tip.textContent).toBe('De b1, 2 pièces, vers b3.');
-    expect(row.contains(tip)).toBe(true);
-    expect(row.querySelectorAll('[tabindex], button')).toHaveLength(0);
-    row.dispatchEvent(new PointerEvent('pointerenter'));
-    expect(tip.hasAttribute('data-open')).toBe(true);
-    expect($(el, '.board .mark.picked').getAttribute('data-cell')).toBe('1');
-    expect($$(el, '.board .mark.target').map((m) => m.getAttribute('data-cell'))).toEqual(['7']);
-    row.dispatchEvent(new PointerEvent('pointerleave'));
-    expect(tip.hasAttribute('data-open')).toBe(false);
-    expect(el.shadowRoot!.querySelector('.board .mark.picked')).toBeNull();
+    expect($(el, '.keep .head').textContent).toBe(`Gardent la nulle${NNBSP}: 2 réponses sur 16`);
+    expect($$(el, '.keep .reply').map((c) => shownText(c.querySelector('.caption')!))).toEqual(['a3-1-b3garde la nulle', 'c3-1-b3garde la nulle']);
+    expect($$(el, '.keep .reply').every((c) => c.dataset.verdict === 'keeps')).toBe(true);
   });
 
-  it('a move chosen in the list is read out and marked on the board', async () => {
+  it('shows the fourteen that lose from the fastest loss to the slowest, each with its verdict', async () => {
     const el = await mount();
-    item(el, 'b1-1-b2').click();
-    expect(readout(el)).toBe(`Blanc joue b1-1-b2${NNBSP}: perd en 16`);
-    expect(item(el, 'b1-1-b2').getAttribute('aria-checked')).toBe('true');
-    expect($(el, '.board .mark.picked').getAttribute('data-cell')).toBe('1');
-    expect($(el, '.board .to').getAttribute('data-cell')).toBe('4');
+    expect($(el, '.lose .head').textContent).toBe(`Perdent${NNBSP}: 14 réponses, du gain blanc le plus rapide au plus lent`);
+    const lost = $$(el, '.lose .reply');
+    expect(lost).toHaveLength(14);
+    expect(shownText(lost[0]!.querySelector('.caption')!)).toBe('b3-2-b1perd en 8');
+    expect(shownText(lost.at(-1)!.querySelector('.caption')!)).toBe('c3-1-c2perd en 22');
+    const plies = lost.map((c) => Number(c.querySelector('.verdict')!.textContent!.split(' ').at(-1)));
+    expect(plies).toEqual([...plies].sort((a, b) => a - b));
+    // The control: the order shown is not simply the table's own.
+    const asListed = table.replies['c1-1-b1']!.filter((m) => m.verdict.kind === 'loses-in').map((m) => moveName(m.move));
+    expect(lost.map((c) => c.dataset.move)).not.toEqual(asListed);
   });
 
-  it('chooses an opening on the board itself: a stack, its count, a destination', async () => {
+  it('each board is the position after its reply, the reply marked where it left and where it landed', async () => {
+    const el = await mount();
+    const card = reply(el, 'b3-2-b1');
+    expect(card.querySelector('.board .from')!.getAttribute('data-cell')).toBe('7');
+    expect(card.querySelector('.board .to')!.getAttribute('data-cell')).toBe('1');
+    expect(card.querySelectorAll('.board .disc.moved')).toHaveLength(2);
+    expect(card.querySelectorAll('.stack[data-cell="1"] .disc')).toHaveLength(5);
+    expect(card.querySelector('.board title')!.textContent).toBe(`Rouge joue b3-2-b1${NNBSP}: perd en 8.`);
+  });
+
+  it('every move name carries its explanation', async () => {
     const el = await mount('en');
-    cell(el, 2).click();
-    expect(readout(el)).toBe('c1, 1\u00a0piece: b1, c2');
-    cell(el, 1).click();
-    expect(readout(el)).toBe('White plays c1-1-b1: holds the draw');
-    expect(item(el, 'c1-1-b1').getAttribute('aria-checked')).toBe('true');
+    const name = reply(el, 'a3-1-b3').querySelector<HTMLElement>('.move-name')!;
+    expect(name.tabIndex).toBe(0);
+    expect(el.shadowRoot!.getElementById(name.getAttribute('aria-describedby')!)!.textContent).toBe('From a3, 1 piece, to b3.');
+    expect($(el, '.keep .head').textContent).toBe('Hold the draw: 2 replies of 16');
+    expect($(el, '.lose .head').textContent).toBe('Lose: 14 replies, from White’s fastest win to the slowest');
   });
 
-  it('moves between cells with the arrow keys, one tab stop on the board', async () => {
-    const el = await mount();
-    const tabStops = () => $$(el, '.cell-button').filter((b) => b.tabIndex === 0).map((b) => b.dataset.cell);
-    expect(tabStops()).toEqual(['0']);
-    cell(el, 0).dispatchEvent(new KeyboardEvent('keydown', { key: 'ArrowRight', bubbles: true }));
-    expect(tabStops()).toEqual(['1']);
-  });
-
-  it('after c1-1-b1, lists Red’s sixteen replies, two of which keep the draw', async () => {
-    const el = await mount();
-    item(el, 'c1-1-b1').click();
-    level(el).click();
-    expect(head(el)).toBe('Réponses des Rouges à c1-1-b1 · 2 gardent la nulle, 14 perdent');
-    expect($$(el, '.list .choice')).toHaveLength(16);
-    expect($$(el, '.list .verdict[data-holds]')).toHaveLength(2);
-    // The board is now the position after the opening, Red to move.
-    expect($$(el, '.board .mark.target').map((m) => m.getAttribute('data-cell')).sort()).toEqual(['6', '7', '8']);
-  });
-
-  it('after b1-2-b3, heads Red’s ten replies with its two wins, set heavier as moves that do not lose', async () => {
-    const el = await mount('en');
-    item(el, 'b1-2-b3').click();
-    level(el).click();
-    expect(head(el)).toBe('Red’s replies to b1-2-b3 · 2 win, 8 lose');
-    expect($$(el, '.list .choice')).toHaveLength(10);
-    expect($$(el, '.list .verdict[data-holds]').map((v) => v.textContent)).toEqual(['wins in 13', 'wins in 13']);
-    level(el).click();
-    expect(head(el)).toBe('White’s first moves · 6 hold the draw, 10 lose');
-    expect(item(el, 'b1-2-b3').getAttribute('aria-checked')).toBe('true');
-  });
-
-  it('« Jouer cette position contre l’ordinateur » hands the position after the chosen moves to the board', async () => {
+  it('a board offers « Jouer cette position contre l’ordinateur », and hands over the position after both moves', async () => {
     const el = await mount();
     const got: PlayFromDetail[] = [];
     const listen = (e: Event) => got.push((e as CustomEvent<PlayFromDetail>).detail);
     document.addEventListener('pogo:playfrom', listen);
     try {
-      item(el, 'a1-1-b1').click();
-      level(el).click();
-      item(el, 'a3-1-b3').click();
-      $(el, '[data-role="play-from-here"]').click();
+      const card = reply(el, 'a3-1-b3');
+      const offer = card.querySelector<HTMLButtonElement>('[data-role="play-from-here"]')!;
+      expect(offer.textContent).toBe('Jouer cette position contre l’ordinateur');
+      offer.click();
       expect(got).toHaveLength(1);
-      expect(got[0]!.label).toBe('les premiers coups, a1-1-b1 a3-1-b3');
-      expect(key(got[0]!.state)).toBe(key(play(play(initial(), [0, 1, 1]), [6, 1, 7])));
+      expect(got[0]!.label).toBe('les premiers coups, c1-1-b1 a3-1-b3');
+      expect(key(got[0]!.state)).toBe(key(play(play(initial(), [2, 1, 1]), [6, 1, 7])));
     } finally {
       document.removeEventListener('pogo:playfrom', listen);
     }
+    // Sixteen offers, one per reply; the position Red replies in has none.
+    expect($$(el, '[data-role="play-from-here"]')).toHaveLength(16);
+    expect($(el, '.card.start').querySelector('button')).toBeNull();
+  });
+
+  it('a tap on a board opens its offer and closes the one open before', async () => {
+    const el = await mount();
+    const [a, b] = [reply(el, 'a3-1-b3'), reply(el, 'b3-2-b1')];
+    a.querySelector<HTMLElement>('.shot')!.click();
+    expect(a.hasAttribute('data-open')).toBe(true);
+    b.querySelector<HTMLElement>('.shot')!.click();
+    expect(a.hasAttribute('data-open')).toBe(false);
+    expect(b.hasAttribute('data-open')).toBe(true);
+    b.querySelector<HTMLElement>('.shot')!.click();
+    expect(b.hasAttribute('data-open')).toBe(false);
+  });
+
+  it('nothing else is interactive: no transport, no list, no playable board', async () => {
+    const el = await mount();
+    expect($$(el, 'button').every((b) => b.dataset.role === 'play-from-here')).toBe(true);
+    expect(el.shadowRoot!.querySelector('.controls, [role="radiogroup"], .cell-button')).toBeNull();
+  });
+
+  it('the boards wait off screen, land in reading order once on screen, and are all there at rest', async () => {
+    PogoOpenings.deps = { ...PogoOpenings.deps, Observer: IntersectionObserverMock as unknown as typeof IntersectionObserver };
+    const el = await mount();
+    const root = $(el, '.openings');
+    expect(root.hasAttribute('data-wait')).toBe(true);
+    const io = observersOf(root)[0]!;
+    io.fire(root, false);
+    expect(root.hasAttribute('data-wait')).toBe(true);
+    io.fire(root);
+    expect(root.hasAttribute('data-wait')).toBe(false);
+    expect(root.hasAttribute('data-land')).toBe(true);
+    // Reading order: the position, the two framed boards, then the fourteen.
+    const order = $$(el, '.card').map((c) => Number(c.style.getPropertyValue('--k')));
+    expect(order).toEqual(order.map((_, k) => k));
+    expect(order).toHaveLength(17);
+    expect(observersOf(root)).toHaveLength(0);
+  });
+
+  it('under reduced motion nothing waits and nothing lands', async () => {
+    const el = await mount('fr', true);
+    const root = $(el, '.openings');
+    expect(root.hasAttribute('data-wait')).toBe(false);
+    expect(observersOf(root)).toHaveLength(0);
   });
 
   it('a table whose replies disagree with legal() shows the fallback', async () => {
     const error = vi.spyOn(console, 'error').mockImplementation(() => {});
     const broken = JSON.parse(JSON.stringify(table)) as TableData;
-    broken.replies['a1-1-b1']!.pop();
+    broken.replies['c1-1-b1']!.pop();
     PogoOpenings.deps = { engine: () => Promise.resolve(), table: () => Promise.resolve(broken) };
     const el = await mount();
     expect(el.hasAttribute('data-failed')).toBe(true);
     error.mockRestore();
   });
 
-  it('stops listening once disconnected', async () => {
+  it('stops watching once disconnected', async () => {
     const el = await mount();
-    const button = item(el, 'a1-1-b1');
-    const line = $(el, '.readout .line');
+    const root = $(el, '.openings');
+    expect(observersOf(root)).toHaveLength(1);
     el.parentElement!.removeChild(el);
-    button.click();
-    expect(line.textContent).toBe('Touchez une pile, ou choisissez un coup dans la liste.');
+    expect(observersOf(root)).toHaveLength(0);
   });
-
 });

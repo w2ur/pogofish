@@ -1,84 +1,56 @@
-// <pogo-openings>: White's sixteen first moves, then every reply Red has after
-// the chosen one, each with the solved table's verdict in words
-// (openings-verdicts.ts). The reader chooses a move from the list, or on the
-// board itself as on the playable board: tap a stack, its count, a
-// destination. The board shows the position the choice is made in and the
-// chosen move on it; « Réponses des Rouges » plays the chosen opening and
-// lists Red's replies; « Jouer cette position contre l’ordinateur » hands the position after the chosen
-// moves to the playable board. The verdicts are game A's.
-import { boardInput, type BoardInput } from '../board-input';
-import { announceMove, chooseCount, describeCell, origins, tap, type Selection } from '../board-state';
+// <pogo-openings>: one picture, no animation of games. The position after a
+// first move of White's that keeps the draw, then every reply Red has there as
+// a small board showing the reply played (where it left, where it landed), its
+// name and the solved table's verdict: the replies that keep the draw framed
+// and set apart, those that lose from the fastest loss to the slowest
+// (openings-verdicts.ts). The only motion is the boards landing one after the
+// other the first time the figure comes on screen; at rest everything is
+// shown. A board offers « Jouer cette position contre l’ordinateur » when it
+// is pointed at, focused or tapped; nothing else is interactive.
+import { announceMove } from '../board-state';
 import { WASM_FILE, assetUrl } from '../assets';
 import type { TableData } from '../data';
-import { legal, moveName, parseMoveName, play, ready, type Move, type Triple } from '../engine';
-import { boardLabels } from '../kit/board-labels';
+import { moveName, ready } from '../engine';
+import type { ObserverCtor } from '../follow-panel';
 import { drawBoard } from '../kit/board-svg';
-import { choiceGroup, controlButton, type ChoiceGroup } from '../kit/controls';
+import { controlButton } from '../kit/controls';
 import { PogoFigure } from '../kit/figure';
-import { moveText, tipControl } from '../kit/move-tip';
+import { moveTip } from '../kit/move-tip';
 import { colon, t, type Lang } from '../kit/strings';
 import { sharedTable } from '../table';
-import { reach, reachText } from './moves-reach';
-import { choicesAfter, headLine, sameMove, verdictText, type Choices } from './openings-verdicts';
+import { replyGrid, verdictText, type ReplyCard, type ReplyGrid } from './openings-verdicts';
 import openingsCss from './pogo-openings.css?raw';
 
-type CountValue = '1' | '2' | '3';
-
-/** The longest of `xs`, for a sizer that holds a text area at one height. */
-const longest = (xs: string[]): string => xs.reduce((a, b) => (b.length > a.length ? b : a), '');
-
-/** « Blanc joue a1-1-b1 : garde la nulle ». */
-function verdictLine(lang: Lang, c: Choices, m: Triple): string {
-  const found = c.moves.find((x) => sameMove(x.move, m));
-  if (!found) throw new Error(`pogo-openings: ${moveName(m)} is not in the list`);
-  return `${announceMove(lang, c.mover, m)}${colon(lang)} ${verdictText(lang, found.verdict)}`;
+/** « Gardent la nulle : 2 réponses sur 16 ». */
+export function keepHead(lang: Lang, g: ReplyGrid): string {
+  const n = g.keeps.length;
+  return `${t(lang, 'openingsKeep')}${colon(lang)} ${n} ${t(lang, n === 1 ? 'openingsReply' : 'openingsReplies')} ${t(lang, 'outOf')} ${g.total}`;
 }
 
-interface Ui {
-  head: HTMLElement;
-  svg: SVGSVGElement;
-  input: BoardInput;
-  count: ChoiceGroup<CountValue>;
-  listSlot: HTMLElement;
-  list: ChoiceGroup<string> | undefined;
-  readout: HTMLElement;
-  level: HTMLButtonElement;
-  playHere: HTMLButtonElement;
+/** « Perdent : 14 réponses, du gain blanc le plus rapide au plus lent ». */
+export function loseHead(lang: Lang, g: ReplyGrid): string {
+  const n = g.loses.length;
+  return `${t(lang, 'openingsLose')}${colon(lang)} ${n} ${t(lang, n === 1 ? 'openingsReply' : 'openingsReplies')}, ${t(lang, 'openingsOrder')}`;
 }
 
 export class PogoOpenings extends PogoFigure {
   static override styles = openingsCss;
-  static override stageMinHeight = '560px';
+  static override stageMinHeight = '720px';
 
-  /** The engine and the table; a test swaps them. */
-  static deps: { engine: () => Promise<void>; table: () => Promise<TableData> } = {
+  /** The engine, the table and the observer that sees the figure come on screen; a test swaps them. */
+  static deps: { engine: () => Promise<void>; table: () => Promise<TableData>; Observer?: ObserverCtor } = {
     engine: () => ready(assetUrl(WASM_FILE)),
     table: sharedTable,
   };
-
-  private table: TableData | undefined;
-  private ui: Ui | undefined;
-  /** The opening whose replies are listed; null while the openings are. */
-  private opening: Triple | null = null;
-  /** The move chosen in the list shown: an opening, or a reply. */
-  private chosen: Triple | null = null;
-  private selection: Selection = null;
-  /** The move whose explanation is shown in the list: its stack and landing are marked on the board. */
-  private preview: Triple | null = null;
 
   protected async render(signal: AbortSignal): Promise<void> {
     const deps = (this.constructor as typeof PogoOpenings).deps;
     const [table] = await Promise.all([deps.table(), deps.engine()]);
     if (signal.aborted) return;
     const lang = this.lang;
-    this.table = table;
-    this.opening = null;
-    this.chosen = null;
-    this.selection = null;
-
-    // Fails here, before anything is drawn, if any list disagrees with legal().
-    const openings = choicesAfter(table, null);
-    const replyLists = openings.moves.map((o) => choicesAfter(table, o.move));
+    // Fails here, before anything is drawn, if the table disagrees with legal().
+    const grid = replyGrid(table);
+    const opening = moveName(grid.opening);
 
     const el = <K extends keyof HTMLElementTagNameMap>(tag: K, className: string, text = ''): HTMLElementTagNameMap[K] => {
       const node = document.createElement(tag);
@@ -86,241 +58,102 @@ export class PogoOpenings extends PogoFigure {
       if (text) node.textContent = text;
       return node;
     };
-    /** A text area that keeps the height of its longest text: the live line over an invisible sizer. */
-    const held = (className: string, sizer: string): { box: HTMLElement; line: HTMLElement } => {
-      const box = el('div', `held ${className}`);
-      const size = el('p', 'sizer', sizer);
-      size.setAttribute('aria-hidden', 'true');
-      const line = el('p', 'line');
-      box.append(size, line);
-      return { box, line };
-    };
 
     const root = el('div', 'openings');
-    const head = held(
-      'head say',
-      longest([headLine(lang, table, null), ...openings.moves.map((o) => headLine(lang, table, o.move))]),
-    );
-    const readout = held(
-      'readout',
-      longest([
-        t(lang, 'openingsPick'),
-        ...openings.moves.map((o) => verdictLine(lang, openings, o.move)),
-        ...replyLists.flatMap((c) => c.moves.map((r) => verdictLine(lang, c, r.move))),
-      ]),
-    );
-    readout.line.setAttribute('aria-live', 'polite');
-    // The list is labelled by the same words: assistive tech reads them there, once.
-    head.box.setAttribute('aria-hidden', 'true');
+    const cards: HTMLElement[] = [];
+    const close = (): void => cards.forEach((c) => c.removeAttribute('data-open'));
 
-    const play_ = el('div', 'play');
-    const svg = drawBoard(openings.position, { labelRoom: true });
-    const input = boardInput({
-      label: t(lang, 'board'),
-      onCell: (i) => this.onCell(i),
-      keys: root,
-      lifted: () => this.selection !== null,
-      onCount: (n) => {
-        this.selection = chooseCount(this.selection, this.moves(), n);
-        this.update();
-      },
-      onDrop: () => {
-        this.selection = null;
-        this.update();
-      },
-    });
-    play_.append(svg, boardLabels(), input.grid);
+    // The position Red replies in, with White's first move marked on it.
+    const start = el('figure', 'card start');
+    const [from, moving, to] = grid.opening;
+    const said = `${t(lang, 'openingsPlayed')} ${opening}${colon(lang)} ${t(lang, 'openingsRedToPlay')}.`;
+    const startShot = el('div', 'shot');
+    startShot.append(drawBoard(grid.position, { from, to, moving, title: said }));
+    const startCaption = el('figcaption', 'caption');
+    const played = el('span', 'name');
+    played.append(`${t(lang, 'openingsPlayed')} `, moveTip(lang, grid.opening));
+    startCaption.append(played, el('span', 'verdict', t(lang, 'openingsRedToPlay')));
+    start.append(startShot, startCaption);
+    cards.push(start);
 
-    const count = choiceGroup<CountValue>({
-      label: `${t(lang, 'pieces')}${colon(lang)}`,
-      id: 'openings-counts-label',
-      choices: (['1', '2', '3'] as const).map((n) => ({ value: n, label: n })),
-      onChoose: (n) => {
-        this.selection = chooseCount(this.selection, this.moves(), Number(n));
-        this.update();
-      },
-    });
-    count.element.classList.add('counts');
-
-    const level = controlButton('', () => this.switchLevel());
-    level.dataset.role = 'level';
-    const playHere = controlButton(t(lang, 'playFromHere'), () => this.playHere(), true);
-    playHere.dataset.role = 'play-from-here';
-    const row = el('div', 'controls');
-    row.append(level, playHere);
-
-    // The list is the one block whose height varies (16 openings, 10 to 16 replies): it comes
-    // last, under everything else in one column and in its own column beside them, so nothing
-    // above or beside it moves when it changes, and it keeps no empty room.
-    const boardCol = el('div', 'board-col');
-    boardCol.append(play_, count.element, readout.box, row);
-    const listSlot = el('div', 'list-slot');
-    const body = el('div', 'body');
-    body.append(boardCol, listSlot);
-
-    root.append(head.box, body);
-    this.ui = {
-      head: head.line,
-      svg,
-      input,
-      count,
-      listSlot,
-      list: undefined,
-      readout: readout.line,
-      level,
-      playHere,
-    };
-    signal.addEventListener('abort', () => (this.ui = undefined), { once: true });
-    this.stage.append(root);
-    this.buildList();
-    this.update();
-  }
-
-  private choices(): Choices {
-    return choicesAfter(this.table!, this.opening);
-  }
-
-  private moves(): Move[] {
-    return legal(this.choices().position);
-  }
-
-  /** The list of the level shown, rebuilt when the level changes. */
-  private buildList(): void {
-    const ui = this.ui;
-    if (!ui) return;
-    const lang = this.lang;
-    const c = this.choices();
-    const list = choiceGroup<string>({
-      label: headLine(lang, this.table!, this.opening),
-      id: 'openings-list-label',
-      choices: c.moves.map((m) => ({ value: moveName(m.move), label: moveName(m.move) })),
-      onChoose: (name) => this.choose(parseMoveName(name)),
-    });
-    list.element.classList.add('list');
-    list.buttons.forEach((b, k) => {
-      const v = c.moves[k]!.verdict;
-      const move = document.createElement('span');
-      move.className = 'mv';
-      move.textContent = b.textContent;
-      const comma = document.createElement('span');
-      comma.className = 'sr';
-      comma.textContent = ', ';
-      const verdict = document.createElement('span');
-      verdict.className = 'verdict';
-      verdict.textContent = verdictText(lang, v);
-      verdict.toggleAttribute('data-holds', v.kind !== 'loses-in');
-      b.replaceChildren(move, comma, verdict);
-      // The row is the control: it carries the move's explanation; nothing in it is focusable.
-      const m = c.moves[k]!.move;
-      tipControl(b, lang, m, {
-        show: () => {
-          this.preview = m;
-          this.update();
-        },
-        hide: () => {
-          if (this.preview !== m) return;
-          this.preview = null;
-          this.update();
-        },
+    const card = (c: ReplyCard): HTMLElement => {
+      const name = moveName(c.move);
+      const verdict = verdictText(lang, c.verdict);
+      const node = el('figure', 'card reply');
+      node.dataset.move = name;
+      node.dataset.verdict = c.verdict.kind === 'keeps-draw' ? 'keeps' : 'loses';
+      const shot = el('div', 'shot');
+      const [f, n, d] = c.move;
+      shot.append(drawBoard(c.after, { from: f, to: d, moving: n, title: `${announceMove(lang, 'Red', c.move)}${colon(lang)} ${verdict}.` }));
+      const offer = controlButton(t(lang, 'playFromHere'), () => {
+        this.playFrom(c.after, `${t(lang, 'openingsName')}, ${opening} ${name}`);
+        close();
       });
-    });
-    this.preview = null;
-    ui.listSlot.replaceChildren(list.element);
-    ui.list = list;
+      offer.classList.add('offer');
+      offer.dataset.role = 'play-from-here';
+      shot.append(offer);
+      // A tap neither hovers nor focuses a board: it opens this board's offer, and closes the others'.
+      shot.addEventListener(
+        'click',
+        (e) => {
+          if (e.target instanceof Node && offer.contains(e.target)) return;
+          const open = node.hasAttribute('data-open');
+          close();
+          node.toggleAttribute('data-open', !open);
+        },
+        { signal },
+      );
+      const caption = el('figcaption', 'caption');
+      const named = el('span', 'name');
+      named.append(moveTip(lang, c.move));
+      caption.append(named, el('span', 'verdict', verdict));
+      node.append(shot, caption);
+      cards.push(node);
+      return node;
+    };
+
+    const block = (className: string, head: string, list: ReplyCard[]): HTMLElement => {
+      const section = el('section', `block ${className}`);
+      const id = `openings-${className}`;
+      const title = el('p', 'say head', head);
+      title.id = id;
+      const boards = el('div', 'cards');
+      boards.setAttribute('role', 'group');
+      boards.setAttribute('aria-labelledby', id);
+      boards.append(...list.map(card));
+      section.append(title, boards);
+      return section;
+    };
+
+    const top = el('div', 'top');
+    top.append(start, block('keep', keepHead(lang, grid), grid.keeps));
+    root.append(top, block('lose', loseHead(lang, grid), grid.loses));
+    cards.forEach((c, k) => c.style.setProperty('--k', String(k)));
+    this.stage.append(root);
+    this.land(root, signal);
   }
 
-  private choose(m: Triple): void {
-    this.chosen = m;
-    this.selection = null;
-    this.update();
-  }
-
-  private switchLevel(): void {
-    if (this.opening === null) {
-      if (!this.chosen) return;
-      this.opening = this.chosen;
-      this.chosen = null;
-    } else {
-      this.chosen = this.opening;
-      this.opening = null;
-    }
-    this.selection = null;
-    this.buildList();
-    this.update();
-  }
-
-  private playHere(): void {
-    const c = this.choices();
-    const state = this.chosen ? play(c.position, this.chosen) : c.position;
-    const names = [this.opening, this.chosen].filter((m): m is Triple => m !== null).map(moveName);
-    this.playFrom(state, names.length ? `${t(this.lang, 'openingsName')}, ${names.join(' ')}` : t(this.lang, 'openingsName'));
-  }
-
-  private onCell(i: number): void {
-    const r = tap(this.selection, this.moves(), i);
-    if ('play' in r) {
-      this.choose(r.play);
-      return;
-    }
-    this.selection = r.selection;
-    this.update();
-  }
-
-  private update(): void {
-    const ui = this.ui;
-    if (!ui) return;
-    const lang = this.lang;
-    const c = this.choices();
-    const moves = this.moves();
-    const sel = this.selection;
-    const chosen = this.chosen;
-    const lift = origins(moves);
-    const options = sel ? reach(moves, sel.from) : [];
-    const land = options.find((o) => o.count === sel?.count)?.cells ?? [];
-
-    let marks: { cell: number; kind: 'target' | 'picked' }[];
-    if (sel) marks = [{ cell: sel.from, kind: 'picked' }, ...land.map((cell) => ({ cell, kind: 'target' as const }))];
-    else if (this.preview) marks = [{ cell: this.preview[0], kind: 'picked' }, { cell: this.preview[2], kind: 'target' }];
-    else if (chosen) marks = [{ cell: chosen[0], kind: 'picked' }];
-    else marks = lift.map((cell) => ({ cell, kind: 'target' as const }));
-    const svg = drawBoard(c.position, {
-      labelRoom: true,
-      marks,
-      // The chosen move's destination is framed; its pieces have not moved yet.
-      ...(chosen && !sel && !this.preview ? { to: chosen[2], moving: 0 } : {}),
-    });
-    ui.svg.replaceWith(svg);
-    ui.svg = svg;
-
-    ui.input.cells.forEach((b, i) => {
-      const mark = sel?.from === i ? 'selected' : land.includes(i) ? 'target' : !sel && lift.includes(i) ? 'can-lift' : null;
-      const actionable = mark !== null || lift.includes(i);
-      b.setAttribute('aria-label', describeCell(lang, c.position, i, mark));
-      b.toggleAttribute('data-actionable', actionable);
-      b.setAttribute('aria-disabled', String(!actionable));
-    });
-    ui.input.syncFocus();
-
-    const available = options.map((o) => o.count);
-    ui.count.element.toggleAttribute('data-off', sel === null);
-    ui.count.buttons.forEach((b, k) => (b.hidden = !available.includes(k + 1)));
-    ui.count.set(sel ? (String(sel.count) as CountValue) : null);
-
-    ui.list?.set(chosen ? moveName(chosen) : null);
-    ui.head.textContent = headLine(lang, this.table!, this.opening);
-
-    if (sel) ui.readout.textContent = reachText(lang, sel.from, sel.count, land);
-    else if (chosen) ui.readout.replaceChildren(...moveText(lang, verdictLine(lang, c, chosen)));
-    else ui.readout.textContent = t(lang, 'openingsPick');
-
-    const first = this.opening === null;
-    ui.level.textContent = t(lang, first ? 'openingsShowReplies' : 'openingsBack');
-    // A disabled button drops focus to the page: keep it on the list's tab stop instead.
-    const focused = this.shadowRoot?.activeElement === ui.level;
-    ui.level.disabled = first && chosen === null;
-    if (focused && ui.level.disabled) ui.list?.buttons.find((b) => b.tabIndex === 0)?.focus();
-    // One primary per row: going on to the replies, then playing from them.
-    ui.level.classList.toggle('secondary', !first);
-    ui.playHere.classList.toggle('secondary', first);
+  /**
+   * The boards land one after the other, in reading order, the first time a part of the
+   * figure is on screen. Never under reduced motion, and never without an observer:
+   * then everything is simply shown.
+   */
+  private land(root: HTMLElement, signal: AbortSignal): void {
+    const Ctor =
+      (this.constructor as typeof PogoOpenings).deps.Observer ??
+      (typeof IntersectionObserver === 'function' ? IntersectionObserver : undefined);
+    if (!Ctor || this.reducedMotion()) return;
+    root.toggleAttribute('data-wait', true);
+    const io = new Ctor(
+      (entries) => {
+        if (!entries.some((e) => e.isIntersecting)) return;
+        io.disconnect();
+        root.removeAttribute('data-wait');
+        root.toggleAttribute('data-land', true);
+      },
+      { threshold: [0, 0.1] },
+    );
+    io.observe(root);
+    signal.addEventListener('abort', () => io.disconnect(), { once: true });
   }
 }

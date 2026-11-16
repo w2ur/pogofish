@@ -1,31 +1,44 @@
 /*
- * <pogo-count>: three factors over a 3px ink rule, then the product. The big
- * numbers follow the figure's width (container units), so the product holds
- * on one line from 280px to the full band.
+ * <pogo-count>: one line, the drawing, the transport, all centred. The
+ * drawing holds the board and the row of 20 places (count-view.ts): the row
+ * under the board, or beside it from 720px, where the figure uses the width.
+ * The line that says whose turn it is is laid over the drawing, under the
+ * board, at the page's own type size whatever the drawing's scale.
  */
-.count {
+:host {
   container-type: inline-size;
-  display: flex;
-  flex-direction: column;
-  gap: 16px;
-  text-align: center;
 }
 
-.factors {
-  display: flex;
-  flex-direction: column;
-  gap: 12px;
-  margin: 0;
-  padding: 0;
-  list-style: none;
+/*
+ * The room the figure keeps before it renders: the drawing follows the width (its
+ * height over its width, per layout), the line and the transport do not. Measured
+ * on the harness (2026-11-16).
+ */
+.stage {
+  min-height: calc(126.1cqi + 142px);
 }
 
-.factor,
-.total {
+@container (min-width: 480px) {
+  .stage {
+    min-height: calc(64.9cqi + 114px);
+  }
+}
+
+@container (min-width: 720px) {
+  .stage {
+    min-height: calc(32.8cqi + 114px);
+  }
+}
+
+.count {
   display: flex;
   flex-direction: column;
   align-items: center;
-  gap: 4px;
+  gap: 14px;
+  text-align: center;
+}
+
+.count p {
   margin: 0;
 }
 
@@ -33,63 +46,93 @@
   justify-content: center;
 }
 
-/* A step still to come keeps its room, out of sight and out of the reading order. */
-[data-off] {
-  visibility: hidden;
+/* Two lines kept for the longest sentence, so the drawing never moves. */
+.line {
+  display: flex;
+  align-items: flex-end;
+  justify-content: center;
+  min-height: 2.8em;
+  max-width: 44ch;
 }
 
-.value {
-  font-size: clamp(28px, 9cqi, 72px);
+.scene {
+  position: relative;
+  width: 100%;
+  line-height: 0;
 }
 
-.total {
-  padding-top: 12px;
-  border-top: 3px solid var(--_ink);
+.drawing {
+  width: 100%;
+  height: auto;
+  overflow: visible;
 }
 
-.product {
-  font-size: clamp(36px, 13cqi, 120px);
-  white-space: nowrap;
+/* The line the row stands on. */
+.rail {
+  stroke: var(--_rule);
+  stroke-width: 1px;
+  vector-effect: non-scaling-stroke;
 }
 
-.what {
-  color: var(--_ink-2);
+/* A separator: the flyer's ink rule, upright. */
+.bar {
+  fill: var(--_ink);
 }
 
-.binomial {
-  color: var(--_muted);
-  text-transform: none;
-  white-space: nowrap;
+/*
+ * The trace: where the pieces are not. Under a position, its row; over a row,
+ * the position it folds into. One dimmed layer, so a stack keeps its look.
+ */
+.traces {
+  opacity: 0.3;
 }
 
-/* C, then k over n: the exponent and the index stacked in one column after it. */
-.binomial .scripts {
-  display: inline-flex;
-  flex-direction: column;
-  margin-left: 0.08em;
-  font-size: 0.72em;
-  line-height: 1;
-  vertical-align: -0.3em;
+.traces[data-fresh] {
+  animation: trace 700ms ease-out 250ms backwards;
 }
 
-.binomial sup,
-.binomial sub {
-  font-size: inherit;
-  line-height: 1;
-  vertical-align: baseline;
+@keyframes trace {
+  from {
+    opacity: 0;
+  }
 }
 
-/* Read by assistive technology, not drawn. */
-.sr {
+/* Whose turn: under the board, a piece of the colour and its words. */
+.turn {
   position: absolute;
-  width: 1px;
-  height: 1px;
-  overflow: hidden;
-  clip-path: inset(50%);
-  white-space: nowrap;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  padding-top: 8px;
+  font-size: 12.8px;
+  font-weight: 800;
+  line-height: 1.2;
+  color: var(--_ink);
 }
 
-/* A digit-group separator, narrow no-break space or comma, given room to be seen. */
-.sep {
-  padding-inline: 0.06em;
+.turn-piece {
+  flex: none;
+  width: 14px;
+  height: 14px;
+  border: 1.5px solid var(--_ink);
+  border-radius: 50%;
+  background: var(--_white);
+}
+
+.turn[data-turn='Red'] .turn-piece {
+  background: var(--_red);
+}
+
+/* The turn has just passed: its line is stamped, the flyer's inverted block, while the step lasts. */
+.turn[data-passed] .turn-text {
+  padding: 2px 6px;
+  background: var(--_ink);
+  color: var(--_ground);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .traces[data-fresh] {
+    animation: none;
+  }
 }
