@@ -37,7 +37,7 @@ jobs:
       - name: Build
         working-directory: figures
         run: npm run build
-      - name: Build assertions (worker entry, nothing inlined, no dist/assets/)
+      - name: Build layout (entry, worker and binaries at the root; hashed chunks under dist/assets/; nothing inlined)
         working-directory: figures
         run: ./scripts/check-dist.sh
       # node runs the file itself: a missing dist/ exits 2 and fails the step, never a silent pass.

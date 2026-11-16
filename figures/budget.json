@@ -4,7 +4,7 @@
     "entry": { "gzip": 3200, "_reason": "dist/pogo-figures.js, the one file every page loads, holding no element: 2232 measured 2026-11-16, chunks under assets/; the plan's ceiling is 120000." },
     "eager": { "gzip": 9100, "_reason": "The entry and the chunks it imports statically (the engine glue), fetched before any figure nears the screen: 6305 measured 2026-11-16 (the engine chunk now carries src/assets.ts)." },
     "largestChunk": { "gzip": 21500, "_reason": "Any one JS file but the entry; the largest is the kit (figure, strings, theme, store), shared by every element: 14120 measured 2026-11-16." },
-    "total": { "gzip": 151000, "_reason": "Every JS file of dist/, what a page holding all seventeen elements fetches: 100684 measured 2026-11-16." }
+    "total": { "gzip": 151000, "_reason": "Every JS file of dist/, what a page holding every element fetches: 100684 measured 2026-11-16." }
   },
   "data": {
     "table.json": { "gzip": 4000 },
