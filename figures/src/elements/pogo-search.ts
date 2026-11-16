@@ -9,7 +9,7 @@
 // on the main thread, on the page's one copy of the net. position="reader" is
 // the position <pogo-net> and <pogo-encoding> show, and follows the store.
 import { NET_NAME } from '../assets';
-import { key, legal, moveName, type State } from '../engine';
+import { LC1_2, key, legal, moveName, type State } from '../engine';
 import { labelledBoard } from '../kit/board-labels';
 import { drawBoard } from '../kit/board-svg';
 import { controlButton, transport } from '../kit/controls';
@@ -37,9 +37,10 @@ export function parsePosition(attr: string | null): SearchPosition {
 }
 
 /** The search on `s` with `net`, the parser and the search loaded on first use. */
+/** The board's search, stated in full: AlphaZero's C_PUCT and the board's lc1-2 rules, never search()'s defaults. */
 async function lazySearch(s: State, net: AzNet, o: Parameters<SearchRun>[0]): Promise<SearchSnapshot> {
-  const { search } = await import('../mcts');
-  return search(s, net, { sims: SEARCH_SIMS, onSnapshot: o.onSnapshot, signal: o.signal });
+  const [{ search }, { C_PUCT }] = await Promise.all([import('../mcts'), import('../search-handler')]);
+  return search(s, net, { sims: SEARCH_SIMS, cPuct: C_PUCT, rules: LC1_2, onSnapshot: o.onSnapshot, signal: o.signal });
 }
 
 /** The root before any simulation: the net's preferences, no visit. */
