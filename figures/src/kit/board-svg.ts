@@ -1,6 +1,6 @@
 // The board, drawn as an SVG and nothing else: no layout reads, no colour.
 // Every paint comes from theme.css classes, so a theme change needs no redraw.
-import type { State } from '../engine';
+import type { Colour, State } from '../engine';
 
 const NS = 'http://www.w3.org/2000/svg';
 const CELL = 100;
@@ -26,7 +26,16 @@ export interface BoardOptions {
   marks?: { cell: number; kind: 'target' | 'picked' }[];
   /** Text alternative, in the figure's language. Without it the drawing is hidden from assistive tech. */
   title?: string;
+  /**
+   * Pieces in the air (pogo-moves' demonstration): the top `count` of `from`, drawn off
+   * their stack and raised over `at`, the squares already passed dotted (`trail`).
+   * `from` keeps the ink ring of a lifted stack.
+   */
+  carry?: { from: number; count: number; pieces: Colour[]; at: number; trail: number[] };
 }
+
+/** How far carried pieces float above their square, in board units. */
+const CARRY_LIFT = 18;
 
 let titles = 0;
 
@@ -85,10 +94,9 @@ export function drawBoard(s: State, o: BoardOptions = {}): SVGSVGElement {
     el('rect', { class: 'to', 'data-cell': o.to, x: x + 3, y: y + 3, width: CELL - 6, height: CELL - 6 }, svg);
   }
 
-  s.cells.forEach((stack, i) => {
-    if (stack.length === 0) return;
+  const carry = o.carry;
+  const drawStack = (stack: readonly Colour[], i: number, g: SVGGElement): void => {
     const [x, y] = corner(i);
-    const g = el('g', { class: 'stack', 'data-cell': i }, svg);
     const cx = x + centre;
     // A tall stack (four discs and more) tightens its offset to stay in its cell.
     const step = stack.length > 1 ? Math.min(baseStep, (room - 2 * radius) / (stack.length - 1)) : 0;
@@ -103,11 +111,28 @@ export function drawBoard(s: State, o: BoardOptions = {}): SVGSVGElement {
       if (k >= stack.length - moved) disc.classList.add('moved');
       el('circle', { class: 'ring', cx, cy, r: radius - 1 }, g);
     });
+  };
+
+  s.cells.forEach((cells, i) => {
+    const stack = carry && i === carry.from ? cells.slice(0, cells.length - carry.count) : cells;
+    if (stack.length === 0) return;
+    drawStack(stack, i, el('g', { class: 'stack', 'data-cell': i }, svg));
   });
 
-  for (const { cell, kind } of o.marks ?? []) {
+  const marks = [...(o.marks ?? []), ...(carry ? [{ cell: carry.from, kind: 'picked' as const }] : [])];
+  for (const { cell, kind } of marks) {
     const [x, y] = corner(cell);
     el('circle', { class: `mark ${kind}`, 'data-cell': cell, cx: x + centre, cy: y + centre, r: radius + 10 }, svg);
+  }
+
+  if (carry) {
+    for (const cell of carry.trail) {
+      const [x, y] = corner(cell);
+      el('circle', { class: 'trail', 'data-cell': cell, cx: x + centre, cy: y + centre, r: 6 }, svg);
+    }
+    // Last, so no stack hides the pieces in the air.
+    const g = el('g', { class: 'carried', 'data-cell': carry.at, transform: `translate(0, -${CARRY_LIFT})` }, svg);
+    drawStack(carry.pieces, carry.at, g);
   }
 
   return svg;

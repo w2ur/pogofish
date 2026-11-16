@@ -1,12 +1,12 @@
-import { afterEach, describe, expect, it } from 'vitest';
-import { intersect, resetMedia, shownText } from '../test-dom';
-import { PogoMoves } from './pogo-moves';
+import { afterEach, describe, expect, it, vi } from 'vitest';
+import { REDUCED_MOTION, intersect, leave, playState, resetMedia, setMedia, shownText } from '../test-dom';
+import { DEMO, demoFrames, movePath } from './moves-demo';
+import { DEMO_INTERVAL, DEMO_REST, PogoMoves } from './pogo-moves';
 
 if (!customElements.get('pogo-moves')) customElements.define('pogo-moves', PogoMoves);
 PogoMoves.deps = { engine: () => Promise.resolve() };
 
 async function mount(view: string, lang = 'fr'): Promise<PogoMoves> {
-  resetMedia();
   const section = document.createElement('section');
   section.setAttribute('lang', lang);
   const el = document.createElement('pogo-moves') as PogoMoves;
@@ -19,14 +19,21 @@ async function mount(view: string, lang = 'fr'): Promise<PogoMoves> {
   return el;
 }
 
+/** mount() under fake timers. */
+async function mountFake(view: string, lang = 'fr'): Promise<PogoMoves> {
+  const p = mount(view, lang);
+  await vi.advanceTimersByTimeAsync(0);
+  return p;
+}
+
 const $ = (el: PogoMoves, s: string) => el.shadowRoot!.querySelector<HTMLElement>(s)!;
-const cell = (el: PogoMoves, i: number) => $(el, `.cell-button[data-cell="${i}"]`) as HTMLButtonElement;
-const marks = (el: PogoMoves, kind: string) =>
-  [...el.shadowRoot!.querySelectorAll(`.board .mark.${kind}`)].map((m) => Number(m.getAttribute('data-cell'))).sort();
-const shownCounts = (el: PogoMoves) =>
-  [...el.shadowRoot!.querySelectorAll<HTMLButtonElement>('.counts .choice')].filter((b) => !b.hidden).map((b) => b.textContent);
+const role = (el: PogoMoves, r: string) => $(el, `[data-role="${r}"]`) as HTMLButtonElement;
+const line = (el: PogoMoves) => shownText($(el, '.line:not(.sizer)'));
+const carriedAt = (el: PogoMoves) => el.shadowRoot!.querySelector('.board .carried')?.getAttribute('data-cell');
 
 afterEach(() => {
+  vi.useRealTimers();
+  resetMedia();
   document.body.innerHTML = '';
 });
 
@@ -41,33 +48,82 @@ describe('<pogo-moves view="start">', () => {
 });
 
 describe('<pogo-moves view="moves">', () => {
-  it('lifting a1 shows its one-piece cells, then its two-piece cells', async () => {
+  it('lets the computer play: no square to press, a transport, the first move announced before it is played', async () => {
     const el = await mount('moves');
-    expect(marks(el, 'target')).toEqual([0, 1, 2]);
-    expect($(el, '.line').textContent).toBe('Touchez une pile au sommet blanc.');
-    cell(el, 0).click();
-    expect(marks(el, 'picked')).toEqual([0]);
-    expect(marks(el, 'target')).toEqual([1, 3]);
-    expect(shownCounts(el)).toEqual(['1', '2']);
-    expect($(el, '.line').textContent).toBe('a1, 1 pièce : b1, a2');
-    (el.shadowRoot!.querySelector('.counts .choice[data-value="2"]') as HTMLButtonElement).click();
-    expect(marks(el, 'target')).toEqual([2, 4, 6]);
+    expect(el.shadowRoot!.querySelectorAll('.cell-button')).toHaveLength(0);
+    expect(role(el, 'play')).not.toBeNull();
+    expect(line(el)).toBe('Une pièce, un mouvement. Blanc joue a1-1-a2.');
+    expect(role(el, 'counter').textContent).toBe(`coup 1 sur ${DEMO.length}`);
+    // The move's name explains itself, as everywhere else.
+    expect($(el, '.line .move-name [role="tooltip"]').textContent).toBe('De a1, 1 pièce, vers a2.');
+    expect(carriedAt(el)).toBeUndefined();
   });
 
-  it('a tap on a destination plays it; the other side moves next; three pieces appear', async () => {
+  it('shows each move as the pieces lifted, the path square by square, the landing', async () => {
     const el = await mount('moves', 'en');
-    cell(el, 0).click();
-    cell(el, 1).click();
-    expect(shownText($(el, '.line'))).toBe('White plays a1-1-b1. Tap a stack with Red on top.');
-    expect($(el, '.line .move-name [role="tooltip"]').textContent).toBe('From a1, 1 piece, to b1.');
-    expect(marks(el, 'target')).toEqual([6, 7, 8]);
-    cell(el, 6).click();
-    cell(el, 3).click();
-    cell(el, 1).click();
-    expect(shownCounts(el)).toEqual(['1', '2', '3']);
-    // « Restart » goes back to the start position.
-    (el.shadowRoot!.querySelector('.controls .control') as HTMLButtonElement).click();
-    expect(marks(el, 'target')).toEqual([0, 1, 2]);
-    expect(el.shadowRoot!.querySelectorAll('.board .to')).toHaveLength(0);
+    const three = DEMO.findIndex((d) => d.move[1] === 3);
+    const start = demoFrames().findIndex((f) => f.move === three);
+    for (let k = 0; k < start; k++) role(el, 'next').click();
+    expect(line(el)).toBe('Three pieces, three steps: a neighbouring square. Both colours taken, the top one the mover’s. Red plays a1-3-b1.');
+    expect(role(el, 'counter').textContent).toBe(`move ${three + 1} of ${DEMO.length}`);
+    role(el, 'next').click();
+    // Lifted: off the stack, over their own square, the stack ringed.
+    const [from, , to] = DEMO[three]!.move;
+    expect(carriedAt(el)).toBe(String(from));
+    expect(el.shadowRoot!.querySelector('.board .mark.picked')!.getAttribute('data-cell')).toBe(String(from));
+    const path: string[] = [];
+    for (let k = 0; k < 3; k++) {
+      role(el, 'next').click();
+      path.push(carriedAt(el)!);
+    }
+    expect(path).toEqual(movePath(...DEMO[three]!.move).slice(1).map(String));
+    role(el, 'next').click();
+    // Landed: nothing in the air, the landing square framed.
+    expect(carriedAt(el)).toBeUndefined();
+    expect(el.shadowRoot!.querySelector('.board .to')!.getAttribute('data-cell')).toBe(String(to));
+  });
+
+  it('starts by itself on screen, pauses off screen, and loops after a rest on the last landing', async () => {
+    vi.useFakeTimers();
+    const el = await mountFake('moves');
+    expect(playState(el)).toBe('play');
+    intersect(el);
+    expect(playState(el)).toBe('pause');
+    leave(el);
+    expect(playState(el)).toBe('play');
+    intersect(el);
+    const frames = demoFrames();
+    vi.advanceTimersByTime(DEMO_INTERVAL * (frames.length - 1));
+    expect(role(el, 'counter').textContent).toBe(`coup ${DEMO.length} sur ${DEMO.length}`);
+    expect(el.shadowRoot!.querySelector('.board .to')).not.toBeNull();
+    vi.advanceTimersByTime(DEMO_INTERVAL + DEMO_REST - 1);
+    expect(el.shadowRoot!.querySelector('.board .to')).not.toBeNull();
+    vi.advanceTimersByTime(1);
+    expect(line(el)).toBe('Une pièce, un mouvement. Blanc joue a1-1-a2.');
+    expect(el.shadowRoot!.querySelector('.board .to')).toBeNull();
+    expect(playState(el)).toBe('pause');
+  });
+
+  it('under reduced motion shows the last landing still, with ▶, and never moves by itself', async () => {
+    setMedia(REDUCED_MOTION, true);
+    vi.useFakeTimers();
+    const el = await mountFake('moves');
+    intersect(el);
+    expect(playState(el)).toBe('play');
+    expect(role(el, 'next').disabled).toBe(true);
+    expect(el.shadowRoot!.querySelector('.board .to')!.getAttribute('data-cell')).toBe(String(DEMO.at(-1)!.move[2]));
+    vi.advanceTimersByTime(60_000);
+    expect(role(el, 'next').disabled).toBe(true);
+  });
+
+  it('says each move once in its live region, when it is announced, and nothing at first: the line is there to read', async () => {
+    const el = await mount('moves', 'en');
+    const live = $(el, '.sr[aria-live]');
+    expect(live.textContent).toBe('');
+    const second = demoFrames().findIndex((f) => f.move === 1);
+    for (let k = 0; k < second; k++) role(el, 'next').click();
+    expect(live.textContent).toBe('Onto an occupied square: the pieces go on top. Red plays a3-2-a1.');
+    role(el, 'next').click();
+    expect(live.textContent).toBe('Onto an occupied square: the pieces go on top. Red plays a3-2-a1.');
   });
 });

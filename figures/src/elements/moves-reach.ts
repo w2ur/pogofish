@@ -1,4 +1,4 @@
-// What <pogo-moves view="moves"> shows, apart from the DOM: from a stack, the
+// What a lifted stack can reach, apart from the DOM (<pogo-openings>): the
 // cells each count of pieces can reach. Everything comes from legal(); nothing
 // here knows the rules.
 import { cellName, counts, destinations } from '../board-state';

@@ -321,6 +321,14 @@ slot[hidden],
   vector-effect: non-scaling-stroke;
 }
 
+/* The squares pieces in the air have passed (pogo-moves): an ink dot, cut out in the ground so it reads on any disc. */
+.board .trail {
+  fill: var(--_ink);
+  stroke: var(--_ground);
+  stroke-width: 2px;
+  vector-effect: non-scaling-stroke;
+}
+
 .board .to {
   fill: none;
   stroke: var(--_ink);

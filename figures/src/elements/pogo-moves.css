@@ -1,11 +1,13 @@
 /*
- * <pogo-moves>: a board at up to 400px, the count chooser, one line saying
- * what the board shows, and « Recommencer ». The playable board's cells and
- * count chooser come from the kit sheet.
+ * <pogo-moves>: the start view is a board at up to 400px with the key to the
+ * two sides; the moves view is the line announcing the move, the board, and the
+ * transport, each centred in the figure. The line keeps the room of the longest
+ * (its sizers), so the board under it never moves.
  */
 .moves {
   display: flex;
   flex-direction: column;
+  align-items: center;
   gap: 12px;
 }
 
@@ -19,16 +21,33 @@
   height: auto;
 }
 
+.said {
+  display: grid;
+  width: min(100%, 400px);
+}
+
+.said > * {
+  grid-area: 1 / 1;
+}
+
+.said .sizer {
+  visibility: hidden;
+}
+
 .line {
   margin: 0;
-  min-height: calc(2 * 1.55em);
-  color: var(--_ink-2);
+  color: var(--_ink);
+}
+
+.moves > .controls {
+  justify-content: center;
 }
 
 /* The key to the two sides, under the start position. */
 .legend {
   display: flex;
   flex-wrap: wrap;
+  justify-content: center;
   gap: 8px 24px;
   margin: 0;
   font-size: 12.8px;
@@ -44,4 +63,14 @@
 .legend .key-disc {
   display: inline-block;
   max-width: none;
+}
+
+/* Read by assistive technology, not drawn. */
+.sr {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  clip-path: inset(50%);
+  white-space: nowrap;
 }

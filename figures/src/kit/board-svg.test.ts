@@ -12,6 +12,22 @@ const discsIn = (svg: SVGSVGElement, cell: number) =>
   [...svg.querySelectorAll<SVGCircleElement>(`.stack[data-cell="${cell}"] .disc`)];
 
 describe('drawBoard', () => {
+  it('carries lifted pieces apart: off their stack, raised over the square they have reached, the squares passed dotted', () => {
+    const svg = drawBoard(mid, { carry: { from: 7, count: 2, pieces: ['Red', 'White'], at: 4, trail: [7] } });
+    // b3 keeps only what was not lifted.
+    expect(discsIn(svg, 7).map((d) => d.dataset.colour)).toEqual(['White']);
+    const carried = svg.querySelector<SVGGElement>('.carried')!;
+    expect(carried.dataset.cell).toBe('4');
+    expect([...carried.querySelectorAll<SVGCircleElement>('.disc')].map((d) => d.dataset.colour)).toEqual(['Red', 'White']);
+    // Drawn after every stack, so the stack under it never hides it, and raised above its square.
+    expect(svg.lastElementChild!.isSameNode(carried) || carried.compareDocumentPosition(svg.querySelector('.stack[data-cell="4"]')!) & Node.DOCUMENT_POSITION_PRECEDING).toBeTruthy();
+    expect(carried.getAttribute('transform')).toMatch(/^translate\(0,? ?-\d+\)$/);
+    expect([...svg.querySelectorAll('.trail')].map((d) => d.getAttribute('data-cell'))).toEqual(['7']);
+    // The square it left keeps the ink ring of a lifted stack.
+    expect(svg.querySelector('.mark.picked')!.getAttribute('data-cell')).toBe('7');
+  });
+
+
   it('renders 9 cells and one disc per piece, bottom first', () => {
     const svg = drawBoard(mid);
     expect(svg.querySelectorAll('.cell')).toHaveLength(9);
