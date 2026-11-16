@@ -4,11 +4,13 @@
 // after the build. Caps live in budget.json, each with its reason.
 //
 // The shape: the entry imports statically only the engine glue, never an element
-// module, the wasm, a net or a data file; every tag of the manifest has a loader
-// in the entry pointing at its own chunk, which exports the element's class; and
-// there are as many tags as element modules in src/elements/.
+// module, the wasm, a net or a data file; every import of every JS file (static or
+// dynamic) resolves to a file of dist/; every tag of the manifest has a loader in
+// the entry pointing at its own chunk under assets/, which exports the element's
+// class; and there are as many tags as element modules in src/elements/.
+// scripts/check-dist.sh checks the layout (hashed chunks under assets/ only).
 import { existsSync, readdirSync, readFileSync } from 'node:fs';
-import { dirname, resolve } from 'node:path';
+import { dirname, posix, resolve } from 'node:path';
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import { fileURLToPath } from 'node:url';
@@ -26,11 +28,20 @@ if (!existsSync(resolve(DIST, ENTRY)) || !existsSync(resolve(DIST, 'manifest.jso
 const budget = JSON.parse(readFileSync(resolve(ROOT, 'budget.json'), 'utf8'));
 const text = (f) => readFileSync(resolve(DIST, f), 'utf8');
 const gz = (f) => gzipSync(readFileSync(resolve(DIST, f))).length;
-const jsFiles = readdirSync(DIST).filter((f) => f.endsWith('.js'));
+/** Every JS file of dist/, as a path relative to it (the root's and those under assets/). */
+const jsFiles = readdirSync(DIST, { recursive: true })
+  .map((f) => f.split('\\').join('/'))
+  .filter((f) => f.endsWith('.js'));
 
-/** The chunks a file imports statically: `import … from "./x.js"` and `import "./x.js"`. */
+/** A relative specifier, as a path of dist/, from the file that holds it. */
+const under = (from, spec) => posix.normalize(posix.join(posix.dirname(from), spec));
+
+/** The files a file imports statically (`import … from "./x.js"`, `import "../x.js"`), as paths of dist/. */
 const staticImports = (f) =>
-  [...text(f).matchAll(/^import\s+(?:[^'";]*?\s+from\s+)?["']\.\/([^"']+)["']/gm)].map((m) => m[1]);
+  [...text(f).matchAll(/^import\s+(?:[^'";]*?\s+from\s+)?["'](\.{1,2}\/[^"']+)["']/gm)].map((m) => under(f, m[1]));
+
+/** The files a file imports dynamically (`import("./x.js")`), as paths of dist/. */
+const dynamicImports = (f) => [...text(f).matchAll(/\bimport\(\s*["'](\.{1,2}\/[^"']+)["']\s*\)/g)].map((m) => under(f, m[1]));
 
 /** The entry and every chunk reachable from it by static imports. */
 function eagerClosure() {
@@ -40,11 +51,11 @@ function eagerClosure() {
   return [...seen];
 }
 
-/** `"pogo-x": () => import("./pogo-x-HASH.js").then((m) => m.PogoX)` in the entry, as tag → [chunk, export]. */
+/** `"pogo-x": () => import("./assets/pogo-x-HASH.js").then((m) => m.PogoX)` in the entry, as tag → [chunk, export]. */
 function loaders() {
   const out = new Map();
-  for (const m of text(ENTRY).matchAll(/"(pogo-[a-z-]+)":\s*\(\)\s*=>\s*import\("\.\/([^"]+)"\)\.then\(\(?(\w+)\)?\s*=>\s*\3\.(\w+)\)/g))
-    out.set(m[1], [m[2], m[4]]);
+  for (const m of text(ENTRY).matchAll(/"(pogo-[a-z-]+)":\s*\(\)\s*=>\s*import\("(\.\/[^"]+)"\)\.then\(\(?(\w+)\)?\s*=>\s*\3\.(\w+)\)/g))
+    out.set(m[1], [under(ENTRY, m[2]), m[4]]);
   return out;
 }
 
@@ -75,16 +86,25 @@ test('no other JS file is over the largest-chunk cap, and all of them together u
 test('the entry imports statically only the engine glue: no element, wasm, net or data file', () => {
   const eager = eagerClosure();
   assert.deepEqual(
-    eager.filter((f) => f !== ENTRY && !/^engine-[\w-]+\.js$/.test(f)),
+    eager.filter((f) => f !== ENTRY && !/^assets\/engine-[\w-]+\.js$/.test(f)),
     [],
     'the entry statically imports more than the engine chunk',
   );
-  for (const f of eager) {
-    const source = text(f);
-    assert.doesNotMatch(source, /^import[^;]*\.wasm["']/m, `${f} imports the wasm statically`);
-    assert.doesNotMatch(source, /nets\/|\.pfw|\.pfv/, `${f} names a net`);
-    assert.doesNotMatch(source, /data\/[\w-]+\.json/, `${f} names a data file`);
-  }
+  // The engine chunk names the files (src/assets.ts), and fetches them only when asked.
+  for (const f of eager)
+    for (const m of text(f).matchAll(/^import\s+(?:[^'";]*?\s+from\s+)?["']([^"']+)["']/gm))
+      assert.doesNotMatch(m[1], /\.(wasm|pfw|pfv|json)$/, `${f} imports ${m[1]} statically`);
+});
+
+test('every import of every JS file, static or dynamic, resolves to a file of dist/', () => {
+  let seen = 0;
+  for (const f of jsFiles)
+    for (const dep of [...staticImports(f), ...dynamicImports(f)]) {
+      seen++;
+      assert.ok(existsSync(resolve(DIST, dep)), `${f} imports ${dep}, which is not in dist/`);
+    }
+  // The entry alone imports the engine and one chunk per tag: a parse that finds none is broken.
+  assert.ok(seen > manifest.length, `only ${seen} imports found`);
 });
 
 test('every tag of the manifest has a loader in the entry, pointing at its own chunk that exports the class', () => {
@@ -92,7 +112,7 @@ test('every tag of the manifest has a loader in the entry, pointing at its own c
   assert.deepEqual([...table.keys()].sort(), [...manifest].sort(), 'the entry’s loaders and manifest.json disagree');
   const chunks = new Set();
   for (const [tag, [chunk, name]] of table) {
-    assert.ok(chunk.startsWith(`${tag}-`), `<${tag}> loads ${chunk}, not a chunk of its own module`);
+    assert.ok(chunk.startsWith(`assets/${tag}-`), `<${tag}> loads ${chunk}, not a chunk of its own module under assets/`);
     assert.ok(existsSync(resolve(DIST, chunk)), `<${tag}>: ${chunk} is missing`);
     assert.match(text(chunk), new RegExp(`export\\s*\\{[^}]*\\b${name}\\b[^}]*\\}`), `${chunk} does not export ${name}`);
     chunks.add(chunk);

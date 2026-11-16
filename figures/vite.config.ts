@@ -1,5 +1,6 @@
 import type { Plugin } from 'vite';
 import { defineConfig } from 'vitest/config';
+import { CHUNK_DIR } from './src/assets';
 import { manifest } from './src/manifest';
 
 /** Writes the list of custom-element names the article page can look up. */
@@ -32,6 +33,9 @@ export default defineConfig({
     },
     rollupOptions: {
       output: {
+        // Every content-hashed chunk in one folder, which the site caches for a year; the entry,
+        // the worker, manifest.json and the binaries stay at the root, unhashed (src/assets.ts).
+        chunkFileNames: `${CHUNK_DIR}/[name]-[hash].js`,
         // The engine, shared by the page and the worker, is one chunk; the net parser and
         // the search load on demand in another. Left alone, Rollup folds the parser into
         // the engine chunk, which the page loads eagerly.

@@ -1,14 +1,26 @@
-// Where the package finds its own files at run time. In dist/ everything sits
-// next to the bundle, so the base is the bundle's own URL. The dev harness
-// serves the sources from elsewhere and sets both by `configureAssets`.
+// Where the package finds its own files at run time. In dist/ the entry, the
+// worker, the wasm, nets/ and data/ sit at the root, and every content-hashed
+// chunk under assets/ (the site caches that folder for a year): the base is the
+// root, derived once here from whichever file this module was bundled into. The
+// dev harness serves the sources from elsewhere and sets both by `configureAssets`.
 
 // Variables, not literals: Vite rewrites `new URL('literal', import.meta.url)`,
 // and a library build would inline a literal worker as base64.
 const HERE = '.';
+const UP = '..';
 const WORKER_FILE = 'search-worker.js';
 
-let base = new URL(HERE, import.meta.url).href;
-let worker = new URL(WORKER_FILE, import.meta.url).href;
+/** The folder of dist/ that holds the content-hashed chunks (vite.config.ts `chunkFileNames`). */
+export const CHUNK_DIR = 'assets';
+
+/** The package's root, from the URL of a module in it: its folder, or the parent of the chunk folder. */
+export function packageRoot(moduleUrl: string): string {
+  const dir = new URL(HERE, moduleUrl);
+  return dir.pathname.endsWith(`/${CHUNK_DIR}/`) ? new URL(UP, dir).href : dir.href;
+}
+
+let base = packageRoot(import.meta.url);
+let worker = new URL(WORKER_FILE, base).href;
 
 export const WASM_FILE = 'pogofish_wasm_bg.wasm';
 export const NET_FILE = 'nets/az-lc1-s1.pfw';

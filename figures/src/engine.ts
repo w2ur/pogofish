@@ -2,6 +2,7 @@
 // that API: a null rule set poisons the instance, and cells are indexed
 // row-major 0..8 with the stack bottom first.
 import * as wasm from 'pogofish-wasm';
+import { assetUrl, WASM_FILE } from './assets';
 
 export type Colour = 'White' | 'Red';
 
@@ -32,7 +33,7 @@ export const LC1_2: Rules = { LC1: { repetitions: 2 } };
 const UNCAPPED = 'Uncapped';
 const wasmRules = (rules: Rules): unknown => rules ?? UNCAPPED;
 
-const WASM_FILE = 'pogofish_wasm_bg.wasm';
+const HERE = './';
 const FEATURES = 'mover-relative-repetition';
 
 let readyPromise: Promise<void> | undefined;
@@ -55,7 +56,8 @@ async function loadBytes(url: URL): Promise<BufferSource> {
 /** Loads the engine once; later calls return the same promise. */
 export function ready(wasmUrl?: string): Promise<void> {
   readyPromise ??= (async () => {
-    const url = new URL(wasmUrl ?? WASM_FILE, import.meta.url);
+    // Relative to the package's root, not to this module: it sits in a chunk under assets/.
+    const url = new URL(wasmUrl ?? WASM_FILE, assetUrl(HERE));
     wasm.initSync({ module: await loadBytes(url) });
   })();
   return readyPromise;
