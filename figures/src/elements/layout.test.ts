@@ -55,3 +55,34 @@ describe('every figure is centred in its box, and the wide ones use it', () => {
     expect(w).not.toMatch(/^\s*\.search \{/m);
   });
 });
+
+describe('round 3, lot B2: three figures that use the width', () => {
+  it('pogo-qsteps: the moves beside the board from 520px, the notebook beside them from 900px, the transport centred', () => {
+    const s = css('pogo-qsteps');
+    expect(s).toMatch(/@container \(min-width: 520px\) \{\s*\.body \{[^}]*grid-template-areas: 'slot moves' 'book book' 'formula formula'/);
+    expect(s).toMatch(/@container \(min-width: 900px\) \{\s*\.body \{[^}]*grid-template-areas: 'slot moves book' 'slot formula formula'/);
+    expect(rule(s, '.qsteps > .controls')).toContain('justify-content: center');
+  });
+
+  it('pogo-stages: the curve beside the board from 520px, under it below', () => {
+    const s = css('pogo-stages');
+    expect(rule(s, '.layout')).toContain('grid-template-columns: minmax(0, 1fr)');
+    expect(s).toMatch(/@container \(min-width: 520px\) \{\s*\.layout \{\s*grid-template-columns: minmax\(0, 5fr\) minmax\(0, 6fr\)/);
+    expect(rule(s, '.game')).toContain('margin-inline: auto');
+  });
+
+  it('pogo-td-targets: boards, chart and numbers share one column per position; the strip and the numbers go under 520px', () => {
+    const s = css('pogo-td-targets');
+    expect(rule(s, '.row')).toContain('grid-template-columns: repeat(var(--n), minmax(0, 1fr))');
+    expect(s).toMatch(/@container \(max-width: 519\.98px\) \{[^}]*\.row\.boards,[^}]*display: none/);
+    expect(rule(s, '.td-targets > .controls')).toContain('justify-content: center');
+  });
+
+  it('each keeps its room before it renders, per width', () => {
+    for (const name of ['pogo-qsteps', 'pogo-stages', 'pogo-td-targets']) {
+      const s = css(name);
+      expect(rule(s, ':host')).toContain('container-type: inline-size');
+      expect(s.match(/\.stage \{\s*min-height: \d+px;/g), name).toHaveLength(3);
+    }
+  });
+});

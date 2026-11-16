@@ -1,12 +1,35 @@
 /*
  * <pogo-td-targets>: the game, the step's words (one grid cell for all, so the
- * chart never moves), the chart of values and targets from White's view on
- * −1…+1, its legend, the transport, then the values behind a disclosure. Ink
- * only: a value is a hollow circle on a dashed line, a target a filled square
- * on a solid one, the result a filled circle. No text inside the SVG.
+ * chart never moves), then the film: a strip of the game's boards, the chart of
+ * values and targets from White's view on −1…+1, and their numbers, all on the
+ * same columns, one per position; then the transport, the legend and the
+ * values behind a disclosure. Ink only: a value is a hollow circle on a dashed
+ * line, a target a filled square on a solid one, the result a filled circle,
+ * an earlier round's values a thin grey line. The lines are an SVG stretched to
+ * the box; the marks are HTML over it, placed by percentage.
  */
-.td-targets {
+:host {
   container-type: inline-size;
+}
+
+/* The room kept before rendering, per width (measured on the harness, 2026-11-16, default game). */
+.stage {
+  min-height: 785px;
+}
+
+@container (min-width: 520px) {
+  .stage {
+    min-height: 750px;
+  }
+}
+
+@container (min-width: 900px) {
+  .stage {
+    min-height: 820px;
+  }
+}
+
+.td-targets {
   display: flex;
   flex-direction: column;
   gap: 12px;
@@ -14,7 +37,7 @@
 
 .status {
   display: grid;
-  align-items: end;
+  align-items: start;
 }
 
 .said {
@@ -28,6 +51,9 @@
   visibility: hidden;
 }
 
+.said p {
+  margin: 0;
+}
 
 .step-text {
   color: var(--_ink);
@@ -35,29 +61,77 @@
 
 .calc {
   color: var(--_ink);
-  font-weight: 600;
+  font-weight: 800;
 }
 
-.plot {
+.film {
   display: grid;
-  grid-template-columns: 2.4em minmax(0, 1fr);
-  grid-template-rows: auto auto;
+  grid-template-columns: 2em minmax(0, 1fr);
   column-gap: 6px;
+  row-gap: 6px;
+  align-items: center;
 }
 
-.td-chart {
+.row {
+  display: grid;
+  grid-template-columns: repeat(var(--n), minmax(0, 1fr));
+  justify-items: center;
+}
+
+.row-name {
+  font-size: 12.8px;
+  line-height: 1.15;
+  color: var(--_muted);
+}
+
+/* The strip: each position's board over its column; the one whose target is computed framed, the next one dashed. */
+.cell.boards {
+  width: 100%;
+  padding: 2px;
+  border: 2px solid transparent;
+}
+
+.cell.boards .board {
   display: block;
   width: 100%;
   height: auto;
 }
 
-.y-ends {
-  position: relative;
+.cell.boards.now {
+  border-color: var(--_ink);
+}
+
+.cell.boards.next {
+  border: 2px dashed var(--_edge);
+}
+
+.side {
+  margin: 0;
   font-size: 12.8px;
   color: var(--_muted);
 }
 
-/* The labels sit on the chart's +1, 0 and −1 lines: PAD_Y of H from each edge, by percentage. */
+.box {
+  position: relative;
+  height: 220px;
+}
+
+.td-chart {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  overflow: visible;
+}
+
+.y-ends {
+  position: relative;
+  align-self: stretch;
+  font-size: 12.8px;
+  color: var(--_muted);
+}
+
+/* The labels sit on the chart's +1, 0 and −1 lines (down() in the element). */
 .y-ends span {
   position: absolute;
   right: 0;
@@ -66,7 +140,7 @@
 }
 
 .y-ends span:nth-child(1) {
-  top: 5%;
+  top: 6%;
 }
 
 .y-ends span:nth-child(2) {
@@ -74,21 +148,18 @@
 }
 
 .y-ends span:nth-child(3) {
-  top: 95%;
+  top: 94%;
 }
 
-.x-ends {
-  grid-column: 2;
-  display: flex;
-  justify-content: space-between;
-  font-size: 12.8px;
-  color: var(--_muted);
+.td-chart line,
+.td-chart polyline {
+  fill: none;
+  vector-effect: non-scaling-stroke;
 }
 
 .td-chart .axis {
   stroke: var(--_rule);
   stroke-width: 1px;
-  vector-effect: non-scaling-stroke;
 }
 
 .td-chart .axis.zero {
@@ -99,7 +170,6 @@
   stroke: var(--_edge);
   stroke-width: 1px;
   stroke-dasharray: 3 3;
-  vector-effect: non-scaling-stroke;
 }
 
 .td-chart .cursor.off {
@@ -107,43 +177,138 @@
 }
 
 .td-chart .notes-line {
-  fill: none;
-  stroke: var(--_ink-2);
-  stroke-width: 1px;
-  stroke-dasharray: 4 3;
-  vector-effect: non-scaling-stroke;
+  stroke: var(--_ink);
+  stroke-width: 2px;
+  stroke-dasharray: 5 4;
 }
 
 .td-chart .targets-line {
-  fill: none;
   stroke: var(--_ink);
-  stroke-width: 2px;
-  vector-effect: non-scaling-stroke;
+  stroke-width: 3px;
 }
 
-.td-chart .note {
-  fill: var(--_ground);
-  stroke: var(--_ink);
-  stroke-width: 1.5px;
-  vector-effect: non-scaling-stroke;
+/* An earlier round's values: where the line stood before it was adjusted. */
+.td-chart .trace {
+  stroke: var(--_edge);
+  stroke-width: 1px;
 }
 
-.td-chart .result {
-  fill: var(--_ink);
-}
-
-.td-chart .target {
-  fill: var(--_ink);
+/* What an adjustment reduces: the distance from each value to its target. */
+.td-chart .gap {
+  stroke: var(--_edge);
+  stroke-width: 1px;
+  stroke-dasharray: 2 3;
   visibility: hidden;
 }
 
-.td-chart .target.known {
+.td-chart .gap.on {
   visibility: visible;
+}
+
+.mk {
+  position: absolute;
+  width: 11px;
+  height: 11px;
+  transform: translate(-50%, -50%);
+}
+
+.mk.note {
+  border: 2px solid var(--_ink);
+  border-radius: 50%;
+  background: var(--_ground);
+}
+
+.mk.result {
+  border-radius: 50%;
+  background: var(--_ink);
+}
+
+.mk.target {
+  background: var(--_ink);
+  visibility: hidden;
+}
+
+.mk.target.known {
+  visibility: visible;
+}
+
+/* The target being computed, and the two points it comes from. */
+.mk.new {
+  width: 15px;
+  height: 15px;
+  outline: 3px solid var(--_ground);
+}
+
+.mk.src {
+  outline: 2px solid var(--_ink);
+  outline-offset: 3px;
+}
+
+.cell.ticks,
+.cell.notes,
+.cell.targets {
+  font-size: 12.8px;
+  line-height: 1.3;
+}
+
+.cell.ticks {
+  color: var(--_muted);
+}
+
+.cell.targets {
+  font-weight: 800;
+  min-height: 1.3em;
+}
+
+.axis-x {
+  margin: 0;
+  font-size: 12.8px;
+  text-align: center;
+  color: var(--_muted);
+}
+
+/* Under 520px a column is too narrow for a board or a number: the words name the position, the table has the numbers. */
+@container (max-width: 519.98px) {
+  .row.notes,
+  .row.targets,
+  .row-name.notes,
+  .row-name.targets,
+  .row.boards,
+  .row-name.boards {
+    display: none;
+  }
+
+  .mk {
+    width: 9px;
+    height: 9px;
+  }
+}
+
+@container (min-width: 520px) {
+  .film {
+    grid-template-columns: 4.6em minmax(0, 1fr);
+    column-gap: 10px;
+  }
+}
+
+@container (min-width: 900px) {
+  .box {
+    height: 280px;
+  }
+
+  .film.strip .cell.boards {
+    max-width: 84px;
+  }
+}
+
+.td-targets > .controls {
+  justify-content: center;
 }
 
 .legend {
   display: flex;
   flex-wrap: wrap;
+  justify-content: center;
   gap: 4px 16px;
   margin: 0;
   padding: 0;
@@ -165,7 +330,7 @@
 }
 
 .swatch.note {
-  border: 1.5px solid var(--_ink);
+  border: 2px solid var(--_ink);
   border-radius: 50%;
 }
 
@@ -178,6 +343,12 @@
   border-radius: 50%;
 }
 
+.swatch.trace {
+  width: 18px;
+  height: 0;
+  border-top: 1px solid var(--_edge);
+}
+
 .values summary {
   font-size: 12.8px;
   cursor: pointer;
@@ -188,6 +359,8 @@
 
 .td-table {
   width: 100%;
+  table-layout: fixed;
+  overflow-wrap: anywhere;
   border-collapse: collapse;
   font-size: 15px;
 }

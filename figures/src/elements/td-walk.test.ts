@@ -5,7 +5,8 @@ import { DEFAULT_GAME } from '../default-game';
 import { createStore } from '../store';
 import { parseTd } from '../nets';
 import { lambdaReturns } from '../players';
-import { TD_LAMBDA, tdGame, tdWalk, tdFrame } from './td-walk';
+import { TD_LAMBDA, TD_ROUNDS, meanGap, tdGame, tdRounds, tdScript, tdWalk, tdFrame } from './td-walk';
+import { replay, type Triple } from '../engine';
 
 const fixture = JSON.parse(readFileSync(resolve(process.cwd(), 'fixtures/reference.json'), 'utf8')) as {
   openingWin: { first: number; outcome: number; lambda: number; returns: number[] };
@@ -77,5 +78,57 @@ describe('the TD(λ) targets', () => {
     store.newGame('White', 'normal');
     store.play(DEFAULT_GAME[0]!);
     expect(() => tdWalk(store.current()!.states, () => 0)).toThrow(/^pogo-figures: /);
+  });
+});
+
+describe('the adjustments after the targets', () => {
+  const states = replay(DEFAULT_GAME as Triple[]);
+  const walks = tdRounds(states, td);
+  const script = tdScript(walks);
+  const T = states.length - 1;
+
+  it('starts from the net as trained, and values the game again after each adjustment', () => {
+    expect(walks).toHaveLength(TD_ROUNDS + 1);
+    expect(walks[0]!.white.notes).toEqual(tdWalk(states, (s) => td.value(s)).white.notes);
+    for (const w of walks) {
+      // Each round's targets are the λ-returns of its own values.
+      expect(w.returns).toEqual(lambdaReturns(w.values, TD_LAMBDA));
+      expect(w.white.notes[T]).toBe(1);
+    }
+    // The values do change from one round to the next.
+    expect(walks[1]!.white.notes).not.toEqual(walks[0]!.white.notes);
+  });
+
+  it('on the default game each adjustment brings the values closer to the targets they were adjusted to', () => {
+    const gaps = walks.map((w) => meanGap(w.white.notes, w.white.targets));
+    for (let r = 1; r < walks.length; r++) {
+      const before = walks[r - 1]!.white;
+      expect(meanGap(walks[r]!.white.notes, before.targets), `round ${r}`).toBeLessThan(meanGap(before.notes, before.targets));
+      expect(gaps[r]).toBeLessThan(gaps[r - 1]!);
+    }
+    expect(gaps.map((g) => g.toFixed(2))).toEqual(['0.23', '0.13', '0.10', '0.08', '0.07', '0.06']);
+  });
+
+  it('the script climbs the targets, then alternates adjustment and new targets, keeping a trace of every earlier round', () => {
+    expect(script.map((s) => s.kind)).toEqual(['start', ...Array(T).fill('climb'), ...Array(TD_ROUNDS).fill(['adjust', 'retarget']).flat()]);
+    expect(script.slice(0, T + 1).map((s) => s.gap === null)).toEqual([...Array(T).fill(true), false]);
+    const adjust = script.filter((s) => s.kind === 'adjust');
+    const retarget = script.filter((s) => s.kind === 'retarget');
+    adjust.forEach((s, k) => {
+      expect(s.round).toBe(k + 1);
+      expect(s.notes).toBe(walks[k + 1]!.white.notes);
+      expect(s.targets).toBe(walks[k]!.white.targets);
+      expect(s.traces).toHaveLength(k + 1);
+      expect(s.gap).toBe(meanGap(s.notes, s.targets));
+    });
+    retarget.forEach((s, k) => {
+      expect(s.notes).toBe(walks[k + 1]!.white.notes);
+      expect(s.targets).toBe(walks[k + 1]!.white.targets);
+    });
+    expect(script.at(-1)!.traces[0]).toBe(walks[0]!.white.notes);
+  });
+
+  it('meanGap is the mean distance between value and target', () => {
+    expect(meanGap([0, 0.5, 1], [0.5, 0])).toBeCloseTo(0.5, 12);
   });
 });
