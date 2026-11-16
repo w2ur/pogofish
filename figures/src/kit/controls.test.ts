@@ -55,6 +55,27 @@ describe('transport', () => {
     expect(next.disabled).toBe(true);
   });
 
+  it('hands focus to the opposite step button when the focused one becomes disabled', () => {
+    const s = new Stepper(3, () => {});
+    const row = transport(s, { lang: 'en' });
+    document.body.replaceChildren(row);
+    const { prev, next } = parts(row);
+    next.focus();
+    next.click();
+    next.click();
+    expect(next.disabled).toBe(true);
+    expect(document.activeElement).toBe(prev);
+    prev.click();
+    prev.click();
+    expect(prev.disabled).toBe(true);
+    expect(document.activeElement).toBe(next);
+    // A step taken from elsewhere (a timer, a keyboard shortcut) leaves an unfocused row alone.
+    next.blur();
+    s.go(2);
+    expect(document.activeElement).not.toBe(prev);
+    document.body.replaceChildren();
+  });
+
   it('formats the counter as the caller asks', () => {
     const s = new Stepper(9, () => {});
     const { counter } = parts(transport(s, { lang: 'en', counter: (i, n) => `${i} / ${n - 1}` }));

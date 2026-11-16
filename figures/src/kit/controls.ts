@@ -79,8 +79,12 @@ export function transport(stepper: Stepper, o: TransportOptions): HTMLElement {
 
   const sync = (): void => {
     const last = stepper.steps - 1;
+    // A disabled button drops focus to the page: hand it to the opposite one instead.
+    const focused = (row.getRootNode() as Document | ShadowRoot).activeElement;
     prev.disabled = stepper.index === 0;
     next.disabled = stepper.index >= last;
+    if (focused === prev && prev.disabled && !next.disabled) next.focus();
+    if (focused === next && next.disabled && !prev.disabled) prev.focus();
     counter.textContent = format(stepper.index, stepper.steps);
     play.hidden = !stepper.auto;
     play.textContent = t(o.lang, stepper.playing ? 'pause' : 'play');
