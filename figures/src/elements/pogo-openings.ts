@@ -105,7 +105,7 @@ export class PogoOpenings extends PogoFigure {
 
     const root = el('div', 'openings');
     const head = held(
-      'head label',
+      'head say',
       longest([headLine(lang, table, null), ...openings.moves.map((o) => headLine(lang, table, o.move))]),
     );
     const readout = held(

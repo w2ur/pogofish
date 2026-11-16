@@ -77,7 +77,7 @@ export class PogoRetrograde extends PogoFigure {
             : [],
         });
         const caption = el('figcaption', 'caption');
-        caption.append(el('span', 'label letter', `${b.letter} · ${side(b.state.to_move)}`));
+        caption.append(el('span', 'letter', `${b.letter} · ${side(b.state.to_move)}`));
         // « Blanc joue b2-3-b1 → C »: the arrow drawn, « mène à la position C » read. The name keeps its line.
         b.moves.forEach((m) => {
           const line = el('span', 'move');

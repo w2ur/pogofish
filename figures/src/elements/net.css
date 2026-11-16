@@ -111,7 +111,6 @@ p {
 }
 
 .layer-name {
-  font-size: 12.8px;
   color: var(--_ink);
 }
 
@@ -232,9 +231,7 @@ p {
 .bars caption {
   caption-side: top;
   margin-bottom: 8px;
-  font-size: 12.8px;
   text-align: left;
-  color: var(--_ink);
 }
 
 .bars thead th {

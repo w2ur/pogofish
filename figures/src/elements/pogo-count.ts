@@ -44,7 +44,7 @@ export class PogoCount extends PogoFigure {
     const rows = steps.map((s, i) => {
       const li = el('li', 'factor');
       const n = number('shout num value', i === 0 ? '' : '× ', s.factor);
-      const what = el('span', 'what label', t(lang, LABEL[s.part]));
+      const what = el('span', 'what', t(lang, LABEL[s.part]));
       if (s.binomial) what.append(' ', el('span', 'binomial', `C(${s.binomial[0]}, ${s.binomial[1]})`));
       li.append(n, what);
       list.append(li);
@@ -54,7 +54,7 @@ export class PogoCount extends PogoFigure {
     const total = el('p', 'total');
     total.setAttribute('aria-live', 'polite');
     const product = el('span', 'shout num product');
-    const totalLabel = el('span', 'what label', t(lang, 'countTotal'));
+    const totalLabel = el('span', 'what', t(lang, 'countTotal'));
     total.append(product, totalLabel);
     root.append(list, total);
 

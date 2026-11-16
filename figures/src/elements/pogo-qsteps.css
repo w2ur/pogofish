@@ -12,8 +12,7 @@
 }
 
 .where {
-  font-size: 12.8px;
-  color: var(--_muted);
+  color: var(--_ink-2);
 }
 
 /* The position shown: ink, underlined, never red. */
@@ -54,9 +53,7 @@
 .notebook caption {
   caption-side: top;
   margin-bottom: 8px;
-  font-size: 12.8px;
   text-align: left;
-  color: var(--_muted);
 }
 
 .notebook th,

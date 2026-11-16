@@ -68,7 +68,7 @@ function el<K extends keyof HTMLElementTagNameMap>(tag: K, className: string, te
 /** One step's words as a block: the game and path, the text, the formula. */
 function wordsBlock(w: QWords): HTMLElement {
   const block = el('div', 'said');
-  const head = el('p', 'label where');
+  const head = el('p', 'where');
   head.append(`${w.game} · `);
   w.path.forEach((p, i) => {
     if (i > 0) head.append(' → ');
@@ -113,7 +113,7 @@ export class PogoQsteps extends PogoFigure {
 
     const slot = el('div', 'board-slot');
     const table = el('table', 'notebook num');
-    table.append(el('caption', 'label', t(lang, 'qNotebook')));
+    table.append(el('caption', 'say', t(lang, 'qNotebook')));
     const headRow = el('tr', '');
     headRow.append(el('th', 'label col', t(lang, 'qRow')), el('th', 'label col value', t(lang, 'qValue')));
     const thead = el('thead', '');

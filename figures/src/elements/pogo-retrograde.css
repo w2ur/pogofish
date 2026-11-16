@@ -73,6 +73,7 @@
 }
 
 .letter {
+  font-weight: 800;
   color: var(--_ink);
 }
 

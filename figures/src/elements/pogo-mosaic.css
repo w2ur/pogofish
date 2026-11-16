@@ -15,9 +15,6 @@
   margin: 0;
 }
 
-.title {
-  font-size: 12.8px;
-}
 
 .note {
   font-size: 12.8px;
@@ -106,12 +103,7 @@
   border-top: 1px solid var(--_rule);
 }
 
-.where {
-  font-size: 12.8px;
-  color: var(--_muted);
-}
-
-/* In the label cut at 12.8px the narrow space all but closes: the count keeps its digits apart. */
+/* The narrow space all but closes at reading size: the count keeps its digits apart. */
 .where .sep {
   padding-inline: 0.12em;
 }

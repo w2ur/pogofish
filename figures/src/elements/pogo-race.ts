@@ -121,7 +121,7 @@ export class PogoRace extends PogoFigure {
 
     const root = el('div', 'race');
     const head = el('div', 'head');
-    head.append(el('p', 'label title', t(lang, 'raceTitle')), el('p', 'unit', t(lang, 'raceUnit')));
+    head.append(el('p', 'say title', t(lang, 'raceTitle')), el('p', 'unit', t(lang, 'raceUnit')));
     root.append(head, this.plot(lang, chart), el('p', 'axis-note', t(lang, 'raceAxis')));
     root.append(this.passes(lang, chart), this.values(lang, chart, data));
     this.stage.append(root);
@@ -203,7 +203,7 @@ export class PogoRace extends PogoFigure {
   /** Where each program first passes greedy, in words, and the rule that decides it. */
   private passes(lang: Lang, chart: RaceChart): HTMLElement {
     const box = el('div', 'passes');
-    box.append(el('p', 'label passes-title', t(lang, 'racePasses')));
+    box.append(el('p', 'say passes-title', t(lang, 'racePasses')));
     const list = el('ul', 'pass-list');
     for (const s of chart.series) {
       const w = passWords(lang, s);

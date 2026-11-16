@@ -28,10 +28,6 @@
   visibility: hidden;
 }
 
-.head {
-  font-size: 12.8px;
-  color: var(--_ink);
-}
 
 .readout {
   color: var(--_ink);

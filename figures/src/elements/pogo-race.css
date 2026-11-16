@@ -16,10 +16,6 @@
   margin: 0;
 }
 
-.title {
-  font-size: 12.8px;
-  color: var(--_ink);
-}
 
 .unit,
 .axis-note,
@@ -265,9 +261,6 @@
   border-top: 1px solid var(--_rule);
 }
 
-.passes-title {
-  font-size: 12.8px;
-}
 
 .pass-list {
   display: flex;

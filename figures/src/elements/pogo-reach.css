@@ -16,10 +16,8 @@
 
 .caption {
   margin-bottom: 8px;
-  font-size: 12.8px;
   text-align: left;
   caption-side: top;
-  color: var(--_ink);
 }
 
 thead th {
@@ -97,7 +95,6 @@ tbody th.ply {
 }
 
 .what {
-  font-size: 12.8px;
   color: var(--_ink-2);
 }
 

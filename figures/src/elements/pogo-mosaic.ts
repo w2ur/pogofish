@@ -177,7 +177,7 @@ export class PogoMosaic extends PogoFigure {
     const root = el('div', 'mosaics');
     // The table follows the program the second view shows, so it is built first.
     const values = this.valuesBox(lang, all);
-    root.append(el('p', 'label title', t(lang, 'mosaicTitle')), this.legend(lang), this.sweep(lang, data, all, signal), this.allStages(lang, all), values);
+    root.append(el('p', 'say title', t(lang, 'mosaicTitle')), this.legend(lang), this.sweep(lang, data, all, signal), this.allStages(lang, all), values);
     this.stage.append(root);
   }
 
@@ -200,7 +200,7 @@ export class PogoMosaic extends PogoFigure {
     const grids = MOSAIC_PROGRAMS.map((program) => {
       const item = el('div', 'sweep-item');
       const heads = all[program].map((s) => {
-        const head = el('p', 'label where num');
+        const head = el('p', 'say where num');
         head.append(...keepCase(`${t(lang, NAME[program])} · `), ...whenNodes(lang, s.gamesTrained));
         return head;
       });
@@ -325,7 +325,7 @@ export class PogoMosaic extends PogoFigure {
   private stageItem(lang: Lang, s: MosaicStage): HTMLLIElement {
     const w = totalsWords(lang, s);
     const li = el('li', 'stage-item');
-    const head = el('p', 'label where num');
+    const head = el('p', 'say where num');
     head.append(`${pctText(lang, s.pct)} · `, ...whenNodes(lang, s.gamesTrained));
     const svg = mosaicSvg(s.squares);
     svg.setAttribute('role', 'img');

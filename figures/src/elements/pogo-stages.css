@@ -31,12 +31,7 @@
   margin: 0;
 }
 
-.where {
-  font-size: 12.8px;
-  color: var(--_muted);
-}
-
-/* In the label cut at 12.8px the narrow space all but closes: the number keeps its digits apart. */
+/* The narrow space all but closes at reading size: the number keeps its digits apart. */
 .where .sep {
   padding-inline: 0.12em;
 }

@@ -177,7 +177,7 @@ export class PogoTdTargets extends PogoFigure {
     const steps = Array.from({ length: T + 2 }, (_, k) => stepWords(lang, g, w, k));
     const blocks = steps.map((s) => {
       const b = el('div', 'said');
-      b.append(el('p', 'label step-head', s.head || ' '), el('p', 'step-text', s.text), el('p', 'calc num', s.calc || ' '));
+      b.append(el('p', 'say step-head', s.head || ' '), el('p', 'step-text', s.text), el('p', 'calc num', s.calc || ' '));
       status.append(b);
       return b;
     });

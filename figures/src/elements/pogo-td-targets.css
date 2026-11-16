@@ -28,10 +28,6 @@
   visibility: hidden;
 }
 
-.step-head {
-  font-size: 12.8px;
-  color: var(--_muted);
-}
 
 .step-text {
   color: var(--_ink);

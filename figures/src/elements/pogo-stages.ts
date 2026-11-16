@@ -156,7 +156,7 @@ export class PogoStages extends PogoFigure {
     const readouts = stages.map((s) => {
       const w = stageWords(lang, program, s);
       const block = el('div', 'stage-words');
-      const where = el('p', 'label where num');
+      const where = el('p', 'say where num');
       // The label cut all but closes a narrow space: the count's digit groups get room (countNodes).
       where.append(...keepCase(w.whereHead), ...(w.before ? whenNodes(lang, 0) : [...countNodes(lang, s.gamesTrained), w.whereTail]));
       block.append(where, el('p', 'score num', w.score), el('p', 'shown', w.shown));

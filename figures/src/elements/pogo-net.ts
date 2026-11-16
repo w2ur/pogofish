@@ -59,7 +59,7 @@ function columnList(lang: Lang, c: Column, widest: number, roles: { first: 'inpu
     const bar = el('span', 'bar');
     bar.setAttribute('aria-hidden', 'true');
     bar.style.width = `${((units / widest) * 100).toFixed(3)}%`;
-    li.append(el('span', 'label layer-name', layerText(lang, units, role, what)), bar);
+    li.append(el('span', 'layer-name', layerText(lang, units, role, what)), bar);
     ol.append(li);
   });
   return ol;

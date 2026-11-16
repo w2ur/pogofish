@@ -96,7 +96,7 @@ export function rankedTable(lang: Lang, className: string, headers: readonly { t
     return thead;
   };
   const table = el('table', `bars ${className}-table`);
-  const caption = el('caption', 'label');
+  const caption = el('caption', 'say');
   const body = el('tbody');
   table.append(caption, head(), body);
   const others = el('details', 'others');

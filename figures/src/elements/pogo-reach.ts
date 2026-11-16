@@ -40,7 +40,7 @@ export class PogoReach extends PogoFigure {
 
     const root = el('div', 'reach');
     const table = el('table', 'bars');
-    table.append(el('caption', 'label caption', t(lang, 'reachCaption')));
+    table.append(el('caption', 'say caption', t(lang, 'reachCaption')));
     const thead = el('thead', '');
     const head = el('tr', '');
     const plyHead = el('th', 'label ply', t(lang, 'reachPly'));
@@ -79,7 +79,7 @@ export class PogoReach extends PogoFigure {
         return n;
       })(),
       (() => {
-        const what = el('span', 'label what');
+        const what = el('span', 'what');
         what.append(
           `${t(lang, 'reachReachable')} ${t(lang, 'outOf')} `,
           ...countNodes(lang, chart.possible),

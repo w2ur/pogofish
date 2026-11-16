@@ -78,7 +78,7 @@ export function buildView(lang: Lang, mode: 'inline' | 'follow', h: Handlers): U
   let toggle: HTMLButtonElement | undefined;
   if (mode === 'follow') {
     const bar = el('div', 'bar');
-    barStatus = el('p', 'bar-status label');
+    barStatus = el('p', 'bar-status say');
     toggle = controlButton(t(lang, 'collapse'), h.toggle, true);
     toggle.setAttribute('aria-controls', body.id);
     bar.append(barStatus, toggle);
