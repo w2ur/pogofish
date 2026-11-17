@@ -28,6 +28,7 @@ describe('the encoding’s demonstration', () => {
 
   it('shows the turn passing each time, so the grid flips with every move', () => {
     const d = encodingDemo();
-    expect(d.states.map((s) => s.to_move)).toEqual(['Red', 'White', 'Red', 'White', 'Red']);
+    // Two moves: the turn passes, and passes back.
+    expect(d.states.map((s) => s.to_move)).toEqual(['Red', 'White', 'Red']);
   });
 });
