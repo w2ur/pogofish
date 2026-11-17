@@ -34,9 +34,11 @@ import {
   crossingEvent,
   crossingOrder,
   headAt,
+  labelPushes,
   lastReached,
   raceChart,
   raceEvents,
+  type LabelBox,
   type RaceChart,
   type RaceEvent,
   type RaceProgram,
@@ -120,8 +122,15 @@ interface Head {
   series: RaceSeries;
   node: HTMLElement;
   value: HTMLElement;
+  /** The line from the head's point to its name, drawn when the name is pushed off it. */
+  leader: HTMLElement;
   shown: boolean;
+  /** How far the name is pushed down, in px, off a name above it. */
+  push: number;
 }
+
+/** Samples of a move, for the names' pushes: enough that a crossing between two stops is seen. */
+const MOVE_SAMPLES = 8;
 
 interface Plot {
   element: HTMLElement;
@@ -158,15 +167,53 @@ export class PogoRace extends PogoFigure {
     const heads: Head[] = chart.series.map((series) => {
       const node = el('span', `name head-name name-${series.program}`);
       const value = el('span', 'head-value num');
-      node.append(t(lang, SHORT[series.program]), ' ', value);
+      const leader = el('span', 'leader');
+      leader.setAttribute('aria-hidden', 'true');
+      node.append(t(lang, SHORT[series.program]), ' ', value, leader);
       plot.heads.append(node);
-      return { series, node, value, shown: false };
+      return { series, node, value, leader, shown: false, push: 0 };
     });
     const crossings = crossingOrder(chart).map((s) => ({
       at: crossingEvent(events, s),
       item: passes.items.get(s.program)!,
       frame: plot.frames.get(s.program),
     }));
+
+    /** A head's name at its point, pushed down by `push` px, its leader drawn from the point to the name. */
+    const putHead = (h: Head, at: { x: number; y: number }): void => {
+      h.node.style.left = pc(at.x);
+      h.node.style.top = h.push > 0 ? `calc(${pc(1 - at.y)} + ${h.push.toFixed(1)}px)` : pc(1 - at.y);
+      // The point, in the name's own frame: its transform places the name against it.
+      const m = new DOMMatrixReadOnly(getComputedStyle(h.node).transform === 'none' ? undefined : getComputedStyle(h.node).transform);
+      const height = h.node.offsetHeight;
+      const y = -m.f - h.push;
+      const [top, length] = h.push <= 0 || (y >= 0 && y <= height) ? [0, 0] : y < 0 ? [y, -y] : [height, y - height];
+      h.leader.style.left = `${(-m.e).toFixed(1)}px`;
+      h.leader.style.top = `${top.toFixed(1)}px`;
+      h.leader.style.height = `${length.toFixed(1)}px`;
+    };
+    /** Each shown name's push for a move of the clock from `from` to `to`: no two names touch at any moment of it. */
+    const pushFor = (from: number, to: number): void => {
+      const w = plot.heads.clientWidth;
+      const hgt = plot.heads.clientHeight;
+      const frames = heads.map((h) => {
+        const m = new DOMMatrixReadOnly(getComputedStyle(h.node).transform === 'none' ? undefined : getComputedStyle(h.node).transform);
+        return { dx: m.e, dy: m.f, width: h.node.offsetWidth, height: h.node.offsetHeight };
+      });
+      const samples: (LabelBox | null)[][] = [];
+      const n = from === to ? 0 : MOVE_SAMPLES;
+      for (let k = 0; k <= n; k++) {
+        const x = n === 0 ? to : from + ((to - from) * k) / n;
+        samples.push(
+          heads.map((h, i) => {
+            const at = h.shown ? headAt(h.series, x) : null;
+            const f = frames[i]!;
+            return at ? { left: at.x * w + f.dx, top: (1 - at.y) * hgt + f.dy, width: f.width, height: f.height } : null;
+          }),
+        );
+      }
+      labelPushes(samples).forEach((p, i) => (heads[i]!.push = p));
+    };
 
     let placed: { i: number; x: number; playing: boolean } | undefined;
     /** Puts the clock where it is, or where it is heading: the next stop while it plays, else its own. */
@@ -179,15 +226,16 @@ export class PogoRace extends PogoFigure {
       const jump = !playing && placed !== undefined && Math.abs(placed.i - i) > 1;
       const ms = playing ? raceHold(events, i) : jump ? 0 : SEEK_MS;
       root.style.setProperty('--_t', `${ms}ms`);
+      const placed0 = placed;
       placed = { i, x, playing };
       plot.clock.style.left = pc(x);
       // A marker on the clock is uncovered whole: the clip runs half a marker past it.
       plot.ink.style.clipPath = `inset(-24px calc(${((1 - x) * 100).toFixed(3)}% - 7px) -24px -24px)`;
+      pushFor(jump ? x : (placed0?.x ?? x), x);
       for (const h of heads) {
         const at = headAt(h.series, x);
         if (!at || !h.shown) continue;
-        h.node.style.left = pc(at.x);
-        h.node.style.top = pc(1 - at.y);
+        putHead(h, at);
       }
     };
 
@@ -200,10 +248,11 @@ export class PogoRace extends PogoFigure {
         if (at && !h.shown) {
           // A head that appears is put at its place at once, never slid there from a stale one.
           h.node.style.transition = 'none';
-          h.node.style.left = pc(at.x);
-          h.node.style.top = pc(1 - at.y);
+          h.leader.style.transition = 'none';
+          putHead(h, at);
           void h.node.offsetWidth;
           h.node.style.transition = '';
+          h.leader.style.transition = '';
         }
         h.shown = at !== null;
         h.node.toggleAttribute('data-off', at === null);

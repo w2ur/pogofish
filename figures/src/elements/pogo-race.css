@@ -469,3 +469,19 @@
     display: none;
   }
 }
+
+/* A name pushed off its point, below a name it would touch: a hairline joins them. */
+.leader {
+  position: absolute;
+  width: 0;
+  border-left: 1px solid var(--_ink);
+  transition:
+    top var(--_t) linear,
+    height var(--_t) linear;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .leader {
+    transition: none;
+  }
+}

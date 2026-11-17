@@ -185,3 +185,59 @@ export function crossingEvent(events: readonly RaceEvent[], s: RaceSeries): numb
   if (!s.firstAbove) return events.length - 1;
   return events.findIndex((e) => e.games === s.firstAbove!.gamesTrained);
 }
+
+// ---------------------------------------------------------------- head labels
+//
+// A head's name rides its line, and two lines can run close: their names must
+// never touch. Each name keeps its place unless a name above it overlaps it;
+// then it is pushed down by the overlap (and a gap), the most any moment of
+// the move needs, so it holds one offset while the clock runs from one stop to
+// the next.
+
+/** A label's box, in px, in the plot's frame; null when that head is not shown. */
+export interface LabelBox {
+  left: number;
+  top: number;
+  width: number;
+  height: number;
+}
+
+/** Room left between two names, in px. */
+export const LABEL_GAP = 2;
+
+/**
+ * How far to push each label down so that, in every sample of a move (the
+ * boxes at several moments of it, labels in the same order), no two shown
+ * labels overlap. The labels keep one order for the whole move, top to bottom
+ * as the move starts: a label is pushed only by one before it, below it by the
+ * gap. A push holds for the whole move, so it is the most any sample needs.
+ */
+export function labelPushes(samples: readonly (readonly (LabelBox | null)[])[], gap = LABEL_GAP): number[] {
+  const n = samples[0]?.length ?? 0;
+  const first = (i: number): number => samples.find((b) => b[i])?.[i]?.top ?? Infinity;
+  const order = Array.from({ length: n }, (_, i) => i).sort((a, b) => first(a) - first(b) || a - b);
+  const push = new Array<number>(n).fill(0);
+  order.forEach((j, k) => {
+    const before = order.slice(0, k);
+    for (let moved = true; moved; ) {
+      moved = false;
+      for (const boxes of samples) {
+        const b = boxes[j];
+        if (!b) continue;
+        for (const i of before) {
+          const o = boxes[i];
+          if (!o) continue;
+          const top = b.top + push[j]!;
+          const oTop = o.top + push[i]!;
+          const across = b.left < o.left + o.width && o.left < b.left + b.width;
+          const down = top < oTop + o.height + gap && oTop - gap < top + b.height;
+          if (across && down) {
+            push[j] = oTop + o.height + gap - b.top;
+            moved = true;
+          }
+        }
+      }
+    }
+  });
+  return push;
+}

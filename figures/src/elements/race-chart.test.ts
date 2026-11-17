@@ -1,7 +1,8 @@
 import { readFileSync } from 'node:fs';
+import fc from 'fast-check';
 import { describe, expect, it } from 'vitest';
 import type { V5Data } from '../data';
-import { RACE_PROGRAMS, crossingEvent, crossingOrder, firstAboveGreedy, headAt, lastReached, raceChart, raceEvents } from './race-chart';
+import { LABEL_GAP, RACE_PROGRAMS, crossingEvent, crossingOrder, firstAboveGreedy, headAt, labelPushes, lastReached, raceChart, raceEvents, type LabelBox } from './race-chart';
 
 const v5 = JSON.parse(readFileSync('public/data/v5.json', 'utf8')) as V5Data;
 const chart = raceChart(v5);
@@ -142,5 +143,45 @@ describe('the race', () => {
       ['qtab', null],
     ]);
     expect(order.map((s) => events[crossingEvent(events, s)]!.games)).toEqual([500, 1000, 5000, 5_000_000]);
+  });
+});
+
+describe('labelPushes', () => {
+  const box = (left: number, top: number, width = 60, height = 16): LabelBox => ({ left, top, width, height });
+  const overlaps = (a: LabelBox, b: LabelBox): boolean =>
+    a.left < b.left + b.width && b.left < a.left + a.width && a.top < b.top + b.height && b.top < a.top + a.height;
+
+  it('leaves names apart where they are', () => {
+    expect(labelPushes([[box(0, 0), box(0, 30), box(100, 5)]])).toEqual([0, 0, 0]);
+  });
+
+  it('pushes the lower of two touching names down by the overlap and the gap', () => {
+    // 6px of overlap, as « TD(λ) » and « AlphaZero sans recherche » near 10 000 games at 320px.
+    expect(labelPushes([[box(0, 10), box(20, 20)]])).toEqual([0, 6 + LABEL_GAP]);
+    expect(labelPushes([[box(20, 20), box(0, 10)]])).toEqual([6 + LABEL_GAP, 0]);
+  });
+
+  it('holds the most any moment of the move needs, and a hidden head pushes nothing', () => {
+    expect(labelPushes([[box(0, 0), box(0, 30)], [box(0, 0), box(0, 4)]])).toEqual([0, 12 + LABEL_GAP]);
+    expect(labelPushes([[null, box(0, 4)]])).toEqual([0, 0]);
+  });
+
+  it('pushes in cascade: a name pushed onto a third pushes it in turn', () => {
+    expect(labelPushes([[box(0, 0), box(0, 10), box(0, 20)]])).toEqual([0, 18 - 10, 36 - 20]);
+  });
+
+  it('once pushed, no two names overlap at any sample of the move', () => {
+    const b = fc.record({ left: fc.integer({ min: 0, max: 200 }), top: fc.integer({ min: 0, max: 200 }), width: fc.integer({ min: 1, max: 120 }), height: fc.integer({ min: 1, max: 30 }) });
+    const samples = fc.integer({ min: 1, max: 5 }).chain((n) => fc.array(fc.array(fc.option(b, { nil: null }), { minLength: n, maxLength: n }), { minLength: 1, maxLength: 5 }));
+    fc.assert(
+      fc.property(samples, (ss) => {
+        const push = labelPushes(ss);
+        expect(push.every((p) => p >= 0)).toBe(true);
+        for (const s of ss) {
+          const moved = s.map((x, i) => (x ? { ...x, top: x.top + push[i]! } : null));
+          for (let i = 0; i < moved.length; i++) for (let j = i + 1; j < moved.length; j++) if (moved[i] && moved[j]) expect(overlaps(moved[i]!, moved[j]!)).toBe(false);
+        }
+      }),
+    );
   });
 });
