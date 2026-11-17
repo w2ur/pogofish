@@ -207,18 +207,12 @@ tbody th.ply {
   color: var(--_ink);
 }
 
-/* A digit-group separator, narrow no-break space or comma, given room to be seen. */
+/*
+ * A digit-group separator, narrow no-break space or comma, given room to be seen:
+ * one rule for every number of the figure, so each groups its digits alike at its size.
+ */
 .sep {
   padding-inline: 0.06em;
-}
-
-.reachable .sep {
-  padding-inline: 0.1em;
-}
-
-/* In the label cut at 12.8px the narrow space all but closes: the number there keeps its digits apart. */
-.what .sep {
-  padding-inline: 0.12em;
 }
 
 @media (prefers-reduced-motion: reduce) {

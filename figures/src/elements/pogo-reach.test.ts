@@ -148,11 +148,15 @@ describe('<pogo-reach>', () => {
     expect(playState(el)).toBe('play');
   });
 
-  it('keeps the digit groups of the summary’s second number apart in the label cut', async () => {
+  // Regression: '.what .sep' gave the summary's second number twice the room of the line above
+  // the band (0.12em at 15px against 0.06em at 12.8px), so its digit groups stood visibly apart.
+  it('groups the digits of every number alike: one separator, one spacing rule', async () => {
     const el = await mount('fr');
     expect($$(el, '.what .sep')).toHaveLength(2);
-    const css = readFileSync('src/elements/pogo-reach.css', 'utf8');
-    expect(css).toMatch(/\.what \.sep \{\s*padding-inline: 0\.12em;/);
+    expect(new Set($$(el, '.sep').map((s) => s.textContent))).toEqual(new Set([NNBSP]));
+    const css = readFileSync('src/elements/pogo-reach.css', 'utf8').replace(/\/\*[\s\S]*?\*\//g, '');
+    const rules = (css.match(/[^{}]*\.sep[^{}]*\{[^}]*\}/g) ?? []).map((r) => r.trim().replace(/\s+/g, ' '));
+    expect(rules).toEqual(['.sep { padding-inline: 0.06em; }']);
   });
 
   it('a file that does not add up shows the fallback, not a wrong chart', async () => {
