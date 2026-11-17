@@ -12,20 +12,20 @@
   container-type: inline-size;
 }
 
-/* The room kept before rendering, per width (measured on the harness, 2026-11-16, default game). */
+/* The room kept before rendering, per width (measured on the harness, 2026-11-17, default game: 733px at 272, 646 at 566, 711 at 1100). */
 .stage {
-  min-height: 785px;
+  min-height: 735px;
 }
 
 @container (min-width: 520px) {
   .stage {
-    min-height: 750px;
+    min-height: 645px;
   }
 }
 
 @container (min-width: 900px) {
   .stage {
-    min-height: 820px;
+    min-height: 710px;
   }
 }
 
