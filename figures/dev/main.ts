@@ -166,6 +166,9 @@ async function build(): Promise<void> {
   clip.controls = true;
   clip.width = 320;
   clip.height = 180;
+  // Never wider than the column: at a 320px viewport the body's padding leaves 272px.
+  clip.style.maxWidth = '100%';
+  clip.style.height = 'auto';
   app.append(head, clip);
 
   app.append(heading('Type cuts'));
