@@ -9,7 +9,7 @@ import { LC1_2, legal, moveName, play, terminal } from '../engine';
 import { search, type SearchSnapshot, type SimulationTrace } from '../mcts';
 import { parseAz, policyIndex } from '../nets';
 import { C_PUCT } from '../search-handler';
-import { frameCounter, frameHold, frameWords, deepSim, leader, mostVisited, rootRow, searchScript, SLOW, type Frame, type SimFrame } from './search-script';
+import { HOLD, frameCounter, frameHold, frameWords, deepSim, leader, mostVisited, rootRow, searchScript, SLOW, type Frame, type SimFrame } from './search-script';
 import { PUZZLE5, SEARCH_SIMS, STOPS, recordFull, rowOrder } from './search-steps';
 
 const b = readFileSync(resolve(process.cwd(), 'public/nets/az-lc1-s1.pfw'));
@@ -43,13 +43,14 @@ describe('searchScript', () => {
     expect(deepSim(traces)).toBe(36);
     expect(traces[35]!.leaf).toBe('end');
     expect(traces.slice(SLOW.length, 35).every((t) => t.leaf !== 'end')).toBe(true);
-    expect(frames.map((f) => `${f.kind}${f.sim}`)).toEqual([
+    // A slowed simulation: its path chosen, then one frame per move down to its leaf, then the note at the leaf, then its row.
+    expect(frames.map((f) => `${f.kind}${f.sim}${f.kind === 'walk' ? `.${f.step}` : ''}`)).toEqual([
       'before0',
-      'path1', 'leaf1', 'back1',
-      'path2', 'leaf2', 'back2',
-      'path3', 'leaf3', 'back3',
+      'path1', 'walk1.1', 'leaf1', 'back1',
+      'path2', 'walk2.1', 'leaf2', 'back2',
+      'path3', 'walk3.1', 'leaf3', 'back3',
       'stop5', 'stop10', 'stop20',
-      'path36', 'leaf36', 'back36',
+      'path36', 'walk36.1', 'walk36.2', 'walk36.3', 'walk36.4', 'walk36.5', 'leaf36', 'back36',
       'stop50', 'end100',
     ]);
     expect(STOPS.slice(0, 3)).toEqual([...SLOW]);
@@ -57,20 +58,22 @@ describe('searchScript', () => {
 
   it('a slowed simulation shows the rows before it while it runs, and after it once its note is counted', () => {
     for (const f of frames) {
-      if (f.kind === 'path' || f.kind === 'leaf') expect(f.snap).toBe(f.sim === 1 ? before : snaps[f.sim - 2]);
+      if (f.kind === 'path' || f.kind === 'walk' || f.kind === 'leaf') expect(f.snap).toBe(f.sim === 1 ? before : snaps[f.sim - 2]);
       else if (f.kind !== 'before') expect(f.snap).toBe(snaps[f.sim - 1]);
     }
   });
 
-  it('lasts between 35 and 55 seconds (its walks at the kit’s one tempo), no frame of a slowed simulation held under 2 seconds', () => {
+  // The owner, 2026-11-17: « ça va très vite ». It lasted 51.8 s.
+  it('lasts between 70 and 95 seconds, every frame but the last held at least 2.5 seconds, a move of a path the tempo and its words', () => {
     const total = frames.reduce((a, _, i) => a + frameHold(frames, i), 0);
-    expect(total).toBeGreaterThanOrEqual(35_000);
-    expect(total).toBeLessThanOrEqual(55_000);
+    expect(total).toBeGreaterThanOrEqual(70_000);
+    expect(total).toBeLessThanOrEqual(95_000);
     frames.forEach((f, i) => {
       if (f.kind === 'end') return;
-      const own = f.kind === 'leaf' ? frameHold(frames, i) - MOVE_TEMPO_MS * f.trace.moves.length : frameHold(frames, i);
-      expect(own, `${f.kind}${f.sim}`).toBeGreaterThanOrEqual(2000);
+      expect(frameHold(frames, i), `${f.kind}${f.sim}`).toBeGreaterThanOrEqual(2500);
     });
+    expect(HOLD.walk).toBeGreaterThanOrEqual(MOVE_TEMPO_MS + 1000);
+    expect(frames.filter((f) => f.kind === 'walk').every((f) => frameHold(frames, frames.indexOf(f)) === HOLD.walk)).toBe(true);
   });
 
   it('the slowed deep simulation follows a legal path to a game the player to move wins', () => {
@@ -84,7 +87,7 @@ describe('searchScript', () => {
 });
 
 describe('frameWords, each fact from the search', () => {
-  const find = (key: string) => frames.find((f) => `${f.kind}${f.sim}` === key)!;
+  const find = (key: string) => frames.find((f) => `${f.kind}${f.sim}${f.kind === 'walk' ? `.${f.step}` : ''}` === key)!;
 
   it('before: the net’s preferred move is the row of highest prior', () => {
     const top = before.root[rowOrder(before)[0]!]!;
@@ -97,6 +100,17 @@ describe('frameWords, each fact from the search', () => {
     expect(words(find('path1'))).toBe(`Simulation 1${N}: la première piste suit le coup que le réseau préfère, b2-2-a3.`);
     expect(words(find('path2'))).toBe(`Simulation 2${N}: la piste suit b2-1-b1.`);
     expect(words(find('path36'))).toBe(`Simulation 36${N}: la piste suit b2-3-b1, c2-1-b2, b3-1-a3, b2-1-b1, a3-3-b1, par des positions déjà simulées.`);
+  });
+
+  it('a step of the walk names its move and who plays it; until the last, it says the position is known and the simulation goes on', () => {
+    const deep = traces[35]!;
+    const walk = (k: number) => find(`walk36.${k}`);
+    expect(words(walk(1))).toBe(`Simulation 36, coup 1 sur 5${N}: Rouge joue b2-3-b1. Position déjà simulée à ce tour${N}: elle continue.`);
+    expect(words(walk(2))).toBe(`Simulation 36, coup 2 sur 5${N}: Blanc joue c2-1-b2. Position déjà simulée à ce tour${N}: elle continue.`);
+    expect(words(walk(5))).toBe(`Simulation 36, coup 5 sur 5${N}: Rouge joue a3-3-b1.`);
+    expect(words(walk(2), 'en')).toBe('Simulation 36, move 2 of 5: White plays c2-1-b2. A position already simulated this turn: it goes on.');
+    expect(deep.moves).toHaveLength(5);
+    expect(words(find('walk1.1'))).toBe(`Simulation 1, coup 1 sur 1${N}: Rouge joue b2-2-a3.`);
   });
 
   it('a leaf says where the simulation stopped and the note it brings back, for Red', () => {

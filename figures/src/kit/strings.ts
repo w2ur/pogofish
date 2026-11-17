@@ -342,6 +342,8 @@ const fr = {
   searchTagEnd: 'partie finie',
   searchTagRepeat: 'déjà sur la piste',
   searchPathLabel: 'La piste',
+  searchWalkKnown: 'Position déjà simulée à ce tour',
+  searchWalkOn: 'elle continue',
 };
 
 export type StringKey = keyof typeof fr;
@@ -684,6 +686,8 @@ const en: Record<StringKey, string> = {
   searchTagEnd: 'game over',
   searchTagRepeat: 'already on the path',
   searchPathLabel: 'The path',
+  searchWalkKnown: 'A position already simulated this turn',
+  searchWalkOn: 'it goes on',
 };
 
 export const STRINGS: Record<Lang, Record<StringKey, string>> = { fr, en };

@@ -4,7 +4,8 @@
 // snapshot and what every simulation did (mcts.ts traces), then plays it back
 // (search-script.ts): the first three simulations one by one and slowly, each
 // as its path (the root move's arrow on the board, the moves after it named
-// under it), where it stops and the note brought back from there, and that
+// under it), then one frame per move down the path, so the reader follows it
+// from the root to where it stops, the note brought back from there, and that
 // note travelling to the root move's row, whose visits and mean value change;
 // then the search accelerating through 5, 10, 20, 50 and 100 simulations, with
 // one deeper simulation slowed down in its place (the first to reach the end of
@@ -23,7 +24,6 @@ import { controlButton, playFromAction, playFromButton, setAway, transport } fro
 import { PogoFigure } from '../kit/figure';
 import { formatShare } from '../kit/score';
 import { Stepper } from '../kit/stepper';
-import { MOVE_TEMPO_MS } from '../kit/tempo';
 import { asTriple, moveText, moveTip, type TipHooks } from '../kit/move-tip';
 import { colon, t, type Lang } from '../kit/strings';
 import type { SearchSnapshot } from '../mcts';
@@ -313,10 +313,9 @@ export class PogoSearch extends PogoFigure {
       shown = i;
       clearTimers();
       const say = (): void => void said.replaceChildren(...moveText(lang, frameWords(lang, f, s.to_move), hooks));
-      // A leaf is said once the board has reached it.
-      if (!(forward && f.kind === 'leaf')) say();
+      say();
       root.dataset.frame = f.kind;
-      const isSim = f.kind === 'path' || f.kind === 'leaf' || f.kind === 'back';
+      const isSim = f.kind === 'path' || f.kind === 'walk' || f.kind === 'leaf' || f.kind === 'back';
       path.toggleAttribute('data-off', !isSim);
       fill(f.snap, { fresh: f.kind === 'back' ? rootRow(f.snap, f.trace) : undefined, final: f.kind === 'end' });
       if (isSim) {
@@ -336,39 +335,41 @@ export class PogoSearch extends PogoFigure {
         note.toggleAttribute('data-gone', false);
         const states = tr.moves.reduce<State[]>((acc, m) => [...acc, play(acc.at(-1)!, m)], [s]);
         if (f.kind === 'path') {
-          steps.forEach((st, k) => st.toggleAttribute('data-on', k === 0));
+          // The move the path takes from the root, arrowed on the board, comes next.
+          steps.forEach((st, k) => {
+            st.toggleAttribute('data-on', false);
+            st.toggleAttribute('data-now', k === 0);
+          });
           showBoard = () => void put(board(s, { arrow: tr.moves[0] }));
           showBoard();
+        } else if (f.kind === 'walk') {
+          // One move down the path: the board after it, its name lit, the arrow of the next one if it goes on.
+          const k = f.step - 1;
+          const m = tr.moves[k]!;
+          const next = tr.moves[k + 1];
+          steps.forEach((st, j) => {
+            st.toggleAttribute('data-on', j <= k);
+            st.toggleAttribute('data-now', j === k);
+          });
+          const from = boardSlot.querySelector('svg') as SVGSVGElement | null;
+          showBoard = () => void put(board(states[k + 1]!, { from: m.from_cell, to: m.to_cell, moving: m.num_pieces, ...(next ? { arrow: next } : {}) }));
+          showBoard();
+          if (forward && from) animateMove(from, boardSlot.querySelector('svg') as SVGSVGElement, asTriple(m));
         } else if (f.kind === 'leaf') {
-          const end = (): void => {
-            const m = tr.moves.at(-1)!;
-            showBoard = () => void put(board(states.at(-1)!, { from: m.from_cell, to: m.to_cell, moving: m.num_pieces }));
-            showBoard();
-            steps.forEach((st) => st.toggleAttribute('data-on', true));
-            path.dataset.stage = 'leaf';
-            say();
-          };
-          if (forward) {
-            // The board walks the path, one move every MOVE_TEMPO_MS, then the note appears where it stopped.
-            path.dataset.stage = 'walk';
-            steps.forEach((st) => st.toggleAttribute('data-on', false));
-            tr.moves.forEach((m, k) => {
-              timers.push(
-                setTimeout(() => {
-                  const from = boardSlot.querySelector('svg') as SVGSVGElement;
-                  const after = put(board(states[k + 1]!, { from: m.from_cell, to: m.to_cell, moving: m.num_pieces }));
-                  animateMove(from, after, asTriple(m));
-                  steps[k]?.toggleAttribute('data-on', true);
-                }, MOVE_TEMPO_MS * k),
-              );
-            });
-            timers.push(setTimeout(end, MOVE_TEMPO_MS * tr.moves.length));
-          } else {
-            end();
-          }
+          // Where it stopped: the board as the last move left it, and the note brought back.
+          const m = tr.moves.at(-1)!;
+          showBoard = () => void put(board(states.at(-1)!, { from: m.from_cell, to: m.to_cell, moving: m.num_pieces }));
+          showBoard();
+          steps.forEach((st) => {
+            st.toggleAttribute('data-on', true);
+            st.toggleAttribute('data-now', false);
+          });
         } else {
           // Back at the root: the note travels to the root move's row.
-          steps.forEach((st) => st.toggleAttribute('data-on', true));
+          steps.forEach((st) => {
+            st.toggleAttribute('data-on', true);
+            st.toggleAttribute('data-now', false);
+          });
           showBoard = () => void put(board(s, { arrow: tr.moves[0] }));
           showBoard();
           const target = rows.find((r) => r.index === rootRow(f.snap, tr));
