@@ -1,7 +1,7 @@
 import { readFileSync } from 'node:fs';
 import { describe, expect, it } from 'vitest';
 import type { TableData } from '../data';
-import { LC1_2, legal, play, replay, terminal } from '../engine';
+import { LC1_2, legal, moveName, play, replay, terminal, winner } from '../engine';
 import { QSTEPS_FIRST, QSTEPS_GAMES, QSTEPS_PREFIX, Q_PHASES, firstGames, moveGroups, notebookColumns, notesAt, noteText, qScript, qSteps, signedNote } from './q-steps';
 
 /**
@@ -142,7 +142,29 @@ describe('the script the figure plays', () => {
       const groups = moveGroups(f.update!);
       expect(groups.reduce((n, g) => n + g.count, 0)).toBe(f.update!.candidates.length);
       expect(Math.max(...groups.map((g) => g.q))).toBe(f.update!.best + 0);
+      // Each group names its moves, legal in the position updated, as many as it counts.
+      const all = legal(f.state).map(moveName);
+      for (const g of groups) {
+        expect(g.moves).toHaveLength(g.count);
+        for (const m of g.moves) expect(all).toContain(moveName(m));
+      }
     }
+  });
+
+  it('« quels sont les coups qui gagnent la partie ? »: the winning moves, each one checked against the engine', () => {
+    for (const f of walk.frames.filter((x) => x.update)) {
+      const win = moveGroups(f.update!).find((g) => g.kind === 'win');
+      // Exactly the moves that end the game with the mover's win, in the engine's order.
+      const want = legal(f.state).filter((m) => {
+        const next = play(f.state, m);
+        return terminal(next, LC1_2) && winner(next, LC1_2) === (f.state.to_move === 'White' ? 'W' : 'R');
+      });
+      expect((win?.moves ?? []).map(moveName)).toEqual(want.map(moveName));
+    }
+    // The first game's C1 has two, and the essay's +1 is theirs.
+    const c1 = moveGroups(walk.frames.find((f) => f.game === 1 && f.update?.name === 'C1')!.update!).find((g) => g.kind === 'win')!;
+    expect(c1.moves).toHaveLength(2);
+    expect(c1.q).toBe(1);
   });
 
   it('« la valeur des positions gagnantes s’est propagée vers les positions qui y mènent »: one position further back at each game', () => {

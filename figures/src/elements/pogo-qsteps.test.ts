@@ -2,7 +2,8 @@ import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { REDUCED_MOTION, intersect, resetMedia, setMedia, leave, playState } from '../test-dom';
 import { MOVE_TEMPO_MS } from '../kit/tempo';
 import { PogoQsteps, READ_MS, SLOW_MS, groupWords, qWords } from './pogo-qsteps';
-import { ALPHA, QSTEPS_FIRST, QSTEPS_GAMES, QSTEPS_PREFIX, notebookColumns, noteText, qScript, qSteps } from './q-steps';
+import { ALPHA, QSTEPS_FIRST, QSTEPS_GAMES, QSTEPS_PREFIX, moveGroups, notebookColumns, noteText, qScript, qSteps } from './q-steps';
+import { moveName } from '../engine';
 
 if (!customElements.get('pogo-qsteps')) customElements.define('pogo-qsteps', PogoQsteps);
 PogoQsteps.deps = { engine: () => Promise.resolve() };
@@ -97,11 +98,11 @@ describe('qWords', () => {
 
 describe('groupWords', () => {
   it('names a move by where it leads, and counts the others', () => {
-    expect(groupWords('fr', { kind: 'to', to: 'C1', count: 1, q: 0 })).toBe('vers C1');
-    expect(groupWords('fr', { kind: 'win', to: null, count: 2, q: 1 })).toBe('2 coups qui gagnent la partie');
-    expect(groupWords('fr', { kind: 'win', to: null, count: 1, q: 1 })).toBe('1 coup qui gagne la partie');
-    expect(groupWords('fr', { kind: 'unseen', to: null, count: 21, q: 0 })).toBe('21 autres coups, vers des positions notées 0');
-    expect(groupWords('en', { kind: 'lose', to: null, count: 1, q: -1 })).toBe('1 move that loses the game');
+    expect(groupWords('fr', { kind: 'to', to: 'C1', count: 1, q: 0, moves: [] })).toBe('vers C1');
+    expect(groupWords('fr', { kind: 'win', to: null, count: 2, q: 1, moves: [] })).toBe('2 coups qui gagnent la partie');
+    expect(groupWords('fr', { kind: 'win', to: null, count: 1, q: 1, moves: [] })).toBe('1 coup qui gagne la partie');
+    expect(groupWords('fr', { kind: 'unseen', to: null, count: 21, q: 0, moves: [] })).toBe('21 autres coups, vers des positions notées 0');
+    expect(groupWords('en', { kind: 'lose', to: null, count: 1, q: -1, moves: [] })).toBe('1 move that loses the game');
   });
 });
 
@@ -169,6 +170,48 @@ describe('<pogo-qsteps>', () => {
     expect(notebook(el)[2]).toBe('C1 0,00 *0,10 · · · ·');
     expect($(el, '.name.here').textContent).toBe('C1');
     expect(role(el, 'counter').textContent).toBe('partie 1 sur 5 · étape 7 sur 8');
+  });
+
+  it('« quels sont les coups qui gagnent la partie ? »: the +1 moves named under their row and shown landing on the board, from the step that values them', async () => {
+    const el = await mount();
+    const i = at(1, 'C1', 'look');
+    const u = walk.frames[script[i]!.frame]!.update!;
+    const wins = moveGroups(u).find((g) => g.kind === 'win')!.moves;
+    expect(wins.length).toBeGreaterThan(1);
+    const names = () => $$(el, '.which .move-name').map((n) => n.firstChild!.textContent);
+    const landed = () => $$(el, '.board-slot .board .landings').map((g) => Number(g.getAttribute('data-cell'))).sort();
+    const picked = () => $$(el, '.board-slot .board .mark.picked').map((g) => Number(g.getAttribute('data-cell'))).sort();
+    const want = [...new Set(wins.map((m) => m[2]))].sort();
+    go(el, i);
+    // Looking: the moves are named, the board does not show them yet.
+    expect(names()).toEqual(wins.map(moveName));
+    expect(landed()).toEqual([]);
+    go(el, 1);
+    // Valued: each winning move lands on its square, lifted from its stack.
+    expect(landed()).toEqual(want);
+    expect(picked()).toEqual([...new Set(wins.map((m) => m[0]))].sort());
+    // The move that led here gives way: no dashed origin, no landing frame beside them.
+    expect(el.shadowRoot!.querySelector('.board-slot .board .from, .board-slot .board .to')).toBeNull();
+    expect(moves(el)[0]).toBe('2 coups qui gagnent la partie = +1,00');
+    // One name hovered: that move alone; left, the two again.
+    const chip = $$(el, '.which .move-name')[1]!;
+    chip.dispatchEvent(new Event('pointerenter'));
+    expect(landed()).toEqual([wins[1]![2]]);
+    chip.dispatchEvent(new Event('pointerleave'));
+    expect(landed()).toEqual(want);
+    // The note written, the board still shows them; the next position, none.
+    go(el, 3);
+    expect(landed()).toEqual(want);
+    go(el, 1);
+    expect(walk.frames[script[i + 5]!.frame]!.update?.name ?? walk.frames[script[i + 5]!.frame]!.kind).not.toBe('C1');
+    expect(landed()).toEqual([]);
+    expect(names()).toEqual([]);
+  });
+
+  it('a value not given yet waits in a ruled box: a dashed edge means where a move left from, and nothing else', async () => {
+    const { readFileSync } = await import('node:fs');
+    const css = readFileSync('src/elements/pogo-qsteps.css', 'utf8').replace(/\/\*[\s\S]*?\*\//g, '');
+    expect(css).not.toMatch(/dashed|dasharray/);
   });
 
   it('the step that values the moves marks the note it reads in the notebook, and the move gets its opposite', async () => {

@@ -147,10 +147,30 @@
   text-align: right;
 }
 
-/* A value not given yet: the box it will land in. */
+/* A value not given yet: the box it will land in, ruled (a dashed edge means where a move left from). */
 .val.empty {
-  border: 2px dashed var(--_edge);
+  border: 2px solid var(--_rule);
   min-height: 1.9em;
+}
+
+/* What the row is, and under it, for the winning moves, the moves themselves. */
+.move-label {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  min-width: 0;
+}
+
+.which {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 2px 10px;
+  font-size: 15px;
+  font-weight: 800;
+}
+
+.which:empty {
+  display: none;
 }
 
 /* The best move: its value kept as the stamp. The others step back. */
@@ -377,7 +397,7 @@
 }
 
 .formula.blank .term .n {
-  border: 2px dashed var(--_edge);
+  border-color: var(--_rule);
 }
 
 .term .n.result {
