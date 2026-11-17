@@ -1,5 +1,5 @@
 // <pogo-moves>: the board as the rules introduce it. `view="start"` is the start
-// position to read, with a key to the two sides. `view="moves"` is the computer
+// position to read, and nothing else. `view="moves"` is the computer
 // showing every kind of move the rules list (moves-demo.ts): each move is
 // announced by one short line, then its pieces are lifted, carried square by
 // square along their path, and land, each frame at the kit's one tempo. It plays by itself on screen and loops
@@ -21,8 +21,6 @@ import { t, type Lang, type StringKey } from '../kit/strings';
 import { DEMO, demoFrames, type MoveKind } from './moves-demo';
 import movesCss from './pogo-moves.css?raw';
 
-const NS = 'http://www.w3.org/2000/svg';
-
 /** How long the last landing is held before the demonstration starts again, in ms. */
 export const DEMO_REST = 2400;
 
@@ -33,42 +31,6 @@ const KIND_KEY: Record<MoveKind, StringKey> = {
   mixed: 'movesMixed',
   onto: 'movesOnto',
 };
-
-/** A piece of `colour` drawn as the board draws it, for the key. */
-function keyDisc(colour: Colour): SVGSVGElement {
-  const svg = document.createElementNS(NS, 'svg');
-  svg.setAttribute('class', 'board key-disc');
-  svg.setAttribute('viewBox', '0 0 20 20');
-  svg.setAttribute('width', '16');
-  svg.setAttribute('height', '16');
-  svg.setAttribute('aria-hidden', 'true');
-  const disc = document.createElementNS(NS, 'circle');
-  disc.setAttribute('class', `disc ${colour === 'White' ? 'white' : 'red'}`);
-  const ring = document.createElementNS(NS, 'circle');
-  ring.setAttribute('class', 'ring');
-  for (const [c, r] of [
-    [disc, '9'],
-    [ring, '8.5'],
-  ] as const) {
-    c.setAttribute('cx', '10');
-    c.setAttribute('cy', '10');
-    c.setAttribute('r', r);
-    svg.append(c);
-  }
-  return svg;
-}
-
-function legend(lang: Lang): HTMLElement {
-  const p = document.createElement('p');
-  p.className = 'legend label';
-  for (const c of ['White', 'Red'] as const) {
-    const key = document.createElement('span');
-    key.className = 'key';
-    key.append(keyDisc(c), t(lang, c === 'White' ? 'white' : 'red'));
-    p.append(key);
-  }
-  return p;
-}
 
 /** « Une pièce, un mouvement. Blanc joue a1-1-a2. »: what the move shows, then the move. */
 export function announcement(lang: Lang, k: number, mover: Colour): string {
@@ -101,7 +63,7 @@ export class PogoMoves extends PogoFigure {
 
     if (this.view === 'start') {
       const board = labelledBoard(drawBoard(initial(), { labelRoom: true, title: t(lang, 'startDescription') }));
-      root.append(board, legend(lang));
+      root.append(board);
       this.stage.append(root);
       return;
     }

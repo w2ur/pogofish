@@ -39,12 +39,14 @@ afterEach(() => {
 });
 
 describe('<pogo-moves view="start">', () => {
-  it('draws the start position with its description, a key, and nothing to press', async () => {
+  it('draws the start position with its description, and nothing else: no key to the two sides, nothing to press', async () => {
     const el = await mount('start');
     expect($(el, 'svg.board title').textContent).toContain('a1, b1 et c1');
-    expect(el.shadowRoot!.querySelectorAll('.board .disc')).toHaveLength(12 + 2);
+    // The twelve pieces of the position, and no disc of a key beside them.
+    expect(el.shadowRoot!.querySelectorAll('.disc')).toHaveLength(12);
     expect(el.shadowRoot!.querySelectorAll('button')).toHaveLength(0);
-    expect($(el, '.legend').textContent).toBe('BlancRouge');
+    expect(el.shadowRoot!.querySelector('.legend')).toBeNull();
+    expect(el.shadowRoot!.querySelector('.moves')!.textContent).not.toMatch(/Blanc|Rouge/);
   });
 });
 

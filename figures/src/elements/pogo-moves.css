@@ -1,7 +1,6 @@
 /*
- * <pogo-moves>: the start view is a board at up to 400px with the key to the
- * two sides; the moves view is the line announcing the move, the board, and the
- * transport, each centred in the figure. The line keeps the room of the longest
+ * <pogo-moves>: the start view is a board at up to 400px, alone; the moves
+ * view is the line announcing the move, the board, and the transport, each centred in the figure. The line keeps the room of the longest
  * (its sizers), so the board under it never moves.
  */
 .moves {
@@ -41,28 +40,6 @@
 
 .moves > .controls {
   justify-content: center;
-}
-
-/* The key to the two sides, under the start position. */
-.legend {
-  display: flex;
-  flex-wrap: wrap;
-  justify-content: center;
-  gap: 8px 24px;
-  margin: 0;
-  font-size: 12.8px;
-  color: var(--_ink);
-}
-
-.key {
-  display: inline-flex;
-  align-items: center;
-  gap: 8px;
-}
-
-.legend .key-disc {
-  display: inline-block;
-  max-width: none;
 }
 
 /* Read by assistive technology, not drawn. */
