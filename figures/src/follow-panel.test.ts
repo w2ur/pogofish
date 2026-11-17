@@ -2,7 +2,7 @@ import { afterEach, describe, expect, it } from 'vitest';
 import { FOLLOW_SIZE_DEFAULT, escapeAction, followShown, isFollowSize, sizeAtStart, watchInlineBoards, type ObserverCtor } from './follow-panel';
 
 describe('the follow board, its size and its close', () => {
-  it('starts as a bar; a game started on a board keeps the reader’s size, a figure’s « Jouer cette position contre l’ordinateur » opens it', () => {
+  it('starts as a bar; a game started on a board keeps the reader’s size, a figure’s « Jouer cette position » opens it', () => {
     expect(FOLLOW_SIZE_DEFAULT).toBe('bar');
     expect(sizeAtStart('bar', 'board')).toBe('bar');
     expect(sizeAtStart('dot', 'board')).toBe('dot');

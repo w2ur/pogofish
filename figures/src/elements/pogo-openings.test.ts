@@ -88,7 +88,7 @@ describe('<pogo-openings>', () => {
     expect($(el, '.lose .head').textContent).toBe('Lose: 14 replies, from White’s fastest win to the slowest');
   });
 
-  it('a board offers « Jouer cette position contre l’ordinateur », and hands over the position after both moves', async () => {
+  it('a board offers « Jouer cette position », and hands over the position after both moves', async () => {
     const el = await mount();
     const got: PlayFromDetail[] = [];
     const listen = (e: Event) => got.push((e as CustomEvent<PlayFromDetail>).detail);
@@ -96,7 +96,8 @@ describe('<pogo-openings>', () => {
     try {
       const card = reply(el, 'a3-1-b3');
       const offer = card.querySelector<HTMLButtonElement>('[data-role="play-from-here"]')!;
-      expect(offer.textContent).toBe('Jouer cette position contre l’ordinateur');
+      expect(offer.textContent).toBe('Jouer cette position');
+      expect(offer.title).toBe('Jouer cette position contre l’ordinateur');
       offer.click();
       expect(got).toHaveLength(1);
       expect(got[0]!.label).toBe('les premiers coups, c1-1-b1 a3-1-b3');

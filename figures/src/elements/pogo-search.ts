@@ -19,7 +19,7 @@ import { LC1_2, key, legal, moveName, play, type Move, type State, type Triple }
 import { labelledBoard } from '../kit/board-labels';
 import { animateMove, cellCentre, drawBoard } from '../kit/board-svg';
 import { autoplay, type Playable } from '../kit/autoplay';
-import { controlButton, transport } from '../kit/controls';
+import { controlButton, playFromAction, playFromButton, transport } from '../kit/controls';
 import { PogoFigure } from '../kit/figure';
 import { formatShare } from '../kit/score';
 import { Stepper } from '../kit/stepper';
@@ -412,12 +412,12 @@ export class PogoSearch extends PogoFigure {
       }
     };
 
-    // ---- the controls: « Lancer » and « Jouer cette position contre l’ordinateur » until the search has run, then its steps.
+    // ---- the controls: « Lancer » and « Jouer cette position » until the search has run, then its steps.
     const controls = el('div', 'search-controls');
     const playFrom = (): void => this.playFrom(s, t(lang, 'searchLabel'));
     const launch = controlButton(t(lang, 'searchRun'), () => void start());
     launch.dataset.role = 'run';
-    const fromHere = controlButton(t(lang, 'playFromHere'), playFrom, true);
+    const fromHere = playFromButton(lang, playFrom, true);
     fromHere.dataset.role = 'play-from';
     const first = el('div', 'controls');
     first.append(launch, fromHere);
@@ -482,7 +482,7 @@ export class PogoSearch extends PogoFigure {
       const row = transport(steps, {
         lang,
         counter: (i) => frameCounter(lang, frames[i]!, SEARCH_SIMS),
-        actions: [{ label: t(lang, 'playFromHere'), onClick: playFrom }],
+        actions: [playFromAction(lang, playFrom)],
       });
       controls.replaceChildren(row);
       if (reduced()) steps.go(1);

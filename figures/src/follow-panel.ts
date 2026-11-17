@@ -9,10 +9,10 @@
 // Size and close are the reader's choice and last for the page's session: the
 // store keeps them in its storage record, beside the saved game (store.ts), so a
 // reload restores them, and a follow board defined late (woken by a figure's
-// « Jouer cette position contre l’ordinateur ») finds the state the event already
+// « Jouer cette position ») finds the state the event already
 // set. Moves and the AI's replies never change them.
 
-/** How a game started: on a board (inline, or the follow board's own « Nouvelle partie »), or from a figure's « Jouer cette position contre l’ordinateur ». */
+/** How a game started: on a board (inline, or the follow board's own « Nouvelle partie »), or from a figure's « Jouer cette position ». */
 export type FollowStart = 'board' | 'figure';
 
 /** Open: the board and its controls; bar: one line, the turn and the controls; dot: one small square that reopens it. */
@@ -24,9 +24,8 @@ export const isFollowSize = (x: unknown): x is FollowSize => FOLLOW_SIZES.includ
 export const FOLLOW_SIZE_DEFAULT: FollowSize = 'bar';
 
 /**
- * The follow board's size once a game starts. A figure's « Jouer cette position
- * contre l’ordinateur » opens it: the reader asked for a board. A game started on
- * a board keeps the reader's last choice.
+ * The follow board's size once a game starts. A figure's « Jouer cette position » opens it: the reader
+ * asked for a board. A game started on a board keeps the reader's last choice.
  */
 export function sizeAtStart(size: FollowSize, how: FollowStart): FollowSize {
   return how === 'figure' ? 'open' : size;

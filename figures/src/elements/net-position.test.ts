@@ -46,7 +46,7 @@ describe('the position the net figures show', () => {
     expect(key(a.state)).toBe(key(b.state));
   });
 
-  it('a game opened from a figure with « Jouer cette position contre l’ordinateur » is the game on the board, not « votre partie »', () => {
+  it('a game opened from a figure with « Jouer cette position » is the game on the board, not « votre partie »', () => {
     const store = make();
     store.playFrom(PUZZLE5, 'la recherche d’AlphaZero');
     expect(positionWords('fr', netPosition(store))).toBe('Position\u202f: la partie du plateau, au départ.');

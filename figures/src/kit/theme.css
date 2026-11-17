@@ -144,7 +144,7 @@ slot[hidden],
   appearance: none;
   margin: 0;
   min-height: 44px;
-  /* A label too long for its row wraps (« Jouer cette position contre l’ordinateur »): its lines need room. */
+  /* A label too long for its row wraps: its lines need room. */
   padding: 6px 16px;
   border: 2px solid var(--_action);
   border-radius: 0;

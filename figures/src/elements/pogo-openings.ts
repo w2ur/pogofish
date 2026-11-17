@@ -5,7 +5,7 @@
 // and set apart, those that lose from the fastest loss to the slowest
 // (openings-verdicts.ts). The only motion is the boards landing one after the
 // other the first time the figure comes on screen; at rest everything is
-// shown. A board offers « Jouer cette position contre l’ordinateur » when it
+// shown. A board offers « Jouer cette position » when it
 // is pointed at, focused or tapped; nothing else is interactive. Each block
 // of boards is two tab stops, one board's offer and its move name, and the
 // arrow keys move both to the next board (kit/controls.ts roving).
@@ -15,7 +15,7 @@ import type { TableData } from '../data';
 import { moveName, ready } from '../engine';
 import type { ObserverCtor } from '../follow-panel';
 import { drawBoard } from '../kit/board-svg';
-import { controlButton, roving } from '../kit/controls';
+import { playFromButton, roving } from '../kit/controls';
 import { PogoFigure } from '../kit/figure';
 import { moveTip } from '../kit/move-tip';
 import { colon, t, type Lang } from '../kit/strings';
@@ -87,7 +87,7 @@ export class PogoOpenings extends PogoFigure {
       const shot = el('div', 'shot');
       const [f, n, d] = c.move;
       shot.append(drawBoard(c.after, { from: f, to: d, moving: n, title: `${announceMove(lang, 'Red', c.move)}${colon(lang)} ${verdict}.` }));
-      const offer = controlButton(t(lang, 'playFromHere'), () => {
+      const offer = playFromButton(lang, () => {
         this.playFrom(c.after, `${t(lang, 'openingsName')}, ${opening} ${name}`);
         close();
       });

@@ -2,13 +2,13 @@
 // replays a line of the solved-table extract, one ply per step, under the rules
 // the page names (line-frames.ts). Each step says the move and, under lc1-2,
 // how often the position has stood; the last says who wins and how. Under
-// game A the loop plays on without end. « Jouer cette position contre l’ordinateur » hands any open position
+// game A the loop plays on without end. « Jouer cette position » hands any open position
 // to the playable board.
 import { announceMove } from '../board-state';
 import { WASM_FILE, assetUrl } from '../assets';
 import type { TableData } from '../data';
 import { LC1_2, ready, terminal } from '../engine';
-import { progress, transport } from '../kit/controls';
+import { playFromAction, progress, transport } from '../kit/controls';
 import { autoplay } from '../kit/autoplay';
 import { PogoFigure } from '../kit/figure';
 import { Stepper } from '../kit/stepper';
@@ -104,13 +104,10 @@ export class PogoLine extends PogoFigure {
       unit: 'move',
       counter: progress(lang, 'move', true),
       actions: [
-        {
-          label: t(lang, 'playFromHere'),
-          onClick: () => {
+        playFromAction(lang, () => {
             const f = frames[stepper.index]!;
             this.playFrom(f.state, `${t(lang, LINE_KEY[name])}, ${t(lang, 'ply')} ${f.ply}`);
-          },
-        },
+          }),
       ],
     });
     const playHere = row.querySelector<HTMLButtonElement>('[data-role="action"]');

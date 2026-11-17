@@ -1,7 +1,7 @@
 import { REDUCED_MOTION, resetMedia, setMedia } from '../test-dom';
 import { readFileSync } from 'node:fs';
 import { resolve } from 'node:path';
-import { choiceGroup, progress, roving, transport } from './controls';
+import { choiceGroup, playFromAction, playFromButton, progress, roving, transport } from './controls';
 import { Stepper } from './stepper';
 
 beforeEach(() => {
@@ -232,6 +232,18 @@ describe('choiceGroup', () => {
     expect(rule).toContain('border-style: solid');
     expect(rule).toContain('border-color: var(--_edge)');
     expect(rule).toContain('color: var(--_muted)');
+  });
+
+  // Regression: « Jouer cette position contre l’ordinateur » wrapped on two tight lines in its 400px
+  // block. The label is the short form; the full sentence is the button's description and tooltip.
+  it('« Jouer cette position »: a short label, the full sentence as its description', () => {
+    const b = playFromButton('fr', () => {});
+    expect(b.textContent).toBe('Jouer cette position');
+    expect(b.title).toBe('Jouer cette position contre l’ordinateur');
+    const a = playFromAction('en', () => {});
+    expect([a.label, a.title]).toEqual(['Play this position', 'Play this position against the computer']);
+    const row = transport(new Stepper(2, () => {}), { lang: 'fr', actions: [a] });
+    expect(row.querySelector<HTMLButtonElement>('[data-role="action"]')!.title).toBe('Play this position against the computer');
   });
 
   it('the theme draws a checked choice as the filled block', () => {

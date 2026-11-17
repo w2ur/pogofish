@@ -96,6 +96,7 @@ function demo(): CustomElementConstructor {
           { label: t(l, 'restart'), onClick: () => stepper.go(0) },
           {
             label: t(l, 'playFromHere'),
+            title: t(l, 'playFromHereLong'),
             onClick: () => this.playFrom(states[stepper.index]!, `demo-${stepper.index}`),
           },
         ],
@@ -206,7 +207,7 @@ async function build(): Promise<void> {
     }
     specimen.append(row);
   }
-  specimen.append(transport(new Stepper(8, () => {}), { lang: l, actions: [{ label: t(l, 'playFromHere'), onClick: () => {} }] }));
+  specimen.append(transport(new Stepper(8, () => {}), { lang: l, actions: [{ label: t(l, 'playFromHere'), title: t(l, 'playFromHereLong'), onClick: () => {} }] }));
   app.append(kitBox(specimen));
 
   app.append(heading('drawBoard · initial, mid-game, a move · 160px bare, 240px and 400px with labelledBoard (labels stay 12.8px)'));

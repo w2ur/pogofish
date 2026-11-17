@@ -20,6 +20,8 @@ const NS = 'http://www.w3.org/2000/svg';
 export interface TransportAction {
   label: string;
   onClick: () => void;
+  /** The control's description, when its label is the short form of a sentence: its title too. */
+  title?: string;
 }
 
 export interface TransportOptions {
@@ -32,14 +34,30 @@ export interface TransportOptions {
 }
 
 /** A button with the kit's control style; `secondary` is the outlined block. */
-export function controlButton(label: string, onClick: () => void, secondary = false): HTMLButtonElement {
+export function controlButton(label: string, onClick: () => void, secondary = false, title?: string): HTMLButtonElement {
   const b = document.createElement('button');
   b.type = 'button';
   b.className = secondary ? 'control secondary' : 'control';
+  // The full sentence a short label stands for: the button's description, and its tooltip.
+  if (title) b.title = title;
   // The control cut is uppercase: a symbol in the label keeps its case.
   b.append(...keepCase(label));
   b.addEventListener('click', onClick);
   return b;
+}
+
+/**
+ * « Jouer cette position »: the action every figure offers to hand its position to the board. The
+ * label stays on one line in a 400px block; the full sentence, « … contre l’ordinateur », is its
+ * description and tooltip.
+ */
+export function playFromAction(lang: Lang, onClick: () => void): TransportAction {
+  return { label: t(lang, 'playFromHere'), title: t(lang, 'playFromHereLong'), onClick };
+}
+
+/** The same action as a button of its own, outside a transport. */
+export function playFromButton(lang: Lang, onClick: () => void, secondary = false): HTMLButtonElement {
+  return controlButton(t(lang, 'playFromHere'), onClick, secondary, t(lang, 'playFromHereLong'));
 }
 
 /** A 16px icon, drawn in the button's own colour, hidden from assistive tech: the button's label names it. */
@@ -115,7 +133,7 @@ export function transport(stepper: Stepper, o: TransportOptions): HTMLElement {
   const playTip = labelTip(play, t(o.lang, 'play'));
 
   const extras = (o.actions ?? []).map((a) => {
-    const b = controlButton(a.label, a.onClick, true);
+    const b = controlButton(a.label, a.onClick, true, a.title);
     b.dataset.role = 'action';
     return b;
   });

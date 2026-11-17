@@ -129,7 +129,7 @@ describe('<pogo-line>', () => {
     expect(el.shadowRoot!.querySelector('[role="status"]')!.textContent).toContain('This position for the 3rd time');
   });
 
-  it('« Jouer cette position contre l’ordinateur » hands the shown position to the board, named by line and ply', async () => {
+  it('« Jouer cette position » hands the shown position to the board, named by line and ply', async () => {
     const el = await mount('openingWin', 'A');
     const got: PlayFromDetail[] = [];
     document.addEventListener('pogo:playfrom', (e) => got.push((e as CustomEvent<PlayFromDetail>).detail), { once: true });

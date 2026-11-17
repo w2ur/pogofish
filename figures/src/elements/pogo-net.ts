@@ -25,7 +25,7 @@ import { LC1_2, key, moveName, replay, terminal, type Colour, type Move, type St
 import { autoplay, type Playable } from '../kit/autoplay';
 import { labelledBoard } from '../kit/board-labels';
 import { drawBoard } from '../kit/board-svg';
-import { progress, transport } from '../kit/controls';
+import { playFromAction, progress, transport } from '../kit/controls';
 import { PogoFigure } from '../kit/figure';
 import { moveTip } from '../kit/move-tip';
 import { formatShare } from '../kit/score';
@@ -430,7 +430,7 @@ export class PogoNet extends PogoFigure {
         lang,
         unit: 'move',
         counter: (i, n) => (n === 1 ? `${t(lang, 'position').toLowerCase()} 1 ${t(lang, 'outOf')} 1` : count(i, n)),
-        actions: [{ label: t(lang, 'playFromHere'), onClick: () => this.playFrom(positions[s.index]!.state, t(lang, 'netName')) }],
+        actions: [playFromAction(lang, () => this.playFrom(positions[s.index]!.state, t(lang, 'netName')))],
       });
       controls.replaceChildren(row);
       if (start !== 0) s.go(start);

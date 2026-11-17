@@ -318,7 +318,8 @@ describe('<pogo-net>', () => {
     const heard: string[] = [];
     el.addEventListener('pogo:playfrom', (e) => heard.push(key((e as CustomEvent<{ state: State }>).detail.state)));
     const action = $(el, '[data-role="action"]');
-    expect(action.textContent).toBe('Jouer cette position contre l’ordinateur');
+    expect(action.textContent).toBe('Jouer cette position');
+    expect(action.title).toBe('Jouer cette position contre l’ordinateur');
     action.click();
     expect(heard).toEqual([key(defaultPosition())]);
   });

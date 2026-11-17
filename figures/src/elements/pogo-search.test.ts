@@ -265,7 +265,7 @@ describe('<pogo-search>', () => {
     expect(at).toBeLessThan(100);
   });
 
-  it('« Jouer cette position contre l’ordinateur » hands the searched position to the store', async () => {
+  it('« Jouer cette position » hands the searched position to the store', async () => {
     const el = await mount('puzzle5');
     const heard = vi.fn();
     document.addEventListener('pogo:playfrom', heard);
