@@ -75,10 +75,11 @@ describe('round 3, lot B2: three figures that use the width', () => {
     expect(rule(s, '.game')).toContain('margin-inline: auto');
   });
 
-  it('pogo-td-targets: boards, chart and numbers share one column per position; the strip and the numbers go under 520px', () => {
+  it('pogo-td-targets: chart and ticks share one column per position; the sum sits beside the two positions from 520px, under them below', () => {
     const s = css('pogo-td-targets');
     expect(rule(s, '.row')).toContain('grid-template-columns: repeat(var(--n), minmax(0, 1fr))');
-    expect(s).toMatch(/@container \(max-width: 519\.98px\) \{[^}]*\.row\.boards,[^}]*display: none/);
+    expect(rule(s, '.glass')).toContain('grid-template-columns: minmax(0, 1fr)');
+    expect(s).toMatch(/@container \(min-width: 520px\) \{\s*\.film \{[^}]*\}\s*\.glass \{\s*grid-template-columns: minmax\(0, 1fr\) minmax\(0, 1fr\)/);
     expect(rule(s, '.td-targets > .controls')).toContain('justify-content: center');
   });
 
