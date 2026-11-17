@@ -406,6 +406,7 @@ export class PogoNet extends PogoFigure {
       // The counter counts the moves played in the line shown; a line of one position says so.
       const row = transport(s, {
         lang,
+        unit: 'move',
         counter: (i, n) => (n === 1 ? `${t(lang, 'position').toLowerCase()} 1 ${t(lang, 'outOf')} 1` : count(i, n)),
         actions: [{ label: t(lang, 'playFromHere'), onClick: () => this.playFrom(positions[s.index]!.state, t(lang, 'netName')) }],
       });

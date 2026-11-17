@@ -287,3 +287,11 @@ describe('inputText', () => {
     expect(inputText('en', 0.25)).toBe('0.25');
   });
 });
+
+describe('<pogo-encoding> transport', () => {
+  it('names its step buttons by the move, since each step is a move of a game', async () => {
+    const el = await mount();
+    const name = (r: string) => el.shadowRoot!.querySelector(`[data-role="${r}"]`)!.getAttribute('aria-label');
+    expect([name('previous'), name('next')]).toEqual(['Revenir au coup précédent', 'Passer au coup suivant']);
+  });
+});

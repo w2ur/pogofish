@@ -152,7 +152,7 @@ export class PogoMoves extends PogoFigure {
 
     const stepper = new Stepper(frames.length, show, { signal, interval: DEMO_INTERVAL, wrapTo: 0, rest: DEMO_REST });
     const of = t(lang, 'outOf');
-    const row = transport(stepper, { lang, counter: (i) => `${t(lang, 'ply')} ${frames[i]!.move + 1} ${of} ${DEMO.length}` });
+    const row = transport(stepper, { lang, unit: 'move', counter: (i) => `${t(lang, 'ply')} ${frames[i]!.move + 1} ${of} ${DEMO.length}` });
     show(0);
     root.append(said, play, row, live);
     this.stage.append(root);

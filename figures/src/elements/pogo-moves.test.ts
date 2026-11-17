@@ -127,3 +127,11 @@ describe('<pogo-moves view="moves">', () => {
     expect(live.textContent).toBe('Onto an occupied square: the pieces go on top. Red plays a3-2-a1.');
   });
 });
+
+describe('<pogo-moves> transport', () => {
+  it('names its step buttons by the move, since each step is a move of a game', async () => {
+    const el = await mount('moves');
+    const name = (r: string) => el.shadowRoot!.querySelector(`[data-role="${r}"]`)!.getAttribute('aria-label');
+    expect([name('previous'), name('next')]).toEqual(['Revenir au coup précédent', 'Passer au coup suivant']);
+  });
+});

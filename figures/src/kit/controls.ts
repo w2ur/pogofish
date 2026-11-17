@@ -27,6 +27,8 @@ export interface TransportOptions {
   actions?: TransportAction[];
   /** The counter's text for step `i` of `steps` (default « étape i + 1 sur steps », progress()). */
   counter?: (i: number, steps: number) => string;
+  /** What a step is, for the previous and next buttons' names: 'step' (default), or 'move' when each step is a move of a game. */
+  unit?: 'step' | 'move';
 }
 
 /** A button with the kit's control style; `secondary` is the outlined block. */
@@ -90,13 +92,14 @@ export function progress(lang: Lang, unit: 'step' | 'move', fromStart = false): 
 
 /** Builds the row and keeps it in step with `stepper`, including reduced motion switched mid-read. */
 export function transport(stepper: Stepper, o: TransportOptions): HTMLElement {
-  const format = o.counter ?? progress(o.lang, 'step');
+  const unit = o.unit ?? 'step';
+  const format = o.counter ?? progress(o.lang, unit);
   const row = document.createElement('div');
   row.className = 'controls';
 
-  const prev = iconButton('left', t(o.lang, 'previous'), () => stepper.prev());
+  const prev = iconButton('left', t(o.lang, unit === 'move' ? 'previousMove' : 'previous'), () => stepper.prev());
   prev.dataset.role = 'previous';
-  const next = iconButton('right', t(o.lang, 'next'), () => stepper.next());
+  const next = iconButton('right', t(o.lang, unit === 'move' ? 'nextMove' : 'next'), () => stepper.next());
   next.dataset.role = 'next';
   const counter = document.createElement('span');
   counter.className = 'label num counter';

@@ -209,7 +209,7 @@ export class PogoGreedy extends PogoFigure {
     show(0);
     const body = el('div', 'game');
     body.append(slot, panel);
-    root.append(body, transport(stepper, { lang, counter: progress(lang, 'move', true) }), live);
+    root.append(body, transport(stepper, { lang, unit: 'move', counter: progress(lang, 'move', true) }), live);
     autoplay(this, stepper, { signal, still: () => stepper.go(stepper.steps - 1) });
     this.stage.append(root);
   }

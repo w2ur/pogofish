@@ -101,6 +101,7 @@ export class PogoLine extends PogoFigure {
     const stepper = new Stepper(frames.length, show, { signal, interval: 1100, ...(cyclic ? { wrapTo: 1, rest: LOOP_REST } : {}) });
     const row = transport(stepper, {
       lang,
+      unit: 'move',
       counter: progress(lang, 'move', true),
       actions: [
         {

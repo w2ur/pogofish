@@ -294,7 +294,7 @@ export class PogoEncoding extends PogoFigure {
       { signal, interval: DEMO_INTERVAL },
     );
     const count_ = progress(lang, 'move', true);
-    const demoRow = transport(stepper, { lang, counter: (i, n) => (offDemo ? t(lang, 'yourTurn') : count_(i, n)) });
+    const demoRow = transport(stepper, { lang, unit: 'move', counter: (i, n) => (offDemo ? t(lang, 'yourTurn') : count_(i, n)) });
     demoRow.classList.add('demo');
     /** The reader took the board: the demonstration stops, and never starts again by itself. */
     function touch(): void {

@@ -99,6 +99,19 @@ describe('transport', () => {
     expect(progress('fr', 'step', true)(0, 6)).toBe('étape 0 sur 5');
   });
 
+  it('names the step buttons by the figure’s unit: « étape » by default, « coup » when the steps are moves of a game', () => {
+    const s = new Stepper(8, () => {});
+    const tip = (b: HTMLElement) => b.querySelector('[role="tooltip"]')!.textContent;
+    const step = parts(transport(s, { lang: 'fr' }));
+    expect([step.prev.getAttribute('aria-label'), step.next.getAttribute('aria-label')]).toEqual(['Revenir à l’étape précédente', 'Passer à l’étape suivante']);
+    const fr = parts(transport(s, { lang: 'fr', unit: 'move' }));
+    expect([fr.prev.getAttribute('aria-label'), fr.next.getAttribute('aria-label')]).toEqual(['Revenir au coup précédent', 'Passer au coup suivant']);
+    expect([tip(fr.prev), tip(fr.next)]).toEqual(['Revenir au coup précédent', 'Passer au coup suivant']);
+    expect(fr.counter.textContent).toBe('coup 1 sur 8');
+    const en = parts(transport(s, { lang: 'en', unit: 'move' }));
+    expect([en.prev.getAttribute('aria-label'), en.next.getAttribute('aria-label')]).toEqual(['Go back one move', 'Go forward one move']);
+  });
+
   it('every icon button shows its name on hover and focus, and the play square follows its state', () => {
     const s = new Stepper(3, () => {});
     const { prev, next, play } = parts(transport(s, { lang: 'en' }));

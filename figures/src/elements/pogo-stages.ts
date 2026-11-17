@@ -295,7 +295,7 @@ export class PogoStages extends PogoFigure {
       const s = script.steps[i]!;
       return `${t(lang, 'progressStep')} ${s.stage + 1} ${of} ${n}\u00a0· ${t(lang, 'ply')} ${s.ply} ${of} ${games[s.stage]!.length - 1}`;
     };
-    const row = transport(stepper, { lang, counter });
+    const row = transport(stepper, { lang, unit: 'move', counter });
 
     /** The reader picks a stage on the curve: its game starts, and plays unless motion is reduced. */
     const choose = (k: number): void => {

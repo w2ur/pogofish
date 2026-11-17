@@ -247,3 +247,11 @@ describe('<pogo-stages>', () => {
     error.mockRestore();
   });
 });
+
+describe('<pogo-stages> transport', () => {
+  it('names its step buttons by the move, since each step is a move of a game', async () => {
+    const el = await mount('td');
+    const name = (r: string) => el.shadowRoot!.querySelector(`[data-role="${r}"]`)!.getAttribute('aria-label');
+    expect([name('previous'), name('next')]).toEqual(['Revenir au coup précédent', 'Passer au coup suivant']);
+  });
+});
