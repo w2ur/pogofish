@@ -1,5 +1,5 @@
 import { afterEach, describe, expect, it, vi } from 'vitest';
-import { labelTip, moveText, moveTip, moveWords, tipControl } from './move-tip';
+import { labelTip, moveText, moveTip, moveWords } from './move-tip';
 import { controlButton } from './controls';
 
 afterEach(() => {
@@ -11,7 +11,6 @@ const tipOf = (holder: Element): HTMLElement => {
   return holder.querySelector<HTMLElement>(`#${id}`)!;
 };
 const shown = (holder: Element): boolean => tipOf(holder).hasAttribute('data-open');
-const focusables = (el: Element): Element[] => [...el.querySelectorAll('[tabindex], button, a[href], input, select, textarea')];
 
 describe('moveWords', () => {
   it('says the move in words, one piece or several, in both languages', () => {
@@ -78,23 +77,6 @@ describe('moveTip', () => {
     const tip = tipOf(name);
     expect(tip.style.left).toMatch(/px$/);
     expect(tip.style.top).toMatch(/px$/);
-  });
-});
-
-describe('tipControl', () => {
-  it('makes the control itself described, with nothing focusable nested', () => {
-    const b = controlButton('', () => {}, true);
-    b.setAttribute('aria-describedby', 'other');
-    b.append('b1-2-b3');
-    tipControl(b, 'fr', [1, 2, 7]);
-    document.body.append(b);
-    expect(b.getAttribute('aria-describedby')).toMatch(/^other move-tip-\d+$/);
-    expect(tipOf(b).textContent).toBe('De b1, 2 pièces, vers b3.');
-    expect(focusables(b)).toEqual([]);
-    b.focus();
-    expect(shown(b)).toBe(true);
-    b.dispatchEvent(new KeyboardEvent('keydown', { key: 'Escape', bubbles: true }));
-    expect(shown(b)).toBe(false);
   });
 });
 

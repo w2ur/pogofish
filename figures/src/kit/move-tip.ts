@@ -1,13 +1,10 @@
 // A move's name (« a3-1-b3 ») with its explanation in words (« De a3, 1 pièce,
 // vers b3. »): shown in a small tooltip on hover and on focus (a tap focuses),
-// dismissed by Escape, and the name's accessible description. Two forms:
+// dismissed by Escape, and the name's accessible description.
 //
-// - moveTip(): the name as its own element, a tab stop (it is the only way a
-//   keyboard reaches the explanation), and moveText(), which wraps every move
-//   name a sentence holds;
-// - tipControl(): a name that sits inside an existing control (a row of the
-//   openings list): nothing nested is focusable, the explanation is the
-//   control's own tooltip and part of its description.
+// moveTip() is the name as its own element, a tab stop (it is the only way a
+// keyboard reaches the explanation), and moveText() wraps every move name a
+// sentence holds.
 //
 // The same tooltip names an icon control (▶, ⏸, a chevron, a close cross):
 // labelTip() shows the control's aria-label, a full verb phrase, on hover, on
@@ -160,11 +157,6 @@ export function moveTip(lang: Lang, move: Move | Triple, hooks?: TipHooks): HTML
   name.textContent = moveName(m);
   wire(name, tooltip(lang, m), hooks);
   return name;
-}
-
-/** A move's name inside an existing control: the control carries the explanation; nothing nested is focusable. */
-export function tipControl(control: HTMLElement, lang: Lang, m: Move | Triple, hooks?: TipHooks): void {
-  wire(control, tooltip(lang, asTriple(m)), hooks);
 }
 
 /** An icon control's name, `text`, shown as its tooltip (see the header); `set` changes it with the control's state. */
