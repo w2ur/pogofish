@@ -1,9 +1,9 @@
 /*
- * <pogo-count>: one line, the drawing, the transport, all centred. The
- * drawing holds the board and the row of 20 places (count-view.ts): the row
- * under the board, or beside it from 720px, where the figure uses the width.
- * The line that says whose turn it is is laid over the drawing, under the
- * board, at the page's own type size whatever the drawing's scale.
+ * <pogo-count>: one line, then the drawing, centred. The drawing holds the
+ * board and the row of 20 places (count-view.ts): the row under the board,
+ * or beside it from 720px, where the figure uses the width. Everything the
+ * reader reads or presses is laid over the drawing as HTML, placed by
+ * percentages, so its type keeps the page's size whatever the drawing's scale.
  */
 :host {
   container-type: inline-size;
@@ -11,22 +11,21 @@
 
 /*
  * The room the figure keeps before it renders: the drawing follows the width (its
- * height over its width, per layout), the line and the transport do not. Measured
- * on the harness (2026-11-16; the invitation line added 2026-11-17).
+ * height over its width, per layout: count-view.ts), the line above it and the gap do not.
  */
 .stage {
-  min-height: calc(126.1cqi + 215px);
+  min-height: calc(138.8cqi + 56px);
 }
 
 @container (min-width: 480px) {
   .stage {
-    min-height: calc(64.9cqi + 168px);
+    min-height: calc(74cqi + 56px);
   }
 }
 
 @container (min-width: 720px) {
   .stage {
-    min-height: calc(32.8cqi + 168px);
+    min-height: calc(34.6cqi + 56px);
   }
 }
 
@@ -42,17 +41,23 @@
   margin: 0;
 }
 
-.count > .controls {
-  justify-content: center;
+/* One line above the drawing: what the introduction says, then the invitation in its place. Two lines' room, so the drawing never moves. */
+.top {
+  display: grid;
+  justify-items: center;
+  align-items: end;
+  min-height: 42px;
 }
 
-/* Two lines kept for the longest sentence, so the drawing never moves. */
-.line {
-  display: flex;
-  align-items: flex-end;
-  justify-content: center;
-  min-height: 2.8em;
-  max-width: 44ch;
+.top > * {
+  grid-area: 1 / 1;
+}
+
+.say {
+  max-width: 52ch;
+  font-size: 15px;
+  line-height: 1.4;
+  color: var(--_ink);
 }
 
 .scene {
@@ -62,6 +67,7 @@
 }
 
 .drawing {
+  display: block;
   width: 100%;
   height: auto;
   overflow: visible;
@@ -79,21 +85,30 @@
   fill: var(--_ink);
 }
 
+/* The reading order of the board, at its left: ink arrows, as the kit's reading marks. */
+.order path {
+  fill: none;
+  stroke: var(--_ink);
+  stroke-width: 2.5px;
+  stroke-linecap: square;
+  vector-effect: non-scaling-stroke;
+}
+
 /*
- * The trace: where the pieces are not. Under a position, its row; over a row,
- * the position it folds into. One dimmed layer, so a stack keeps its look.
- * Once the reader edits, both sides are theirs: the trace is drawn in full.
+ * The twins: where the pieces of the introduction are not. Under a position, its row; over
+ * a row, the position it folds into. One dimmed layer, so a stack keeps its look. Once the
+ * toy is the reader's, both sides are whole.
  */
-.traces {
+.twins {
   opacity: 0.3;
+  transition: opacity 300ms ease-out;
 }
 
-.count[data-edit] .traces {
+.count[data-toy='ready'] .twins {
   opacity: 1;
-  animation: none;
 }
 
-.traces[data-fresh] {
+.twins[data-fresh] {
   animation: trace 700ms ease-out 250ms backwards;
 }
 
@@ -104,23 +119,24 @@
 }
 
 /*
- * What the reader taps, over the drawing: the board's squares (board-input.ts, the kit's
- * cell buttons) and the row's twenty places. Transparent; a picked one is framed in ink.
+ * What the reader presses, over the drawing: the board's squares (the kit's cell buttons,
+ * under the squares' names) and the row's twenty places (the kit's drag places).
  */
 .board-hit,
-.row-hits {
+.row-hits,
+.run-names {
   position: absolute;
   inset: 0;
   pointer-events: none;
 }
 
+.board-hit {
+  inset: auto;
+}
+
 .board-hit .cells,
 .row-hit {
   pointer-events: auto;
-}
-
-.board-hit .cells {
-  inset: 0;
 }
 
 .row-hit {
@@ -130,11 +146,6 @@
   padding: 0;
   border: 0;
   background: transparent;
-  cursor: pointer;
-}
-
-.board-hit .cell-button[data-actionable] {
-  cursor: pointer;
 }
 
 .row-hit:focus-visible {
@@ -142,37 +153,131 @@
   outline-offset: 0;
 }
 
-.board-hit .cell-button[aria-pressed='true'],
-.row-hit[aria-pressed='true'] {
-  outline: 3px solid var(--_ink);
-  outline-offset: -3px;
+/*
+ * While a pointer drags, the row already shows the drop: the place the thing left holds
+ * its neighbour by then, and is not framed.
+ */
+.count[data-dragging] .row-hit[data-held] {
+  outline: none;
 }
 
-/* The invitation, under the drawing, at the label size. */
-.invite {
-  max-width: 52ch;
+/* What the pointer holds follows it, over the rest. */
+.pc[data-held],
+.bar[data-held] {
+  pointer-events: none;
+}
+
+/*
+ * Under the board, one box and one thing in it: the line that says whose turn it is, or,
+ * while a stack is lifted, the count chooser in its place.
+ */
+.under {
+  position: absolute;
+  display: grid;
+  justify-items: center;
+  align-items: start;
+  padding-top: 6px;
+  box-sizing: border-box;
+  line-height: 1.2;
+}
+
+.under > * {
+  grid-area: 1 / 1;
+}
+
+.under .counts {
+  justify-content: center;
+}
+
+.count[data-layout='wide'] .under {
+  justify-items: start;
+}
+
+/* Narrow, the chooser's label takes a line of its own, over its three counts. */
+.count[data-layout='narrow'] .under .counts {
+  row-gap: 4px;
+}
+
+.count[data-layout='narrow'] .under .counts > .label {
+  flex-basis: 100%;
+  text-align: center;
+}
+
+/* Beside the row, the turn line stays under the board's middle. */
+.count[data-layout='wide'] .under .turn {
+  width: 57.7%;
+}
+
+.count[data-lifted] .under .turn {
+  visibility: hidden;
+}
+
+/* The row's arrow: over its first places, with the one thing it cannot say. */
+.row-head {
+  position: absolute;
+  transform: translateY(-100%);
+  padding-bottom: 4px;
+  line-height: 1.2;
+  white-space: nowrap;
+}
+
+/* Each run of pieces carries its square's name, the board's own cut. */
+.run-names {
+  inset: auto 0 auto 0;
+  height: 0;
+}
+
+.run-name {
+  position: absolute;
+  top: 5px;
+  transform: translateX(-50%);
+  padding: 1px 2px;
   font-size: 12.8px;
-  color: var(--_ink-2);
+  font-stretch: 125%;
+  font-weight: 800;
+  letter-spacing: 0.02em;
+  line-height: 1;
+  color: var(--_muted);
+}
+
+.run-name[hidden] {
+  display: none;
+}
+
+/* The stack lifted on the board: its run's name is stamped, the flyer's inverted block. */
+.run-name[data-on] {
+  background: var(--_ink);
+  color: var(--_ground);
 }
 
 /* Whose turn: under the board, a piece of the colour and its words. A tap passes it. */
 .turn {
   appearance: none;
   margin: 0;
+  padding: 0;
   border: 0;
   background: transparent;
   font-family: inherit;
   cursor: pointer;
-  position: absolute;
+  min-height: 28px;
   display: flex;
   align-items: center;
   justify-content: center;
   gap: 8px;
-  padding-top: 8px;
   font-size: 12.8px;
   font-weight: 800;
   line-height: 1.2;
   color: var(--_ink);
+}
+
+.turn:focus-visible {
+  outline: 2px solid var(--_ink);
+  outline-offset: -2px;
+}
+
+.turn-text {
+  text-decoration: underline 1px;
+  text-underline-offset: 3px;
 }
 
 .turn-piece {
@@ -188,15 +293,12 @@
   background: var(--_red);
 }
 
-/* The turn has just passed: its line is stamped, the flyer's inverted block, while the step lasts. */
-.turn[data-passed] .turn-text {
-  padding: 2px 6px;
-  background: var(--_ink);
-  color: var(--_ground);
-}
-
 @media (prefers-reduced-motion: reduce) {
-  .traces[data-fresh] {
+  .twins {
+    transition: none;
+  }
+
+  .twins[data-fresh] {
     animation: none;
   }
 }

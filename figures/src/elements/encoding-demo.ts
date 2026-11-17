@@ -1,4 +1,4 @@
-// The demonstration <pogo-encoding> plays by itself: from the essay's position
+// The introduction <pogo-encoding> plays once (kit/toy.ts): from the essay's position
 // (net-position.ts: the default game after DEFAULT_PLY moves), the next moves
 // of that same game, so the grid is seen following a board that changes. Every
 // position comes from the engine.
@@ -6,8 +6,8 @@ import { DEFAULT_GAME } from '../default-game';
 import { replay, type State, type Triple } from '../engine';
 import { DEFAULT_PLY, defaultPosition } from './net-position';
 
-/** Moves the demonstration plays. */
-export const DEMO_MOVES = 4;
+/** Moves the introduction plays: the turn passes, and passes back. */
+export const DEMO_MOVES = 2;
 
 export interface EncodingDemo {
   /** The essay's position, then one position per move played. */

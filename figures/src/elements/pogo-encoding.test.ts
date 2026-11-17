@@ -3,11 +3,11 @@ import { resolve } from 'node:path';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { features, key, legal, play, type State, type Triple } from '../engine';
 import { createStore, type Store } from '../store';
-import { REDUCED_MOTION, intersect, leave, playState, resetMedia, setMedia } from '../test-dom';
+import { REDUCED_MOTION, intersect, leave, resetMedia, setMedia } from '../test-dom';
 import { encodingDemo } from './encoding-demo';
 import { encodingDiff } from './encoding-diff';
 import { defaultPosition } from './net-position';
-import { DEMO_INTERVAL, PogoEncoding, inputText } from './pogo-encoding';
+import { INTRO_MOVE, INTRO_REST, PogoEncoding, inputText } from './pogo-encoding';
 
 if (!customElements.get('pogo-encoding')) customElements.define('pogo-encoding', PogoEncoding);
 
@@ -43,6 +43,8 @@ const $$ = (el: Element, s: string) => [...el.shadowRoot!.querySelectorAll<HTMLE
 const cellButton = (el: Element, i: number) => $(el, `.cell-button[data-cell="${i}"]`) as HTMLButtonElement;
 const values = (el: Element) => $$(el, '.v').map((c) => c.textContent);
 const shownKey = (el: Element) => $(el, '.encoding').dataset.position;
+const phase = (el: Element) => $(el, '.encoding').dataset.toy;
+const stamped = (el: Element) => $$(el, '.enc-row.on .c-name').map((n) => n.textContent);
 const expected = (s: State, lang: 'fr' | 'en' = 'fr') => Array.from(features(s)).map((v) => inputText(lang, v));
 /** Plays `m` on the figure's board as a reader does: the stack, the count, the landing. */
 function playByHand(el: Element, [from, n, to]: Triple): void {
@@ -76,16 +78,28 @@ describe('<pogo-encoding>', () => {
   });
 
   // Regression: at 390px the grid's digits were set at ~9px (clamp from 9.5px at 3.3cqi), under the
-  // page's 12.8px floor. Narrow, the grid now scrolls sideways in its own box at 12.8px.
-  it('never sets the grid under 12.8px: narrow, it scrolls sideways inside the figure', async () => {
-    expect(sheet).toMatch(/\.enc-table \{[^}]*font-size: clamp\(12\.8px,/);
-    expect(sheet).toMatch(/\.enc-wrap \{[^}]*overflow-x: auto;/);
-    expect(sheet).toMatch(/@container \(max-width: 499px\) \{\s*\.enc-table \{[^}]*font-size: 12\.8px;/);
+  // page's 12.8px floor. They keep 12.8px at every width; the grid no longer scrolls sideways in a
+  // box of its own (it left the figure's box by 68px at 320px): narrow, the digits take the face's
+  // narrow cut and the columns close up.
+  it('never sets the grid under 12.8px, and never wider than the figure: narrow, the digits narrow and the columns close up', async () => {
+    expect(sheet).toMatch(/\.enc-table \{[^}]*font-size: 12\.8px;/);
+    expect(sheet).not.toMatch(/\.enc-table \{[^}]*min-width/);
+    expect(sheet.match(/overflow-x|overflow: auto|overflow: scroll/g)).toBeNull();
+    const narrow = sheet.slice(sheet.indexOf('@container (max-width: 499px)'));
+    expect(narrow).toMatch(/\.v \{\s*font-stretch: 75%;/);
+    expect(narrow).toMatch(/\.enc-table \{\s*--gap: 1px;/);
+    // No size is set under the floor anywhere in the sheet.
+    for (const [, px] of sheet.matchAll(/font-size: (?:max\(1em, )?([\d.]+)px/g)) expect(Number(px)).toBeGreaterThanOrEqual(11);
     const el = await mount('fr');
-    const wrap = $(el, '.enc-wrap');
-    expect(wrap.tabIndex).toBe(0);
-    expect(wrap.getAttribute('role')).toBe('region');
-    expect(wrap.getAttribute('aria-label')).toBe('Les 127 entrées du réseau');
+    // The grid is no scrolling region: nothing to reach by keyboard but the board and its buttons.
+    expect(el.shadowRoot!.querySelector('.enc-wrap, [role="region"]')).toBeNull();
+    expect($(el, '.enc-table').tabIndex).toBe(-1);
+  });
+
+  // Regression: « Aux Rouges de jouer » was pulled 4px out of the figure's box by a negative margin
+  // (measured at 566px by lot K5).
+  it('nothing is pulled out of the figure’s box by a negative margin', () => {
+    expect(sheet).not.toMatch(/margin(-left|-right|-inline)?: -/);
   });
 
   // A visitor read « +1 = pièce rouge » without seeing the essay's « +1 pour le joueur dont c'est le
@@ -100,11 +114,31 @@ describe('<pogo-encoding>', () => {
     expect($(en, '.key').textContent).toBe('Red to move: +1 for the player whose turn it is, here Red; −1 for the opponent, here White; 0 if there is no piece.');
   });
 
-  it('invites the reader to play on its board, in one line under it', async () => {
+  it('invites the reader to play on its board, in one line directly above it, and no « à vous » is left', async () => {
     const el = await mount();
-    expect($(el, '.invite').textContent).toBe('Jouez sur le plateau, les deux couleurs tour à tour : les 127 nombres suivent.');
-    expect($(el, '.invite').previousElementSibling!.classList.contains('play')).toBe(true);
-    expect($(await mount('en'), '.invite').textContent).toBe('Play on the board, both colours in turn: the 127 numbers follow.');
+    expect($(el, '.toy-invite').textContent).toBe('Jouez sur le plateau, les deux couleurs tour à tour\u202f: les 127 nombres suivent.');
+    expect($(el, '.toy-invite').nextElementSibling!.classList.contains('play')).toBe(true);
+    expect(el.shadowRoot!.textContent).not.toMatch(/À vous|à vous/);
+    const en = await mount('en');
+    expect($(en, '.toy-invite').textContent).toBe('Play on the board, both colours in turn: the 127 numbers follow.');
+    expect(en.shadowRoot!.textContent).not.toMatch(/Your move|Your turn/);
+  });
+
+  it('draws which way it reads: an arrow from the board to the grid, and one along the stack’s columns, bottom to top', async () => {
+    const el = await mount();
+    // Between the board and the grid, in the order of the page.
+    expect($$(el, '.enc-body > *').map((n) => n.className)).toEqual(['enc-side', 'enc-reads', 'enc-main', 'controls actions']);
+    const between = $(el, '.enc-reads .reads');
+    expect(between.dataset.dir).toBe('right');
+    expect(between.getAttribute('aria-hidden')).toBe('true');
+    // Downwards while the grid is under the board, rightwards once it stands beside it.
+    expect(sheet).toMatch(/\.enc-reads \.reads \{\s*transform: rotate\(90deg\);/);
+    const wide = sheet.slice(sheet.indexOf('@container (min-width: 860px)', sheet.indexOf('.sr {')));
+    expect(wide).toMatch(/\.enc-reads \.reads \{\s*transform: none;/);
+    const stack = $(el, '.enc-head .c-slots .reads');
+    expect(stack.dataset.dir).toBe('right');
+    expect(stack.textContent).toBe('pile, du bas vers le haut');
+    expect(sheet).not.toMatch(/dash/);
   });
 
   it('the board keeps the move just played: its origin ring and the pieces it lifted', async () => {
@@ -158,12 +192,47 @@ describe('<pogo-encoding>', () => {
     const lands = legal(s).filter((m) => m.from_cell === 8 && m.num_pieces === 1).map((m) => String(m.to_cell)).sort();
     expect($$(el, '.board .mark.target').map((m) => m.getAttribute('data-cell')!).sort()).toEqual(lands);
     expect($(el, '.counts').hasAttribute('data-off')).toBe(false);
-    expect($(el, '.enc-row[data-row="8"]').classList.contains('on')).toBe(true);
+    expect(stamped(el)).toEqual(['c3']);
     // Lifting changes nothing in the grid: no mark appears.
     expect($$(el, '.v[data-change]')).toHaveLength(0);
     cellButton(el, 8).click();
     expect($$(el, '.board .mark.picked')).toHaveLength(0);
-    expect($$(el, '.enc-row.on')).toHaveLength(0);
+    expect(stamped(el)).toEqual([]);
+  });
+
+  it('ties the rows to the board: a row carries its square’s name, stamped where the move just played left and landed', async () => {
+    const el = await mount();
+    // The same nine names, on the board's squares and at the head of the rows.
+    expect($$(el, '.board-labels .coord').map((c) => c.textContent).sort()).toEqual($$(el, '.enc-row:not(.enc-head) .c-name').map((n) => n.textContent).sort());
+    // At rest on the essay's position nothing is in use.
+    expect(stamped(el)).toEqual([]);
+    playByHand(el, [6, 1, 3]);
+    expect($(el, '.board .from')?.getAttribute('data-cell')).toBe('6');
+    expect($(el, '.board .to')?.getAttribute('data-cell')).toBe('3');
+    expect(stamped(el)).toEqual(['a2', 'a3']);
+    // A stack lifted takes over: its row alone.
+    const next = legal(play(defaultPosition(), [6, 1, 3]))[0]!;
+    cellButton(el, next.from_cell).click();
+    expect(stamped(el)).toHaveLength(1);
+    cellButton(el, next.from_cell).click();
+    expect(stamped(el)).toEqual(['a2', 'a3']);
+    ($(el, '[data-role="undo"]') as HTMLButtonElement).click();
+    expect(stamped(el)).toEqual([]);
+    expect(sheet).toMatch(/\.enc-row\.on \.c-name \{[^}]*background: var\(--_ink\);[^}]*color: var\(--_ground\);/);
+  });
+
+  it('the row of the square under the pointer or the focus answers too', async () => {
+    const el = await mount();
+    cellButton(el, 1).dispatchEvent(new Event('pointerover', { bubbles: true }));
+    expect(stamped(el)).toEqual(['b1']);
+    cellButton(el, 2).dispatchEvent(new Event('pointerover', { bubbles: true }));
+    expect(stamped(el)).toEqual(['c1']);
+    $(el, '.play').dispatchEvent(new Event('pointerleave'));
+    expect(stamped(el)).toEqual([]);
+    cellButton(el, 4).dispatchEvent(new Event('focusin', { bubbles: true }));
+    expect(stamped(el)).toEqual(['b2']);
+    cellButton(el, 4).dispatchEvent(new Event('focusout', { bubbles: true }));
+    expect(stamped(el)).toEqual([]);
   });
 
   it('marks every input a move changed: new facts about the board apart from pieces merely seen from the other side', async () => {
@@ -243,57 +312,93 @@ describe('<pogo-encoding>', () => {
     expect(shownKey(el)).toBe(key(defaultPosition()));
   });
 
-  it('plays a short demonstration by itself once on screen: the next moves of the essay’s game, the grid following', async () => {
+  it('plays a short introduction once on screen: the next moves of the essay’s game, the grid following, then the essay’s position again', async () => {
     vi.useFakeTimers();
     const el = mountSync();
     await vi.advanceTimersByTimeAsync(0);
     const demo = encodingDemo();
-    expect(playState(el)).toBe('play');
+    expect(demo.moves).toHaveLength(2);
+    expect(phase(el)).toBe('waiting');
     intersect(el);
-    expect(playState(el)).toBe('pause');
-    expect($(el, '[data-role="counter"]').textContent).toBe('coup 0 sur 4');
+    expect(phase(el)).toBe('intro');
+    expect(shownKey(el)).toBe(key(demo.states[0]!));
+    await vi.advanceTimersByTimeAsync(INTRO_REST);
     for (let i = 1; i < demo.states.length; i++) {
-      await vi.advanceTimersByTimeAsync(DEMO_INTERVAL);
       expect(shownKey(el)).toBe(key(demo.states[i]!));
       expect(values(el)).toEqual(expected(demo.states[i]!));
-      expect($(el, '[data-role="counter"]').textContent).toBe(`coup ${i} sur 4`);
+      // Each move shows what it changed, and where it left and landed.
+      expect($$(el, '.v[data-change]').length).toBeGreaterThan(0);
+      expect(stamped(el)).toHaveLength(2);
+      expect(phase(el)).toBe('intro');
+      await vi.advanceTimersByTimeAsync(INTRO_MOVE);
     }
-    expect(playState(el)).toBe('replay');
-    // The demonstration's moves are the figure's line: they can be taken back.
-    ($(el, '[data-role="undo"]') as HTMLButtonElement).click();
-    expect(shownKey(el)).toBe(key(demo.states[3]!));
+    // The toy is the reader's, on the essay's position, with nothing marked as just changed.
+    expect(phase(el)).toBe('ready');
+    expect(shownKey(el)).toBe(key(defaultPosition()));
+    expect(values(el)).toEqual(expected(defaultPosition()));
+    expect($$(el, '.v[data-change]')).toHaveLength(0);
+    expect(stamped(el)).toEqual([]);
+    expect(($(el, '[data-role="undo"]') as HTMLButtonElement).disabled).toBe(true);
+    expect(vi.getTimerCount()).toBe(0);
+    // It never plays again, and nothing is there to replay it.
+    leave(el);
+    intersect(el);
+    await vi.advanceTimersByTimeAsync(INTRO_MOVE * 4);
+    expect(phase(el)).toBe('ready');
+    expect(shownKey(el)).toBe(key(defaultPosition()));
+    expect(el.shadowRoot!.querySelector('[data-role="play"], [data-role="next"], [data-role="previous"], [data-role="counter"]')).toBeNull();
   });
 
-  it('the reader’s first touch stops the demonstration for good', async () => {
+  it('is short, and holds a move no longer than it needs to be read', () => {
+    expect(INTRO_REST + 2 * INTRO_MOVE).toBeLessThanOrEqual(7000);
+    // The marks of a move take 2200ms to fade: a move is held that long at least.
+    expect(INTRO_MOVE).toBeGreaterThanOrEqual(2200);
+  });
+
+  it('the reader’s first press ends the introduction for good, and acts on the essay’s position', async () => {
     vi.useFakeTimers();
     const el = mountSync();
     await vi.advanceTimersByTimeAsync(0);
     intersect(el);
-    await vi.advanceTimersByTimeAsync(DEMO_INTERVAL);
+    await vi.advanceTimersByTimeAsync(INTRO_REST);
     const demo = encodingDemo();
     expect(shownKey(el)).toBe(key(demo.states[1]!));
-    // A stack lifted is enough.
-    const m = legal(demo.states[1]!)[0]!;
-    cellButton(el, m.from_cell).click();
-    expect(playState(el)).toBe('play');
-    expect($(el, '[data-role="counter"]').textContent).toBe('À vous de jouer');
-    await vi.advanceTimersByTimeAsync(DEMO_INTERVAL * 3);
-    expect(shownKey(el)).toBe(key(demo.states[1]!));
-    leave(el);
-    intersect(el);
-    await vi.advanceTimersByTimeAsync(DEMO_INTERVAL * 3);
-    expect(shownKey(el)).toBe(key(demo.states[1]!));
+    // A press on a stack: the toy is the reader's before the press is heard.
+    cellButton(el, 6).dispatchEvent(new Event('pointerdown', { bubbles: true, composed: true }));
+    expect(phase(el)).toBe('ready');
+    expect(shownKey(el)).toBe(key(defaultPosition()));
+    cellButton(el, 6).click();
+    expect($(el, '.board .mark.picked').getAttribute('data-cell')).toBe('6');
+    await vi.advanceTimersByTimeAsync(INTRO_MOVE * 3);
+    expect(shownKey(el)).toBe(key(defaultPosition()));
+    expect(vi.getTimerCount()).toBe(0);
   });
 
-  it('under reduced motion it rests on the essay’s position, with the play control', async () => {
+  it('a stack lifted on a position of the introduction is not lifted on the reader’s', async () => {
+    vi.useFakeTimers();
+    const el = mountSync();
+    await vi.advanceTimersByTimeAsync(0);
+    intersect(el);
+    await vi.advanceTimersByTimeAsync(INTRO_REST);
+    // A script presses without a pointer: White's a1, which may move only in the introduction's position.
+    const demo = encodingDemo();
+    const m = legal(demo.states[1]!)[0]!;
+    cellButton(el, m.from_cell).click();
+    expect(phase(el)).toBe('ready');
+    expect(shownKey(el)).toBe(key(defaultPosition()));
+    expect($$(el, '.board .mark.picked')).toHaveLength(0);
+  });
+
+  it('under reduced motion nothing plays: it rests on the essay’s position, the reader’s from the start', async () => {
     setMedia(REDUCED_MOTION, true);
     vi.useFakeTimers();
     const el = mountSync();
     await vi.advanceTimersByTimeAsync(0);
+    expect(phase(el)).toBe('ready');
     intersect(el);
-    await vi.advanceTimersByTimeAsync(DEMO_INTERVAL * 3);
+    await vi.advanceTimersByTimeAsync(INTRO_MOVE * 3);
     expect(shownKey(el)).toBe(key(defaultPosition()));
-    expect(playState(el)).toBe('play');
+    expect(vi.getTimerCount()).toBe(0);
   });
 
   it('says a game that ends on its board', async () => {
@@ -304,12 +409,11 @@ describe('<pogo-encoding>', () => {
     expect($$(el, '.cell-button[data-actionable]')).toHaveLength(0);
   });
 
-  it('the board stands beside the grid in the wide box, and above it otherwise; only the grid’s own box may scroll', () => {
+  it('the board stands beside the grid in the wide box, its actions under it; otherwise the grid comes under the board and the actions last', () => {
     const wide = sheet.slice(sheet.indexOf('@container (min-width: 860px)', sheet.indexOf('.sr {')));
-    expect(wide).toMatch(/\.enc-body \{[^}]*grid-template-columns: 300px minmax\(0, 640px\)/);
-    // The grid's box is the one thing that scrolls, and only under 500px, where it keeps a width.
-    expect(sheet.match(/overflow-x|overflow: auto|overflow: scroll/g)).toEqual(['overflow-x']);
-    expect(sheet).toMatch(/\.enc-wrap \{[^}]*overflow-x: auto;/);
+    expect(wide).toMatch(/\.enc-body \{[^}]*grid-template-columns: 300px 40px minmax\(0, 640px\)/);
+    expect(wide).toMatch(/\.enc-main \{[^}]*grid-column: 3;/);
+    expect(wide).toMatch(/\.actions \{[^}]*grid-column: 1;/);
     expect(sheet).toMatch(/\.enc-row \{[^}]*grid-template-columns: 2\.1em repeat\(12, minmax\(0, 1fr\)\)/);
   });
 });
@@ -318,13 +422,5 @@ describe('inputText', () => {
   it('writes the inputs as the essay names them', () => {
     expect([1, -1, 0, 0.25, 1 / 12, 0.5, 1].map((x) => inputText('fr', Math.fround(x)))).toEqual(['+1', '−1', '0', '0,25', '0,08', '0,5', '+1']);
     expect(inputText('en', 0.25)).toBe('0.25');
-  });
-});
-
-describe('<pogo-encoding> transport', () => {
-  it('names its step buttons by the move, since each step is a move of a game', async () => {
-    const el = await mount();
-    const name = (r: string) => el.shadowRoot!.querySelector(`[data-role="${r}"]`)!.getAttribute('aria-label');
-    expect([name('previous'), name('next')]).toEqual(['Revenir au coup précédent', 'Passer au coup suivant']);
   });
 });
