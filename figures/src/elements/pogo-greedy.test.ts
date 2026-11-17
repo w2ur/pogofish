@@ -1,3 +1,5 @@
+import { readFileSync } from 'node:fs';
+import { resolve } from 'node:path';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { REDUCED_MOTION, intersect, leave, playState, resetMedia, setMedia, shownText } from '../test-dom';
 import { greedyGame } from './greedy-game';
@@ -264,5 +266,15 @@ describe('<pogo-greedy> transport', () => {
     const el = await mount();
     const name = (r: string) => el.shadowRoot!.querySelector(`[data-role="${r}"]`)!.getAttribute('aria-label');
     expect([name('previous'), name('next')]).toEqual(['Revenir au coup précédent', 'Passer au coup suivant']);
+  });
+});
+
+describe('<pogo-greedy> scoreboard', () => {
+  // Regression: the inverted block behind a count that had just changed was the 2ch of the body font,
+  // 17px, for a 34px digit about 15px wide: the « 4 » touched its edges and read as clipped.
+  it('sizes a count’s block from its digit, with room on each side', () => {
+    const css = readFileSync(resolve(process.cwd(), 'src/elements/pogo-greedy.css'), 'utf8').replace(/\/\*[\s\S]*?\*\//g, '');
+    expect(css).toMatch(/\.number \{[^}]*padding: 0\.08em 0\.14em 0\.04em;/);
+    expect(css).toMatch(/\.count \{[^}]*grid-template-columns: auto minmax\(2ch, auto\) minmax\(0, 1fr\);/);
   });
 });
