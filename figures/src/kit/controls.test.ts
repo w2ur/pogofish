@@ -223,6 +223,17 @@ describe('choiceGroup', () => {
     expect(chosen.at(-1)).toBe('hard');
   });
 
+  // Regression: a disabled control drew a dashed edge, the page's mark for « can be picked up »
+  // (the ring on the board). Disabled is now a solid edge in the edge colour, its label muted.
+  it('the theme draws a disabled control with a solid edge and a muted label, never dashed', () => {
+    const css = readFileSync(resolve(process.cwd(), 'src/kit/theme.css'), 'utf8');
+    const rule = /\.control:disabled \{([^}]*)\}/.exec(css)![1]!;
+    expect(rule).not.toContain('dashed');
+    expect(rule).toContain('border-style: solid');
+    expect(rule).toContain('border-color: var(--_edge)');
+    expect(rule).toContain('color: var(--_muted)');
+  });
+
   it('the theme draws a checked choice as the filled block', () => {
     const css = readFileSync(resolve(process.cwd(), 'src/kit/theme.css'), 'utf8');
     const rule = /\.choice\[aria-checked='true'\] \{([^}]*)\}/.exec(css)![1]!;

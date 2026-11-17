@@ -207,10 +207,15 @@ slot[hidden],
   display: none;
 }
 
+/*
+ * Unavailable: a solid edge in the edge colour and a muted label. Never dashed: on this page a
+ * dashed edge means « can be picked up » (the ring on the board). The muted label keeps 6:1 or more
+ * on the ground in both themes (#a3a39d on #0a0a0a 7.8:1, #565a5e on #eff1f2 6.1:1).
+ */
 .control:disabled {
   background: transparent;
   border-color: var(--_edge);
-  border-style: dashed;
+  border-style: solid;
   color: var(--_muted);
   cursor: default;
   transform: none;
