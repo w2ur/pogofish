@@ -70,7 +70,8 @@ export class PogoMoves extends PogoFigure {
   override connectedCallback(): void {
     super.connectedCallback();
     // Room kept before the render, so the board does not push the text down when it arrives.
-    this.stage.style.setProperty('--_stage-min', this.view === 'start' ? '300px' : '520px');
+    // The moves view keeps its own, by the width (pogo-moves.css).
+    if (this.view === 'start') this.stage.style.setProperty('--_stage-min', '300px');
   }
 
   protected async render(signal: AbortSignal): Promise<void> {

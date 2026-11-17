@@ -177,10 +177,11 @@ export class PogoOpenings extends PogoFigure {
     const boardCol = el('div', 'board-col');
     boardCol.append(playBox, count.element);
     const side = el('div', 'side');
-    side.append(askLine, list, actions);
+    side.append(list, actions);
     const body = el('div', 'tester');
     body.append(boardCol, side);
-    root.append(body);
+    // What to do next, above the board: read before the board is played.
+    root.append(askLine, body);
     update(null);
     this.stage.append(root);
   }

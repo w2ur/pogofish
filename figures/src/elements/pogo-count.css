@@ -12,21 +12,21 @@
 /*
  * The room the figure keeps before it renders: the drawing follows the width (its
  * height over its width, per layout), the line and the transport do not. Measured
- * on the harness (2026-11-16).
+ * on the harness (2026-11-16; the invitation line added 2026-11-17).
  */
 .stage {
-  min-height: calc(126.1cqi + 142px);
+  min-height: calc(126.1cqi + 215px);
 }
 
 @container (min-width: 480px) {
   .stage {
-    min-height: calc(64.9cqi + 114px);
+    min-height: calc(64.9cqi + 168px);
   }
 }
 
 @container (min-width: 720px) {
   .stage {
-    min-height: calc(32.8cqi + 114px);
+    min-height: calc(32.8cqi + 168px);
   }
 }
 

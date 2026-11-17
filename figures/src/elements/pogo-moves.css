@@ -10,6 +10,20 @@
   container-type: inline-size;
 }
 
+/*
+ * The room the moves view keeps before it renders, measured on the harness (2026-11-17):
+ * the three boards one under the other, or side by side at a third of the width each.
+ */
+:host([view='moves']) .stage {
+  min-height: 1010px;
+}
+
+@container (min-width: 480px) {
+  :host([view='moves']) .stage {
+    min-height: calc(min(33.3cqi - 11px, 300px) + 200px);
+  }
+}
+
 .moves {
   display: flex;
   flex-direction: column;
@@ -45,23 +59,41 @@
 @container (min-width: 480px) {
   .fan {
     grid-template-columns: repeat(3, minmax(0, 1fr));
-    gap: 16px;
+    gap: 8px 16px;
+  }
+
+  /* The captions share one row, the boards the next: three boards on one line, however the captions wrap. */
+  .fan-group {
+    display: grid;
+    grid-template-rows: subgrid;
+    grid-row: span 2;
+    justify-items: center;
+  }
+
+  .fan-group > .say {
+    align-self: end;
   }
 }
 
+/* One under the other (under 480px), a board is kept small, so the three still read together. */
 .fan-group {
   display: flex;
   flex-direction: column;
   align-items: center;
   gap: 8px;
   width: 100%;
-  max-width: 280px;
+  max-width: 220px;
   margin: 0;
 }
 
-/* The caption keeps two lines in a row of three, so the three boards start on one line. */
+@container (min-width: 480px) {
+  .fan-group {
+    max-width: 300px;
+  }
+}
+
+/* Each group's caption, over its board. */
 .fan-group > .say {
-  min-height: 2.6em;
   text-align: center;
 }
 

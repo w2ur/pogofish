@@ -1,21 +1,21 @@
 /*
- * <pogo-openings>, the tester: the board the reader plays on, with its count
- * chooser under it, and beside it (from 640px) or under it the line that asks
- * for the next move, the verdicts of the moves played, and the two actions.
+ * <pogo-openings>, the tester: the line that asks for the next move, then the
+ * board the reader plays on, with its count chooser under it, and beside it
+ * (from 640px) or under it the verdicts of the moves played and the actions.
  * The verdicts' list keeps the room of two, so nothing moves as they arrive.
  */
 :host {
   container-type: inline-size;
 }
 
-/* The room the figure keeps before it renders, measured on the harness (2026-11-17). */
+/* The room the figure keeps before it renders: the board follows the width up to 400px. Measured on the harness (2026-11-17). */
 .stage {
-  min-height: 860px;
+  min-height: calc(min(100cqi, 400px) + 335px);
 }
 
 @container (min-width: 640px) {
   .stage {
-    min-height: 480px;
+    min-height: 500px;
   }
 }
 
@@ -59,9 +59,14 @@
   width: min(100%, 400px);
 }
 
-/* Two lines kept for the longest request, so the list under it does not move. */
+/* Two lines kept for the longest request, so the board under it does not move. */
 .ask {
+  display: flex;
+  align-items: flex-end;
+  justify-content: center;
   min-height: 2.7em;
+  margin-bottom: 12px;
+  text-align: center;
   color: var(--_ink);
 }
 
