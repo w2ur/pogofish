@@ -1,31 +1,35 @@
 /*
  * <pogo-td-targets>: the game, the step's words (one grid cell for all, so the
- * chart never moves), then the film: a strip of the game's boards, the chart of
- * values and targets from White's view on −1…+1, and their numbers, all on the
- * same columns, one per position; then the transport, the legend and the
- * values behind a disclosure. Ink only: a value is a hollow circle on a dashed
+ * chart never moves), then the film on the chart's width: the glass (two
+ * positions, each its board and its two numbers, and the step's sum beside
+ * them from 520px), a wedge from the glass to the two columns it enlarges, the
+ * chart of values and targets from White's side on −1…+1, the positions'
+ * numbers; then the transport, the legend and the side it is all read from.
+ * Ink only, but a negative number, red: a value is a hollow circle on a dashed
  * line, a target a filled square on a solid one, the result a filled circle,
- * an earlier round's values a thin grey line. The lines are an SVG stretched to
- * the box; the marks are HTML over it, placed by percentage.
+ * an earlier round's values a thin grey line. A number the sum uses is framed
+ * where it is read; nothing is framed with dashes (a dashed edge is where a
+ * move left from, on a board). The lines are an SVG stretched to the box; the
+ * marks are HTML over it, placed by percentage.
  */
 :host {
   container-type: inline-size;
 }
 
-/* The room kept before rendering, per width (measured on the harness, 2026-11-17, default game: 733px at 272, 646 at 566, 711 at 1100). */
+/* The room kept before rendering, per width (measured on the harness, 2026-11-17, default game: 1147px at 272, 890 at 566, 861 at 1100). */
 .stage {
-  min-height: 735px;
+  min-height: 1145px;
 }
 
 @container (min-width: 520px) {
   .stage {
-    min-height: 645px;
+    min-height: 890px;
   }
 }
 
 @container (min-width: 900px) {
   .stage {
-    min-height: 710px;
+    min-height: 860px;
   }
 }
 
@@ -51,71 +55,204 @@
   visibility: hidden;
 }
 
-.said p {
-  margin: 0;
-}
-
 .step-text {
   color: var(--_ink);
 }
 
-.calc {
-  color: var(--_ink);
-  font-weight: 800;
-}
-
 .film {
+  --zgap: 12px;
   display: grid;
   grid-template-columns: 2em minmax(0, 1fr);
   column-gap: 6px;
-  row-gap: 6px;
   align-items: center;
+}
+
+.film > * {
+  grid-column: 2;
+}
+
+.film > .y-ends {
+  grid-column: 1;
+}
+
+/* The glass: the two positions, then the sum. */
+.glass {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  gap: 12px 16px;
+  align-items: start;
+}
+
+/* The slide brings a third column in from the left: it never shows outside the glass. */
+.zoom {
+  overflow: clip;
+}
+
+.zcols {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+  gap: var(--zgap);
+}
+
+.zcol {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  min-width: 0;
+}
+
+/* Which of the two is the next one: a line of its own, kept in both columns so the boards stay level. */
+.zsub {
+  min-height: 1.3em;
+  margin-top: -4px;
+  font-size: 12.8px;
+  line-height: 1.3;
+  color: var(--_ink-2);
+}
+
+.zboard .board {
+  display: block;
+  width: 100%;
+  max-width: 132px;
+  height: auto;
+}
+
+/* A number of a position: its name, then its mark and the number, large, as the sum writes it. */
+.zrow {
+  display: grid;
+  grid-template-columns: max-content minmax(0, 1fr);
+  align-items: center;
+  gap: 0 6px;
+  min-height: 52px;
+  padding: 3px 6px;
+  border: 2px solid transparent;
+}
+
+.zlabel {
+  grid-area: 1 / 1 / auto / -1;
+  font-size: 12.8px;
+  line-height: 1.2;
+  color: var(--_ink-2);
+}
+
+.zval {
+  font-size: 20px;
+  font-weight: 800;
+  line-height: 1.3;
+}
+
+/* A term of the sum, framed where it is read; the target it gives (in act 2, a number that has just moved), framed and filled. */
+.zrow.used,
+.zrow.new {
+  border-color: var(--_ink);
+}
+
+.zrow.new {
+  background: color-mix(in srgb, var(--_ink) 12%, transparent);
+}
+
+[data-sign='negative'] {
+  color: var(--_red-text);
+}
+
+/* The sum, one term per line; room kept for its three lines. */
+.sum {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  min-height: 150px;
+}
+
+.srow {
+  display: grid;
+  grid-template-columns: 1.2ch 4.4em max-content;
+  align-items: center;
+  gap: 0 8px;
+  font-size: 19px;
+  font-weight: 800;
+  line-height: 1.3;
+}
+
+.srow.total {
+  padding-top: 6px;
+  border-top: 2px solid var(--_ink);
+}
+
+.sshare {
+  text-align: right;
+}
+
+.sterm {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.slabel {
+  grid-column: 2 / -1;
+  font-size: 12.8px;
+  font-weight: 400;
+  line-height: 1.2;
+  color: var(--_ink-2);
+}
+
+/* Act 2: the mean gap, where the sum stood. */
+.sum.gap {
+  justify-content: center;
+  gap: 4px;
+  text-align: center;
+}
+
+.gap-label {
+  font-size: 15px;
+  color: var(--_ink-2);
+}
+
+.gap-values {
+  font-size: 34px;
+  font-weight: 800;
+  line-height: 1.2;
+}
+
+/* From the glass down to the two columns of the chart it enlarges (--cl to --cr, set by the element). */
+.wedge {
+  display: none;
+  height: 28px;
+  background: var(--_rule);
+  opacity: 0.55;
+  clip-path: polygon(0 0, var(--zr) 0, var(--cr) 100%, var(--cl) 100%);
+  transition: clip-path 450ms ease-in-out;
+}
+
+.band {
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  left: var(--cl);
+  width: calc(var(--cr) - var(--cl));
+  background: var(--_rule);
+  opacity: 0.55;
+  transition: left 450ms ease-in-out;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .wedge,
+  .band {
+    transition: none;
+  }
 }
 
 .row {
   display: grid;
   grid-template-columns: repeat(var(--n), minmax(0, 1fr));
   justify-items: center;
-}
-
-/* A row's name stands on one line: its column takes the room it needs. */
-.row-name {
-  font-size: 12.8px;
-  line-height: 1.15;
-  white-space: nowrap;
-  color: var(--_muted);
-}
-
-/* The strip: each position's board over its column; the one whose target is computed framed, the next one dashed. */
-.cell.boards {
-  width: 100%;
-  padding: 2px;
-  border: 2px solid transparent;
-}
-
-.cell.boards .board {
-  display: block;
-  width: 100%;
-  height: auto;
-}
-
-.cell.boards.now {
-  border-color: var(--_ink);
-}
-
-.cell.boards.next {
-  border: 2px dashed var(--_edge);
-}
-
-.side {
-  margin: 0;
-  font-size: 12.8px;
-  color: var(--_muted);
+  margin-top: 6px;
 }
 
 .box {
   position: relative;
-  height: 220px;
+  height: 180px;
+  margin-top: 12px;
 }
 
 .td-chart {
@@ -129,6 +266,7 @@
 .y-ends {
   position: relative;
   align-self: stretch;
+  margin-top: 12px;
   font-size: 12.8px;
   color: var(--_muted);
 }
@@ -168,16 +306,6 @@
   stroke: var(--_edge);
 }
 
-.td-chart .cursor {
-  stroke: var(--_edge);
-  stroke-width: 1px;
-  stroke-dasharray: 3 3;
-}
-
-.td-chart .cursor.off {
-  visibility: hidden;
-}
-
 .td-chart .notes-line {
   stroke: var(--_ink);
   stroke-width: 2px;
@@ -197,7 +325,7 @@
 
 /* What an adjustment reduces: the distance from each value to its target. */
 .td-chart .gap {
-  stroke: var(--_edge);
+  stroke: var(--_ink-2);
   stroke-width: 1px;
   stroke-dasharray: 2 3;
   visibility: hidden;
@@ -209,8 +337,8 @@
 
 .mk {
   position: absolute;
-  width: 11px;
-  height: 11px;
+  width: 9px;
+  height: 9px;
   transform: translate(-50%, -50%);
 }
 
@@ -249,51 +377,91 @@
 .cell.ticks {
   font-size: 12.8px;
   line-height: 1.3;
-}
-
-.cell.ticks {
   color: var(--_muted);
 }
 
+/* The two positions under the glass. */
+.cell.ticks.on {
+  color: var(--_ink);
+  font-weight: 800;
+}
+
 .axis-x {
-  margin: 0;
+  margin-top: 6px;
   font-size: 12.8px;
   text-align: center;
   color: var(--_muted);
 }
 
-/* Under 520px a column is too narrow for a board: the words name the position, the step’s sum gives its numbers. */
-@container (max-width: 519.98px) {
-  .row.boards,
-  .row-name.boards {
-    display: none;
-  }
-
-  .mk {
-    width: 9px;
-    height: 9px;
-  }
-}
-
 @container (min-width: 520px) {
   .film {
-    grid-template-columns: 4.6em minmax(0, 1fr);
+    --zgap: 16px;
+    grid-template-columns: 1.6em minmax(0, 1fr);
     column-gap: 10px;
   }
 
-  /* With the strip, the names column is as wide as its widest name, the ends of the scale. */
-  .film.strip {
-    grid-template-columns: max-content minmax(0, 1fr);
+
+  .glass {
+    grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+  }
+
+  .sum {
+    align-self: center;
+    min-height: 0;
+  }
+
+  .wedge {
+    --zr: calc(50% - 8px);
+    display: block;
+    margin-top: 8px;
+  }
+
+  .box {
+    height: 200px;
+    margin-top: 0;
+  }
+
+  .y-ends {
+    margin-top: 0;
+  }
+
+  .mk {
+    width: 11px;
+    height: 11px;
+  }
+
+  .mk.new {
+    width: 15px;
+    height: 15px;
   }
 }
 
 @container (min-width: 900px) {
-  .box {
-    height: 280px;
+  .zrow {
+    grid-template-columns: max-content minmax(0, 1fr) max-content;
+    min-height: 40px;
   }
 
-  .film.strip .cell.boards {
-    max-width: 84px;
+  .zlabel {
+    grid-area: auto;
+  }
+
+  .zboard .board {
+    max-width: 150px;
+  }
+
+  .srow {
+    grid-template-columns: 1.2ch 4.4em max-content minmax(0, 1fr);
+    font-size: 22px;
+  }
+
+  .slabel {
+    grid-column: auto;
+    font-size: 15px;
+  }
+
+  .box {
+    height: 240px;
   }
 }
 
@@ -321,6 +489,7 @@
 
 .swatch {
   display: inline-block;
+  flex: none;
   width: 10px;
   height: 10px;
 }
@@ -343,6 +512,18 @@
   width: 18px;
   height: 0;
   border-top: 1px solid var(--_edge);
+}
+
+.swatch.gap {
+  width: 0;
+  height: 14px;
+  border-left: 1px dotted var(--_ink-2);
+}
+
+.view {
+  font-size: 15px;
+  text-align: center;
+  color: var(--_ink-2);
 }
 
 .sr {
