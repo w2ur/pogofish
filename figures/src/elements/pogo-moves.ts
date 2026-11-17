@@ -3,13 +3,14 @@
 // allow from one stack, grouped by how many pieces it lifts (moves-demo.ts):
 // one board per count, the stack ringed in ink, each possible landing shown
 // (the lifted pieces faded on the square, its corners marked: kit/board-svg.ts,
-// never a dashed ring, which says where a move left from), all of it there at rest. Then each board plays its example, one
-// after the other: the pieces lifted, carried square by square, landed, each
-// frame at the kit's one tempo, the other boards staying whole. It plays by
-// itself on screen and loops after a rest on the last landing
-// (kit/autoplay.ts); the reader steps or pauses it with the transport. Under
-// reduced motion it rests with every move shown. No move is written in the
-// page's notation here: the essay defines it after this figure.
+// never a dashed ring, which says where a move left from), all of it there at
+// rest. Then the three boards play every one of their moves, at the same time:
+// the pieces lifted, carried square by square, landed, each frame at the kit's
+// one tempo; a board whose moves are all played rests. It plays by itself on
+// screen and loops after a rest on the last landing (kit/autoplay.ts); the
+// reader steps or pauses it with the transport. Under reduced motion it rests
+// with every move shown. No move is written in the page's notation here: the
+// essay defines it after this figure.
 import { WASM_FILE, assetUrl } from '../assets';
 import { initial, ready, type Triple } from '../engine';
 import { autoplay } from '../kit/autoplay';
@@ -21,7 +22,7 @@ import { moveWords } from '../kit/move-tip';
 import { Stepper } from '../kit/stepper';
 import { MOVE_TEMPO_MS } from '../kit/tempo';
 import { colon, t, type Lang, type StringKey } from '../kit/strings';
-import { fan, fanFrames, type Count, type Fan, type FanFrame } from './moves-demo';
+import { fan, fanFrames, type BoardFrame, type Count, type Fan } from './moves-demo';
 import movesCss from './pogo-moves.css?raw';
 
 /** How long the last landing is held before the demonstration starts again, in ms. */
@@ -31,9 +32,9 @@ const CAPTION: Record<Count, StringKey> = { 1: 'movesFan1', 2: 'movesFan2', 3: '
 
 const cellName = (i: number): string => `${'abc'[i % 3]}${Math.floor(i / 3) + 1}`;
 
-/** « Depuis la pile de a1 : une, deux ou trois pièces. Les pièces estompées… » */
+/** « Tous les déplacements depuis la pile de a1. » */
 export function lead(lang: Lang, from: number): string {
-  return `${t(lang, 'movesFanFrom')} ${cellName(from)}${colon(lang)} ${t(lang, 'movesFanLead')}`;
+  return `${t(lang, 'movesFanFrom')} ${cellName(from)}.`;
 }
 
 /** A group's board in words: its caption, then its landings (« … : c1, b2 ou a3. »). */
@@ -42,12 +43,12 @@ export function groupTitle(lang: Lang, count: Count, moves: readonly Triple[]): 
   return `${t(lang, CAPTION[count])}${colon(lang)} ${list}.`;
 }
 
-/** Group `k`'s board on frame `f`: at rest unless its example is the one playing. */
-function groupBoard(lang: Lang, fanned: Fan, k: number, f: FanFrame): SVGSVGElement {
+/** Group `k`'s board on its frame `f`: at rest, or playing one of its moves. */
+function groupBoard(lang: Lang, fanned: Fan, k: number, f: BoardFrame): SVGSVGElement {
   const g = fanned.groups[k]!;
   const title = groupTitle(lang, g.count, g.moves);
   const targets = g.moves.map((m) => ({ cell: m[2], kind: 'target' as const }));
-  if (f.group !== k) {
+  if (f.phase === 'rest' || !f.move) {
     return drawBoard(fanned.state, {
       labelRoom: true,
       title,
@@ -56,7 +57,7 @@ function groupBoard(lang: Lang, fanned: Fan, k: number, f: FanFrame): SVGSVGElem
     });
   }
   if (f.phase === 'land') {
-    const [from, moving, to] = g.example;
+    const [from, moving, to] = f.move;
     return drawBoard(f.state, { labelRoom: true, title, from, to, moving });
   }
   // carry adds the stack's ink ring itself.
@@ -124,9 +125,10 @@ export class PogoMoves extends PogoFigure {
 
     const show = (i: number): void => {
       const f = frames[i]!;
-      slots.forEach((slot, k) => slot.replaceChildren(labelledBoard(groupBoard(lang, fanned, k, f))));
-      // Said once per example, when its pieces are lifted.
-      if (f.phase === 'lift') live.textContent = moveWords(lang, fanned.groups[f.group]!.example);
+      slots.forEach((slot, k) => slot.replaceChildren(labelledBoard(groupBoard(lang, fanned, k, f.boards[k]!))));
+      // Said once per round, when the pieces are lifted: the moves the boards play together.
+      const lifted = f.boards.filter((b) => b.phase === 'lift' && b.move);
+      if (lifted.length > 0) live.textContent = lifted.map((b) => moveWords(lang, b.move!)).join(' ');
     };
 
     const stepper = new Stepper(frames.length, show, { signal, interval: MOVE_TEMPO_MS, wrapTo: 0, rest: DEMO_REST });

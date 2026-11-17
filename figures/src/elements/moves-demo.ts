@@ -5,8 +5,9 @@
 // three, has moves, and some land on occupied squares. Every move comes from
 // legal(): footnote 2’s rule, no return to the starting square, is the
 // engine’s, never typed here (moves-demo.test.ts holds both). Each group has
-// one example the figure plays (fanFrames): the pieces lifted, carried square
-// by square along their path, and landed.
+// one example, which it plays first; then every other move (fanFrames), the three
+// boards at once: the pieces lifted, carried square by square along their path,
+// and landed.
 import { legal, play, replay, type Colour, type State, type Triple } from '../engine';
 
 export type MoveKind = 'one' | 'diagonal' | 'three' | 'mixed' | 'onto';
@@ -86,8 +87,10 @@ export interface FanGroup {
   count: Count;
   /** Every legal move from FAN_FROM lifting `count` pieces, by landing square. */
   moves: Triple[];
-  /** The one the figure plays (see fan()). */
+  /** The one that shows its count’s line of the rules best (see fan()). */
   example: Triple;
+  /** The order the figure plays them in: the example first, then by landing square. */
+  played: Triple[];
 }
 
 export interface Fan {
@@ -119,33 +122,53 @@ export function fan(): Fan {
       return (kinds.includes(SIGNATURE[count]) ? 10 : 0) + kinds.length;
     };
     const example = moves.reduce((best, m) => (score(m) > score(best) ? m : best));
-    return { count, moves, example };
+    return { count, moves, example, played: [example, ...moves.filter((m) => m !== example)] };
   });
   return { state, from: FAN_FROM, groups };
 }
 
-export interface FanFrame {
-  /** The group whose example is playing; -1 on the frame where every group is at rest. */
-  group: number;
+export interface BoardFrame {
   phase: 'rest' | 'lift' | 'step' | 'land';
-  /** The playing board’s position: before the move until it lands, after it once it has. */
+  /** The move this board is playing; absent at rest. */
+  move?: Triple;
+  /** The board’s position: before the move until it lands, after it once it has. */
   state: State;
   /** The pieces in the air: taken from `from`, now over `at`, the squares passed in `trail`. */
   carry?: { from: number; count: number; pieces: Colour[]; at: number; trail: number[] };
 }
 
-/** The frame with every group at rest, then for each group its example: lifted, each square, landed. */
+export interface FanFrame {
+  /** Which of each board’s moves is playing (0 for the first); -1 on the frame where all rest. */
+  round: number;
+  /** One per group, in the groups’ order. */
+  boards: BoardFrame[];
+}
+
+/**
+ * The frame with every board at rest, then every move of every board, the three boards at once:
+ * round r plays each board’s r-th move (lifted, each square, landed) from the same frame on, and
+ * lasts as long as its longest move; a board that has landed holds its landing to the round’s
+ * end, and one whose moves are all played rests, every landing shown.
+ */
 export function fanFrames(f: Fan = fan()): FanFrame[] {
-  const frames: FanFrame[] = [{ group: -1, phase: 'rest', state: f.state }];
-  f.groups.forEach((g, group) => {
-    const [from, count, to] = g.example;
-    const pieces = f.state.cells[from]!.slice(-count);
-    const path = movePath(from, count, to);
-    frames.push({ group, phase: 'lift', state: f.state, carry: { from, count, pieces, at: from, trail: [] } });
-    for (let k = 1; k <= count; k++) {
-      frames.push({ group, phase: 'step', state: f.state, carry: { from, count, pieces, at: path[k]!, trail: path.slice(0, k) } });
+  const rest: BoardFrame = { phase: 'rest', state: f.state };
+  const frames: FanFrame[] = [{ round: -1, boards: f.groups.map(() => rest) }];
+  const rounds = Math.max(...f.groups.map((g) => g.played.length));
+  for (let round = 0; round < rounds; round++) {
+    const playing = f.groups.filter((g) => round < g.played.length);
+    const ticks = Math.max(...playing.map((g) => g.count + 2));
+    for (let t = 0; t < ticks; t++) {
+      const boards = f.groups.map((g): BoardFrame => {
+        const move = g.played[round];
+        if (!move) return rest;
+        const [from, count] = move;
+        if (t > count) return { phase: 'land', move, state: play(f.state, move) };
+        const pieces = f.state.cells[from]!.slice(-count);
+        const path = movePath(...move);
+        return { phase: t === 0 ? 'lift' : 'step', move, state: f.state, carry: { from, count, pieces, at: path[t]!, trail: path.slice(0, t) } };
+      });
+      frames.push({ round, boards });
     }
-    frames.push({ group, phase: 'land', state: play(f.state, g.example) });
-  });
+  }
   return frames;
 }

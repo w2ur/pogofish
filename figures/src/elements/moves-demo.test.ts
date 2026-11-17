@@ -58,21 +58,43 @@ describe('the moves of <pogo-moves view="moves">: every move from one stack, by 
 });
 
 describe('fanFrames', () => {
-  it('starts with every group at rest, then for each group: lifted, each square of the path, landed', () => {
+  it('starts with every board at rest, then plays every move of each board, the three boards at once', () => {
     const f = fan();
     const frames = fanFrames(f);
-    expect(frames[0]).toMatchObject({ group: -1, phase: 'rest' });
-    expect(frames).toHaveLength(1 + f.groups.reduce((n, g) => n + g.count + 2, 0));
+    expect(frames[0]!.round).toBe(-1);
+    expect(frames[0]!.boards.map((b) => b.phase)).toEqual(['rest', 'rest', 'rest']);
+    // Every move of every count is played once, in its board's order: the example first.
     f.groups.forEach((g, k) => {
-      const own = frames.filter((x) => x.group === k);
-      expect(own.map((x) => x.phase)).toEqual(['lift', ...Array<string>(g.count).fill('step'), 'land']);
-      expect(own.filter((x) => x.phase === 'step').map((x) => x.carry!.at)).toEqual(movePath(...g.example).slice(1));
-      expect(own.at(-1)!.state).toEqual(play(f.state, g.example));
-      for (const x of own.slice(0, -1)) {
-        expect(x.state).toEqual(f.state);
-        expect(x.carry!.pieces).toEqual(f.state.cells[FAN_FROM]!.slice(-g.count));
-      }
+      expect(g.played[0]).toEqual(g.example);
+      expect([...g.played].sort((a, b) => a[2] - b[2])).toEqual(g.moves);
+      const lifted = frames.filter((x) => x.boards[k]!.phase === 'lift').map((x) => x.boards[k]!.move);
+      expect(lifted).toEqual(g.played);
     });
+    // A round lifts on the same frame on every board that still has a move: they move together.
+    const rounds = Math.max(...f.groups.map((g) => g.moves.length));
+    for (let r = 0; r < rounds; r++) {
+      const own = frames.filter((x) => x.round === r);
+      const playing = f.groups.map((g, k) => (r < g.played.length ? k : -1)).filter((k) => k >= 0);
+      expect(own[0]!.boards.map((b, k) => (b.phase === 'lift' ? k : -1)).filter((k) => k >= 0)).toEqual(playing);
+      // The round lasts as long as its longest move, lifted, each square, landed.
+      expect(own).toHaveLength(Math.max(...playing.map((k) => f.groups[k]!.count + 2)));
+      for (const k of playing) {
+        const g = f.groups[k]!;
+        const m = g.played[r]!;
+        const phases = own.map((x) => x.boards[k]!.phase);
+        const tail = own.length - (g.count + 2);
+        expect(phases).toEqual(['lift', ...Array<string>(g.count).fill('step'), ...Array<string>(tail + 1).fill('land')]);
+        expect(own.filter((x) => x.boards[k]!.phase === 'step').map((x) => x.boards[k]!.carry!.at)).toEqual(movePath(...m).slice(1));
+        expect(own.at(-1)!.boards[k]!.state).toEqual(play(f.state, m));
+        for (const x of own.filter((y) => y.boards[k]!.phase !== 'land')) {
+          expect(x.boards[k]!.state).toEqual(f.state);
+          expect(x.boards[k]!.carry!.pieces).toEqual(f.state.cells[FAN_FROM]!.slice(-g.count));
+        }
+      }
+      // A board whose moves are all played rests, every landing shown.
+      for (let k = 0; k < 3; k++) if (!playing.includes(k)) expect(own.every((x) => x.boards[k]!.phase === 'rest')).toBe(true);
+    }
+    expect(frames).toHaveLength(1 + frames.filter((x) => x.round >= 0).length);
   });
 });
 
