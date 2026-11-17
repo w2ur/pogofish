@@ -1,17 +1,20 @@
 import { readFileSync } from 'node:fs';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import type { TableData } from '../data';
-import { initial, key, play, replay, parseMoveName, type Colour } from '../engine';
+import { initial, key, moveName as moveNameOf, play, replay, parseMoveName, type Colour } from '../engine';
 import type { PlayFromDetail } from '../kit/figure';
-import { intersect, resetMedia, shownText } from '../test-dom';
-import { PogoOpenings } from './pogo-openings';
+import { MOVE_TEMPO_MS } from '../kit/tempo';
+import { REDUCED_MOTION, intersect, leave, resetMedia, setMedia, shownText } from '../test-dom';
+import { introMoves } from './openings-verdicts';
+import { INTRO_READ_MS, PogoOpenings } from './pogo-openings';
 
 if (!customElements.get('pogo-openings')) customElements.define('pogo-openings', PogoOpenings);
 const table = JSON.parse(readFileSync('public/data/table.json', 'utf8')) as TableData;
 const NNBSP = ' ';
 
-async function mount(lang = 'fr'): Promise<PogoOpenings> {
+async function mount(lang = 'fr', reduced = false): Promise<PogoOpenings> {
   resetMedia();
+  if (reduced) setMedia(REDUCED_MOTION, true);
   const section = document.createElement('section');
   section.setAttribute('lang', lang);
   const el = document.createElement('pogo-openings') as PogoOpenings;
@@ -31,20 +34,28 @@ const actionable = (el: PogoOpenings) =>
     .map((b) => Number(b.dataset.cell))
     .sort((a, b) => a - b);
 const ask = (el: PogoOpenings) => $(el, '.ask').textContent;
-const verdicts = (el: PogoOpenings) => $$(el, '.played li').map((li) => [shownText(li.querySelector('.move')!), li.querySelector('.verdict')!.textContent]);
+const verdicts = (el: PogoOpenings) => $$(el, '.played li:not([data-pending])').map((li) => [shownText(li.querySelector('.move')!), li.querySelector('.verdict')!.textContent]);
 /** The stacks drawn, read back from the board, each bottom first. */
 const drawnCells = (el: PogoOpenings): Colour[][] =>
   Array.from({ length: 9 }, (_, i) => [...el.shadowRoot!.querySelectorAll<SVGElement>(`.board .stack[data-cell="${i}"] .disc`)].map((d) => d.dataset.colour as Colour));
 
+/** A reader's press: the pointer goes down, then the click. */
+function press(b: HTMLElement): void {
+  b.dispatchEvent(new PointerEvent('pointerdown', { bubbles: true, composed: true }));
+  b.click();
+}
+
 /** Plays `name` on the board as a reader does: the stack, its count, the landing. */
 function playMove(el: PogoOpenings, name: string): void {
   const [from, n, to] = parseMoveName(name);
-  cell(el, from).click();
-  $(el, `.counts [data-value="${n}"]`).click();
-  cell(el, to).click();
+  press(cell(el, from));
+  press($(el, `.counts [data-value="${n}"]`));
+  press(cell(el, to));
 }
 
-const ASK_WHITE = `Jouez un premier coup des Blancs${NNBSP}: soulevez une pile, puis choisissez où la poser.`;
+const toyPhase = (el: PogoOpenings) => $(el, '.openings').dataset.toy;
+
+const ASK_WHITE = 'Jouez un premier coup des Blancs.';
 
 beforeEach(() => {
   PogoOpenings.deps = { engine: () => Promise.resolve(), table: () => Promise.resolve(table) };
@@ -56,10 +67,18 @@ afterEach(() => {
 
 describe('<pogo-openings>: a tester of the first two moves', () => {
   it('opens on the start position and invites the reader to play White’s first move', async () => {
-    const el = await mount();
+    const el = await mount('fr', true);
+    expect(toyPhase(el)).toBe('ready');
     expect(ask(el)).toBe(ASK_WHITE);
     expect(actionable(el)).toEqual([0, 1, 2]);
-    expect($$(el, '.played li')).toHaveLength(0);
+    expect(verdicts(el)).toHaveLength(0);
+    // Round 5: the result's two rows wait beside the board, named, so the room there reads at once.
+    expect($$(el, '.played li[data-pending]').map((li) => [li.dataset.side, li.querySelector('.move')!.textContent])).toEqual([
+      ['White', 'Blanc'],
+      ['Red', 'Rouge'],
+    ]);
+    // One ink arrow from the board to what it becomes.
+    expect($$(el, '.tester > .reads')).toHaveLength(1);
     expect(drawnCells(el)).toEqual(initial().cells);
     expect(($(el, '[data-role="restart"]') as HTMLButtonElement).disabled).toBe(true);
   });
@@ -104,7 +123,7 @@ describe('<pogo-openings>: a tester of the first two moves', () => {
     playMove(el, 'a1-2-b2');
     playMove(el, 'a3-2-b2');
     $(el, '[data-role="restart"]').click();
-    expect($$(el, '.played li')).toHaveLength(0);
+    expect(verdicts(el)).toHaveLength(0);
     expect(ask(el)).toBe(ASK_WHITE);
     expect(actionable(el)).toEqual([0, 1, 2]);
     expect(drawnCells(el)).toEqual(initial().cells);
@@ -145,5 +164,69 @@ describe('<pogo-openings>: a tester of the first two moves', () => {
     PogoOpenings.deps = { engine: () => Promise.resolve(), table: () => Promise.resolve(broken) };
     const el = await mount();
     expect(el.hasAttribute('data-failed')).toBe(true);
+  });
+});
+
+describe('<pogo-openings> is a toy: an introduction once, then the reader’s', () => {
+  it('plays White’s losing move to the centre and Red’s quickest win, each verdict held to be read, then hands the start position over', async () => {
+    vi.useFakeTimers();
+    const p = mount();
+    await vi.advanceTimersByTimeAsync(0);
+    const el = await p;
+    intersect(el);
+    expect(toyPhase(el)).toBe('intro');
+    const [white, red] = introMoves(table);
+    expect(drawnCells(el)).toEqual(initial().cells);
+    // No « Jouer cette position » while it plays (the invitation is hidden by the theme: toy.test.ts).
+    expect($(el, '.play-from').hasAttribute('data-away')).toBe(true);
+    vi.advanceTimersByTime(MOVE_TEMPO_MS);
+    expect(drawnCells(el)).toEqual(play(initial(), white).cells);
+    expect(verdicts(el)).toEqual([[`Blanc ${moveNameOf(white)}`, 'Perd : les Rouges forcent la victoire en 11 coups.']]);
+    vi.advanceTimersByTime(INTRO_READ_MS);
+    expect(verdicts(el)).toHaveLength(2);
+    expect(verdicts(el)[1]![0]).toBe(`Rouge ${moveNameOf(red)}`);
+    expect(verdicts(el)[1]![1]).toMatch(/^Gagne : les Rouges forcent la victoire en \d+ coups?\.$/);
+    vi.advanceTimersByTime(INTRO_READ_MS);
+    expect(toyPhase(el)).toBe('ready');
+    expect(drawnCells(el)).toEqual(initial().cells);
+    expect(verdicts(el)).toHaveLength(0);
+    expect(ask(el)).toBe(ASK_WHITE);
+    expect($(el, '.play-from').hasAttribute('data-away')).toBe(false);
+    vi.useRealTimers();
+  });
+
+  it('the reader’s first press ends it at once and acts on the start position', async () => {
+    vi.useFakeTimers();
+    const p = mount();
+    await vi.advanceTimersByTimeAsync(0);
+    const el = await p;
+    intersect(el);
+    vi.advanceTimersByTime(MOVE_TEMPO_MS);
+    expect(verdicts(el)).toHaveLength(1);
+    press(cell(el, 2));
+    expect(toyPhase(el)).toBe('ready');
+    expect(verdicts(el)).toHaveLength(0);
+    expect(drawnCells(el)).toEqual(initial().cells);
+    expect(el.shadowRoot!.querySelector('.board .mark.picked')!.getAttribute('data-cell')).toBe('2');
+    vi.advanceTimersByTime(10 * INTRO_READ_MS);
+    expect(verdicts(el)).toHaveLength(0);
+    vi.useRealTimers();
+  });
+
+  it('leaving the screen ends it; under reduced motion it never plays', async () => {
+    vi.useFakeTimers();
+    const p = mount();
+    await vi.advanceTimersByTimeAsync(0);
+    const el = await p;
+    intersect(el);
+    vi.advanceTimersByTime(MOVE_TEMPO_MS);
+    leave(el);
+    expect(toyPhase(el)).toBe('ready');
+    expect(drawnCells(el)).toEqual(initial().cells);
+    vi.useRealTimers();
+    document.body.innerHTML = '';
+    const still = await mount('fr', true);
+    expect(toyPhase(still)).toBe('ready');
+    expect(verdicts(still)).toHaveLength(0);
   });
 });

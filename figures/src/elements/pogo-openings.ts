@@ -8,24 +8,36 @@
 // legal() before anything is drawn). The essay's claim, the six first moves on
 // one's own row are exactly those that avoid defeat, is held by a test there.
 // The board is played as every board of the page: tap a stack, choose how many
-// pieces (1, 2 or 3, also by key), tap where they land (kit/take-pieces.ts). The figure plays nothing by itself: the reader is the one
-// who plays. « Jouer cette position » hands the position on the board over.
+// pieces (1, 2 or 3, also by key), tap where they land (kit/take-pieces.ts).
+// It is a toy (kit/toy.ts): the first time it comes on screen it plays its
+// introduction once, White's losing first move to the centre then Red's
+// quickest win, each verdict held to be read (introMoves()); then, or at the
+// reader's first press, it is back on the start position and the reader's.
+// The verdicts sit beside the board when there is room (under it when narrow),
+// White's row and Red's named from the start, an ink arrow from the board to
+// them. « Jouer cette position » hands the position on the board over, once
+// the toy is the reader's.
 import { WASM_FILE, assetUrl } from '../assets';
 import type { TableData } from '../data';
 import { initial, legal, moveName, play, ready, type Colour, type Move, type State, type Triple } from '../engine';
 import { boardLabels } from '../kit/board-labels';
 import { animateMove, drawBoard } from '../kit/board-svg';
-import { controlButton, playFromButton } from '../kit/controls';
+import { controlButton, playFromButton, setAway } from '../kit/controls';
 import { PogoFigure } from '../kit/figure';
 import { moveTip } from '../kit/move-tip';
 import { t } from '../kit/strings';
 import { takePieces } from '../kit/take-pieces';
+import { MOVE_TEMPO_MS } from '../kit/tempo';
+import { readingMark, toy } from '../kit/toy';
 import { sharedTable } from '../table';
-import { openingChoices, outcomeText, replyChoices, verdictOf } from './openings-verdicts';
+import { introMoves, openingChoices, outcomeText, replyChoices, verdictOf } from './openings-verdicts';
 import openingsCss from './pogo-openings.css?raw';
 
 /** The table holds the verdicts of the first two moves: White's first, Red's reply. */
 const JUDGED = 2;
+
+/** How long the introduction holds each verdict: one sentence to read. */
+export const INTRO_READ_MS = 3000;
 
 export class PogoOpenings extends PogoFigure {
   static override styles = openingsCss;
@@ -57,8 +69,6 @@ export class PogoOpenings extends PogoFigure {
     const moves = (): Move[] => (played.length < JUDGED ? legal(now()) : []);
 
     const root = el('div', 'openings');
-    const askLine = el('p', 'ask say');
-    askLine.setAttribute('aria-live', 'polite');
 
     const playBox = el('div', 'play');
     const take = takePieces({
@@ -95,6 +105,11 @@ export class PogoOpenings extends PogoFigure {
     const actions = el('div', 'controls actions');
     actions.append(restart, offer);
 
+    const SIDES: Colour[] = ['White', 'Red'];
+    /** The toy is the reader's (kit/toy.ts calls onReady once, maybe before toy() returns). */
+    let isReady = false;
+    /** The invitation, the toy's: set once toy() has returned. */
+    let askLine: HTMLParagraphElement | null = null;
     const drawBoardPart = (before?: SVGSVGElement, moved?: Triple): void => {
       const last = played.at(-1);
       const svg = drawBoard(now(), {
@@ -113,18 +128,27 @@ export class PogoOpenings extends PogoFigure {
     const update = (before: SVGSVGElement | null, moved?: Triple): void => {
       drawBoardPart(before ?? undefined, moved);
       list.replaceChildren(
-        ...played.map((m, k) => {
-          const mover: Colour = k === 0 ? 'White' : 'Red';
+        ...SIDES.map((mover, k) => {
+          const m = played[k];
           const li = el('li', 'verdict-row');
           li.dataset.side = mover;
+          const side = t(lang, mover === 'White' ? 'white' : 'red');
+          // A row not played yet: the side named, its verdict to come.
+          if (!m) {
+            li.dataset.pending = '';
+            li.append(el('p', 'move', side), el('p', 'verdict', '…'));
+            return li;
+          }
           const move = el('p', 'move');
-          move.append(`${t(lang, mover === 'White' ? 'white' : 'red')} `, moveTip(lang, m));
+          move.append(`${side} `, moveTip(lang, m));
           li.append(move, el('p', 'verdict', outcomeText(lang, mover, verdictOf(table, played.slice(0, k + 1)))));
           return li;
         }),
       );
-      askLine.textContent = t(lang, played.length === 0 ? 'openingsAskWhite' : played.length === 1 ? 'openingsAskRed' : 'openingsDone');
-      restart.disabled = played.length === 0;
+      // Hidden by the theme until the toy is the reader's; its text then follows the moves played.
+      if (askLine) askLine.textContent = t(lang, played.length === 0 ? 'openingsAskWhite' : played.length === 1 ? 'openingsAskRed' : 'openingsDone');
+      restart.disabled = played.length === 0 || !isReady;
+      setAway(offer, !isReady);
     };
 
     const boardCol = el('div', 'board-col');
@@ -132,7 +156,35 @@ export class PogoOpenings extends PogoFigure {
     const side = el('div', 'side');
     side.append(list, actions);
     const body = el('div', 'tester');
-    body.append(boardCol, side);
+    // From the board to its verdicts: right when they stand beside it, down when under it (pogo-openings.css).
+    const reads = readingMark('right');
+    body.append(boardCol, reads, side);
+
+    const [introWhite, introRed] = introMoves(table);
+    const intro = [[], [introWhite], [introWhite, introRed]] as Triple[][];
+    const toyState = toy(this, {
+      root,
+      invite: t(lang, 'openingsAskWhite'),
+      intro: {
+        steps: intro.length,
+        show: (i) => {
+          const before = playBox.querySelector<SVGSVGElement>(':scope > svg');
+          played = intro[i]!;
+          update(before, played.at(-1));
+        },
+        interval: (i) => (i === 0 ? MOVE_TEMPO_MS : INTRO_READ_MS),
+      },
+      onReady: () => {
+        isReady = true;
+        played = [];
+        take.putDown();
+        update(null);
+      },
+      signal,
+    });
+    askLine = toyState.invite;
+    askLine.classList.add('ask');
+    askLine.setAttribute('aria-live', 'polite');
     // What to do next, above the board: read before the board is played.
     root.append(askLine, body);
     update(null);

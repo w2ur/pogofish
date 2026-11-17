@@ -2,7 +2,7 @@ import { readFileSync } from 'node:fs';
 import { describe, expect, it } from 'vitest';
 import type { TableData } from '../data';
 import { initial, key, legal, moveName, parseMoveName, play } from '../engine';
-import { openingChoices, outcome, outcomeText, replyChoices, verdictOf } from './openings-verdicts';
+import { introMoves, openingChoices, outcome, outcomeText, replyChoices, verdictOf } from './openings-verdicts';
 
 const table = JSON.parse(readFileSync('public/data/table.json', 'utf8')) as TableData;
 const names = (xs: { move: number[] }[]) => xs.map((x) => moveName(x.move as [number, number, number])).sort();
@@ -107,5 +107,19 @@ describe('outcomeText', () => {
         expect(outcomeText(lang, 'White', v)).not.toMatch(/nulle|draw/i);
       }
     }
+  });
+});
+
+describe('introMoves', () => {
+  it('the introduction’s two moves: White’s first to the centre, which loses, then Red’s quickest win', () => {
+    const [white, red] = introMoves(table);
+    expect(white[2]).toBe(4);
+    expect(verdictOf(table, [white]).kind).toBe('loses-in');
+    // The first such opening in the table's order.
+    expect(moveName(white)).toBe(moveName(table.openings.find((o) => o.move[2] === 4 && o.verdict.kind === 'loses-in')!.move));
+    const v = verdictOf(table, [white, red]);
+    expect(v.kind).toBe('wins-in');
+    const fewest = Math.min(...replyChoices(table, white).moves.map((m) => (m.verdict.kind === 'wins-in' ? m.verdict.plies : Infinity)));
+    expect(v.kind === 'wins-in' && v.plies).toBe(fewest);
   });
 });
