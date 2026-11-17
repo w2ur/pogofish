@@ -6,20 +6,9 @@
 // (follow-panel.ts). Both offer side and level before each game, and « Nouvelle
 // partie » asks once before abandoning one, which then leaves the setup for the
 // next. Every board shows the store's one game; the driver plays the AI's side
-// once for the page. The choices come from board-state.ts, never from the DOM.
-import {
-  announceMove,
-  chooseCount,
-  counts,
-  describeCell,
-  destinations,
-  neighbour,
-  origins,
-  resultText,
-  tap,
-  type CellMark,
-  type Selection,
-} from '../board-state';
+// once for the page. The reader takes pieces as on every board of the page
+// (kit/take-pieces.ts); the choices come from board-state.ts, never from the DOM.
+import { announceMove, resultText } from '../board-state';
 import { createDriver, type Driver } from '../driver';
 import { escapeAction, followShown, watchInlineBoards, type FollowSize, type ObserverCtor } from '../follow-panel';
 import { initial, legal, type Move, type State, type Triple } from '../engine';
@@ -27,10 +16,11 @@ import { animateMove, drawBoard } from '../kit/board-svg';
 import { PogoFigure, kitSheet } from '../kit/figure';
 import { moveText, moveTip } from '../kit/move-tip';
 import { colon, t, type Lang } from '../kit/strings';
+import { takePieces, type TakePieces } from '../kit/take-pieces';
 import { SearchClient } from '../search-client';
 import { store, type Level, type Store } from '../store';
 import boardCss from './pogo-board.css?raw';
-import { buildView, colourKey, stamp, type CountValue, type Ui } from './pogo-board-view';
+import { buildView, colourKey, stamp, type Ui } from './pogo-board-view';
 
 let sheet: CSSStyleSheet | undefined;
 function boardSheet(): CSSStyleSheet {
@@ -59,8 +49,8 @@ export class PogoBoard extends PogoFigure {
   };
 
   private ui: Ui | undefined;
-  private selection: Selection = null;
-  private focusCell = 0;
+  /** The lifted stack, the squares' buttons and the count chooser: the page's one way to take pieces. */
+  private take: TakePieces | undefined;
   /** A follow board: whether an inline board of the document is on screen. */
   private inlineOnScreen = false;
   /** « Nouvelle partie » was pressed once during a game: the next press abandons it. */
@@ -172,7 +162,7 @@ export class PogoBoard extends PogoFigure {
       stop?.focus();
       return;
     }
-    ui.cells[this.focusCell]?.focus();
+    this.take?.focus();
   }
 
   private setSize(size: FollowSize): void {
@@ -190,11 +180,18 @@ export class PogoBoard extends PogoFigure {
     await s.ready();
     if (signal.aborted) return;
     const driver = this.deps.driver();
+    // No `keys`: Escape does more on this board (onKey), which routes 1/2/3 and the put-down itself.
+    const take = takePieces({
+      lang: this.lang,
+      id: 'counts-label',
+      state: () => this.view().s,
+      moves: () => this.view().moves,
+      onPlay: (move) => this.deps.store.play(move),
+      onChange: () => this.update(),
+    });
+    this.take = take;
     this.ui = buildView(this.lang, this.mode, {
-      cell: (i) => this.onCell(i),
-      arrow: (e) => this.onArrow(e),
       key: this.onKey,
-      count: (n) => this.onCount(n),
       side: (c) => this.deps.store.setReaderColour(c),
       level: (l) => this.deps.store.setLevel(l),
       newGame: () => this.newGame(),
@@ -212,7 +209,7 @@ export class PogoBoard extends PogoFigure {
         this.deps.store.setFollowClosed(true);
         this.update();
       },
-    });
+    }, take);
     this.stage.append(this.ui.root);
     const ui = this.ui;
     // A press anywhere else in the board puts the abandon question away.
@@ -230,6 +227,7 @@ export class PogoBoard extends PogoFigure {
         offGame();
         offDriver();
         this.ui = undefined;
+        this.take = undefined;
         this.drawn = '';
         this.seen = undefined;
         this.heard = undefined;
@@ -277,43 +275,14 @@ export class PogoBoard extends PogoFigure {
     return { s, moves: readerTurn ? legal(s) : [], readerTurn };
   }
 
-  private onCell(i: number): void {
-    this.focusCell = i;
-    const { moves } = this.view();
-    if (moves.length === 0) return;
-    const r = tap(this.selection, moves, i);
-    if ('play' in r) {
-      this.selection = null;
-      this.deps.store.play(r.play);
-      return;
-    }
-    this.selection = r.selection;
-    this.update();
-  }
-
-  private onCount(n: number): void {
-    const { moves } = this.view();
-    this.selection = chooseCount(this.selection, moves, n);
-    this.update();
-  }
-
-  private onArrow(e: KeyboardEvent): void {
-    const from = Number((e.target as HTMLElement).dataset.cell ?? this.focusCell);
-    const to = neighbour(from, e.key);
-    if (to === from && !e.key.startsWith('Arrow')) return;
-    e.preventDefault();
-    this.focusCell = to;
-    this.syncFocus();
-    this.ui?.cells[to]?.focus();
-  }
-
   /** 1/2/3 choose the count; Escape puts the question, then the stack, away, then folds a follow board. Anywhere in the board. */
   private onKey = (e: KeyboardEvent): void => {
+    const lifted = (this.take?.selection() ?? null) !== null;
     const escape =
       e.key === 'Escape'
         ? escapeAction({
             confirming: this.confirming,
-            lifted: this.selection !== null,
+            lifted: lifted,
             follow: this.mode === 'follow',
             size: this.deps.store.followSize(),
           })
@@ -324,55 +293,45 @@ export class PogoBoard extends PogoFigure {
       this.update();
     } else if (escape === 'put-down') {
       e.preventDefault();
-      this.selection = null;
+      this.take?.putDown();
       this.update();
     } else if (escape === 'fold') {
       // Folding hides the body: repairFocus() hands focus to the toggle if it was there.
       e.preventDefault();
       this.deps.store.setFollowSize('bar');
       this.update();
-    } else if (['1', '2', '3'].includes(e.key) && this.selection !== null) {
+    } else if (['1', '2', '3'].includes(e.key) && lifted) {
       e.preventDefault();
-      this.onCount(Number(e.key));
+      this.take?.count(Number(e.key));
     }
   };
 
-  private syncFocus(): void {
-    this.ui?.cells.forEach((b, i) => (b.tabIndex = i === this.focusCell ? 0 : -1));
-  }
-
   private update(): void {
     const ui = this.ui;
-    if (!ui) return;
+    const take = this.take;
+    if (!ui || !take) return;
     const lang = this.lang;
     const { store: st } = this.deps;
     const driver = this.deps.driver();
     const g = st.current();
     const status = driver.status();
-    const { s, moves, readerTurn } = this.view();
+    const { readerTurn } = this.view();
 
     const ply = g?.moves.length ?? 0;
     const moved = g !== null && this.seen?.start === g.start && ply === this.seen.ply + 1;
     // A new position puts down whatever was lifted, and the abandon question with it:
     // blur alone cannot clear it where a click does not focus a button (Safari, Firefox on Mac).
     if (!g || this.seen?.start !== g.start || this.seen.ply !== ply) {
-      this.selection = null;
+      take.putDown();
       this.confirming = false;
     }
-    if (this.selection && !origins(moves).includes(this.selection.from)) this.selection = null;
     this.seen = g ? { start: g.start, ply } : undefined;
 
-    this.draw(g?.moves[ply - 1], moves, moved);
-    this.drawCells(s, moves);
-
-    // Count chooser: only the counts that can move, the chosen one pressed.
-    const sel = this.selection;
-    const available = sel ? counts(moves, sel.from) : [];
-    // Kept (hidden) through the game, so lifting a stack never shifts the page; gone outside one.
-    ui.count.element.toggleAttribute('data-off', sel === null);
+    this.draw(g?.moves[ply - 1], moved);
+    // The squares' names and the count chooser: only the counts that can move, the chosen one pressed.
+    take.sync();
+    // The chooser's line is kept (off) through the game, so lifting a stack never shifts the page; gone outside one.
     ui.count.element.hidden = g === null || g.finished;
-    ui.count.buttons.forEach((b, k) => (b.hidden = !available.includes(k + 1)));
-    ui.count.set(sel ? (String(sel.count) as CountValue) : null);
 
     // Status: the result, the AI thinking or failing, or the reader's turn, in one reserved area.
     const result = g ? resultText(lang, g) : null;
@@ -447,17 +406,11 @@ export class PogoBoard extends PogoFigure {
   }
 
   /** Redraws the SVG only when what it shows changed, so a running move animation is not cut. */
-  private draw(last: Triple | undefined, moves: Move[], moved: boolean): void {
+  private draw(last: Triple | undefined, moved: boolean): void {
     const ui = this.ui!;
     const g = this.deps.store.current();
     const s = g ? g.states[g.states.length - 1]! : initial();
-    const marks: { cell: number; kind: 'target' | 'picked' }[] = [];
-    if (this.selection) {
-      marks.push({ cell: this.selection.from, kind: 'picked' });
-      for (const c of destinations(moves, this.selection.from, this.selection.count)) marks.push({ cell: c, kind: 'target' });
-    } else {
-      for (const c of origins(moves)) marks.push({ cell: c, kind: 'target' });
-    }
+    const marks = this.take!.marks();
     const key = JSON.stringify([s.cells, last, marks]);
     if (key === this.drawn) return;
     this.drawn = key;
@@ -470,25 +423,6 @@ export class PogoBoard extends PogoFigure {
     before.replaceWith(svg);
     ui.svg = svg;
     if (moved && last && !this.reducedMotion()) animateMove(before, svg, last);
-  }
-
-  private drawCells(s: State, moves: Move[]): void {
-    const ui = this.ui!;
-    const lang = this.lang;
-    const sel = this.selection;
-    const lift = origins(moves);
-    const land = sel ? destinations(moves, sel.from, sel.count) : [];
-    ui.cells.forEach((b, i) => {
-      let mark: CellMark = null;
-      if (sel?.from === i) mark = 'selected';
-      else if (land.includes(i)) mark = 'target';
-      else if (!sel && lift.includes(i)) mark = 'can-lift';
-      const actionable = sel ? mark !== null || lift.includes(i) : mark === 'can-lift';
-      b.setAttribute('aria-label', describeCell(lang, s, i, mark));
-      b.toggleAttribute('data-actionable', actionable);
-      b.setAttribute('aria-disabled', String(!actionable));
-    });
-    this.syncFocus();
   }
 
   /**
@@ -537,6 +471,6 @@ export class PogoBoard extends PogoFigure {
     if (!gone) return;
     if (ui.panel && !ui.panel.dot.hidden) ui.panel.dot.focus();
     else if (ui.body.hidden) ui.panel?.toggle.focus();
-    else ui.cells[this.focusCell]?.focus();
+    else this.take?.focus();
   }
 }

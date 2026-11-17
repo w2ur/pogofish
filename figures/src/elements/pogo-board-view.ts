@@ -1,14 +1,15 @@
 // The DOM of <pogo-board>, built once per render: it holds no state and makes no
 // decision. pogo-board.ts owns the state and fills these nodes in update().
-import { SCREEN_ORDER, longestResult } from '../board-state';
+import { longestResult } from '../board-state';
 import { initial, type Colour } from '../engine';
 import { boardLabels } from '../kit/board-labels';
 import { drawBoard } from '../kit/board-svg';
 import { choiceGroup, controlButton, iconControl, type ChoiceGroup } from '../kit/controls';
-import { colon, t, type Lang, type StringKey } from '../kit/strings';
+import { t, type Lang, type StringKey } from '../kit/strings';
+import type { CountValue, TakePieces } from '../kit/take-pieces';
 import { LEVELS, type Level } from '../store';
 
-export type CountValue = '1' | '2' | '3';
+export type { CountValue };
 export const COLOURS: readonly Colour[] = ['White', 'Red'];
 export const colourKey = (c: Colour): StringKey => (c === 'White' ? 'white' : 'red');
 
@@ -57,10 +58,7 @@ export interface Ui {
 
 /** What the view's controls call; the element decides what each does. */
 export interface Handlers {
-  cell(i: number): void;
-  arrow(e: KeyboardEvent): void;
   key(e: KeyboardEvent): void;
-  count(n: number): void;
   side(c: Colour): void;
   level(l: Level): void;
   /** « Nouvelle partie », or its confirmation when a game is under way. */
@@ -86,7 +84,8 @@ const BOARD_ICON = 'M2 2h12v12H2zM6 2v12M10 2v12M2 6h12M2 10h12';
 /** « Vous gagnez. » as the stamp says it: the sentence without its full stop. */
 export const stamp = (you: string): string => you.replace(/\.$/, '');
 
-export function buildView(lang: Lang, mode: 'inline' | 'follow', h: Handlers): Ui {
+/** `take` is the board's way to take pieces (kit/take-pieces.ts): its squares are laid over the board, its count chooser under it. */
+export function buildView(lang: Lang, mode: 'inline' | 'follow', h: Handlers, take: TakePieces): Ui {
   const el = <K extends keyof HTMLElementTagNameMap>(tag: K, className = '', text = ''): HTMLElementTagNameMap[K] => {
     const node = document.createElement(tag);
     if (className) node.className = className;
@@ -150,28 +149,8 @@ export function buildView(lang: Lang, mode: 'inline' | 'follow', h: Handlers): U
 
   const play = el('div', 'play');
   const svg = drawBoard(initial(), { labelRoom: true });
-  const grid = el('div', 'cells');
-  grid.setAttribute('role', 'group');
-  grid.setAttribute('aria-label', t(lang, 'board'));
-  const cells: HTMLButtonElement[] = [];
-  for (const i of SCREEN_ORDER) {
-    const b = el('button', 'cell-button');
-    b.type = 'button';
-    b.dataset.cell = String(i);
-    b.addEventListener('click', () => h.cell(i));
-    cells[i] = b;
-    grid.append(b);
-  }
-  grid.addEventListener('keydown', h.arrow);
-  play.append(svg, boardLabels(), grid);
-
-  const count = choiceGroup<CountValue>({
-    label: `${t(lang, 'pieces')}${colon(lang)}`,
-    id: 'counts-label',
-    choices: (['1', '2', '3'] as const).map((n) => ({ value: n, label: n })),
-    onChoose: (n) => h.count(Number(n)),
-  });
-  count.element.classList.add('counts');
+  play.append(svg, boardLabels(), take.grid);
+  const { cells, counts: count } = take;
 
   // Side and level, for the next game: on the follow board too, which is the page's board.
   const side = choiceGroup<Colour>({

@@ -8,25 +8,21 @@
 // legal() before anything is drawn). The essay's claim, the six first moves on
 // one's own row are exactly those that avoid defeat, is held by a test there.
 // The board is played as every board of the page: tap a stack, choose how many
-// pieces (1, 2 or 3, also by key), tap where they land (board-input.ts,
-// board-state.ts). The figure plays nothing by itself: the reader is the one
+// pieces (1, 2 or 3, also by key), tap where they land (kit/take-pieces.ts). The figure plays nothing by itself: the reader is the one
 // who plays. « Jouer cette position » hands the position on the board over.
-import { boardInput } from '../board-input';
-import { chooseCount, counts, describeCell, destinations, origins, tap, type Selection } from '../board-state';
 import { WASM_FILE, assetUrl } from '../assets';
 import type { TableData } from '../data';
 import { initial, legal, moveName, play, ready, type Colour, type Move, type State, type Triple } from '../engine';
 import { boardLabels } from '../kit/board-labels';
 import { animateMove, drawBoard } from '../kit/board-svg';
-import { choiceGroup, controlButton, playFromButton } from '../kit/controls';
+import { controlButton, playFromButton } from '../kit/controls';
 import { PogoFigure } from '../kit/figure';
 import { moveTip } from '../kit/move-tip';
-import { colon, t } from '../kit/strings';
+import { t } from '../kit/strings';
+import { takePieces } from '../kit/take-pieces';
 import { sharedTable } from '../table';
 import { openingChoices, outcomeText, replyChoices, verdictOf } from './openings-verdicts';
 import openingsCss from './pogo-openings.css?raw';
-
-type CountValue = '1' | '2' | '3';
 
 /** The table holds the verdicts of the first two moves: White's first, Red's reply. */
 const JUDGED = 2;
@@ -57,7 +53,6 @@ export class PogoOpenings extends PogoFigure {
     };
 
     let played: Triple[] = [];
-    let selection: Selection = null;
     const now = (): State => played.reduce((s, m) => play(s, m), initial());
     const moves = (): Move[] => (played.length < JUDGED ? legal(now()) : []);
 
@@ -66,31 +61,20 @@ export class PogoOpenings extends PogoFigure {
     askLine.setAttribute('aria-live', 'polite');
 
     const playBox = el('div', 'play');
-    const input = boardInput({
-      label: t(lang, 'board'),
-      onCell: (i) => onCell(i),
-      keys: root,
-      lifted: () => selection !== null,
-      onCount: (n) => {
-        selection = chooseCount(selection, moves(), n);
-        drawBoardPart();
-      },
-      onDrop: () => {
-        selection = null;
-        drawBoardPart();
-      },
-    });
-    playBox.append(boardLabels(), input.grid);
-    const count = choiceGroup<CountValue>({
-      label: `${t(lang, 'pieces')}${colon(lang)}`,
+    const take = takePieces({
+      lang,
       id: 'openings-counts-label',
-      choices: (['1', '2', '3'] as const).map((n) => ({ value: n, label: n })),
-      onChoose: (n) => {
-        selection = chooseCount(selection, moves(), Number(n));
-        drawBoardPart();
+      keys: root,
+      state: now,
+      moves,
+      onPlay: (move) => {
+        const before = playBox.querySelector<SVGSVGElement>(':scope > svg');
+        played = [...played, move];
+        update(before, move);
       },
+      onChange: () => drawBoardPart(),
     });
-    count.element.classList.add('counts');
+    playBox.append(boardLabels(), take.grid);
 
     const list = el('ol', 'played');
     list.setAttribute('aria-label', t(lang, 'openingsPlayedList'));
@@ -100,7 +84,7 @@ export class PogoOpenings extends PogoFigure {
       t(lang, 'restart'),
       () => {
         played = [];
-        selection = null;
+        take.putDown();
         update(null);
       },
       true,
@@ -112,35 +96,17 @@ export class PogoOpenings extends PogoFigure {
     actions.append(restart, offer);
 
     const drawBoardPart = (before?: SVGSVGElement, moved?: Triple): void => {
-      const s = now();
-      const legalMoves = moves();
-      const lift = origins(legalMoves);
-      const land = selection ? destinations(legalMoves, selection.from, selection.count) : [];
       const last = played.at(-1);
-      const marks = selection
-        ? [{ cell: selection.from, kind: 'picked' as const }, ...land.map((cell) => ({ cell, kind: 'target' as const }))]
-        : lift.map((cell) => ({ cell, kind: 'target' as const }));
-      const svg = drawBoard(s, {
+      const svg = drawBoard(now(), {
         labelRoom: true,
-        marks,
+        marks: take.marks(),
         // The move just played keeps its frame until a stack is lifted.
-        ...(last && !selection ? { to: last[2], moving: last[1] } : {}),
+        ...(last && !take.selection() ? { to: last[2], moving: last[1] } : {}),
       });
       playBox.querySelector(':scope > svg')?.remove();
       playBox.prepend(svg);
       if (before && moved && !this.reducedMotion()) animateMove(before, svg, moved);
-      input.cells.forEach((b, i) => {
-        const mark = selection?.from === i ? 'selected' : land.includes(i) ? 'target' : !selection && lift.includes(i) ? 'can-lift' : null;
-        const actionable = mark !== null || lift.includes(i);
-        b.setAttribute('aria-label', describeCell(lang, s, i, mark));
-        b.toggleAttribute('data-actionable', actionable);
-        b.setAttribute('aria-disabled', String(!actionable));
-      });
-      input.syncFocus();
-      const available = selection ? counts(legalMoves, selection.from) : [];
-      count.element.toggleAttribute('data-off', selection === null);
-      count.buttons.forEach((b, k) => (b.hidden = !available.includes(k + 1)));
-      count.set(selection ? (String(selection.count) as CountValue) : null);
+      take.sync();
     };
 
     /** Redraws all: the board (the pieces of `moved` travelling from `before`), the verdicts, the line that asks. */
@@ -161,21 +127,8 @@ export class PogoOpenings extends PogoFigure {
       restart.disabled = played.length === 0;
     };
 
-    function onCell(i: number): void {
-      const r = tap(selection, moves(), i);
-      if ('play' in r) {
-        const before = playBox.querySelector<SVGSVGElement>(':scope > svg');
-        played = [...played, r.play];
-        selection = null;
-        update(before, r.play);
-        return;
-      }
-      selection = r.selection;
-      drawBoardPart();
-    }
-
     const boardCol = el('div', 'board-col');
-    boardCol.append(playBox, count.element);
+    boardCol.append(playBox, take.counts.element);
     const side = el('div', 'side');
     side.append(list, actions);
     const body = el('div', 'tester');

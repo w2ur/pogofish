@@ -1,8 +1,9 @@
-// The input layer of a board the reader plays on (pogo-moves, pogo-openings):
-// nine buttons laid over the drawn board, one tab stop that the arrow keys
-// move, and, while a stack is lifted, 1/2/3 to choose the count and Escape to
-// put it down. What a tap or a key means is the figure's: this module only
-// wires the buttons and the keys, as board-state.ts decides without the DOM.
+// The buttons of a board the reader acts on: nine of them laid over the drawn
+// board, one tab stop that the arrow keys move, and, while a stack is lifted,
+// 1/2/3 to choose the count and Escape to put it down. What a tap or a key
+// means is the caller's: this module only wires the buttons and the keys, as
+// board-state.ts decides without the DOM. A figure does not use it directly:
+// kit/take-pieces.ts builds the page's one way to take pieces on it.
 import { neighbour, SCREEN_ORDER } from './board-state';
 
 export interface BoardInputOptions {
@@ -10,8 +11,8 @@ export interface BoardInputOptions {
   label: string;
   /** A tap, or Enter/Space, on cell `i`. */
   onCell: (i: number) => void;
-  /** Where 1/2/3 and Escape are heard: the figure's root, so they work from the count chooser too. */
-  keys: HTMLElement;
+  /** Where 1/2/3 and Escape are heard: the figure's root, so they work from the count chooser too. Without it, no key but the arrows is heard. */
+  keys?: HTMLElement;
   /** Whether a stack is lifted: the count and Escape keys act only then. */
   lifted: () => boolean;
   onCount: (n: number) => void;
@@ -25,6 +26,8 @@ export interface BoardInput {
   cells: HTMLButtonElement[];
   /** Puts the board's one tab stop on the cell last touched; call after each update. */
   syncFocus(): void;
+  /** Focus on that tab stop. */
+  focus(): void;
 }
 
 export function boardInput(o: BoardInputOptions): BoardInput {
@@ -41,6 +44,7 @@ export function boardInput(o: BoardInputOptions): BoardInput {
     b.dataset.cell = String(i);
     b.addEventListener('click', () => {
       focusCell = i;
+      syncFocus();
       o.onCell(i);
     });
     cells[i] = b;
@@ -59,7 +63,7 @@ export function boardInput(o: BoardInputOptions): BoardInput {
     cells[to]?.focus();
   });
 
-  o.keys.addEventListener('keydown', (e) => {
+  o.keys?.addEventListener('keydown', (e) => {
     if (!o.lifted()) return;
     if (e.key === 'Escape') {
       e.preventDefault();
@@ -71,5 +75,5 @@ export function boardInput(o: BoardInputOptions): BoardInput {
   });
 
   syncFocus();
-  return { grid, cells, syncFocus };
+  return { grid, cells, syncFocus, focus: () => cells[focusCell]?.focus() };
 }
