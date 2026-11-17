@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import { LC1_2, initial, legal, play, terminal, winner, type Colour, type State } from '../engine';
 import { LOSS_SCORE, WIN_SCORE, greedyMove, mulberry32 } from '../players';
-import { GAME_SEED, SHORT_PLIES, gapText, greedyGame, positionKey, stacks, suits, valueRows } from './greedy-game';
+import { GAME_SEED, SHORT_PLIES, candidateRows, endOf, gapText, greedyGame, positionKey, stacks, suits, valueRows } from './greedy-game';
 
 // `node tools/article-visuals/greedy.mjs OUT moves SEED`, run on 2026-11-16: the tool's games.
 const GREEDY_MJS = {
@@ -129,8 +129,33 @@ describe('the game the figure shows', () => {
               : LOSS_SCORE
           : tops(next, mover) - tops(next, other(mover));
         expect(o.score, `move ${i + 1}, option ${k}`).toBe(expected);
+        // The stacks each colour owns after it, counted here from that position.
+        expect(o.stacks, `move ${i + 1}, option ${k}`).toEqual({ white: tops(next, 'White'), red: tops(next, 'Red') });
       });
     });
+  });
+
+  it('candidateRows: every move weighed, the greatest value first, engine order among equals; the best and the one played marked', () => {
+    for (const f of frames.slice(1)) {
+      const c = f.choice!;
+      const rows = candidateRows(c);
+      expect(rows.map((r) => r.move).sort()).toEqual(c.options.map((o) => o.move).sort());
+      for (let k = 1; k < rows.length; k++) {
+        expect(rows[k - 1]!.score).toBeGreaterThanOrEqual(rows[k]!.score);
+        if (rows[k - 1]!.score === rows[k]!.score) {
+          const at = (r: (typeof rows)[number]) => c.options.findIndex((o) => o.move === r.move);
+          expect(at(rows[k - 1]!)).toBeLessThan(at(rows[k]!));
+        }
+      }
+      expect(rows.filter((r) => r.best)).toHaveLength(c.tied);
+      expect(rows.filter((r) => r.best).every((r) => r.score === rows[0]!.score)).toBe(true);
+      expect(rows.filter((r) => r.chosen).map((r) => r.move)).toEqual([c.move]);
+      // The gap is read off the two counts, the mover's less the opponent's (an end is not a gap).
+      for (const r of rows) {
+        if (endOf(r.score)) continue;
+        expect(r.score).toBe(c.mover === 'White' ? r.stacks.white - r.stacks.red : r.stacks.red - r.stacks.white);
+      }
+    }
   });
 
   it('valueRows: one row per value, the greatest first, the move played in the first row, ties counted', () => {
