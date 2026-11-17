@@ -11,15 +11,25 @@
 // is not drawn in full is drawn as a trace: the row under a position, the
 // position a row folds into. It plays by itself once on screen
 // (kit/autoplay.ts); under reduced motion it shows a position and its row.
+//
+// The reader can take it, as one line under the drawing invites them to: swap
+// two places of the row, move a square's top piece onto another square, or
+// tap the turn line (count-edit.ts). The telling pauses, as the reader's own
+// pause; both sides are drawn in full, and the side the reader did not touch
+// follows, its pieces travelling. ▶ gives the figure back its story.
+import { boardInput } from '../board-input';
+import { describeCell } from '../board-state';
 import { WASM_FILE, assetUrl } from '../assets';
 import { DEFAULT_GAME } from '../default-game';
 import { ready, replay, type Colour, type State, type Triple } from '../engine';
 import { autoplay } from '../kit/autoplay';
-import { transport } from '../kit/controls';
+import { roving, transport } from '../kit/controls';
 import { PogoFigure } from '../kit/figure';
 import { Stepper } from '../kit/stepper';
-import { t, type Lang, type StringKey } from '../kit/strings';
-import { BARS, PIECES, countFrames, reassign, type CountFrame } from './count-row';
+import { labelTip } from '../kit/move-tip';
+import { colon, t, type Lang, type StringKey } from '../kit/strings';
+import { moveTop, rowItems, swapItems } from './count-edit';
+import { BARS, PIECES, countFrames, fromRow, reassign, type CountFrame, type Row } from './count-row';
 import { CELL, LAYOUTS, RADIUS, layoutFor, scene, type Layout, type Spot } from './count-view';
 import countCss from './pogo-count.css?raw';
 
@@ -109,11 +119,39 @@ export class PogoCount extends PogoFigure {
     const traces = svgEl('g', { class: 'traces' }, svg);
     const barLayer = svgEl('g', { class: 'bars' }, svg);
     const pieceLayer = svgEl('g', { class: 'pieces' }, svg);
-    const turn = el('p', 'turn');
+    // The turn line is the third thing a position is: a tap passes it.
+    const turn = el('button', 'turn');
+    turn.type = 'button';
     const turnPiece = el('span', 'turn-piece');
     const turnText = el('span', 'turn-text');
     turn.append(turnPiece, turnText);
-    sceneBox.append(svg, turn);
+    // What the reader taps, laid over the drawing: the nine squares, the row's twenty places.
+    const boardHit = el('div', 'board-hit');
+    const input = boardInput({
+      label: t(lang, 'board'),
+      onCell: (i) => onSquare(i),
+      keys: boardHit,
+      lifted: () => false,
+      onCount: () => {},
+      onDrop: () => {},
+    });
+    boardHit.append(input.grid);
+    const rowHits = el('div', 'row-hits');
+    rowHits.setAttribute('role', 'group');
+    rowHits.setAttribute('aria-label', t(lang, 'countRow'));
+    const placeButtons = Array.from({ length: PIECES + BARS }, (_, p) => {
+      const b = el('button', 'row-hit');
+      b.type = 'button';
+      b.dataset.place = String(p);
+      b.setAttribute('aria-pressed', 'false');
+      b.addEventListener('click', () => onPlace(p), { signal });
+      return b;
+    });
+    rowHits.append(...placeButtons);
+    roving(rowHits, [placeButtons], signal);
+    for (const b of input.cells) b.setAttribute('aria-pressed', 'false');
+    sceneBox.append(svg, boardHit, rowHits, turn);
+    labelTip(turn, t(lang, 'countPassTurn'));
 
     // The twelve pieces, the same all along: piece d starts at rank d of the first row.
     const colours = [...frames[0]!.row.order];
@@ -142,6 +180,15 @@ export class PogoCount extends PogoFigure {
       turn.style.left = `${((l.board.x / l.width) * 100).toFixed(3)}%`;
       turn.style.width = `${(((3 * CELL) / l.width) * 100).toFixed(3)}%`;
       turn.style.top = `${(((l.board.y + 3 * CELL) / l.height) * 100).toFixed(3)}%`;
+      const box = (node: HTMLElement, left: number, top: number, w: number, h: number): void => {
+        node.style.left = `${((left / l.width) * 100).toFixed(3)}%`;
+        node.style.top = `${((top / l.height) * 100).toFixed(3)}%`;
+        node.style.width = `${((w / l.width) * 100).toFixed(3)}%`;
+        node.style.height = `${((h / l.height) * 100).toFixed(3)}%`;
+      };
+      box(boardHit, l.board.x, l.board.y, 3 * CELL, 3 * CELL);
+      // A place's button is its slot, as tall as a separator.
+      placeButtons.forEach((b, p) => box(b, l.row.x + p * slot, l.row.y - slot * 0.72, slot, slot * 1.44));
     };
 
     const canAnimate = typeof pieces[0]!.animate === 'function';
@@ -157,8 +204,16 @@ export class PogoCount extends PogoFigure {
     };
 
     let shown = -1;
-    const draw = (i: number, animated: boolean): void => {
-      const f = frames[i]!;
+    /** The reader's own position, once they have touched the figure; null while it tells its story. */
+    let edit: { row: Row; turn: Colour; solid: 'board' | 'row' } | null = null;
+    /** What the reader has picked, to swap or to move with their next tap. */
+    let picked: { side: 'board' | 'row'; at: number } | null = null;
+    const current = (): CountFrame =>
+      edit
+        ? { kind: edit.solid === 'board' ? 'board' : 'reorder', row: edit.row, cells: fromRow(edit.row), turn: edit.turn, solid: edit.solid }
+        : frames[shown]!;
+
+    const paint = (f: CountFrame, animated: boolean): void => {
       const s = scene(layout, f);
       at = reassign(at, colours, f.row.order);
       const staged = f.kind === 'unfold' || f.kind === 'fold';
@@ -203,11 +258,72 @@ export class PogoCount extends PogoFigure {
 
       root.dataset.kind = f.kind;
       root.dataset.solid = f.solid;
-      say.textContent = sayFrame(lang, f);
+      say.textContent = edit ? t(lang, 'countSayEdit') : sayFrame(lang, f);
       turnText.textContent = t(lang, f.turn === 'White' ? 'countTurnWhite' : 'countTurnRed');
       turn.dataset.turn = f.turn;
-      turn.toggleAttribute('data-passed', f.kind === 'turn');
+      turn.toggleAttribute('data-passed', !edit && f.kind === 'turn');
+      name(f);
     };
+
+    /** Each square and each place says what it holds, and whether it is picked. */
+    const name = (f: CountFrame): void => {
+      const state = { cells: f.cells, to_move: f.turn, move_count: 0, history: [] };
+      input.cells.forEach((b, i) => {
+        const on = picked?.side === 'board' && picked.at === i;
+        b.setAttribute('aria-label', describeCell(lang, state, i, on ? 'selected' : null));
+        b.setAttribute('aria-pressed', String(on));
+        b.toggleAttribute('data-actionable', f.cells[i]!.length > 0 || picked?.side === 'board');
+      });
+      input.syncFocus();
+      const what = { White: 'countPieceWhite', Red: 'countPieceRed', bar: 'countBar' } as const;
+      rowItems(f.row).forEach((x, p) => {
+        const b = placeButtons[p]!;
+        b.setAttribute('aria-label', `${t(lang, 'countPlace')} ${p + 1}${colon(lang)} ${t(lang, what[x])}`);
+        b.setAttribute('aria-pressed', String(picked?.side === 'row' && picked.at === p));
+      });
+    };
+    const draw = (i: number, animated: boolean): void => paint(frames[i]!, animated);
+
+    /** The reader takes the figure: the telling pauses, as the reader's own pause, on the position shown. */
+    const take = (): NonNullable<typeof edit> => {
+      if (!edit) {
+        const f = frames[shown]!;
+        edit = { row: f.row, turn: f.turn, solid: f.solid };
+        root.toggleAttribute('data-edit', true);
+        stepper.pauseByReader();
+      }
+      return edit;
+    };
+    /** A new position of the reader's: the side they did not touch follows, its pieces travelling. */
+    const follow = (row: Row, follower: 'board' | 'row'): void => {
+      const e = take();
+      const same = e.solid === follower;
+      edit = { ...e, row, solid: follower };
+      picked = null;
+      paint(current(), same && !this.reducedMotion());
+    };
+    function onPlace(p: number): void {
+      take();
+      if (picked?.side === 'row' && picked.at !== p) return follow(swapItems(edit!.row, picked.at, p), 'board');
+      picked = picked?.side === 'row' ? null : { side: 'row', at: p };
+      paint(current(), false);
+    }
+    function onSquare(i: number): void {
+      const e = take();
+      const cells = fromRow(e.row);
+      if (picked?.side === 'board' && picked.at !== i) return follow(moveTop(e.row, picked.at, i), 'row');
+      picked = picked?.side === 'board' || cells[i]!.length === 0 ? null : { side: 'board', at: i };
+      paint(current(), false);
+    }
+    turn.addEventListener(
+      'click',
+      () => {
+        const e = take();
+        edit = { ...e, turn: e.turn === 'White' ? 'Red' : 'White' };
+        paint(current(), false);
+      },
+      { signal },
+    );
 
     const show = (i: number): void => {
       // A step forward travels; the loop's return to its second frame is one too.
@@ -219,7 +335,16 @@ export class PogoCount extends PogoFigure {
     lay(layoutFor(this.getBoundingClientRect().width || LAYOUTS.mid.width));
     const stepper = new Stepper(frames.length, show, { signal, interval: STEP_MS, wrapTo: 1 });
     show(0);
-    root.append(say, sceneBox, transport(stepper, { lang }));
+    // ▶ gives the figure back its story, where it was.
+    stepper.onChange(() => {
+      if (!edit || !stepper.playing) return;
+      edit = null;
+      picked = null;
+      root.removeAttribute('data-edit');
+      draw(shown, false);
+    });
+    const invite = el('p', 'invite', t(lang, 'countInvite'));
+    root.append(say, sceneBox, invite, transport(stepper, { lang }));
     // Under reduced motion: a position and its row, the sentence of the figure.
     autoplay(this, stepper, { signal, still: () => stepper.go(1) });
     this.stage.append(root);
@@ -229,7 +354,7 @@ export class PogoCount extends PogoFigure {
         const width = entries.at(-1)?.contentRect.width ?? 0;
         if (width === 0 || layoutFor(width) === layout) return;
         lay(layoutFor(width));
-        draw(shown, false);
+        paint(current(), false);
       });
       sizes.observe(this);
       signal.addEventListener('abort', () => sizes.disconnect(), { once: true });
