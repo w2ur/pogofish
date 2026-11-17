@@ -480,6 +480,71 @@ slot[hidden],
   outline-offset: -4px;
 }
 
+/*
+ * Drag and drop (drag.ts). A place that holds something takeable keeps the page from scrolling
+ * under the finger that starts on it; what is held is framed in ink as a lifted stack is ringed,
+ * and the place a release would drop on in a thinner frame. Where a held thing may go
+ * ([data-droppable]) is the figure's to draw, or not.
+ */
+.drag-place[data-takeable] {
+  touch-action: none;
+  cursor: grab;
+}
+
+.drag-place[data-held] {
+  cursor: grabbing;
+  outline: 3px solid var(--_ink);
+  outline-offset: -3px;
+}
+
+.drag-place[data-over] {
+  outline: 2px solid var(--_ink);
+  outline-offset: -2px;
+}
+
+/*
+ * A toy (toy.ts). Its invitation: one line at the figure's text size, above what the reader
+ * manipulates; out of sight, its room kept, until the introduction is over.
+ */
+.toy-invite {
+  max-width: 52ch;
+  margin: 0;
+  font-size: 15px;
+  line-height: 1.4;
+  text-align: center;
+  color: var(--_ink);
+}
+
+[data-toy]:not([data-toy='ready']) .toy-invite {
+  visibility: hidden;
+}
+
+/* Which way a toy reads: an ink arrow, never red (red is the Red side), never dashed. */
+.reads {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  color: var(--_ink);
+}
+
+.reads svg {
+  display: block;
+  flex: none;
+}
+
+.reads path {
+  fill: none;
+  stroke: currentColor;
+  stroke-width: 2.5px;
+  stroke-linecap: square;
+}
+
+.reads-label {
+  font-size: 12.8px;
+  line-height: 1.2;
+  color: var(--_ink-2);
+}
+
 /* The count chooser keeps its line when hidden, so the board never shifts. */
 .counts {
   display: flex;
