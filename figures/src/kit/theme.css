@@ -7,6 +7,8 @@
  *   --pogo-edge  --pogo-red  --pogo-red-text  --pogo-white  --pogo-on-red
  *   --pogo-action  --pogo-font  --pogo-font-display
  *
+ * and may declare --pogo-black, which is #0a0a0a in both themes unless it does.
+ *
  * When the page declares none, the fallbacks below are the dark values, and
  * the light ones under prefers-color-scheme: light. The private --_ aliases
  * resolve each token once; nothing below names a colour.
@@ -26,6 +28,8 @@
   --_red-text: var(--pogo-red-text, #ff3b1f);
   --_white: var(--pogo-white, #f2f2ee);
   --_on-red: var(--pogo-on-red, #0a0a0a);
+  /* Black in both themes (a mosaic's game lost): the ground in dark, the ink in light. */
+  --_black: var(--pogo-black, #0a0a0a);
   --_action: var(--pogo-action, #f2f2ee);
   --_font: var(--pogo-font, Archivo, system-ui, sans-serif);
   --_font-display: var(--pogo-font-display, Archivo, system-ui, sans-serif);

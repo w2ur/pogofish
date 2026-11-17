@@ -3,7 +3,8 @@
 // by games trained on a log axis, with the exact-table player, greedy and the
 // random player as horizontal references (public/data/v5.json, seed 1;
 // race-chart.ts places every point). Stage 0 sits in its own column, detached
-// from the axis. Ink only: the programs differ by line style and marker shape.
+// from the axis and named « avant l’entraînement » under it. Each point's 95 %
+// interval is a capped ink stroke beside its marker. Ink only: the programs differ by line style and marker shape.
 //
 // It runs as a race when it comes on screen (kit/autoplay.ts): one clock sweeps
 // the training-games axis from left to right at one speed, stopping at every
@@ -41,6 +42,7 @@ import {
   type LabelBox,
   type RaceChart,
   type RaceEvent,
+  type RacePoint,
   type RaceProgram,
   type RaceSeries,
   type ReferenceKey,
@@ -95,6 +97,18 @@ function marker(program: RaceProgram, x: number, y: number): HTMLElement {
   m.style.left = pc(x);
   m.style.top = pc(1 - y);
   return m;
+}
+
+/**
+ * A point's 95 % interval: an ink stroke from its low end to its high one, capped at both,
+ * set beside its marker (pogo-race.css), since round 5's intervals are about a marker tall.
+ */
+function interval(p: Pick<RacePoint, 'x' | 'lo' | 'hi'>): HTMLElement {
+  const bar = el('span', 'ci');
+  bar.style.left = pc(p.x);
+  bar.style.top = pc(1 - p.hi);
+  bar.style.height = pc(p.hi - p.lo);
+  return bar;
 }
 
 /** « AlphaZero, 100 simulations : au-dessus du glouton dès 500 parties d’entraînement. » */
@@ -229,8 +243,8 @@ export class PogoRace extends PogoFigure {
       const placed0 = placed;
       placed = { i, x, playing };
       plot.clock.style.left = pc(x);
-      // A marker on the clock is uncovered whole: the clip runs half a marker past it.
-      plot.ink.style.clipPath = `inset(-24px calc(${((1 - x) * 100).toFixed(3)}% - 7px) -24px -24px)`;
+      // A marker on the clock is uncovered whole, with its interval beside it: the clip runs past both.
+      plot.ink.style.clipPath = `inset(-24px calc(${((1 - x) * 100).toFixed(3)}% - 14px) -24px -24px)`;
       pushFor(jump ? x : (placed0?.x ?? x), x);
       for (const h of heads) {
         const at = headAt(h.series, x);
@@ -277,13 +291,13 @@ export class PogoRace extends PogoFigure {
     place(stepper);
 
     const controls = transport(stepper, { lang, counter: (i) => clockWords(lang, events[i]!) });
-    // What the strokes are and why the 0 column stands apart: the chart cannot be read without them.
+    // What the axis and the strokes are: the chart cannot be read without them.
     root.append(
       head,
       plot.element,
       controls,
       passes.element,
-      ...(['raceAxis', 'raceCi', 'raceZero'] as const).map((k) => el('p', 'axis-note', t(lang, k))),
+      ...(['raceAxis', 'raceCi'] as const).map((k) => el('p', 'axis-note', t(lang, k))),
       this.values(lang, chart, data),
     );
     this.stage.append(root);
@@ -347,7 +361,7 @@ export class PogoRace extends PogoFigure {
       yAxis.append(tick);
     }
 
-    // Stage 0: one slot per program, its own gridlines, nothing joining it to the axis.
+    // Stage 0: one slot per program, its own gridlines, nothing joining it to the axis, its name under it.
     const zero = hidden(el('div', 'box zero'));
     const zSvg = stretched();
     grid(zSvg);
@@ -355,12 +369,12 @@ export class PogoRace extends PogoFigure {
     for (const s of chart.series) {
       const p = s.points.find((q) => q.column === 'zero');
       if (!p) continue;
-      zSvg.append(svgEl('line', { class: 'ci', x1: p.x * U, x2: p.x * U, y1: Y(p.lo), y2: Y(p.hi) }));
-      zMarks.append(marker(s.program, p.x, p.y));
+      zMarks.append(interval(p), marker(s.program, p.x, p.y));
     }
     zero.append(zSvg, zMarks);
     const zeroTick = hidden(el('div', 'x-axis zero-axis'));
-    const z = el('span', 'tick num', '0');
+    // Named in words: on a count of games, 0 would read as a place on the log axis it is not on.
+    const z = el('span', 'tick', t(lang, 'raceBefore'));
     z.style.left = '50%';
     zeroTick.append(z);
 
@@ -375,11 +389,10 @@ export class PogoRace extends PogoFigure {
     // Drawn last to first, so the first program's line is on top.
     for (const s of [...chart.series].reverse()) {
       const on = s.points.filter((p) => p.column === 'log');
-      for (const p of on) svg.append(svgEl('line', { class: 'ci', x1: p.x * U, x2: p.x * U, y1: Y(p.lo), y2: Y(p.hi) }));
       if (on.length > 1) {
         svg.append(svgEl('polyline', { class: `run run-${s.program}`, points: on.map((p) => `${p.x * U},${Y(p.y)}`).join(' ') }));
       }
-      for (const p of on) marks.append(marker(s.program, p.x, p.y));
+      for (const p of on) marks.append(interval(p), marker(s.program, p.x, p.y));
     }
     ink.append(svg, marks);
     // A frame round each first point above greedy, shown when the clock reaches it.

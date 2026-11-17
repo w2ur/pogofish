@@ -5,8 +5,8 @@
 // hands it as a CSS custom property and lets a zero-length transition time.
 // Under reduced motion the sheet drops every delay.
 
-/** Milliseconds between one game's square and the next: 100 squares sweep in under half a second. */
-export const SWEEP_STEP_MS = 5;
+/** Milliseconds between one game's square and the next: 100 squares sweep in under a third of a second. */
+export const SWEEP_STEP_MS = 3;
 
 /** Games per mosaic. */
 const GAMES = 100;
