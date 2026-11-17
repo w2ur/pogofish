@@ -2,7 +2,7 @@ import { readFileSync } from 'node:fs';
 import { describe, expect, it } from 'vitest';
 import type { TableData } from '../data';
 import { initial, key, legal, moveName, parseMoveName, play } from '../engine';
-import { SHOWN_OPENING, openingChoices, replyChoices, replyGrid, verdictText } from './openings-verdicts';
+import { openingChoices, outcome, outcomeText, replyChoices, verdictOf } from './openings-verdicts';
 
 const table = JSON.parse(readFileSync('public/data/table.json', 'utf8')) as TableData;
 const names = (xs: { move: number[] }[]) => xs.map((x) => moveName(x.move as [number, number, number])).sort();
@@ -40,61 +40,72 @@ describe('replyChoices', () => {
   });
 });
 
-describe('replyGrid', () => {
-  it('shows the replies to c1-1-b1, a first move that keeps the draw', () => {
-    expect(moveName(SHOWN_OPENING)).toBe('c1-1-b1');
-    const g = replyGrid(table);
-    expect(key(g.position)).toBe(key(play(initial(), SHOWN_OPENING)));
-    expect(g.position.to_move).toBe('Red');
-  });
-
-  it('is what the letter’s picture showed: 2 replies of 16 keep the draw, 14 lose, in 8 to 22', () => {
-    const g = replyGrid(table);
-    // Recounted from the file itself, then compared.
-    const raw = table.replies['c1-1-b1']!;
-    expect(raw.filter((m) => m.verdict.kind === 'keeps-draw')).toHaveLength(2);
-    expect(raw.filter((m) => m.verdict.kind === 'loses-in')).toHaveLength(14);
-    expect(g.total).toBe(16);
-    expect(g.keeps.map((x) => moveName(x.move))).toEqual(['a3-1-b3', 'c3-1-b3']);
-    expect(g.loses).toHaveLength(14);
-    const plies = g.loses.map((x) => (x.verdict.kind === 'loses-in' ? x.verdict.plies : NaN));
-    expect(plies).toEqual([8, 10, 12, 12, 12, 12, 12, 14, 14, 16, 16, 18, 18, 22]);
-  });
-
-  it('orders the losses from the fastest to the slowest, equal ones as the table lists them', () => {
-    const g = replyGrid(table);
-    const order = table.replies['c1-1-b1']!.map((m) => moveName(m.move));
-    for (let i = 1; i < g.loses.length; i++) {
-      const [a, b] = [g.loses[i - 1]!, g.loses[i]!];
-      const pa = a.verdict.kind === 'loses-in' ? a.verdict.plies : NaN;
-      const pb = b.verdict.kind === 'loses-in' ? b.verdict.plies : NaN;
-      expect(pa).toBeLessThanOrEqual(pb);
-      if (pa === pb) expect(order.indexOf(moveName(a.move))).toBeLessThan(order.indexOf(moveName(b.move)));
-    }
-  });
-
-  it('every card holds the position its reply leads to, and every legal reply has its card', () => {
-    const g = replyGrid(table);
-    const cards = [...g.keeps, ...g.loses];
-    expect(names(cards)).toEqual(legal(g.position).map(moveName).sort());
-    for (const c of cards) expect(key(c.after)).toBe(key(play(g.position, c.move)));
-  });
-
-  it('refuses a first move that loses, one whose replies include a win, and a move that is not a first move', () => {
-    expect(() => replyGrid(table, parseMoveName('b1-2-b3'))).toThrow(/does not keep the draw/);
-    const wins = JSON.parse(JSON.stringify(table)) as TableData;
-    wins.replies['c1-1-b1']![0]!.verdict = { kind: 'wins-in', plies: 3 };
-    expect(() => replyGrid(wins)).toThrow(/wins/);
-    expect(() => replyGrid(table, parseMoveName('a3-1-b3'))).toThrow(/not a first move/);
+describe('the essay’s claim on the first move', () => {
+  // « Sur les seize premiers coups possibles, seuls les six qui consistent à jouer sur sa propre rangée
+  // évitent la défaite. » Checked both ways: on the row ⇒ avoids defeat, and avoids defeat ⇒ on the row.
+  it('of the sixteen first moves, the six played on one’s own row are exactly those that avoid defeat', () => {
+    const c = openingChoices(table);
+    expect(c.moves).toHaveLength(16);
+    const ownRow = (to: number): boolean => Math.floor(to / 3) === 0;
+    const onRow = c.moves.filter((m) => ownRow(m.move[2])).map((m) => moveName(m.move)).sort();
+    const avoid = c.moves.filter((m) => outcome('White', m.verdict).kind === 'avoids').map((m) => moveName(m.move)).sort();
+    expect(onRow).toHaveLength(6);
+    expect(avoid).toEqual(onRow);
+    // The other ten lose: none of them wins.
+    expect(c.moves.filter((m) => !ownRow(m.move[2])).every((m) => m.verdict.kind === 'loses-in')).toBe(true);
   });
 });
 
-describe('words', () => {
-  it('says each verdict in words, never a score', () => {
-    expect(verdictText('fr', { kind: 'keeps-draw' })).toBe('garde la nulle');
-    expect(verdictText('fr', { kind: 'loses-in', plies: 12 })).toBe('perd en 12');
-    expect(verdictText('fr', { kind: 'wins-in', plies: 21 })).toBe('gagne en 21');
-    expect(verdictText('en', { kind: 'loses-in', plies: 22 })).toBe('loses in 22');
-    expect(verdictText('en', { kind: 'keeps-draw' })).toBe('holds the draw');
+describe('verdictOf', () => {
+  it('reads the verdict of the reader’s first move, then of the reply, from the table', () => {
+    expect(verdictOf(table, [parseMoveName('a1-2-b2')])).toEqual({ kind: 'loses-in', plies: 12 });
+    expect(verdictOf(table, [parseMoveName('a1-2-b2'), parseMoveName('a3-2-b2')])).toEqual({ kind: 'wins-in', plies: 11 });
+    expect(verdictOf(table, [parseMoveName('c1-1-b1'), parseMoveName('a3-1-b3')])).toEqual({ kind: 'keeps-draw' });
+  });
+
+  it('refuses a move the table does not list, and a third move', () => {
+    expect(() => verdictOf(table, [parseMoveName('a3-1-b3')])).toThrow();
+    const a = parseMoveName('c1-1-b1');
+    expect(() => verdictOf(table, [a, parseMoveName('a1-1-a2')])).toThrow();
+    expect(() => verdictOf(table, [a, parseMoveName('a3-1-b3'), a])).toThrow();
+  });
+});
+
+describe('outcome', () => {
+  it('counts the moves the winner needs after the move played: the table counts the move itself', () => {
+    expect(outcome('White', { kind: 'loses-in', plies: 12 })).toEqual({ kind: 'loses', winner: 'Red', moves: 11 });
+    expect(outcome('Red', { kind: 'wins-in', plies: 11 })).toEqual({ kind: 'wins', winner: 'Red', moves: 10 });
+    expect(outcome('Red', { kind: 'keeps-draw' })).toEqual({ kind: 'avoids' });
+  });
+
+  it('the count is the game’s: Red’s forced win after White’s centre opening is the rest of the solved line', () => {
+    const line = table.lines.centreLoss;
+    const first = verdictOf(table, [line[0]!]);
+    const o = outcome('White', first);
+    expect(o.kind).toBe('loses');
+    // The line plays the whole forced win: every move after White's first.
+    expect(o.kind === 'loses' && o.moves).toBe(line.length - 1);
+    const reply = outcome('Red', verdictOf(table, [line[0]!, line[1]!]));
+    expect(reply.kind === 'wins' && reply.moves).toBe(line.length - 2);
+  });
+});
+
+describe('outcomeText', () => {
+  it('says it in the essay’s words: avoids defeat and a game without end, or who forces the win, in how many moves', () => {
+    expect(outcomeText('fr', 'White', { kind: 'keeps-draw' })).toBe('Évite la défaite : la partie peut continuer sans fin.');
+    expect(outcomeText('fr', 'White', { kind: 'loses-in', plies: 12 })).toBe('Perd : les Rouges forcent la victoire en 11 coups.');
+    expect(outcomeText('fr', 'Red', { kind: 'wins-in', plies: 11 })).toBe('Gagne : les Rouges forcent la victoire en 10 coups.');
+    expect(outcomeText('fr', 'Red', { kind: 'loses-in', plies: 2 })).toBe('Perd : les Blancs forcent la victoire en 1 coup.');
+    expect(outcomeText('en', 'White', { kind: 'keeps-draw' })).toBe('Avoids defeat: the game can go on without end.');
+    expect(outcomeText('en', 'White', { kind: 'loses-in', plies: 12 })).toBe('Loses: Red forces the win in 11 moves.');
+    expect(outcomeText('en', 'Red', { kind: 'loses-in', plies: 2 })).toBe('Loses: White forces the win in 1 move.');
+  });
+
+  it('never says « nulle »: the essay speaks of a game without end', () => {
+    for (const lang of ['fr', 'en'] as const) {
+      for (const v of [{ kind: 'keeps-draw' as const }, { kind: 'loses-in' as const, plies: 5 }, { kind: 'wins-in' as const, plies: 5 }]) {
+        expect(outcomeText(lang, 'White', v)).not.toMatch(/nulle|draw/i);
+      }
+    }
   });
 });

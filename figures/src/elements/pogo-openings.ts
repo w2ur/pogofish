@@ -1,46 +1,42 @@
-// <pogo-openings>: one picture, no animation of games. The position after a
-// first move of White's that keeps the draw, then every reply Red has there as
-// a small board showing the reply played (where it left, where it landed), its
-// name and the solved table's verdict: the replies that keep the draw framed
-// and set apart, those that lose from the fastest loss to the slowest
-// (openings-verdicts.ts). The only motion is the boards landing one after the
-// other the first time the figure comes on screen; at rest everything is
-// shown. A board offers « Jouer cette position » when it
-// is pointed at, focused or tapped; nothing else is interactive. Each block
-// of boards is two tab stops, one board's offer and its move name, and the
-// arrow keys move both to the next board (kit/controls.ts roving).
-import { announceMove } from '../board-state';
+// <pogo-openings>: a tester of the first two moves. The reader plays a first
+// move for White on the start position, and the figure says what it leads to,
+// from the solved table, in the essay's words: it avoids defeat (the game can
+// go on without end), or it loses (Red forces the win in so many moves). Then
+// the reader plays a reply for Red, and gets the same kind of verdict. Then the
+// board is done, until « Recommencer ». Only the first two moves are judged:
+// the table holds those (openings-verdicts.ts, every list checked against
+// legal() before anything is drawn). The essay's claim, the six first moves on
+// one's own row are exactly those that avoid defeat, is held by a test there.
+// The board is played as every board of the page: tap a stack, choose how many
+// pieces (1, 2 or 3, also by key), tap where they land (board-input.ts,
+// board-state.ts). The figure plays nothing by itself: the reader is the one
+// who plays. « Jouer cette position » hands the position on the board over.
+import { boardInput } from '../board-input';
+import { chooseCount, counts, describeCell, destinations, origins, tap, type Selection } from '../board-state';
 import { WASM_FILE, assetUrl } from '../assets';
 import type { TableData } from '../data';
-import { moveName, ready } from '../engine';
-import type { ObserverCtor } from '../follow-panel';
-import { drawBoard } from '../kit/board-svg';
-import { playFromButton, roving } from '../kit/controls';
+import { initial, legal, moveName, play, ready, type Colour, type Move, type State, type Triple } from '../engine';
+import { boardLabels } from '../kit/board-labels';
+import { animateMove, drawBoard } from '../kit/board-svg';
+import { choiceGroup, controlButton, playFromButton } from '../kit/controls';
 import { PogoFigure } from '../kit/figure';
 import { moveTip } from '../kit/move-tip';
-import { colon, t, type Lang } from '../kit/strings';
+import { colon, t } from '../kit/strings';
 import { sharedTable } from '../table';
-import { replyGrid, verdictText, type ReplyCard, type ReplyGrid } from './openings-verdicts';
+import { openingChoices, outcomeText, replyChoices, verdictOf } from './openings-verdicts';
 import openingsCss from './pogo-openings.css?raw';
 
-/** « Gardent la nulle : 2 réponses sur 16 ». */
-export function keepHead(lang: Lang, g: ReplyGrid): string {
-  const n = g.keeps.length;
-  return `${t(lang, 'openingsKeep')}${colon(lang)} ${n} ${t(lang, n === 1 ? 'openingsReply' : 'openingsReplies')} ${t(lang, 'outOf')} ${g.total}`;
-}
+type CountValue = '1' | '2' | '3';
 
-/** « Perdent : 14 réponses, du gain blanc le plus rapide au plus lent ». */
-export function loseHead(lang: Lang, g: ReplyGrid): string {
-  const n = g.loses.length;
-  return `${t(lang, 'openingsLose')}${colon(lang)} ${n} ${t(lang, n === 1 ? 'openingsReply' : 'openingsReplies')}, ${t(lang, 'openingsOrder')}`;
-}
+/** The table holds the verdicts of the first two moves: White's first, Red's reply. */
+const JUDGED = 2;
 
 export class PogoOpenings extends PogoFigure {
   static override styles = openingsCss;
-  static override stageMinHeight = '720px';
+  static override stageMinHeight = '640px';
 
-  /** The engine, the table and the observer that sees the figure come on screen; a test swaps them. */
-  static deps: { engine: () => Promise<void>; table: () => Promise<TableData>; Observer?: ObserverCtor } = {
+  /** The engine and the table; a test swaps them. */
+  static deps: { engine: () => Promise<void>; table: () => Promise<TableData> } = {
     engine: () => ready(assetUrl(WASM_FILE)),
     table: sharedTable,
   };
@@ -50,9 +46,8 @@ export class PogoOpenings extends PogoFigure {
     const [table] = await Promise.all([deps.table(), deps.engine()]);
     if (signal.aborted) return;
     const lang = this.lang;
-    // Fails here, before anything is drawn, if the table disagrees with legal().
-    const grid = replyGrid(table);
-    const opening = moveName(grid.opening);
+    // Fails here, before anything is drawn, if any list of the table disagrees with legal().
+    for (const o of openingChoices(table).moves) replyChoices(table, o.move);
 
     const el = <K extends keyof HTMLElementTagNameMap>(tag: K, className: string, text = ''): HTMLElementTagNameMap[K] => {
       const node = document.createElement(tag);
@@ -61,105 +56,132 @@ export class PogoOpenings extends PogoFigure {
       return node;
     };
 
+    let played: Triple[] = [];
+    let selection: Selection = null;
+    const now = (): State => played.reduce((s, m) => play(s, m), initial());
+    const moves = (): Move[] => (played.length < JUDGED ? legal(now()) : []);
+
     const root = el('div', 'openings');
-    const cards: HTMLElement[] = [];
-    const close = (): void => cards.forEach((c) => c.removeAttribute('data-open'));
+    const askLine = el('p', 'ask say');
+    askLine.setAttribute('aria-live', 'polite');
 
-    // The position Red replies in, with White's first move marked on it.
-    const start = el('figure', 'card start');
-    const [from, moving, to] = grid.opening;
-    const said = `${t(lang, 'openingsPlayed')} ${opening}${colon(lang)} ${t(lang, 'openingsRedToPlay')}.`;
-    const startShot = el('div', 'shot');
-    startShot.append(drawBoard(grid.position, { from, to, moving, title: said }));
-    const startCaption = el('figcaption', 'caption');
-    const played = el('span', 'name');
-    played.append(`${t(lang, 'openingsPlayed')} `, moveTip(lang, grid.opening));
-    startCaption.append(played, el('span', 'verdict', t(lang, 'openingsRedToPlay')));
-    start.append(startShot, startCaption);
-    cards.push(start);
-
-    const card = (c: ReplyCard): HTMLElement => {
-      const name = moveName(c.move);
-      const verdict = verdictText(lang, c.verdict);
-      const node = el('figure', 'card reply');
-      node.dataset.move = name;
-      node.dataset.verdict = c.verdict.kind === 'keeps-draw' ? 'keeps' : 'loses';
-      const shot = el('div', 'shot');
-      const [f, n, d] = c.move;
-      shot.append(drawBoard(c.after, { from: f, to: d, moving: n, title: `${announceMove(lang, 'Red', c.move)}${colon(lang)} ${verdict}.` }));
-      const offer = playFromButton(lang, () => {
-        this.playFrom(c.after, `${t(lang, 'openingsName')}, ${opening} ${name}`);
-        close();
-      });
-      offer.classList.add('offer');
-      offer.dataset.role = 'play-from-here';
-      shot.append(offer);
-      // A tap neither hovers nor focuses a board: it opens this board's offer, and closes the others'.
-      shot.addEventListener(
-        'click',
-        (e) => {
-          if (e.target instanceof Node && offer.contains(e.target)) return;
-          const open = node.hasAttribute('data-open');
-          close();
-          node.toggleAttribute('data-open', !open);
-        },
-        { signal },
-      );
-      const caption = el('figcaption', 'caption');
-      const named = el('span', 'name');
-      named.append(moveTip(lang, c.move));
-      caption.append(named, el('span', 'verdict', verdict));
-      node.append(shot, caption);
-      cards.push(node);
-      return node;
-    };
-
-    const block = (className: string, head: string, list: ReplyCard[]): HTMLElement => {
-      const section = el('section', `block ${className}`);
-      const id = `openings-${className}`;
-      const title = el('p', 'say head', head);
-      title.id = id;
-      const boards = el('div', 'cards');
-      boards.setAttribute('role', 'group');
-      boards.setAttribute('aria-labelledby', id);
-      const nodes = list.map(card);
-      boards.append(...nodes);
-      // One tab stop for the offers and one for the names, on one board; the arrows move among the boards.
-      const of = (sel: string) => nodes.map((n) => n.querySelector<HTMLElement>(sel)!);
-      roving(boards, [of('[data-role="play-from-here"]'), of('.move-name')], signal);
-      section.append(title, boards);
-      return section;
-    };
-
-    const top = el('div', 'top');
-    top.append(start, block('keep', keepHead(lang, grid), grid.keeps));
-    root.append(top, block('lose', loseHead(lang, grid), grid.loses));
-    cards.forEach((c, k) => c.style.setProperty('--k', String(k)));
-    this.stage.append(root);
-    this.land(root, signal);
-  }
-
-  /**
-   * The boards land one after the other, in reading order, the first time a part of the
-   * figure is on screen. Never under reduced motion, and never without an observer:
-   * then everything is simply shown.
-   */
-  private land(root: HTMLElement, signal: AbortSignal): void {
-    const Ctor =
-      (this.constructor as typeof PogoOpenings).deps.Observer ??
-      (typeof IntersectionObserver === 'function' ? IntersectionObserver : undefined);
-    if (!Ctor || this.reducedMotion()) return;
-    root.toggleAttribute('data-wait', true);
-    const io = new Ctor(
-      (entries) => {
-        if (!entries.some((e) => e.isIntersecting)) return;
-        io.disconnect();
-        root.removeAttribute('data-wait');
-        root.toggleAttribute('data-land', true);
+    const playBox = el('div', 'play');
+    const input = boardInput({
+      label: t(lang, 'board'),
+      onCell: (i) => onCell(i),
+      keys: root,
+      lifted: () => selection !== null,
+      onCount: (n) => {
+        selection = chooseCount(selection, moves(), n);
+        drawBoardPart();
       },
-      { threshold: [0, 0.1] },
+      onDrop: () => {
+        selection = null;
+        drawBoardPart();
+      },
+    });
+    playBox.append(boardLabels(), input.grid);
+    const count = choiceGroup<CountValue>({
+      label: `${t(lang, 'pieces')}${colon(lang)}`,
+      id: 'openings-counts-label',
+      choices: (['1', '2', '3'] as const).map((n) => ({ value: n, label: n })),
+      onChoose: (n) => {
+        selection = chooseCount(selection, moves(), Number(n));
+        drawBoardPart();
+      },
+    });
+    count.element.classList.add('counts');
+
+    const list = el('ol', 'played');
+    list.setAttribute('aria-label', t(lang, 'openingsPlayedList'));
+    list.setAttribute('aria-live', 'polite');
+
+    const restart = controlButton(
+      t(lang, 'restart'),
+      () => {
+        played = [];
+        selection = null;
+        update(null);
+      },
+      true,
     );
-    io.observe(root);
-    signal.addEventListener('abort', () => io.disconnect(), { once: true });
+    restart.dataset.role = 'restart';
+    // « les premiers coups, c1-1-b1 a3-1-b3 »: what the playable board says it was handed.
+    const offer = playFromButton(lang, () => this.playFrom(now(), [t(lang, 'openingsName'), ...(played.length ? [played.map(moveName).join(' ')] : [])].join(', ')));
+    const actions = el('div', 'controls actions');
+    actions.append(restart, offer);
+
+    const drawBoardPart = (before?: SVGSVGElement, moved?: Triple): void => {
+      const s = now();
+      const legalMoves = moves();
+      const lift = origins(legalMoves);
+      const land = selection ? destinations(legalMoves, selection.from, selection.count) : [];
+      const last = played.at(-1);
+      const marks = selection
+        ? [{ cell: selection.from, kind: 'picked' as const }, ...land.map((cell) => ({ cell, kind: 'target' as const }))]
+        : lift.map((cell) => ({ cell, kind: 'target' as const }));
+      const svg = drawBoard(s, {
+        labelRoom: true,
+        marks,
+        // The move just played keeps its frame until a stack is lifted.
+        ...(last && !selection ? { to: last[2], moving: last[1] } : {}),
+      });
+      playBox.querySelector(':scope > svg')?.remove();
+      playBox.prepend(svg);
+      if (before && moved && !this.reducedMotion()) animateMove(before, svg, moved);
+      input.cells.forEach((b, i) => {
+        const mark = selection?.from === i ? 'selected' : land.includes(i) ? 'target' : !selection && lift.includes(i) ? 'can-lift' : null;
+        const actionable = mark !== null || lift.includes(i);
+        b.setAttribute('aria-label', describeCell(lang, s, i, mark));
+        b.toggleAttribute('data-actionable', actionable);
+        b.setAttribute('aria-disabled', String(!actionable));
+      });
+      input.syncFocus();
+      const available = selection ? counts(legalMoves, selection.from) : [];
+      count.element.toggleAttribute('data-off', selection === null);
+      count.buttons.forEach((b, k) => (b.hidden = !available.includes(k + 1)));
+      count.set(selection ? (String(selection.count) as CountValue) : null);
+    };
+
+    /** Redraws all: the board (the pieces of `moved` travelling from `before`), the verdicts, the line that asks. */
+    const update = (before: SVGSVGElement | null, moved?: Triple): void => {
+      drawBoardPart(before ?? undefined, moved);
+      list.replaceChildren(
+        ...played.map((m, k) => {
+          const mover: Colour = k === 0 ? 'White' : 'Red';
+          const li = el('li', 'verdict-row');
+          li.dataset.side = mover;
+          const move = el('p', 'move');
+          move.append(`${t(lang, mover === 'White' ? 'white' : 'red')} `, moveTip(lang, m));
+          li.append(move, el('p', 'verdict', outcomeText(lang, mover, verdictOf(table, played.slice(0, k + 1)))));
+          return li;
+        }),
+      );
+      askLine.textContent = t(lang, played.length === 0 ? 'openingsAskWhite' : played.length === 1 ? 'openingsAskRed' : 'openingsDone');
+      restart.disabled = played.length === 0;
+    };
+
+    function onCell(i: number): void {
+      const r = tap(selection, moves(), i);
+      if ('play' in r) {
+        const before = playBox.querySelector<SVGSVGElement>(':scope > svg');
+        played = [...played, r.play];
+        selection = null;
+        update(before, r.play);
+        return;
+      }
+      selection = r.selection;
+      drawBoardPart();
+    }
+
+    const boardCol = el('div', 'board-col');
+    boardCol.append(playBox, count.element);
+    const side = el('div', 'side');
+    side.append(askLine, list, actions);
+    const body = el('div', 'tester');
+    body.append(boardCol, side);
+    root.append(body);
+    update(null);
+    this.stage.append(root);
   }
 }

@@ -1,126 +1,91 @@
 /*
- * <pogo-openings>: a grid of small boards. First the position Red replies in,
- * then the replies that keep the draw, framed in ink; then the replies that
- * lose, from the fastest loss to the slowest. From 720px the position and the
- * framed boards share the first row; below, each block takes its own. The
- * grid reflows by itself: as many columns of at least 124px as the box holds
- * (seven in the wide box, four in the essay's column, two on a phone).
+ * <pogo-openings>, the tester: the board the reader plays on, with its count
+ * chooser under it, and beside it (from 640px) or under it the line that asks
+ * for the next move, the verdicts of the moves played, and the two actions.
+ * The verdicts' list keeps the room of two, so nothing moves as they arrive.
  */
 :host {
   container-type: inline-size;
 }
 
-/* The room the figure keeps before it renders, measured on the harness (2026-11-16). */
+/* The room the figure keeps before it renders, measured on the harness (2026-11-17). */
 .stage {
-  min-height: 1872px;
+  min-height: 860px;
 }
 
-@container (min-width: 480px) {
+@container (min-width: 640px) {
   .stage {
-    min-height: 1457px;
+    min-height: 480px;
   }
-}
-
-@container (min-width: 720px) {
-  .stage {
-    min-height: 749px;
-  }
-}
-
-.openings {
-  display: flex;
-  flex-direction: column;
-  gap: 28px;
-  --_col: 124px;
-  --_gap: 16px;
 }
 
 .openings p {
   margin: 0;
 }
 
-.top {
+.tester {
   display: flex;
   flex-direction: column;
-  gap: 28px;
+  align-items: center;
+  gap: 20px;
 }
 
-.block {
+@container (min-width: 640px) {
+  .tester {
+    flex-direction: row;
+    align-items: flex-start;
+    justify-content: center;
+    gap: 32px;
+  }
+}
+
+.board-col {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 12px;
+  width: min(100%, 400px);
+  flex: none;
+}
+
+.board-col .play {
+  width: 100%;
+}
+
+.side {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  width: min(100%, 400px);
+}
+
+/* Two lines kept for the longest request, so the list under it does not move. */
+.ask {
+  min-height: 2.7em;
+  color: var(--_ink);
+}
+
+.played {
   display: flex;
   flex-direction: column;
   gap: 12px;
-}
-
-.cards {
-  display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(var(--_col), 1fr));
-  gap: 20px var(--_gap);
-}
-
-.card {
+  min-height: 9em;
   margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.verdict-row {
   display: flex;
   flex-direction: column;
-  gap: 6px;
-  min-width: 0;
+  gap: 2px;
+  padding-left: 12px;
+  border-left: 3px solid var(--_ink);
 }
 
-/* The position before the replies: alone on its line, at the width of two boards at most. */
-.start {
-  width: min(100%, 220px);
-  align-self: center;
-}
-
-/* The two that keep the draw: one ink frame each, the flyer's rule. */
-.keep .cards {
-  grid-template-columns: repeat(2, minmax(0, 220px));
-  justify-content: center;
-}
-
-.keep .card {
-  padding: 10px;
-  border: 3px solid var(--_ink);
-}
-
-@container (min-width: 720px) {
-  .top {
-    display: grid;
-    grid-template-columns: 200px minmax(0, 1fr);
-    column-gap: 40px;
-    align-items: end;
-  }
-
-  .start {
-    width: 100%;
-    /* Level with the framed boards beside it: their frame and padding. */
-    padding-bottom: 13px;
-  }
-
-  .keep .cards {
-    grid-template-columns: repeat(2, 226px);
-    justify-content: start;
-  }
-}
-
-.shot {
-  position: relative;
-  line-height: 0;
-}
-
-.shot .board {
-  width: 100%;
-  height: auto;
-}
-
-.caption {
-  display: flex;
-  flex-direction: column;
+.move {
   font-size: 12.8px;
-  line-height: 1.35;
-  text-align: center;
-}
-
-.name {
+  font-weight: 800;
   color: var(--_ink-2);
 }
 
@@ -128,75 +93,6 @@
   color: var(--_ink);
 }
 
-.keep .verdict,
-.start .verdict {
-  font-weight: 800;
-}
-
-/*
- * The offer: the kit's « Jouer cette position » icon, in its board's bottom
- * right corner on the ground colour, shown while the board is pointed at,
- * holds the focus or was tapped. Out of sight it keeps its place in the tab
- * order, and coming into focus shows it.
- */
-.offer {
-  position: absolute;
-  inset: auto 0 0 auto;
-  opacity: 0;
-  pointer-events: none;
-}
-
-/* Over the pieces: the kit's outlined block on the ground, never see-through. */
-.control.secondary.offer,
-.control.secondary.offer:hover:enabled {
-  background: var(--_ground);
-}
-
-.reply:hover .offer,
-.reply:focus-within .offer,
-.reply[data-open] .offer {
-  opacity: 1;
-  pointer-events: auto;
-}
-
-.reply .shot {
-  cursor: pointer;
-}
-
-/* The boards land in reading order, once, when the figure comes on screen. */
-.openings[data-wait] .card {
-  opacity: 0;
-}
-
-.openings[data-land] .card {
-  animation: land 320ms ease-out both;
-  animation-delay: calc(var(--k) * 80ms);
-}
-
-@keyframes land {
-  from {
-    opacity: 0;
-    transform: translateY(10px);
-  }
-}
-
-@media (prefers-reduced-motion: reduce) {
-  .openings[data-wait] .card {
-    opacity: 1;
-  }
-
-  .openings[data-land] .card {
-    animation: none;
-  }
-}
-
-/* Below the wide layout every block is centred, its head with it. */
-.head {
-  text-align: center;
-}
-
-@container (min-width: 720px) {
-  .head {
-    text-align: left;
-  }
+.actions {
+  justify-content: flex-start;
 }
