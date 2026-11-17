@@ -65,7 +65,7 @@ export function playFromAction(lang: Lang, onClick: () => void): TransportAction
 const playFromTips = new WeakMap<HTMLButtonElement, { hide(): void }>();
 
 /**
- * The same action as an icon button of its own: a board and an arrow leaving it, drawn by the kit.
+ * The same action as an icon button of its own: a square holding a piece and an arrow leaving it, drawn by the kit.
  * Its full sentence, « Jouer cette position contre l’ordinateur », is its name and, on hover, focus
  * and tap, its tooltip. A caller outside a transport says when it is away (setAway).
  */
@@ -115,8 +115,8 @@ const PLAY = 'M4 2.5v11L13.5 8z';
 const PAUSE = 'M3.5 2.5h3v11h-3zM9.5 2.5h3v11h-3z';
 /** Replay: an open circle and its arrowhead, stroked like the chevrons. */
 const REPLAY = 'M12.5 8a4.5 4.5 0 1 1-1.32-3.18M11.5 1.5v3.5H8';
-/** « Jouer cette position »: a board of three by three, and an arrow leaving it for the board you play on. */
-const PLAY_FROM = 'M1.5 5.5h9v9h-9zM4.5 5.5v9M7.5 5.5v9M1.5 8.5h9M1.5 11.5h9M9 7l5.5-5.5M10 1.5h4.5V6';
+/** « Jouer cette position »: a square holding a piece, and an arrow leaving it for the board you play on. */
+const PLAY_FROM = 'M1.5 4.5h10v10h-10zM6.5 7.5a2 2 0 1 0 0.01 0zM9 7l5.5-5.5M10 1.5h4.5V6';
 
 /**
  * A square icon control of the kit's size: its `label`, a full verb phrase, is its

@@ -203,11 +203,11 @@ slot[hidden],
   fill: currentColor;
 }
 
-/* « Jouer cette position »: a board and the arrow leaving it, finer than the chevrons so its grid reads. */
+/* « Jouer cette position »: a square, its piece and the arrow leaving it, a little finer than the chevrons. */
 .control .board-out {
   fill: none;
   stroke: currentColor;
-  stroke-width: 1.5px;
+  stroke-width: 2px;
   stroke-linecap: square;
 }
 
