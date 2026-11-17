@@ -1,6 +1,6 @@
 import { afterEach, describe, expect, it, vi } from 'vitest';
 import { REDUCED_MOTION, intersect, leave, playState, resetMedia, setMedia, shownText } from '../test-dom';
-import { DEMO, demoFrames, movePath } from './moves-demo';
+import { FAN_FROM, fan, fanFrames, movePath } from './moves-demo';
 import { MOVE_TEMPO_MS } from '../kit/tempo';
 import { DEMO_REST, PogoMoves } from './pogo-moves';
 
@@ -29,8 +29,9 @@ async function mountFake(view: string, lang = 'fr'): Promise<PogoMoves> {
 
 const $ = (el: PogoMoves, s: string) => el.shadowRoot!.querySelector<HTMLElement>(s)!;
 const role = (el: PogoMoves, r: string) => $(el, `[data-role="${r}"]`) as HTMLButtonElement;
-const line = (el: PogoMoves) => shownText($(el, '.line:not(.sizer)'));
-const carriedAt = (el: PogoMoves) => el.shadowRoot!.querySelector('.board .carried')?.getAttribute('data-cell');
+const groups = (el: PogoMoves) => [...el.shadowRoot!.querySelectorAll<HTMLElement>('.fan-group')];
+const cellsOf = (g: HTMLElement, sel: string) => [...g.querySelectorAll(sel)].map((n) => Number(n.getAttribute('data-cell'))).sort((a, b) => a - b);
+const carriedAt = (g: HTMLElement) => g.querySelector('.board .carried')?.getAttribute('data-cell');
 
 afterEach(() => {
   vi.useRealTimers();
@@ -51,56 +52,67 @@ describe('<pogo-moves view="start">', () => {
 });
 
 describe('<pogo-moves view="moves">', () => {
-  it('lets the computer play: no square to press, a transport, the first move announced before it is played', async () => {
+  const f = fan();
+  const frames = fanFrames(f);
+
+  it('shows, at rest, every move from the stack, one board per count, each landing ringed, the stack lifted', async () => {
     const el = await mount('moves');
-    expect(el.shadowRoot!.querySelectorAll('.cell-button')).toHaveLength(0);
-    expect(role(el, 'play')).not.toBeNull();
-    expect(line(el)).toBe('Une pièce, un mouvement. Blanc joue a1-1-a2.');
-    expect(role(el, 'counter').textContent).toBe(`coup 1 sur ${DEMO.length}`);
-    // The move's name explains itself, as everywhere else.
-    expect($(el, '.line .move-name [role="tooltip"]').textContent).toBe('De a1, 1 pièce, vers a2.');
-    expect(carriedAt(el)).toBeUndefined();
+    expect($(el, '.lead').textContent).toBe(
+      'Depuis la pile de a1 : une, deux ou trois pièces. Chaque cercle pointillé est une arrivée possible, jamais la case de départ.',
+    );
+    const gs = groups(el);
+    expect(gs.map((g) => g.querySelector('.say')!.textContent)).toEqual([
+      '1 pièce, 1 mouvement',
+      '2 pièces, 2 mouvements, y compris la diagonale',
+      '3 pièces, 3 mouvements, y compris une case voisine',
+    ]);
+    gs.forEach((g, k) => {
+      expect(cellsOf(g, '.board .mark.target')).toEqual(f.groups[k]!.moves.map((m) => m[2]));
+      expect(cellsOf(g, '.board .mark.picked')).toEqual([FAN_FROM]);
+      expect(carriedAt(g)).toBeUndefined();
+    });
+    // Each board says its landings in words, for those who do not see the rings.
+    expect(gs[1]!.querySelector('svg.board title')!.textContent).toBe('2 pièces, 2 mouvements, y compris la diagonale : c1, b2 ou a3.');
+    // No move notation yet: the essay defines it after this figure.
+    expect($(el, '.moves').textContent).not.toMatch(/[abc][123]-[123]-[abc][123]/);
   });
 
-  it('shows each move as the pieces lifted, the path square by square, the landing', async () => {
+  it('plays one example per count on its own board, the other boards staying whole', async () => {
     const el = await mount('moves', 'en');
-    const three = DEMO.findIndex((d) => d.move[1] === 3);
-    const start = demoFrames().findIndex((f) => f.move === three);
+    expect($(el, '.lead').textContent).toBe('From the stack on a1: one, two or three pieces. Each dashed ring is a possible landing, never the square they left.');
+    const three = 2;
+    const g = f.groups[three]!;
+    const start = frames.findIndex((x) => x.group === three);
     for (let k = 0; k < start; k++) role(el, 'next').click();
-    expect(line(el)).toBe('Three pieces, three steps: a neighbouring square. Both colours taken, the top one the mover’s. Red plays a1-3-b1.');
-    expect(role(el, 'counter').textContent).toBe(`move ${three + 1} of ${DEMO.length}`);
-    role(el, 'next').click();
-    // Lifted: off the stack, over their own square, the stack ringed.
-    const [from, , to] = DEMO[three]!.move;
-    expect(carriedAt(el)).toBe(String(from));
-    expect(el.shadowRoot!.querySelector('.board .mark.picked')!.getAttribute('data-cell')).toBe(String(from));
+    const board = () => groups(el)[three]!;
+    expect(carriedAt(board())).toBe(String(FAN_FROM));
+    // Lifted, the stack's landings stay ringed; the other boards rest whole.
+    expect(cellsOf(board(), '.board .mark.target')).toEqual(g.moves.map((m) => m[2]));
+    for (const k of [0, 1]) expect(cellsOf(groups(el)[k]!, '.board .mark.target')).toEqual(f.groups[k]!.moves.map((m) => m[2]));
     const path: string[] = [];
-    for (let k = 0; k < 3; k++) {
+    for (let k = 0; k < g.count; k++) {
       role(el, 'next').click();
-      path.push(carriedAt(el)!);
+      path.push(carriedAt(board())!);
     }
-    expect(path).toEqual(movePath(...DEMO[three]!.move).slice(1).map(String));
+    expect(path).toEqual(movePath(...g.example).slice(1).map(String));
     role(el, 'next').click();
-    // Landed: nothing in the air, the landing square framed.
-    expect(carriedAt(el)).toBeUndefined();
-    expect(el.shadowRoot!.querySelector('.board .to')!.getAttribute('data-cell')).toBe(String(to));
+    // Landed: nothing in the air, the landing framed, the ring it left says how many pieces it lifted.
+    expect(carriedAt(board())).toBeUndefined();
+    expect(board().querySelector('.board .to')!.getAttribute('data-cell')).toBe(String(g.example[2]));
+    expect(board().querySelector('.lifted')!.textContent).toBe('3');
   });
 
-  it('each frame of a move, lifted, carried, landed, is held the kit’s one tempo', async () => {
+  it('each frame, lifted, carried, landed, is held the kit’s one tempo', async () => {
     vi.useFakeTimers();
     const el = await mountFake('moves');
     role(el, 'play').click();
-    const frames = demoFrames();
-    // The first frames: the announcement, the lift, the one square, the landing.
+    const at = (k: number) => String(frames[k]!.carry?.at ?? frames[k]!.phase);
+    const shown = () => groups(el)[0]!.querySelector('.board .carried')?.getAttribute('data-cell') ?? (groups(el)[0]!.querySelector('.board .to') ? 'land' : 'rest');
     for (let k = 1; k < 4; k++) {
       vi.advanceTimersByTime(MOVE_TEMPO_MS - 1);
-      expect(el.shadowRoot!.querySelector('.board .carried')?.getAttribute('data-cell') ?? 'land').toBe(
-        String(frames[k - 1]!.carry?.at ?? 'land'),
-      );
+      expect(shown()).toBe(at(k - 1));
       vi.advanceTimersByTime(1);
-      expect(el.shadowRoot!.querySelector('.board .carried')?.getAttribute('data-cell') ?? 'land').toBe(
-        String(frames[k]!.carry?.at ?? 'land'),
-      );
+      expect(shown()).toBe(at(k));
     }
   });
 
@@ -113,46 +125,43 @@ describe('<pogo-moves view="moves">', () => {
     leave(el);
     expect(playState(el)).toBe('play');
     intersect(el);
-    const frames = demoFrames();
     vi.advanceTimersByTime(MOVE_TEMPO_MS * (frames.length - 1));
-    expect(role(el, 'counter').textContent).toBe(`coup ${DEMO.length} sur ${DEMO.length}`);
-    expect(el.shadowRoot!.querySelector('.board .to')).not.toBeNull();
+    const last = () => groups(el)[2]!;
+    expect(last().querySelector('.board .to')).not.toBeNull();
     vi.advanceTimersByTime(MOVE_TEMPO_MS + DEMO_REST - 1);
-    expect(el.shadowRoot!.querySelector('.board .to')).not.toBeNull();
+    expect(last().querySelector('.board .to')).not.toBeNull();
     vi.advanceTimersByTime(1);
-    expect(line(el)).toBe('Une pièce, un mouvement. Blanc joue a1-1-a2.');
-    expect(el.shadowRoot!.querySelector('.board .to')).toBeNull();
+    expect(last().querySelector('.board .to')).toBeNull();
+    expect(cellsOf(last(), '.board .mark.target')).toEqual(f.groups[2]!.moves.map((m) => m[2]));
     expect(playState(el)).toBe('pause');
   });
 
-  it('under reduced motion shows the last landing still, with ▶, and never moves by itself', async () => {
+  it('under reduced motion rests with every move shown, with ▶, and never moves by itself', async () => {
     setMedia(REDUCED_MOTION, true);
     vi.useFakeTimers();
     const el = await mountFake('moves');
     intersect(el);
     expect(playState(el)).toBe('play');
-    expect(role(el, 'next').disabled).toBe(true);
-    expect(el.shadowRoot!.querySelector('.board .to')!.getAttribute('data-cell')).toBe(String(DEMO.at(-1)!.move[2]));
+    groups(el).forEach((g, k) => expect(cellsOf(g, '.board .mark.target')).toEqual(f.groups[k]!.moves.map((m) => m[2])));
     vi.advanceTimersByTime(60_000);
-    expect(role(el, 'next').disabled).toBe(true);
+    expect(role(el, 'counter').textContent).toBe(`étape 1 sur ${frames.length}`);
   });
 
-  it('says each move once in its live region, when it is announced, and nothing at first: the line is there to read', async () => {
-    const el = await mount('moves', 'en');
+  it('says each example in words once it is lifted, and nothing at first', async () => {
+    const el = await mount('moves');
     const live = $(el, '.sr[aria-live]');
     expect(live.textContent).toBe('');
-    const second = demoFrames().findIndex((f) => f.move === 1);
-    for (let k = 0; k < second; k++) role(el, 'next').click();
-    expect(live.textContent).toBe('Onto an occupied square: the pieces go on top. Red plays a3-2-a1.');
     role(el, 'next').click();
-    expect(live.textContent).toBe('Onto an occupied square: the pieces go on top. Red plays a3-2-a1.');
+    expect(live.textContent).toBe('De a1, 1 pièce, vers a2.');
+    role(el, 'next').click();
+    expect(live.textContent).toBe('De a1, 1 pièce, vers a2.');
   });
 });
 
 describe('<pogo-moves> transport', () => {
-  it('names its step buttons by the move, since each step is a move of a game', async () => {
+  it('names its step buttons by the step', async () => {
     const el = await mount('moves');
     const name = (r: string) => el.shadowRoot!.querySelector(`[data-role="${r}"]`)!.getAttribute('aria-label');
-    expect([name('previous'), name('next')]).toEqual(['Revenir au coup précédent', 'Passer au coup suivant']);
+    expect([name('previous'), name('next')]).toEqual(['Revenir à l’étape précédente', 'Passer à l’étape suivante']);
   });
 });

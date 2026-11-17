@@ -1,8 +1,15 @@
 /*
- * <pogo-moves>: the start view is a board at up to 400px, alone; the moves
- * view is the line announcing the move, the board, and the transport, each centred in the figure. The line keeps the room of the longest
- * (its sizers), so the board under it never moves.
+ * <pogo-moves>: the start view is a board at up to 400px, alone. The moves
+ * view is the line that says how to read it, the three boards of one stack's
+ * moves (one per count), and the transport, each centred in the figure. The
+ * boards stand side by side from 480px and one under the other below; a board
+ * under 240px drops its coordinates (board-labels.ts: they would reach the
+ * pieces), never the count of a move's lifted pieces.
  */
+:host {
+  container-type: inline-size;
+}
+
 .moves {
   display: flex;
   flex-direction: column;
@@ -10,32 +17,69 @@
   gap: 12px;
 }
 
-/* The start view's board: the drawing fills its frame, the coordinates stay 12.8px. */
-.moves > .board-frame {
+/* A board fills its frame, whatever the frame's width; the coordinates stay 12.8px. */
+.moves .board-frame {
   width: min(100%, 400px);
 }
 
-.moves > .board-frame > .board {
+.moves .board-frame > .board {
   width: 100%;
   height: auto;
 }
 
-.said {
-  display: grid;
-  width: min(100%, 400px);
-}
-
-.said > * {
-  grid-area: 1 / 1;
-}
-
-.said .sizer {
-  visibility: hidden;
-}
-
-.line {
+.lead {
+  max-width: 52ch;
   margin: 0;
+  text-align: center;
   color: var(--_ink);
+}
+
+.fan {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  justify-items: center;
+  gap: 20px;
+  width: 100%;
+}
+
+@container (min-width: 480px) {
+  .fan {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 16px;
+  }
+}
+
+.fan-group {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 8px;
+  width: 100%;
+  max-width: 280px;
+  margin: 0;
+}
+
+/* The caption keeps two lines in a row of three, so the three boards start on one line. */
+.fan-group > .say {
+  min-height: 2.6em;
+  text-align: center;
+}
+
+.fan-board {
+  container-type: inline-size;
+  width: 100%;
+  text-align: center;
+  line-height: 0;
+}
+
+.fan-board .board-frame {
+  width: 100%;
+}
+
+@container (max-width: 239px) {
+  .fan-board .coord {
+    display: none;
+  }
 }
 
 .moves > .controls {
