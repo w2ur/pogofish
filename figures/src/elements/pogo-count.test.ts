@@ -291,6 +291,14 @@ describe('<pogo-count>, the toy', () => {
     const edit = moveItem(first, 7, 10);
     expect(order(el, '.pieces')).toEqual(edit.row.order);
     expect(drawnRow(el)).toBe(drawn(first));
+    // Left to right, what is not held has closed up (under reduced motion the row's pieces are the twins): the row as the drop would leave it, less the piece held.
+    const others = [
+      ...$$(el, '.twins .pc:not([data-held])').map((n) => ({ x: x(n), what: n.dataset.colour![0]! })),
+      ...$$(el, '.bars .bar').map((n) => ({ x: x(n), what: '|' })),
+    ].sort((a, b) => a.x - b.x);
+    expect(others.map((t) => t.what).join('')).toBe(`${drawn(edit.row).slice(0, 10)}${drawn(edit.row).slice(11)}`);
+    const slot = LAYOUTS.mid.row.slot;
+    expect(others.map((t) => Math.round((t.x - LAYOUTS.mid.row.x) / slot - 0.5))).toEqual([0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 11, 12, 13, 14, 15, 16, 17, 18, 19]);
     // The piece itself is under the pointer: 90px right of its place.
     expect(x(held[0]!)).toBeCloseTo(LAYOUTS.mid.row.x + 7.5 * LAYOUTS.mid.row.slot + 90, 1);
     pointer(el, 'pointerup', 7, 315);
@@ -317,6 +325,22 @@ describe('<pogo-count>, the toy', () => {
     const edit = moveItem(first, 1, 3);
     expect(drawnRow(el)).toBe('WWW|WRRW|W||||RR||RR');
     expect(boardLabels(el)).toEqual(boardWords(edit.row, 'Red'));
+  });
+
+  it('each separator keeps its own drawing: the one put past another is the one that stands there', async () => {
+    const el = await mountReady();
+    const slot = LAYOUTS.mid.row.slot;
+    const at = (p: number) => LAYOUTS.mid.row.x + (p + 0.5) * slot;
+    // Places 11 to 14 are four separators side by side: the first is put after the third.
+    expect(drawn(first).slice(10, 14)).toBe('||||');
+    const taken = $$(el, '.bars .bar').find((b) => Math.abs(x(b) - at(10)) < 0.1)!;
+    place(el, 10).click();
+    place(el, 12).click();
+    expect(drawnRow(el)).toBe(drawn(first));
+    expect(x(taken)).toBeCloseTo(at(12), 1);
+    // And every place still holds one thing.
+    const xs = [...$$(el, '.bars .bar'), ...$$(el, '.twins .pc')].map((n) => Math.round((x(n) - LAYOUTS.mid.row.x) / slot - 0.5)).sort((a, b) => a - b);
+    expect(xs).toEqual([...Array(PIECES + BARS).keys()]);
   });
 
   it('a drag let go off the row, or taken back by the browser, moves nothing', async () => {
