@@ -6,11 +6,7 @@
 // of each other, so every position is one row and every row one position:
 // the essay's two factors are the orders of the 12 pieces and the places of
 // the 8 separators, and its third is the side to move.
-//
-// countFrames() is the figure's telling: a position, its row, another order of
-// the pieces, other places for the separators, the position that row folds
-// into, the turn passing; then the same again from there.
-import type { Colour, State } from '../engine';
+import type { Colour } from '../engine';
 
 export const PIECES = 12;
 export const CELLS = 9;
@@ -69,62 +65,4 @@ export function places(row: Row): { pieces: number[]; bars: number[] } {
     pieces: row.order.map((_, k) => k + row.bars.filter((b) => b <= k).length),
     bars: row.bars.map((b, j) => b + j),
   };
-}
-
-export type FrameKind = 'board' | 'unfold' | 'reorder' | 'slide' | 'fold' | 'turn';
-
-export interface CountFrame {
-  kind: FrameKind;
-  /** The row shown, and the position it is: `cells` is `fromRow(row)`, always. */
-  row: Row;
-  cells: Colour[][];
-  /** The side to move the figure shows with the position. */
-  turn: Colour;
-  /** Where the pieces are drawn in full: on the board, or laid in the row. The other one shows their trace. */
-  solid: 'board' | 'row';
-}
-
-/**
- * The telling, from the first position through each of the others and back to the
- * first: for each change, the row of the position (unfold), the next position's
- * order of pieces under the same separators (reorder), its separators (slide), the
- * board again (fold), and the turn passing when the next position's differs (turn).
- * The last frame is the first position again, so the telling loops from frame 1.
- */
-export function countFrames(positions: readonly Pick<State, 'cells' | 'to_move'>[]): CountFrame[] {
-  if (positions.length < 2) fail('the telling needs two positions at least');
-  const first = positions[0]!;
-  const frame = (kind: FrameKind, row: Row, turn: Colour, solid: 'board' | 'row'): CountFrame => ({ kind, row, cells: fromRow(row), turn, solid });
-  let turn = first.to_move;
-  const frames = [frame('board', toRow(first.cells), turn, 'board')];
-  positions.forEach((p, k) => {
-    const next = positions[(k + 1) % positions.length]!;
-    const [here, there] = [toRow(p.cells), toRow(next.cells)];
-    frames.push(frame('unfold', here, turn, 'row'));
-    frames.push(frame('reorder', { order: there.order, bars: here.bars }, turn, 'row'));
-    frames.push(frame('slide', there, turn, 'row'));
-    frames.push(frame('fold', there, turn, 'board'));
-    if (next.to_move !== turn) {
-      turn = next.to_move;
-      frames.push(frame('turn', there, turn, 'board'));
-    }
-  });
-  return frames;
-}
-
-/**
- * Which piece goes where when the row changes its order: `at[d]` is the rank, in the
- * row, of piece `d`. The pieces of one colour keep their order among themselves, so
- * no two of them ever cross: the white piece that came n-th among the white ones
- * takes the n-th white rank of the new order, and the same for red.
- */
-export function reassign(at: readonly number[], colours: readonly Colour[], order: readonly Colour[]): number[] {
-  const next = new Array<number>(at.length);
-  for (const colour of ['White', 'Red'] as const) {
-    const pieces = at.map((rank, d) => ({ rank, d })).filter((x) => colours[x.d] === colour).sort((a, b) => a.rank - b.rank);
-    const ranks = order.flatMap((c, k) => (c === colour ? [k] : []));
-    if (pieces.length !== ranks.length) fail('the new order does not hold the same pieces');
-    pieces.forEach((x, n) => (next[x.d] = ranks[n]!));
-  }
-  return next;
 }

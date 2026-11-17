@@ -31,13 +31,14 @@ describe('every figure is centred in its box, and the wide ones use it', () => {
     expect(rule(s, '.line-figure > .controls')).toContain('justify-content: center');
   });
 
-  it('pogo-count: the line, the drawing and the transport centred; the row beside the board from 720px', () => {
+  it('pogo-count: the line and the drawing centred; the row beside the board from 720px', () => {
     const s = css('pogo-count');
     expect(rule(s, '.count')).toContain('text-align: center');
     expect(rule(s, '.count')).toContain('align-items: center');
     // The drawing itself changes layout with the width (count-view.ts): the sheet keeps its room.
     wide(s);
-    expect(rule(s, '.count > .controls')).toContain('justify-content: center');
+    // What the introduction says and the invitation share one place, so the drawing never moves.
+    expect(rule(s, '.top > *')).toContain('grid-area: 1 / 1');
   });
 
   it('pogo-board inline: one centred column, the setup and the moves beside the board from 720px', () => {
