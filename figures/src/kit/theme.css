@@ -293,6 +293,25 @@ slot[hidden],
   color: var(--_muted);
 }
 
+/*
+ * How many pieces the move lifted: on the lower right of its dashed ring, the kit's inverted
+ * block (the tooltip's ink and ground), centred on the ring, at the coordinates' fixed size.
+ */
+.board-labels .lifted {
+  position: absolute;
+  min-width: 18px;
+  padding: 2px 4px;
+  transform: translate(-50%, -50%);
+  background: var(--_ink);
+  color: var(--_ground);
+  font-family: var(--_font);
+  font-size: 12.8px;
+  font-stretch: 125%;
+  font-weight: 800;
+  line-height: 1;
+  text-align: center;
+}
+
 .board .gap {
   fill: var(--_ground);
 }

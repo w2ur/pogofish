@@ -82,6 +82,21 @@ describe('<pogo-line>', () => {
     expect(role(el, 'action').disabled).toBe(true);
   });
 
+  it('at each move, the dashed ring carries the number of pieces the line’s move lifted', async () => {
+    const el = await mount('centreLoss', 'A');
+    const lifted = () => el.shadowRoot!.querySelector<HTMLElement>('.board-slot .lifted');
+    expect(lifted()).toBeNull();
+    const counts = new Set<number>();
+    for (const [from, n] of table.lines.centreLoss) {
+      role(el, 'next').click();
+      expect(lifted()!.textContent).toBe(String(n));
+      expect(lifted()!.dataset.cell).toBe(String(from));
+      counts.add(n);
+    }
+    // The line lifts more than one count, so the number is read from each move.
+    expect(counts.size).toBeGreaterThan(1);
+  });
+
   it('the loop’s wrap, last frame to first move, moves its piece like any step forward', async () => {
     const proto = Element.prototype as unknown as { animate?: unknown };
     const had = proto.animate;

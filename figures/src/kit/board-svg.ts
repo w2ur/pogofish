@@ -7,7 +7,10 @@ const CELL = 100;
 const SIDE = 3 * CELL;
 
 export interface BoardOptions {
-  /** Origin of the move that led to `s`: carries the dashed ring. */
+  /**
+   * Origin of the move that led to `s`: carries the dashed ring. With `moving`, the ring keeps how
+   * many pieces the move lifted (`data-lifted`), which labelledBoard writes beside it.
+   */
   from?: number;
   /** Destination of that move: its top `moving` discs are the moved ones. */
   to?: number;
@@ -87,7 +90,8 @@ export function drawBoard(s: State, o: BoardOptions = {}): SVGSVGElement {
 
   if (o.from !== undefined) {
     const [x, y] = corner(o.from);
-    el('circle', { class: 'from', 'data-cell': o.from, cx: x + centre, cy: y + centre, r: radius + 10 }, svg);
+    const ring = el('circle', { class: 'from', 'data-cell': o.from, cx: x + centre, cy: y + centre, r: radius + 10 }, svg);
+    if (o.moving) ring.dataset.lifted = String(o.moving);
   }
   if (o.to !== undefined) {
     const [x, y] = corner(o.to);

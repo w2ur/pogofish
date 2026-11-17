@@ -1,6 +1,8 @@
 // The board's coordinates, a1…c3, as fixed-size HTML laid over a drawBoard SVG.
 // Drawn inside the SVG they scaled with the board and outweighed the pieces at
-// 400px; here the type stays 12.8px whatever the board's width.
+// 400px; here the type stays 12.8px whatever the board's width. When the board
+// shows a move, the dashed ring where it came from carries, the same way, the
+// number of pieces the move lifted (1, 2 or 3), read from the drawing.
 
 /** Each label's offset from its cell's top-left corner, in the board's 300-unit viewBox. */
 const INSET = 8;
@@ -43,10 +45,33 @@ export function boardLabels(): HTMLElement {
   return overlay;
 }
 
-/** `svg` (drawn with `labelRoom: true`) in a box that carries the coordinates. */
+/**
+ * The number of pieces the move shown lifted, on the lower right of its dashed ring: what
+ * drawBoard keeps on the ring (`data-lifted`), so it is always the move's own. Null when the
+ * board shows no move, or not where it came from.
+ */
+function liftedCount(svg: SVGSVGElement): HTMLElement | null {
+  const ring = svg.querySelector<SVGCircleElement>('.from[data-lifted]');
+  if (!ring) return null;
+  const cell = Number(ring.dataset.cell);
+  // The ring's own centre and radius, in the board's units: the count sits where the drawing put the ring.
+  const along = Number(ring.getAttribute('r')) * Math.SQRT1_2;
+  const badge = document.createElement('span');
+  badge.className = 'lifted';
+  badge.dataset.cell = String(cell);
+  badge.textContent = ring.dataset.lifted!;
+  badge.style.left = pct(Number(ring.getAttribute('cx')) + along);
+  badge.style.top = pct(Number(ring.getAttribute('cy')) + along);
+  return badge;
+}
+
+/** `svg` (drawn with `labelRoom: true`) in a box that carries the coordinates, and the count of a move's lifted pieces. */
 export function labelledBoard(svg: SVGSVGElement): HTMLElement {
   const frame = document.createElement('div');
   frame.className = 'board-frame';
-  frame.append(svg, boardLabels());
+  const labels = boardLabels();
+  const lifted = liftedCount(svg);
+  if (lifted) labels.append(lifted);
+  frame.append(svg, labels);
   return frame;
 }

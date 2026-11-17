@@ -1,6 +1,6 @@
 import { readFileSync } from 'node:fs';
 import { resolve } from 'node:path';
-import { initial } from '../engine';
+import { initial, play } from '../engine';
 import { boardLabels, labelledBoard } from './board-labels';
 import { drawBoard } from './board-svg';
 
@@ -27,6 +27,39 @@ describe('boardLabels', () => {
     expect(frame.className).toBe('board-frame');
     expect(frame.firstElementChild).toBe(svg);
     expect(frame.querySelectorAll('.coord')).toHaveLength(9);
+  });
+
+  it('a board that shows a move says, at its dashed ring, how many pieces were lifted', () => {
+    for (const [from, n, to] of [
+      [0, 1, 3],
+      [1, 2, 5],
+    ] as const) {
+      const after = play(initial(), [from, n, to]);
+      const frame = labelledBoard(drawBoard(after, { labelRoom: true, from, to, moving: n }));
+      const lifted = frame.querySelectorAll<HTMLElement>('.board-labels .lifted');
+      expect(lifted).toHaveLength(1);
+      expect(lifted[0]!.textContent).toBe(String(n));
+      expect(lifted[0]!.dataset.cell).toBe(String(from));
+      // On the ring's lower right: cell a1 is the bottom-left one, b1 the bottom middle.
+      const [x, y] = [parseFloat(lifted[0]!.style.left), parseFloat(lifted[0]!.style.top)];
+      expect(x).toBeGreaterThan(((from % 3) * 100 + 56) / 3);
+      expect(x).toBeLessThan(((from % 3) * 100 + 100) / 3);
+      expect(y).toBeGreaterThan((200 + 56) / 3);
+      expect(y).toBeLessThan(100);
+    }
+  });
+
+  it('no count without a move, nor without where it came from', () => {
+    expect(labelledBoard(drawBoard(initial(), { labelRoom: true })).querySelector('.lifted')).toBeNull();
+    const after = play(initial(), [0, 1, 3]);
+    expect(labelledBoard(drawBoard(after, { labelRoom: true, to: 3, moving: 1 })).querySelector('.lifted')).toBeNull();
+  });
+
+  it('the theme sets the count at the kit’s fixed label size, never scaled with the board', () => {
+    const css = readFileSync(resolve(process.cwd(), 'src/kit/theme.css'), 'utf8');
+    const rule = /\.board-labels \.lifted \{([^}]*)\}/.exec(css)![1]!;
+    expect(rule).toContain('font-size: 12.8px');
+    expect(rule).toContain('position: absolute');
   });
 
   it('the theme sets the label type at a fixed 12.8px, in the muted ink, never scaled', () => {
