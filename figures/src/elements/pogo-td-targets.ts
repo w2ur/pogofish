@@ -264,8 +264,8 @@ export class PogoTdTargets extends PogoFigure {
     const c = chart(script, positions);
     const film = el('div', strip ? 'film strip' : 'film');
     film.style.setProperty('--n', String(positions));
-    const row = (cls: string, label = ''): { cells: HTMLElement[] } => {
-      const name = el('span', `row-name ${cls}`, label);
+    const row = (cls: string): { cells: HTMLElement[] } => {
+      const name = el('span', `row-name ${cls}`);
       const cells = g.states.map(() => el('span', `cell ${cls} num`));
       const line = el('div', `row ${cls}`);
       line.append(...cells);
@@ -292,8 +292,6 @@ export class PogoTdTargets extends PogoFigure {
     ticks.forEach((cell, i) => {
       if (strip || i === 0 || i === T) cell.textContent = String(i);
     });
-    const noteCells = strip ? row('notes', t(lang, 'tdNote')).cells : [];
-    const targetCells = strip ? row('targets', t(lang, 'tdTarget')).cells : [];
     film.append(el('span', 'row-name'), el('p', 'axis-x', t(lang, 'tdAxisX')));
 
     const legend = el('ul', 'legend');
@@ -317,9 +315,6 @@ export class PogoTdTargets extends PogoFigure {
         cell.classList.toggle('now', i === s.current);
         cell.classList.toggle('next', s.current !== null && i === s.current + 1);
       });
-      const known = new Set(s.known);
-      noteCells.forEach((cell, i) => (cell.textContent = signedNote(lang, s.notes[i]!)));
-      targetCells.forEach((cell, i) => (cell.textContent = i < T && known.has(i) ? signedNote(lang, s.targets[i]!) : ''));
       const w = steps[k]!;
       live.textContent = [w.head, w.text, w.calc].filter(Boolean).join('. ');
       at = k;
@@ -332,39 +327,7 @@ export class PogoTdTargets extends PogoFigure {
     show(0);
     autoplay(this, stepper, { signal, still: () => stepper.go(stepper.steps - 1) });
 
-    return [words, status, film, controls, legend, live, this.values(lang, g, script[0]!)];
-  }
-
-  /** Every position's value and target as the net was trained, as a table behind a disclosure. */
-  private values(lang: Lang, g: TdGame, first: TdStep): HTMLElement {
-    const T = g.states.length - 1;
-    const details = el('details', 'values');
-    details.append(el('summary', 'label', t(lang, 'tdValues')));
-    const table = el('table', 'td-table num');
-    const head = el('tr');
-    for (const k of ['tdPosition', 'toMove', 'tdNote', 'tdTarget'] as const) {
-      const th = el('th', 'label', t(lang, k));
-      th.scope = 'col';
-      head.append(th);
-    }
-    const thead = el('thead');
-    thead.append(head);
-    const body = el('tbody');
-    for (let i = 0; i <= T; i++) {
-      const tr = el('tr');
-      tr.dataset.t = String(i);
-      const th = el('th', '', String(i));
-      th.scope = 'row';
-      tr.append(
-        th,
-        el('td', '', colourName(lang, g.states[i]!.to_move)),
-        el('td', 'note-cell', i === T ? `${signedNote(lang, first.notes[i]!)} (${t(lang, 'tdResult')})` : signedNote(lang, first.notes[i]!)),
-        el('td', 'target-cell', i === T ? '—' : signedNote(lang, first.targets[i]!)),
-      );
-      body.append(tr);
-    }
-    table.append(thead, body);
-    details.append(table);
-    return details;
+    return [words, status, film, controls, legend, live];
   }
 }
+
