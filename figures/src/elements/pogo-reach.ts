@@ -24,11 +24,12 @@ import { reachChart, reachSteps, type ReachStep } from './reach-bars';
 
 /**
  * How long a level is held, in automatic play: long enough to see its bar land in red and read its
- * number. At 900 ms a reader could not follow the fifteen levels (dummy-visitor read, 2026-11-17).
+ * number. At 900 ms a reader could not follow the fifteen levels (dummy-visitor read, 2026-11-17);
+ * at 2000 ms the owner found it slow (round 5).
  */
-export const LEVEL_MS = 2000;
+export const LEVEL_MS = 1200;
 /** The empty level and the total are held longer: they are the figure's two points. */
-export const STOP_MS = 2200;
+export const STOP_MS = 2000;
 
 const pc = (f: number): string => `${(f * 100).toFixed(4)}%`;
 
