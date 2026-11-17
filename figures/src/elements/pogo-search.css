@@ -228,9 +228,11 @@
   width: 5.6em;
 }
 
+/* Room for « Note moyenne » on one line, level with the other heads. */
 .search-table th.mean {
-  width: 5em;
+  width: 7.2em;
   text-align: right;
+  white-space: nowrap;
 }
 
 .search-table tbody th,
@@ -311,7 +313,18 @@
   }
 
   .search-table th.mean {
-    width: 4.2em;
+    width: 7em;
+  }
+}
+
+/*
+ * Under 300px the four heads cannot all stand on one line (French needs about
+ * 280px): there « Note moyenne » goes back to two lines, its last on the others' baseline.
+ */
+@container (max-width: 299px) {
+  .search-table th.mean {
+    width: 4.4em;
+    white-space: normal;
   }
 }
 
