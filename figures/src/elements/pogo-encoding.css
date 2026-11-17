@@ -64,6 +64,21 @@ p {
   width: min(100%, 300px);
 }
 
+/* The board and its coordinates fill the playable box; the cell buttons lie over them. */
+.play > .board-frame {
+  position: absolute;
+  inset: 0;
+  display: block;
+}
+
+/* One line under the board: what the reader can do with it. */
+.invite {
+  font-size: 12.8px;
+  line-height: 1.4;
+  text-align: center;
+  color: var(--_ink-2);
+}
+
 .enc-side .controls {
   justify-content: center;
 }
