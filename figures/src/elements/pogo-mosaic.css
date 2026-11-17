@@ -1,8 +1,9 @@
 /*
  * <pogo-mosaic>: three programs side by side, a row per stage of training, in
- * each cell a hundred squares. A game won is a full square in the page's one
- * red; a game lost is an empty square with a hairline. The programs are told
- * apart by their columns and headings, never by hue. The SVG scales as a whole;
+ * each cell a hundred squares. A game won is a white square, a game lost a
+ * black one; every square is framed by a hairline drawn over the fills, so
+ * white stands off the light ground and black off the dark one. The programs
+ * are told apart by their columns and headings, never by hue. The SVG scales as a whole;
  * it holds no text, and its hairlines keep their width.
  *
  * Narrow (the default): the stage heads its row across the three columns, and
@@ -14,20 +15,20 @@
   container-type: inline-size;
 }
 
-/* The room the figure takes, kept before it renders (measured 2026-11-16 on the harness, by width). */
+/* The room the figure takes, kept before it renders (measured 2026-11-17 on the harness at 320, 566, 640 and 1100px). */
 :host .stage {
-  min-height: 1120px;
+  min-height: 1141px;
 }
 
 @container (min-width: 560px) {
   :host .stage {
-    min-height: 895px;
+    min-height: 951px;
   }
 }
 
 @container (min-width: 640px) {
   :host .stage {
-    min-height: 944px;
+    min-height: 906px;
   }
 }
 
@@ -117,19 +118,25 @@
   height: auto;
 }
 
-.mosaic .lost {
+.mosaic .slots {
   fill: none;
   stroke: var(--_edge);
   vector-effect: non-scaling-stroke;
 }
 
-/* A game won: filled at its own delay, at once; emptied at once when its stage is taken back. */
+/* A game, won or lost: filled at its own delay, at once; emptied at once when its stage is taken back. */
 .mosaic .won {
-  fill: var(--_red);
+  fill: var(--_white);
   opacity: 0;
 }
 
-.stage-row[data-on] .won {
+.mosaic .lost {
+  fill: var(--_black);
+  opacity: 0;
+}
+
+.stage-row[data-on] .won,
+.stage-row[data-on] .lost {
   opacity: 1;
   transition: opacity 0s linear var(--d);
 }
@@ -153,7 +160,7 @@
 }
 
 /* A stage not reached yet: its squares stand, fainter, so the page never moves as they fill. */
-.stage-row:not([data-on]) .lost {
+.stage-row:not([data-on]) .slots {
   stroke: var(--_rule);
 }
 
@@ -167,7 +174,7 @@
   display: none;
 }
 
-.mosaic .lost {
+.mosaic .slots {
   stroke-width: 0.75px;
 }
 
@@ -197,7 +204,7 @@
     justify-content: center;
   }
 
-  /* The stages' column is as wide as its widest stage: its heading comes with the wide box. */
+  /* The stages' column is as wide as its widest stage; each row says what its number is, so the heading stays hidden. */
   .corner {
     display: block;
     align-self: end;
@@ -209,7 +216,7 @@
     visibility: hidden;
   }
 
-  .mosaic .lost {
+  .mosaic .slots {
     stroke-width: 1px;
   }
 
@@ -225,9 +232,10 @@
     margin-top: 0;
   }
 
-  /* Said once, by the column's heading. */
+  /* Under its number, wrapped, so the column stays narrow. */
   .of {
-    display: none;
+    max-width: 8.5em;
+    line-height: 1.25;
   }
 
   /* How far the program has trained on one line, its games won on the next. */
@@ -245,11 +253,6 @@
     font-size: 32px;
   }
 
-  .corner {
-    width: auto;
-    visibility: visible;
-  }
-
   .when,
   .dot {
     display: inline;
@@ -258,6 +261,7 @@
 
 @media (prefers-reduced-motion: reduce) {
   .stage-row[data-on] .won,
+  .stage-row[data-on] .lost,
   .stage-row[data-on] .count {
     transition: none;
   }

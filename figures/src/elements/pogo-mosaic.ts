@@ -2,10 +2,12 @@
 // one per program; eight rows, one per stage of training; in each cell the
 // first 100 games of the program's bench against greedy at that stage
 // (public/data/v5.json; mosaic-grid.ts), one square per game in the order they
-// were played, 20 to a row. A game won is a full square in the kit's red, a
-// game lost an empty square with a hairline: the picture reads from afar, red
-// spreading down the columns of the programs that learn. Under each mosaic,
-// how far the program has trained and its games won, and nothing else.
+// were played, 20 to a row. A game won is a white square, a game lost a black
+// one, each framed by a hairline so both stand off the ground in either theme:
+// the picture reads from afar, white spreading down the columns of the
+// programs that learn. Each row says, by its number, that the number is the
+// share of the training done (read alone, « 0 %, 1 %, 2 % » passed for games
+// won). Under each mosaic, how far the program has trained and its games won.
 //
 // The figure fills stage after stage, by itself once on screen: a stage's
 // squares fill one by one in the order of the games (mosaic-sweep.ts), through
@@ -31,8 +33,11 @@ const NAME: Record<MosaicProgram, StringKey> = { az100: 'progAz100', td: 'progTd
 const CELL = 10;
 const INSET = 1;
 const SIDE = CELL - 2 * INSET;
-/** A stage fills in under half a second, then holds long enough to be read before the next. */
-export const SWEEP_INTERVAL = 1400;
+/**
+ * A stage fills in under a third of a second, then holds about as long: the eight
+ * stages play in under five seconds, so a reader scrolling past sees them filled.
+ */
+export const SWEEP_INTERVAL = 650;
 
 function el<K extends keyof HTMLElementTagNameMap>(tag: K, className = '', text = ''): HTMLElementTagNameMap[K] {
   const node = document.createElement(tag);
@@ -41,14 +46,19 @@ function el<K extends keyof HTMLElementTagNameMap>(tag: K, className = '', text 
   return node;
 }
 
+/** « 5 % de l’entraînement effectué »: a stage's number never stands alone, or it reads as games won. */
+export function doneText(lang: Lang, pct: number): string {
+  return `${pctText(lang, pct)} ${t(lang, 'mosaicOfTraining')}`;
+}
+
 /** « 79 gagnées sur 100 ». */
 export function winsWords(lang: Lang, s: Pick<MosaicStage, 'wins' | 'games'>): string {
   return `${s.wins} ${t(lang, 'mosaicWonOf')} ${s.games}`;
 }
 
 /**
- * One stage of one program: every game's hairline square in one path, and a filled
- * square over it for each game won, which carries its game's number and its delay.
+ * One stage of one program: a filled square per game, won or lost, which carries its
+ * game's number and its delay, then every game's frame in one path over them all.
  */
 export function mosaicSvg(stage: Pick<MosaicStage, 'squares'>): SVGSVGElement {
   const rows = Math.max(1, Math.ceil(stage.squares.length / MOSAIC_COLUMNS));
@@ -57,34 +67,33 @@ export function mosaicSvg(stage: Pick<MosaicStage, 'squares'>): SVGSVGElement {
   svg.setAttribute('class', 'mosaic');
   svg.setAttribute('focusable', 'false');
   svg.setAttribute('role', 'img');
-  const lost = document.createElementNS(NS, 'path');
-  lost.setAttribute('class', 'lost');
+  const slots = document.createElementNS(NS, 'path');
+  slots.setAttribute('class', 'slots');
   let d = '';
-  const won: SVGRectElement[] = [];
+  const fills: SVGRectElement[] = [];
   stage.squares.forEach((q, k) => {
     const x = q.col * CELL + INSET;
     const y = q.row * CELL + INSET;
     d += `M${x} ${y}h${SIDE}v${SIDE}h${-SIDE}z`;
-    if (q.result !== 'win') return;
     const r = document.createElementNS(NS, 'rect');
-    r.setAttribute('class', 'won');
+    r.setAttribute('class', q.result === 'win' ? 'won' : 'lost');
     r.setAttribute('x', String(x));
     r.setAttribute('y', String(y));
     r.setAttribute('width', String(SIDE));
     r.setAttribute('height', String(SIDE));
     r.dataset.game = String(k);
     r.style.setProperty('--d', `${sweepDelay(k)}ms`);
-    won.push(r);
+    fills.push(r);
   });
-  lost.setAttribute('d', d);
-  svg.append(lost, ...won);
+  slots.setAttribute('d', d);
+  svg.append(...fills, slots);
   return svg;
 }
 
 export class PogoMosaic extends PogoFigure {
   static override styles = mosaicCss;
   /** A floor only: pogo-mosaic.css keeps the measured room, by width. */
-  static override stageMinHeight = '895px';
+  static override stageMinHeight = '906px';
 
   /** The data; a test swaps it. */
   static deps: { v5: () => Promise<V5Data> } = { v5: sharedV5 };
@@ -151,11 +160,11 @@ export class PogoMosaic extends PogoFigure {
       shownStages(rows.length, k).forEach((on, i) => rows[i]!.toggleAttribute('data-on', on));
       if (!say) return;
       const each = MOSAIC_PROGRAMS.map((p) => `${t(lang, NAME[p])}, ${winsWords(lang, all[p][k]!)}`);
-      live.textContent = `${pctText(lang, stages[k]!)}${colon(lang)} ${each.join(lang === 'fr' ? ' ; ' : '; ')}.`;
+      live.textContent = `${doneText(lang, stages[k]!)}${colon(lang)} ${each.join(lang === 'fr' ? ' ; ' : '; ')}.`;
     };
 
     const stepper = new Stepper(stages.length, (k) => show(k, true), { signal, interval: SWEEP_INTERVAL });
-    const row = transport(stepper, { lang, counter: (i, n) => `${progress(lang, 'step')(i, n)} · ${pctText(lang, stages[i]!)}` });
+    const row = transport(stepper, { lang, counter: (i, n) => `${progress(lang, 'step')(i, n)} · ${doneText(lang, stages[i]!)}` });
     show(0, false);
     root.append(el('p', 'say title', t(lang, 'mosaicTitle')), el('p', 'key', t(lang, 'mosaicLegend')), table, row, live);
     this.stage.append(root);

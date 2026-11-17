@@ -48,7 +48,7 @@ afterEach(() => {
 });
 
 describe('<pogo-mosaic>', () => {
-  it('draws the three programs side by side, one row per stage: 100 squares each, a filled one per game won, in the data’s order', async () => {
+  it('draws the three programs side by side, one row per stage: 100 framed squares each, filled won or lost, in the data’s order', async () => {
     const el = await mount();
     expect(rows(el)).toHaveLength(v5.stagesPct.length);
     rows(el).forEach((row, k) => {
@@ -56,11 +56,17 @@ describe('<pogo-mosaic>', () => {
       expect(cells.map((c) => c.dataset.program)).toEqual([...MOSAIC_PROGRAMS]);
       cells.forEach((cell, p) => {
         const games = v5.mosaics[MOSAIC_PROGRAMS[p]!][k]!.games;
-        // Every game has its hairline square; a game won has a filled one over it, at its own place.
-        expect((cell.querySelector('.lost')!.getAttribute('d') ?? '').split('M').length - 1).toBe(100);
-        const won = [...cell.querySelectorAll<SVGRectElement>('.won')];
+        // Every game has its frame, drawn over the fills so each square keeps its edge on any ground.
+        const slots = cell.querySelector('.slots')!;
+        expect((slots.getAttribute('d') ?? '').split('M').length - 1).toBe(100);
+        expect(slots.parentElement!.lastElementChild).toBe(slots);
+        // And one filled square, won or lost, at its own place.
+        const won = [...cell.querySelectorAll<SVGRectElement>('rect.won')];
+        const lost = [...cell.querySelectorAll<SVGRectElement>('rect.lost')];
         expect(won.map((r) => Number(r.dataset.game))).toEqual(games.flatMap((g, i) => (g.result === 'win' ? [i] : [])));
-        for (const r of won) {
+        expect(lost.map((r) => Number(r.dataset.game))).toEqual(games.flatMap((g, i) => (g.result === 'loss' ? [i] : [])));
+        expect(won.length + lost.length).toBe(100);
+        for (const r of [...won, ...lost]) {
           const i = Number(r.dataset.game);
           expect([Number(r.getAttribute('x')), Number(r.getAttribute('y'))]).toEqual([(i % 20) * 10 + 1, Math.floor(i / 20) * 10 + 1]);
         }
@@ -81,24 +87,31 @@ describe('<pogo-mosaic>', () => {
     expect(rows(en)[4]!.querySelector('.cell[data-program="az100"] .count')!.textContent).toBe(`after 1,000 games · ${wins('az100', 4)} won of 100`);
   });
 
-  it('heads each column with its program and each row with its share of the training', async () => {
+  it('heads each column with its program and each row with the share of the training done, said beside the number at every width', async () => {
     const el = await mount();
     expect($$(el, '.head .program').map((h) => h.textContent)).toEqual(['AlphaZero, 100 simulations', 'TD(λ)', 'Q-learning']);
     expect($$(el, '.stage-label .pct').map((h) => h.textContent)).toEqual(v5.stagesPct.map((p) => `${p} %`));
-    expect($(el, '.stage-label .of').textContent).toBe('de l’entraînement');
+    // « 0 %, 1 %, 2 % » alone read as games won: the words stay by every number.
+    expect($$(el, '.stage-label .of').map((o) => o.textContent)).toEqual(v5.stagesPct.map(() => 'de l’entraînement effectué'));
+    expect(sheet).not.toMatch(/\.of \{[^}]*display: none/);
+    const en = await mount('en');
+    expect($(en, '.stage-label .of').textContent).toBe('of training done');
   });
 
   it('says what a square is in one line, and nothing else: no note, no disclosure, no table of values', async () => {
     const el = await mount();
-    expect($(el, '.key').textContent).toBe('Une case par partie : rouge si le programme gagne, vide s’il perd.');
+    expect($(el, '.key').textContent).toBe('Une case par partie : blanche si le programme gagne, noire s’il perd.');
+    expect($(await mount('en'), '.key').textContent).toBe('One square per game: white if the program wins, black if it loses.');
     expect(el.shadowRoot!.querySelector('details')).toBeNull();
     expect(el.shadowRoot!.querySelector('table')).toBeNull();
     expect($$(el, '.mosaics > p').map((p) => p.className)).toEqual(['say title', 'key', 'sr']);
   });
 
-  it('a won square is the kit’s red, a lost one a hairline: no other colour', () => {
-    expect(sheet).toMatch(/\.mosaic \.won \{[^}]*fill: var\(--_red\)/);
-    expect(sheet).toMatch(/\.mosaic \.lost \{[^}]*fill: none;[^}]*stroke: var\(--_edge\)/);
+  it('a won square is white, a lost one black, each framed so both stand off the ground in either theme: no other colour', () => {
+    expect(sheet).toMatch(/\.mosaic \.won \{[^}]*fill: var\(--_white\)/);
+    expect(sheet).toMatch(/\.mosaic \.lost \{[^}]*fill: var\(--_black\)/);
+    expect(sheet).toMatch(/\.mosaic \.slots \{[^}]*fill: none;[^}]*stroke: var\(--_edge\)/);
+    expect(sheet).not.toMatch(/--_red/);
     expect(sheet).not.toMatch(/#[0-9a-f]{3,6}\b|rgb\(|hsl\(/i);
   });
 
@@ -113,7 +126,7 @@ describe('<pogo-mosaic>', () => {
     expect(playState(el)).toBe('pause');
     await vi.advanceTimersByTimeAsync(SWEEP_INTERVAL);
     expect(shown(el)).toEqual(upTo(1));
-    expect($(el, '[data-role="counter"]').textContent).toBe('étape 2 sur 8 · 1 %');
+    expect($(el, '[data-role="counter"]').textContent).toBe('étape 2 sur 8 · 1 % de l’entraînement effectué');
     await vi.advanceTimersByTimeAsync(SWEEP_INTERVAL * 10);
     expect(shown(el)).toEqual(upTo(7));
     expect(playState(el)).toBe('replay');
@@ -141,12 +154,20 @@ describe('<pogo-mosaic>', () => {
   it('a stage fills square by square in the order of the games, and its count comes once the last has filled', async () => {
     const el = await mount();
     const cell = rows(el)[3]!.querySelector<HTMLElement>('.cell[data-program="az100"]')!;
-    for (const r of cell.querySelectorAll<SVGRectElement>('.won')) expect(r.style.getPropertyValue('--d')).toBe(`${Number(r.dataset.game) * SWEEP_STEP_MS}ms`);
-    expect(sheet).toMatch(/\.stage-row\[data-on\] \.won \{[^}]*opacity: 1;[^}]*transition: opacity 0s linear var\(--d\)/);
+    const fills = cell.querySelectorAll<SVGRectElement>('rect');
+    expect(fills).toHaveLength(100);
+    for (const r of fills) expect(r.style.getPropertyValue('--d')).toBe(`${Number(r.dataset.game) * SWEEP_STEP_MS}ms`);
+    expect(sheet).toMatch(/\.stage-row\[data-on\] \.won,\s*\.stage-row\[data-on\] \.lost \{[^}]*opacity: 1;[^}]*transition: opacity 0s linear var\(--d\)/);
     expect($(el, '.table').style.getPropertyValue('--sweep')).toBe(`${SWEEP_MS}ms`);
     expect(sheet).toMatch(/\.stage-row\[data-on\] \.count \{[^}]*visibility: visible;[^}]*transition: visibility 0s linear var\(--sweep\)/);
     // The interval leaves the sweep time to end and the stage time to be read.
     expect(SWEEP_INTERVAL).toBeGreaterThan(2 * SWEEP_MS);
+  });
+
+  it('plays fast enough to keep up with a reader scrolling past: the eight stages in under five seconds', () => {
+    // Round 3 took 1.4 s a stage, ten seconds in all, and the owner scrolled past it unfilled.
+    expect(SWEEP_INTERVAL * (v5.stagesPct.length - 1)).toBeLessThanOrEqual(5000);
+    expect(SWEEP_MS).toBeLessThanOrEqual(300);
   });
 
   it('under reduced motion nothing starts by itself: the whole mosaic at once, and the play control', async () => {
@@ -158,7 +179,7 @@ describe('<pogo-mosaic>', () => {
     await vi.advanceTimersByTimeAsync(SWEEP_INTERVAL * 3);
     expect(shown(el)).toEqual(upTo(7));
     expect(playState(el)).toBe('play');
-    expect(sheet).toMatch(/@media \(prefers-reduced-motion: reduce\) \{[^@]*\.won,[^@]*\.count \{\s*transition: none/);
+    expect(sheet).toMatch(/@media \(prefers-reduced-motion: reduce\) \{[^@]*\.won,[^@]*\.lost,[^@]*\.count \{\s*transition: none/);
   });
 
   it('puts the transport right under the mosaics, and says each stage once to a screen reader', async () => {
@@ -167,7 +188,7 @@ describe('<pogo-mosaic>', () => {
     $(el, '[data-role="play"]').click();
     $(el, '[data-role="next"]').click();
     expect($(el, '.sr').textContent).toBe(
-      `1 % : AlphaZero, 100 simulations, ${wins('az100', 1)} gagnées sur 100 ; TD(λ), ${wins('td', 1)} gagnées sur 100 ; Q-learning, ${wins('qtab', 1)} gagnées sur 100.`,
+      `1 % de l’entraînement effectué : AlphaZero, 100 simulations, ${wins('az100', 1)} gagnées sur 100 ; TD(λ), ${wins('td', 1)} gagnées sur 100 ; Q-learning, ${wins('qtab', 1)} gagnées sur 100.`,
     );
   });
 
