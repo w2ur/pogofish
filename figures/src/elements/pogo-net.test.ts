@@ -8,7 +8,7 @@ import { t } from '../kit/strings';
 import { parseAz, parseTd, policyIndex } from '../nets';
 import { createStore, type Store } from '../store';
 import { REDUCED_MOTION, intersect, leave, playState, resetMedia, setMedia } from '../test-dom';
-import { flowEnd } from './net-canvas';
+import { LINK_ALPHA, LINK_WIDTH, flowEnd } from './net-canvas';
 import { netGraph, signal } from './net-graph';
 import { DEFAULT_PLY, defaultPosition } from './net-position';
 import { PER_NODE, PogoNet, STEP_MS, TOP_MOVES, drawnWords, inputWords, netNumber, outputMove, positionMs, probeWords } from './pogo-net';
@@ -152,6 +152,27 @@ describe('<pogo-net>', () => {
     expect(g.links).toBe(24512);
     expect($(el, '.legend').textContent).toContain('positif');
     expect($(el, '.legend').textContent).toContain('négatif');
+  });
+
+  // The owner could not tell magnitudes apart (« plus c'est vif, on ne distingue pas »), and red stood for
+  // positive: positive is now ink and negative red, the usual sign colours, and the legend draws the
+  // canvas's own three strengths.
+  it('positive is ink and negative red, in the legend, the note and its marker', () => {
+    expect(sheet).toMatch(/\.dot\.positive \{\s*background: var\(--_ink\);/);
+    expect(sheet).toMatch(/\.dot\.negative \{\s*background: var\(--_red\);/);
+    expect(sheet).toMatch(/\.note\[data-sign='negative'\] \.note-number \{\s*color: var\(--_red-text\);/);
+    expect(sheet).toMatch(/\.note\[data-sign='negative'\] \.marker \{\s*background: var\(--_red\);/);
+    expect(sheet).not.toMatch(/data-sign='positive'\] \.(note-number|marker) \{\s*(color|background): var\(--_red/);
+  });
+
+  it('the legend draws the three strengths the canvas uses, from weak to strong', async () => {
+    const el = await mount('td');
+    const weights = $$(el, '.legend .weight');
+    expect(weights.map((w) => w.style.height)).toEqual(LINK_WIDTH.map((w) => `${w}px`));
+    expect(weights.map((w) => Number(w.style.opacity))).toEqual([...LINK_ALPHA]);
+    expect($(el, '.legend .strengths').textContent).toBe('faiblefort');
+    expect($(await mount('td', 'en'), '.legend .strengths').textContent).toBe('weakstrong');
+    expect(el.shadowRoot!.textContent).not.toContain('vif');
   });
 
   it('AlphaZero lists its preferred moves with their shares, the rest summed: all the legal moves share 100 %', async () => {

@@ -6,8 +6,9 @@
 // says how many of all the links that is. The signal crosses the net: the
 // inputs light up from the position, their links reach the first layer, which
 // lights, and so on to the output, where the value appears on its −1…+1 scale
-// (and, for AlphaZero, the preferred moves with their shares). Red is a
-// positive number, ink a negative one, the stronger the plainer. Everything
+// (and, for AlphaZero, the preferred moves with their shares). Ink is a
+// positive number, red a negative one, in three strengths of width and
+// opacity the legend draws. Everything
 // drawn is computed in the page from the real weights.
 //
 // Then another position, and the flow again, the previous pass held (its colours
@@ -37,7 +38,7 @@ import { store, type Store } from '../store';
 import { formatCount } from './count-steps';
 import { CELLS, PER_CELL, SLOTS } from './encoding-rows';
 import { inputText } from './input-text';
-import { drawNet, flowEnd, type Palette, type Probe } from './net-canvas';
+import { LINK_ALPHA, LINK_WIDTH, drawNet, flowEnd, type Palette, type Probe } from './net-canvas';
 import { netGraph, signal, type GraphColumn, type NetGraph, type Signal } from './net-graph';
 import { layoutNet, nodeAt, type NetLayout } from './net-layout';
 import { DEFAULT_PLY } from './net-position';
@@ -195,7 +196,17 @@ export class PogoNet extends PogoFigure {
       return item;
     };
     const drawnLine = el('span', 'drawn num');
-    legend.append(dot('positive', t(lang, 'netPositive')), dot('negative', t(lang, 'netNegative')), el('span', 'legend-item', t(lang, 'netStrong')), drawnLine);
+    // The three strengths the canvas draws, weak to strong, at their own width and opacity.
+    const strengths = el('span', 'legend-item strengths');
+    strengths.append(el('span', 'w', t(lang, 'netWeak')));
+    LINK_WIDTH.forEach((width, k) => {
+      const w = el('i', 'weight');
+      w.style.height = `${width}px`;
+      w.style.opacity = String(LINK_ALPHA[k]);
+      strengths.append(w);
+    });
+    strengths.append(el('span', 'w', t(lang, 'netStrongWord')));
+    legend.append(dot('positive', t(lang, 'netPositive')), dot('negative', t(lang, 'netNegative')), strengths, drawnLine);
     const probeLine = el('p', 'probe num', t(lang, 'netProbeHint'));
     probeLine.setAttribute('aria-live', 'polite');
     draw.append(...(top.childElementCount ? [top] : []), wrap, bottom, legend, probeLine);

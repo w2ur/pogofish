@@ -3,8 +3,9 @@
 // net from left to right in `tau`, counted in ranks: at tau = r the nodes of
 // rank r light up, then their links grow towards rank r + 1 and reach it at
 // tau = r + 1. A link is drawn in the page's red when what it carried
-// (weight × activation) is positive and in ink when negative, the stronger the
-// plainer; a node likewise by its value. Under the lit links the same links
+// (weight × activation) is positive in ink and negative in the page's red, the
+// usual sign colours; its strength is one of three steps of width and opacity
+// wide enough apart to be told at a glance; a node likewise by its value. Under the lit links the same links
 // stand as hairlines, so the net is there before the signal is.
 import type { NetGraph, Signal } from './net-graph';
 import type { NetLayout } from './net-layout';
@@ -47,9 +48,13 @@ export function linkStrength(share: number): 0 | 1 | 2 {
   return share < 0.22 ? 0 : share < 0.55 ? 1 : 2;
 }
 
-const LINK_ALPHA = [0.16, 0.45, 1] as const;
-const LINK_WIDTH = [0.5, 0.8, 1.3] as const;
-const NODE_ALPHA = [0.45, 0.75, 1] as const;
+/** A link's three strengths, weak to strong: its opacity and its width in CSS pixels. The legend draws the same. */
+export const LINK_ALPHA = [0.2, 0.5, 1] as const;
+export const LINK_WIDTH = [0.6, 1.6, 3.2] as const;
+/** A node's three strengths, weak to strong: its opacity. */
+export const NODE_ALPHA = [0.35, 0.65, 1] as const;
+/** The colour of a signed number: ink for positive, red for negative. */
+const signColour = (p: Palette, positive: boolean): string => (positive ? p.ink : p.red);
 const TAU = Math.PI * 2;
 
 export interface NetView {
@@ -111,7 +116,7 @@ export function drawNet(ctx: CanvasRenderingContext2D, v: NetView): void {
         }
         if (!any) continue;
         ctx.globalAlpha = LINK_ALPHA[lv] * dim;
-        ctx.strokeStyle = positive ? palette.red : palette.ink;
+        ctx.strokeStyle = signColour(palette, positive);
         ctx.lineWidth = LINK_WIDTH[lv];
         ctx.stroke();
       }
@@ -134,7 +139,7 @@ export function drawNet(ctx: CanvasRenderingContext2D, v: NetView): void {
       ctx.fill();
       if (lit > 0 && value !== 0) {
         ctx.globalAlpha = (0.3 + 0.7 * Math.min(1, Math.abs(value))) * lit;
-        ctx.fillStyle = value > 0 ? palette.red : palette.ink;
+        ctx.fillStyle = signColour(palette, value > 0);
         ctx.fill();
       }
       ctx.globalAlpha = 1;
@@ -181,7 +186,7 @@ export function drawNet(ctx: CanvasRenderingContext2D, v: NetView): void {
         }
         if (!any) continue;
         ctx.globalAlpha = NODE_ALPHA[lv] * lit * (probe ? 0.55 : 1);
-        ctx.fillStyle = positive ? palette.red : palette.ink;
+        ctx.fillStyle = signColour(palette, positive);
         ctx.fill();
       }
     }
@@ -209,8 +214,8 @@ export function drawNet(ctx: CanvasRenderingContext2D, v: NetView): void {
         ctx.lineTo(b.x[d.to[k]!]!, b.y[d.to[k]!]!);
       }
       ctx.globalAlpha = 1;
-      ctx.strokeStyle = positive ? palette.red : palette.ink;
-      ctx.lineWidth = 1.6;
+      ctx.strokeStyle = signColour(palette, positive);
+      ctx.lineWidth = LINK_WIDTH[2];
       ctx.stroke();
     }
   });

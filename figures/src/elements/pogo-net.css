@@ -4,9 +4,9 @@
  * 560px the position stands beside the net, the output under them. From 900px
  * (the wide box) the output stands at the right, where the signal arrives.
  *
- * Red is a positive number and ink a negative one, on the canvas as in the
- * legend; the stronger, the plainer. Nothing here is a control: controls are
- * never red.
+ * Ink is a positive number and red a negative one, on the canvas as in the
+ * legend, in three strengths of width and opacity. Nothing here is a control:
+ * controls are never red.
  */
 :host {
   container-type: inline-size;
@@ -178,10 +178,23 @@ ol {
 }
 
 .dot.positive {
-  background: var(--_red);
+  background: var(--_ink);
 }
 
 .dot.negative {
+  background: var(--_red);
+}
+
+/* The three strengths: « faible », the canvas's three link widths and opacities, « fort ». */
+.strengths {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+}
+
+.strengths .weight {
+  display: inline-block;
+  width: 18px;
   background: var(--_ink);
 }
 
@@ -227,7 +240,7 @@ ol {
   font-size: 56px;
 }
 
-.note[data-sign='positive'] .note-number {
+.note[data-sign='negative'] .note-number {
   color: var(--_red-text);
 }
 
@@ -263,7 +276,7 @@ ol {
   background: var(--_ink);
 }
 
-.note[data-sign='positive'] .marker {
+.note[data-sign='negative'] .marker {
   background: var(--_red);
 }
 
