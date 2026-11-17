@@ -1,8 +1,8 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { REDUCED_MOTION, intersect, resetMedia, setMedia, leave, playState } from '../test-dom';
 import { MOVE_TEMPO_MS } from '../kit/tempo';
-import { PogoQsteps, SLOW_MS, groupWords, qWords } from './pogo-qsteps';
-import { ALPHA, qScript, qSteps } from './q-steps';
+import { PogoQsteps, READ_MS, SLOW_MS, groupWords, qWords } from './pogo-qsteps';
+import { ALPHA, QSTEPS_FIRST, QSTEPS_GAMES, QSTEPS_PREFIX, notebookColumns, noteText, qScript, qSteps } from './q-steps';
 
 if (!customElements.get('pogo-qsteps')) customElements.define('pogo-qsteps', PogoQsteps);
 PogoQsteps.deps = { engine: () => Promise.resolve() };
@@ -66,17 +66,17 @@ describe('qWords', () => {
       'Il attribue une valeur à chaque coup : +1 si le coup permet de gagner la partie ; sinon, l’opposé de la note de la position d’arrivée.',
       'Il garde la valeur du meilleur coup : +1,00.',
       'Il calcule la nouvelle note de C1.',
-      'Il écrit la nouvelle note dans le carnet : C1 passe de 0,00 à 0,10. Il joue ensuite un coup, en général le meilleur.',
+      'Il met à jour la note de la position : C1 passe de 0,00 à 0,10. Il joue ensuite un coup, en général le meilleur.',
     ]);
     expect(words('fr', i).game).toBe('Partie 1 sur 5');
     expect(words('fr', i).path).toEqual(['A', 'B', 'C1']);
     expect(words('fr', i).counter).toBe('partie 1 sur 5 · étape 3 sur 8');
-    expect(words('en', i + 4).text).toBe('It writes the new value in the notebook: C1 goes from 0.00 to 0.10. It then plays a move, usually the best one.');
+    expect(words('en', i + 4).text).toBe('It updates the value of the position: C1 goes from 0.00 to 0.10. It then plays a move, usually the best one.');
   });
 
-  it('where a value is read in the notebook, says so, with the essay’s reason', () => {
+  it('where a value is read from a position’s note, says so, with the essay’s reason', () => {
     expect(words('fr', at(3, 'B', 'value')).text).toBe(
-      'Il attribue une valeur à chaque coup : l’opposé de la note de la position d’arrivée, lue dans le carnet (le coup suivant appartient à l’adversaire).',
+      'Il attribue une valeur à chaque coup : l’opposé de la note de la position d’arrivée (le coup suivant appartient à l’adversaire).',
     );
     expect(words('fr', at(3, 'B', 'write')).text).toContain('B passe de 0,00 à −0,01.');
   });
@@ -213,7 +213,7 @@ describe('<pogo-qsteps>', () => {
     expect(script.filter((s) => s.phase !== null).every((s) => s.slow)).toBe(true);
   });
 
-  it('a step of a game already seen is a move played at the kit’s one tempo', async () => {
+  it('a step of a game already seen is held long enough to read its sentence, longer than the move it plays', async () => {
     const el = await mount();
     const fast = script.findIndex((s, i) => i > 0 && !s.slow);
     expect(fast).toBeGreaterThan(0);
@@ -222,10 +222,87 @@ describe('<pogo-qsteps>', () => {
     const at = counter.textContent;
     vi.useFakeTimers();
     role(el, 'play').click();
-    vi.advanceTimersByTime(MOVE_TEMPO_MS - 1);
+    vi.advanceTimersByTime(READ_MS - 1);
     expect(counter.textContent).toBe(at);
     vi.advanceTimersByTime(1);
     expect(counter.textContent).toBe(words('fr', fast + 1).counter);
+    expect(READ_MS).toBeGreaterThan(MOVE_TEMPO_MS);
+    expect(READ_MS).toBeLessThan(SLOW_MS);
+  });
+
+  it('plays slower than before: the whole walk between 90 seconds and two minutes (it was 68.6 s)', () => {
+    const total = script.reduce((a, s) => a + (s.slow ? SLOW_MS : READ_MS), 0);
+    expect(total).toBeGreaterThan(90_000);
+    expect(total).toBeLessThan(120_000);
+  });
+
+  it('never says « carnet »: the essay speaks of the notes of the positions', async () => {
+    for (const [lang, word] of [
+      ['fr', /carnet/i],
+      ['en', /notebook/i],
+    ] as const) {
+      const el = await mount(lang);
+      expect(el.shadowRoot!.textContent).not.toMatch(word);
+      for (let i = 0; i < script.length; i++) expect(words(lang, i).text).not.toMatch(word);
+      document.body.innerHTML = '';
+    }
+    const el = await mount('fr');
+    expect($(el, 'caption').textContent).toBe('Les notes des positions, pour le joueur au trait');
+  });
+
+  it('shows A, B, C1 and C2 at every step, each position drawn beside its name', async () => {
+    const el = await mount();
+    const check = (): void => {
+      const rows = $$(el, 'tbody tr');
+      expect(rows.map((r) => r.querySelector('.name')!.textContent)).toEqual(walk.rows);
+      rows.forEach((r, k) => {
+        const state = walk.states[walk.rows[k]!]!;
+        const drawn = [...r.querySelectorAll('.name svg .stack')].map((s) => Number(s.getAttribute('data-cell')));
+        expect(drawn, walk.rows[k]).toEqual(state.cells.flatMap((c, i) => (c.length ? [i] : [])));
+      });
+    };
+    check();
+    go(el, Math.floor(script.length / 2));
+    check();
+    go(el, script.length);
+    check();
+  });
+
+  it('the reader sets the learning rate, 10 % or 100 %: at 100 % each note copies the best value at once', async () => {
+    setMedia(REDUCED_MOTION, true);
+    const el = await mount();
+    const group = $(el, '[role="radiogroup"]');
+    expect(el.shadowRoot!.getElementById(group.getAttribute('aria-labelledby')!)!.textContent).toBe('Taux d’apprentissage');
+    const choice = (label: string) => $$(el, '[role="radio"]').find((b) => b.textContent === label)!;
+    expect(choice('10\u202f%').getAttribute('aria-checked')).toBe('true');
+    const plain = () => notebook(el).map((r) => r.replace(/[*>]/g, ''));
+    const rested = (alpha: number) => {
+      const cols = notebookColumns(qSteps(QSTEPS_PREFIX, QSTEPS_FIRST, QSTEPS_GAMES, alpha));
+      return walk.rows.map((r) => [r, ...cols.map((c) => noteText('fr', c[r]!))].join(' '));
+    };
+    expect(plain()).toEqual(rested(0.1));
+    choice('100\u202f%').click();
+    expect(choice('100\u202f%').getAttribute('aria-checked')).toBe('true');
+    // Under reduced motion it rests on the last step of the new walk.
+    expect(plain()).toEqual(rested(1));
+    expect(plain()[2]).toBe('C1 0,00 1,00 1,00 1,00 1,00 1,00');
+    expect(formula(el)).toContain('+ 100\u202f% × (');
+    choice('10\u202f%').click();
+    expect(plain()).toEqual(rested(0.1));
+    expect(formula(el)).toContain('+ 10\u202f% × (');
+  });
+
+  it('choosing a rate plays the new walk from its start, unless motion is reduced', async () => {
+    const el = await mount();
+    vi.useFakeTimers();
+    go(el, 5);
+    $$(el, '[role="radio"]').find((b) => b.textContent === '100\u202f%')!.click();
+    expect(role(el, 'counter').textContent).toBe('avant la première partie');
+    expect(playState(el)).toBe('pause');
+    vi.advanceTimersByTime(SLOW_MS);
+    expect(role(el, 'counter').textContent).toBe(words('fr', 1).counter);
+    // The control keeps its place and its focus: only the walk under it is new.
+    expect($$(el, '[role="radiogroup"]')).toHaveLength(1);
   });
 
   it('an aborted signal stops a running walk', async () => {

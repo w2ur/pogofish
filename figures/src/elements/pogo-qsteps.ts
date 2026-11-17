@@ -1,29 +1,32 @@
 // <pogo-qsteps>: tabular Q-learning on a real ending (q-steps.ts), shown as
 // cause and effect. The position the program is in, its possible moves and
-// their values, the essay's formula with these very numbers, and the notebook:
-// one row per position, one column per game. The first update that changes a
+// their values, the essay's formula with these very numbers, and the notes of
+// the positions: one row per position, A, B, C1, C2, each drawn beside its
+// name at every step, one column per game. The first update that changes a
 // note of each kind of position is played slowly, in the essay's five
-// sub-steps: a note read in the notebook travels to its move and changes sign
-// on the way, the best value is kept, the formula is written, and the result
-// travels into the notebook. Game after game the non-zero note reaches one
-// position further back: the notebook's columns keep every game, so the wave
-// is seen at rest too.
+// sub-steps: a note read in the table travels to its move and changes sign on
+// the way, the best value is kept, the formula is written, and the result
+// travels into the table. Game after game the non-zero note reaches one
+// position further back: the columns keep every game, so the wave is seen at
+// rest too. The reader sets the formula's step, 10 % or 100 % (the essay's
+// « pourquoi 10 % et pas 100 % »): the walk is played again with it.
 import { WASM_FILE, assetUrl } from '../assets';
 import type { Colour } from '../engine';
 import { ready } from '../engine';
 import { autoplay } from '../kit/autoplay';
 import { labelledBoard } from '../kit/board-labels';
 import { animateMove, drawBoard } from '../kit/board-svg';
-import { transport } from '../kit/controls';
+import { choiceGroup, transport } from '../kit/controls';
 import { PogoFigure } from '../kit/figure';
 import { Stepper } from '../kit/stepper';
-import { MOVE_TEMPO_MS } from '../kit/tempo';
 import { colon, t, type Lang, type StringKey } from '../kit/strings';
 import { fly } from './motion';
 import qstepsCss from './pogo-qsteps.css?raw';
 import {
   ALPHA,
+  QSTEPS_FIRST,
   QSTEPS_GAMES,
+  QSTEPS_PREFIX,
   moveGroups,
   notebookColumns,
   notesAt,
@@ -39,8 +42,12 @@ import {
 import replayCss from './replay.css?raw';
 import { colourKey, resultWords } from './replay-view';
 
-/** How long a step read for the first time is held; a step of a game the reader already knows is a move, at the kit's one tempo. */
-export const SLOW_MS = 2800;
+/** How long a step read for the first time is held. */
+export const SLOW_MS = 3800;
+/** How long a step of a game the reader already knows is held: its move takes the kit's one tempo, its sentence the rest. */
+export const READ_MS = 2400;
+/** The steps the reader can set: the essay's 10 %, and the 100 % it argues against. */
+export const RATES = [ALPHA, 1] as const;
 
 const colourName = (lang: Lang, c: Colour): string => t(lang, colourKey(c));
 const pct = (lang: Lang, x: number): string => `${Math.round(x * 100)}${lang === 'fr' ? '\u202f' : ''}%`;
@@ -125,13 +132,42 @@ export class PogoQsteps extends PogoFigure {
     await (this.constructor as typeof PogoQsteps).deps.engine();
     if (signal.aborted) return;
     const lang = this.lang;
-    const walk = qSteps();
+    const root = el('div', 'qsteps');
+    // The step is the reader's: the walk under the control is played again with it.
+    const walkBox = el('div', 'walk');
+    let alpha: number = ALPHA;
+    let run: AbortController | undefined;
+    const rate = choiceGroup({
+      label: t(lang, 'qRate'),
+      id: 'q-rate',
+      choices: RATES.map((a) => ({ value: String(a), label: pct(lang, a) })),
+      onChoose: (v) => {
+        if (Number(v) === alpha) return;
+        alpha = Number(v);
+        build(true);
+      },
+    });
+    rate.element.classList.add('rate');
+    const build = (byReader: boolean): void => {
+      run?.abort();
+      const current = new AbortController();
+      run = current;
+      rate.set(String(alpha));
+      walkBox.replaceChildren(...this.walkView(lang, alpha, current.signal, byReader, root));
+    };
+    signal.addEventListener('abort', () => run?.abort(), { once: true });
+    build(false);
+    root.append(rate.element, walkBox);
+    this.stage.append(root);
+  }
+
+  /** The walk at step size `alpha`: its words, its body and its transport, playing under `signal`; notes fly over `root`. */
+  private walkView(lang: Lang, alpha: number, signal: AbortSignal, byReader: boolean, root: HTMLElement): HTMLElement[] {
+    const walk = qSteps(QSTEPS_PREFIX, QSTEPS_FIRST, QSTEPS_GAMES, alpha);
     const { frames, rows } = walk;
     const script = qScript(walk);
     const columns = notebookColumns(walk);
     const words = script.map((s, i) => qWords(lang, walk, s, i === script.length - 1));
-
-    const root = el('div', 'qsteps');
 
     // The words of every step in one grid cell: the figure below never moves.
     const status = el('div', 'status');
@@ -182,7 +218,7 @@ export class PogoQsteps extends PogoFigure {
       return n;
     };
     const after = term('qNew', '=');
-    const before = term('qOld', `+ ${pct(lang, ALPHA)} × (`);
+    const before = term('qOld', `+ ${pct(lang, alpha)} × (`);
     const best = term('qBest', '−');
     const again = term('qOld', ')');
     const slots = { after, before, best, again };
@@ -219,8 +255,12 @@ export class PogoQsteps extends PogoFigure {
     const cells = new Map<string, { name: HTMLTableCellElement; values: HTMLTableCellElement[] }>();
     for (const r of rows) {
       const tr = el('tr');
-      const name = el('th', 'name', r);
+      // The position itself beside its name, at every step: the reader never has to remember which is which.
+      const name = el('th', 'name');
       name.scope = 'row';
+      const thumb = drawBoard(walk.states[r]!, { size: 52 });
+      thumb.setAttribute('aria-hidden', 'true');
+      name.append(el('span', 'row-label', r), thumb);
       const values = columns.map(() => el('td', 'value'));
       tr.append(name, ...values);
       tbody.append(tr);
@@ -344,12 +384,13 @@ export class PogoQsteps extends PogoFigure {
       shown = i;
     };
 
-    const stepper = new Stepper(script.length, show, { signal, interval: (i) => (script[i]!.slow ? SLOW_MS : MOVE_TEMPO_MS) });
+    const stepper = new Stepper(script.length, show, { signal, interval: (i) => (script[i]!.slow ? SLOW_MS : READ_MS) });
     signal.addEventListener('abort', () => landings.forEach((land) => land()), { once: true });
     const row = transport(stepper, { lang, counter: (i) => words[i]!.counter });
     show(0);
     autoplay(this, stepper, { signal, still: () => stepper.go(stepper.steps - 1) });
-    root.append(status, body, row, live);
-    this.stage.append(root);
+    // A step the reader has just chosen: its walk plays from the start, unless motion is reduced.
+    if (byReader) stepper.play();
+    return [status, body, row, live];
   }
 }
