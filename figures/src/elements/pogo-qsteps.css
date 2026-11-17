@@ -1,10 +1,10 @@
-/* The room kept before rendering, per width (measured on the harness, 2026-11-17: 1218px at 272, 897 at 566, 618 at 1100). */
+/* The room kept before rendering, per width (measured on the harness, 2026-11-17: 1263px at 272, 897 at 566, 618 at 1100). */
 :host {
   container-type: inline-size;
 }
 
 .stage {
-  min-height: 1200px;
+  min-height: 1250px;
 }
 
 @container (min-width: 520px) {
@@ -287,11 +287,22 @@
   }
 
   .notebook .name-col {
-    width: 1.9em;
+    width: 2.6em;
   }
 
   .notebook .name {
     font-stretch: 100%;
+  }
+
+  /* The name over its position, the position smaller: the games keep their columns. */
+  .notebook .name .row-label {
+    display: block;
+  }
+
+  .notebook .name .board {
+    width: 30px;
+    height: 30px;
+    margin-left: 0;
   }
 
   .notebook th,
@@ -321,7 +332,7 @@
     display: none;
   }
 
-  .qsteps > .controls > .counter {
+  .walk > .controls > .counter {
     min-width: 0;
     flex-basis: 100%;
   }
@@ -387,7 +398,7 @@
   white-space: nowrap;
 }
 
-.qsteps > .controls {
+.walk > .controls {
   justify-content: center;
 }
 

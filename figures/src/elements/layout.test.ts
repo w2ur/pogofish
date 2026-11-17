@@ -63,7 +63,8 @@ describe('round 3, lot B2: three figures that use the width', () => {
     const s = css('pogo-qsteps');
     expect(s).toMatch(/@container \(min-width: 520px\) \{\s*\.body \{[^}]*grid-template-areas: 'slot moves' 'book book' 'formula formula'/);
     expect(s).toMatch(/@container \(min-width: 900px\) \{\s*\.body \{[^}]*grid-template-areas: 'slot moves book' 'slot formula formula'/);
-    expect(rule(s, '.qsteps > .controls')).toContain('justify-content: center');
+    // Regression: since 3420d4d the transport sits in .walk (under the rate control), and `.qsteps > .controls` matched nothing.
+    expect(rule(s, '.walk > .controls')).toContain('justify-content: center');
   });
 
   it('pogo-stages: the curve beside the board from 520px, under it below', () => {

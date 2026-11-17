@@ -132,6 +132,9 @@ describe('<pogo-qsteps>', () => {
     const el = await mount('fr');
     expect([...$(el, '.body').children].map((c) => c.className)).toEqual(['board-slot', 'moves', 'book', 'formula blank']);
     expect($(el, '.body').nextElementSibling!.classList.contains('controls')).toBe(true);
+    // The sheet centres `.walk > .controls`: the transport is a child of the walk, under the rate control.
+    expect($(el, '.controls').parentElement!.classList.contains('walk')).toBe(true);
+    expect($(el, '.walk').previousElementSibling!.classList.contains('rate')).toBe(true);
   });
 
   it('starts on a notebook of zeros with one column, the games to come empty', async () => {
