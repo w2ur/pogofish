@@ -1,5 +1,7 @@
+import { readFileSync } from 'node:fs';
+import { resolve } from 'node:path';
 import { initial, type State } from '../engine';
-import { drawBoard } from './board-svg';
+import { drawBoard, landing } from './board-svg';
 
 const mid: State = {
   cells: [['White'], [], ['Red', 'White'], [], ['White', 'White', 'Red'], [], ['Red'], ['White', 'Red', 'White'], []],
@@ -116,5 +118,54 @@ describe('drawBoard', () => {
     expect(children.indexOf(target)).toBeGreaterThan(lastStack);
     expect(children.indexOf(picked)).toBeGreaterThan(lastStack);
     expect(svg.querySelectorAll('.mark')).toHaveLength(2);
+  });
+});
+
+// Round 5, convention 1: the dashed ring says where a move left from, and nothing else.
+describe('drawBoard, the marks of a possible move', () => {
+  it('draws a candidate as the four corners of the landing frame, never as a ring', () => {
+    const svg = drawBoard(mid, { labelRoom: true, marks: [{ cell: 4, kind: 'target' }] });
+    const mark = svg.querySelector('.mark.target[data-cell="4"]')!;
+    expect(mark.tagName.toLowerCase()).toBe('path');
+    // Four corners, each one stroke of two arms: four subpaths.
+    expect(mark.getAttribute('d')!.match(/M/g)).toHaveLength(4);
+    expect(svg.querySelectorAll('circle.target')).toHaveLength(0);
+  });
+
+  it('keeps the dashed ring for the origin alone: the theme dashes .from and no mark', () => {
+    const css = readFileSync(resolve(process.cwd(), 'src/kit/theme.css'), 'utf8');
+    const dashed = [...css.matchAll(/([^{}]+)\{[^{}]*stroke-dasharray[^{}]*\}/g)].map((m) => m[1]!.replace(/\/\*[\s\S]*?\*\//g, '').trim());
+    expect(dashed).toEqual(['.board .from']);
+  });
+
+  it('shows a possible move landing: its lifted pieces faded on top of the destination, the origin whole', () => {
+    // b2 (White, White, Red) could send its top two onto c1 (Red, White).
+    const move = landing(mid, [4, 2, 2]);
+    expect(move).toEqual({ to: 2, pieces: ['White', 'Red'] });
+    const svg = drawBoard(mid, { landings: [move] });
+    // Nothing has moved: every stack keeps its pieces, and they are not faded.
+    expect(discsIn(svg, 4).map((d) => d.dataset.colour)).toEqual(['White', 'White', 'Red']);
+    expect(discsIn(svg, 2).map((d) => d.dataset.colour)).toEqual(['Red', 'White']);
+    expect(svg.querySelectorAll('.stack .landing')).toHaveLength(0);
+    const ghosts = [...svg.querySelectorAll<SVGCircleElement>('.landings[data-cell="2"] .disc.landing')];
+    expect(ghosts.map((d) => d.dataset.colour)).toEqual(['White', 'Red']);
+    // On top of the stack, bottom first, in one column with it.
+    const ys = [...discsIn(svg, 2), ...ghosts].map((d) => Number(d.getAttribute('cy')));
+    for (let k = 1; k < ys.length; k++) expect(ys[k]!).toBeLessThan(ys[k - 1]!);
+    expect(new Set([...discsIn(svg, 2), ...ghosts].map((d) => d.getAttribute('cx'))).size).toBe(1);
+  });
+
+  it('lands on an empty square too, under the marks', () => {
+    const svg = drawBoard(mid, { landings: [landing(mid, [0, 1, 1])], marks: [{ cell: 1, kind: 'target' }] });
+    const group = svg.querySelector('.landings[data-cell="1"]')!;
+    expect(group.querySelectorAll('.disc.landing')).toHaveLength(1);
+    const children = [...svg.children];
+    expect(children.indexOf(svg.querySelector('.mark.target')!)).toBeGreaterThan(children.indexOf(group));
+    // An empty square holds no stack: a figure counting stacks counts the position's.
+    expect(svg.querySelector('.stack[data-cell="1"]')).toBeNull();
+  });
+
+  it('refuses a landing of pieces the origin does not hold', () => {
+    expect(() => landing(mid, [1, 1, 0])).toThrow(/pogo/);
   });
 });

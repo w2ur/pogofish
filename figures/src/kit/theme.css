@@ -226,7 +226,7 @@ slot[hidden],
 
 /*
  * Unavailable: a solid edge in the edge colour and a muted label. Never dashed: on this page a
- * dashed edge means « can be picked up » (the ring on the board). The muted label keeps 6:1 or more
+ * dash belongs to the board, where it marks the square a move left from. The muted label keeps 6:1 or more
  * on the ground in both themes (#a3a39d on #0a0a0a 7.8:1, #565a5e on #eff1f2 6.1:1).
  */
 .control:disabled {
@@ -342,17 +342,35 @@ slot[hidden],
 }
 
 /*
- * What moved: a dashed ring where it left, a solid frame where it landed.
- * On a playable board the same dashed ring marks what can be tapped, and a
- * solid ink ring the stack that is lifted.
+ * The marks (board-svg.ts holds the convention). What moved: a dashed ring where it left, a
+ * solid frame where it landed. The dashed ring means that, on every board, and nothing else.
  */
-.board .from,
-.board .target {
+.board .from {
   fill: none;
   stroke: var(--_edge);
   stroke-width: 2px;
   stroke-dasharray: 5 4;
   vector-effect: non-scaling-stroke;
+}
+
+/*
+ * A square that could be chosen (a possible destination, a candidate, a stack the reader may
+ * lift): the four corners of the frame a landing leaves, in ink.
+ */
+.board .target {
+  fill: none;
+  stroke: var(--_ink);
+  stroke-width: 2.5px;
+  stroke-linecap: square;
+  vector-effect: non-scaling-stroke;
+}
+
+/*
+ * A possible move shown landing: the pieces it would put there, faded. Their outline stays
+ * whole, so a faded white piece still reads on the light ground.
+ */
+.board .disc.landing {
+  fill-opacity: 0.45;
 }
 
 .board .picked {

@@ -1,8 +1,9 @@
 // <pogo-moves>: the board as the rules introduce it. `view="start"` is the start
 // position to read, and nothing else. `view="moves"` is every move the rules
 // allow from one stack, grouped by how many pieces it lifts (moves-demo.ts):
-// one board per count, the stack ringed in ink, each possible landing in a
-// dashed ring, all of it there at rest. Then each board plays its example, one
+// one board per count, the stack ringed in ink, each possible landing shown
+// (the lifted pieces faded on the square, its corners marked: kit/board-svg.ts,
+// never a dashed ring, which says where a move left from), all of it there at rest. Then each board plays its example, one
 // after the other: the pieces lifted, carried square by square, landed, each
 // frame at the kit's one tempo, the other boards staying whole. It plays by
 // itself on screen and loops after a rest on the last landing
@@ -13,7 +14,7 @@ import { WASM_FILE, assetUrl } from '../assets';
 import { initial, ready, type Triple } from '../engine';
 import { autoplay } from '../kit/autoplay';
 import { labelledBoard } from '../kit/board-labels';
-import { drawBoard } from '../kit/board-svg';
+import { drawBoard, landing } from '../kit/board-svg';
 import { transport } from '../kit/controls';
 import { PogoFigure } from '../kit/figure';
 import { moveWords } from '../kit/move-tip';
@@ -30,7 +31,7 @@ const CAPTION: Record<Count, StringKey> = { 1: 'movesFan1', 2: 'movesFan2', 3: '
 
 const cellName = (i: number): string => `${'abc'[i % 3]}${Math.floor(i / 3) + 1}`;
 
-/** « Depuis la pile de a1 : une, deux ou trois pièces. Chaque cercle pointillé… » */
+/** « Depuis la pile de a1 : une, deux ou trois pièces. Les pièces estompées… » */
 export function lead(lang: Lang, from: number): string {
   return `${t(lang, 'movesFanFrom')} ${cellName(from)}${colon(lang)} ${t(lang, 'movesFanLead')}`;
 }
@@ -47,7 +48,12 @@ function groupBoard(lang: Lang, fanned: Fan, k: number, f: FanFrame): SVGSVGElem
   const title = groupTitle(lang, g.count, g.moves);
   const targets = g.moves.map((m) => ({ cell: m[2], kind: 'target' as const }));
   if (f.group !== k) {
-    return drawBoard(fanned.state, { labelRoom: true, title, marks: [{ cell: fanned.from, kind: 'picked' }, ...targets] });
+    return drawBoard(fanned.state, {
+      labelRoom: true,
+      title,
+      marks: [{ cell: fanned.from, kind: 'picked' }, ...targets],
+      landings: g.moves.map((m) => landing(fanned.state, m)),
+    });
   }
   if (f.phase === 'land') {
     const [from, moving, to] = g.example;

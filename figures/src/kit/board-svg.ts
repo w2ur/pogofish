@@ -1,6 +1,25 @@
 // The board, drawn as an SVG and nothing else: no layout reads, no colour.
 // Every paint comes from theme.css classes, so a theme change needs no redraw.
-import type { Colour, State } from '../engine';
+//
+// The marks, one meaning each on every board of the page (round 5, convention 1):
+//
+//   dashed ring (`from`)        where the move that led to the position LEFT from.
+//                                Nothing else is ever dashed on a board.
+//   solid frame (`to`)          where that move landed.
+//   solid ink ring (`picked`)   the stack lifted now: by the reader, or by a move
+//                                the figure points at before it is played.
+//   four corners (`target`)     a square that could be chosen: a possible
+//                                destination, a candidate, a stack the reader may
+//                                lift. They are the corners of the frame a landing
+//                                leaves, so a candidate reads as a landing not yet
+//                                made.
+//   faded pieces (`landings`)   a possible move SHOWN, not only pointed at: the
+//                                pieces it would lift, drawn on top of the stack
+//                                they would land on. The origin keeps its pieces:
+//                                nothing has moved. Build one with landing().
+//
+// A possible move is drawn as picked + target + landing; a move played as from + to.
+import type { Colour, State, Triple } from '../engine';
 
 const NS = 'http://www.w3.org/2000/svg';
 const CELL = 100;
@@ -23,10 +42,17 @@ export interface BoardOptions {
    */
   labelRoom?: boolean;
   /**
-   * Rings drawn above the stacks, so a stack never hides one: `target` is the
-   * dashed ring of what can be tapped, `picked` the solid ink ring of a lifted stack.
+   * Marks drawn above the stacks, so a stack never hides one: `target` is the four
+   * corners of a square that could be chosen, `picked` the solid ink ring of a lifted
+   * stack (see the header).
    */
-  marks?: { cell: number; kind: 'target' | 'picked' }[];
+  marks?: BoardMark[];
+  /**
+   * Possible moves shown landing: each one's pieces faded on top of its destination,
+   * under the marks. One per destination square; a second one on the same square is
+   * not drawn.
+   */
+  landings?: Landing[];
   /** Text alternative, in the figure's language. Without it the drawing is hidden from assistive tech. */
   title?: string;
   /**
@@ -36,6 +62,32 @@ export interface BoardOptions {
    */
   carry?: { from: number; count: number; pieces: Colour[]; at: number; trail: number[] };
 }
+
+/** A mark on a square: see the header for what each kind means. */
+export interface BoardMark {
+  cell: number;
+  kind: 'target' | 'picked';
+}
+
+/** A possible move's arrival: `pieces` (bottom first) would land on top of square `to`. */
+export interface Landing {
+  to: number;
+  pieces: Colour[];
+}
+
+/**
+ * The arrival of `move` played from `s`, for drawBoard's `landings`: the pieces are read
+ * from the position, never typed. Throws when the origin does not hold that many pieces.
+ */
+export function landing(s: State, [from, n, to]: Readonly<Triple>): Landing {
+  const stack = s.cells[from] ?? [];
+  if (n < 1 || stack.length < n) throw new Error(`pogo-figures: no ${n} pieces to lift from square ${from}`);
+  return { to, pieces: stack.slice(-n) };
+}
+
+/** A candidate's corners: inset as the landing frame (`to`) is, each arm this long, in board units. */
+const CORNER_INSET = 3;
+const CORNER_ARM = 20;
 
 /** How far carried pieces float above their square, in board units. */
 const CARRY_LIFT = 18;
@@ -99,34 +151,63 @@ export function drawBoard(s: State, o: BoardOptions = {}): SVGSVGElement {
   }
 
   const carry = o.carry;
-  const drawStack = (stack: readonly Colour[], i: number, g: SVGGElement): void => {
+  /**
+   * Draws `stack` on square `i`, with `landed` on top of it in the same column: the stack's
+   * own discs go to `g`, the pieces that would land there to `ghosts`, faded.
+   */
+  const drawStack = (stack: readonly Colour[], i: number, g: SVGGElement | null, landed: readonly Colour[] = [], ghosts?: SVGGElement): void => {
     const [x, y] = corner(i);
     const cx = x + centre;
+    const height = stack.length + landed.length;
     // A tall stack (four discs and more) tightens its offset to stay in its cell.
-    const step = stack.length > 1 ? Math.min(baseStep, (room - 2 * radius) / (stack.length - 1)) : 0;
-    const bottom = y + centre + ((stack.length - 1) * step) / 2;
+    const step = height > 1 ? Math.min(baseStep, (room - 2 * radius) / (height - 1)) : 0;
+    const bottom = y + centre + ((height - 1) * step) / 2;
     const moved = i === o.to ? Math.min(o.moving ?? 0, stack.length) : 0;
-    stack.forEach((colour, k) => {
+    [...stack, ...landed].forEach((colour, k) => {
       const cy = bottom - k * step;
+      const ghost = k >= stack.length;
+      const parent = ghost ? ghosts! : g!;
       // The cut-out in the ground colour separates a disc from the one below.
-      el('circle', { class: 'gap', cx, cy, r: radius + gap }, g);
-      const disc = el('circle', { class: `disc ${colour === 'White' ? 'white' : 'red'}`, cx, cy, r: radius }, g);
+      el('circle', { class: 'gap', cx, cy, r: radius + gap }, parent);
+      const disc = el('circle', { class: `disc ${colour === 'White' ? 'white' : 'red'}`, cx, cy, r: radius }, parent);
       disc.dataset.colour = colour;
-      if (k >= stack.length - moved) disc.classList.add('moved');
-      el('circle', { class: 'ring', cx, cy, r: radius - 1 }, g);
+      if (ghost) disc.classList.add('landing');
+      else if (k >= stack.length - moved) disc.classList.add('moved');
+      el('circle', { class: 'ring', cx, cy, r: radius - 1 }, parent);
     });
   };
 
+  const landingOn = (i: number): Landing | undefined => o.landings?.find((l) => l.to === i);
+  const ghostGroups: SVGGElement[] = [];
   s.cells.forEach((cells, i) => {
     const stack = carry && i === carry.from ? cells.slice(0, cells.length - carry.count) : cells;
-    if (stack.length === 0) return;
-    drawStack(stack, i, el('g', { class: 'stack', 'data-cell': i }, svg));
+    const landed = landingOn(i)?.pieces ?? [];
+    if (stack.length === 0 && landed.length === 0) return;
+    const g = stack.length > 0 ? el('g', { class: 'stack', 'data-cell': i }, svg) : null;
+    // Kept apart from the stacks, and appended after them all: a taller neighbour never hides one.
+    const ghosts = landed.length > 0 ? el('g', { class: 'landings', 'data-cell': i }) : undefined;
+    if (ghosts) ghostGroups.push(ghosts);
+    drawStack(stack, i, g, landed, ghosts);
   });
+  svg.append(...ghostGroups);
 
   const marks = [...(o.marks ?? []), ...(carry ? [{ cell: carry.from, kind: 'picked' as const }] : [])];
   for (const { cell, kind } of marks) {
     const [x, y] = corner(cell);
-    el('circle', { class: `mark ${kind}`, 'data-cell': cell, cx: x + centre, cy: y + centre, r: radius + 10 }, svg);
+    if (kind === 'picked') {
+      el('circle', { class: 'mark picked', 'data-cell': cell, cx: x + centre, cy: y + centre, r: radius + 10 }, svg);
+      continue;
+    }
+    // The four corners of the frame a landing leaves (`to`), each drawn from one arm's end to the other's.
+    const [l, t, r, b] = [x + CORNER_INSET, y + CORNER_INSET, x + CELL - CORNER_INSET, y + CELL - CORNER_INSET];
+    const a = CORNER_ARM;
+    const d = [
+      `M${l} ${t + a}V${t}H${l + a}`,
+      `M${r - a} ${t}H${r}V${t + a}`,
+      `M${r} ${b - a}V${b}H${r - a}`,
+      `M${l + a} ${b}H${l}V${b - a}`,
+    ].join('');
+    el('path', { class: 'mark target', 'data-cell': cell, d }, svg);
   }
 
   if (carry) {

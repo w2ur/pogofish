@@ -58,7 +58,7 @@ describe('<pogo-moves view="moves">', () => {
   it('shows, at rest, every move from the stack, one board per count, each landing ringed, the stack lifted', async () => {
     const el = await mount('moves');
     expect($(el, '.lead').textContent).toBe(
-      'Depuis la pile de a1 : une, deux ou trois pièces. Chaque cercle pointillé est une arrivée possible, jamais la case de départ.',
+      'Depuis la pile de a1 : une, deux ou trois pièces. Les pièces estompées montrent chaque arrivée possible, jamais la case de départ.',
     );
     const gs = groups(el);
     expect(gs.map((g) => g.querySelector('.say')!.textContent)).toEqual([
@@ -70,6 +70,12 @@ describe('<pogo-moves view="moves">', () => {
       expect(cellsOf(g, '.board .mark.target')).toEqual(f.groups[k]!.moves.map((m) => m[2]));
       expect(cellsOf(g, '.board .mark.picked')).toEqual([FAN_FROM]);
       expect(carriedAt(g)).toBeUndefined();
+      // Round 5: a possible move is shown, its pieces landing on each square, and no ring is dashed at rest.
+      expect(cellsOf(g, '.board .landings')).toEqual(f.groups[k]!.moves.map((m) => m[2]));
+      for (const ghosts of g.querySelectorAll('.board .landings')) {
+        expect([...ghosts.querySelectorAll<SVGElement>('.disc.landing')].map((d) => d.dataset.colour)).toEqual(f.state.cells[FAN_FROM]!.slice(-f.groups[k]!.count));
+      }
+      expect(g.querySelector('.board .from')).toBeNull();
     });
     // Each board says its landings in words, for those who do not see the rings.
     expect(gs[1]!.querySelector('svg.board title')!.textContent).toBe('2 pièces, 2 mouvements, y compris la diagonale : c1, b2 ou a3.');
@@ -79,7 +85,7 @@ describe('<pogo-moves view="moves">', () => {
 
   it('plays one example per count on its own board, the other boards staying whole', async () => {
     const el = await mount('moves', 'en');
-    expect($(el, '.lead').textContent).toBe('From the stack on a1: one, two or three pieces. Each dashed ring is a possible landing, never the square they left.');
+    expect($(el, '.lead').textContent).toBe('From the stack on a1: one, two or three pieces. The faded pieces show each possible landing, never the square they left.');
     const three = 2;
     const g = f.groups[three]!;
     const start = frames.findIndex((x) => x.group === three);
