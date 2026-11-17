@@ -321,3 +321,11 @@ describe('shownRows', () => {
     expect(formatShare('fr', 0.028)).toBe('2,8 %');
   });
 });
+
+describe('<pogo-search> board', () => {
+  // Regression: the root move's arrow ran through the corner where « b2 » is written, over its letters.
+  it('sets the cell names on the ground, above the arrow that crosses their corner', () => {
+    const css = readFileSync(resolve(process.cwd(), 'src/elements/pogo-search.css'), 'utf8').replace(/\/\*[\s\S]*?\*\//g, '');
+    expect(css).toMatch(/\.board-labels \.coord \{[^}]*background: var\(--_ground\);/);
+  });
+});

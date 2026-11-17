@@ -92,6 +92,17 @@
 }
 
 /*
+ * A cell's name stays above the arrow: the root move's arrow runs from one centre to another
+ * through the corner where the name sits (« b2 » under b2-2-a3), so the name is set on a cut-out
+ * of the ground, as the arrow's own halo is, and the arrow passes under it.
+ */
+.board-labels .coord {
+  padding: 1px 2px;
+  margin: -1px 0 0 -2px;
+  background: var(--_ground);
+}
+
+/*
  * The path: its moves from the root (the ones walked in ink), where it stopped,
  * and the note it brings back. It keeps its room when no simulation is shown.
  */
