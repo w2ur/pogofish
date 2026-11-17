@@ -1,7 +1,9 @@
 /*
  * <pogo-reach>: a table drawn as a bar chart, played level by level, over one
  * band that stands for every possible position. Each row is the move, a bar on
- * one linear scale, and its number. Bars are ink, never red: no side owns them.
+ * one linear scale, and its number. The one colour is red, and it means one
+ * thing: positions never seen before, the level just explored (owner's
+ * decision, 2026-11-17). Once the next level lands, a bar is ink.
  * A level still to come keeps its room: nothing below it moves when it lands.
  */
 .reach {
@@ -24,6 +26,24 @@
   margin-bottom: 8px;
   text-align: left;
   caption-side: top;
+}
+
+/* The key to the red, under the caption, at the label size. */
+.key {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-top: 4px;
+  font-size: 12.8px;
+  font-weight: 400;
+  color: var(--_ink-2);
+}
+
+.key-swatch {
+  flex: none;
+  width: 14px;
+  height: 14px;
+  background: var(--_red);
 }
 
 thead th {
@@ -74,7 +94,14 @@ tbody th.ply {
   width: var(--share);
   height: 14px;
   background: var(--_ink);
-  transition: width 650ms cubic-bezier(0.2, 0.7, 0.2, 1);
+  transition:
+    width 1000ms cubic-bezier(0.2, 0.7, 0.2, 1),
+    background-color 400ms;
+}
+
+/* The level just explored: positions never seen before. */
+.level[data-front] .bar {
+  background: var(--_red);
 }
 
 .value {
@@ -143,10 +170,17 @@ tbody th.ply {
   border: 1px solid var(--_ink);
 }
 
-.fill {
+.fill,
+.fresh {
+  flex: none;
   height: 100%;
   background: var(--_ink);
-  transition: width 650ms cubic-bezier(0.2, 0.7, 0.2, 1);
+  transition: width 1000ms cubic-bezier(0.2, 0.7, 0.2, 1);
+}
+
+/* The part of the band the level just explored adds: never seen before. */
+.fresh {
+  background: var(--_red);
 }
 
 /* What no game reaches, at its true share: framed, and pointed at, once the exploration has stopped. */
@@ -228,6 +262,7 @@ tbody th.ply {
 @media (prefers-reduced-motion: reduce) {
   .bar,
   .fill,
+  .fresh,
   tbody th.ply {
     transition: none;
   }

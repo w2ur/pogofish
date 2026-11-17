@@ -1,32 +1,16 @@
-// What <pogo-moves view="moves"> plays, apart from the DOM: four moves from the
-// start position that, between them, show every kind of move the essay's rules
-// list (one piece one step; two pieces on the diagonal; three pieces to a
-// neighbouring square; a pick of both colours, its top the mover's; a landing
-// on an occupied square), then the frames that show each one: the line that
-// announces it, the pieces lifted, each square of their path, the landing.
-//
-// The order is not the rules' list: a stack of three exists only once a move
-// has landed on another stack, so the landing on an occupied square comes
-// second, and the three-piece move is also the pick of both colours. The kinds
-// each move is said to show are checked against the engine's position
-// (moves-demo.test.ts), and every move is legal() there.
-import { initial, play, type Colour, type State, type Triple } from '../engine';
+// What <pogo-moves view="moves"> shows, apart from the DOM: every move the
+// rules allow from one stack, grouped by how many pieces it lifts. The stack is
+// Red’s a1, three pieces high (a white one under two red ones), in the
+// position three moves from the start reach; there every count, one, two and
+// three, has moves, and some land on occupied squares. Every move comes from
+// legal(): footnote 2’s rule, no return to the starting square, is the
+// engine’s, never typed here (moves-demo.test.ts holds both). Each group has
+// one example the figure plays (fanFrames): the pieces lifted, carried square
+// by square along their path, and landed.
+import { legal, play, replay, type Colour, type State, type Triple } from '../engine';
 
 export type MoveKind = 'one' | 'diagonal' | 'three' | 'mixed' | 'onto';
 const KIND_ORDER: readonly MoveKind[] = ['one', 'diagonal', 'three', 'mixed', 'onto'];
-
-export interface DemoMove {
-  move: Triple;
-  kinds: MoveKind[];
-}
-
-/** White a1-1-a2, Red a3-2-a1 onto it, White b1-2-c2 on the diagonal, Red a1-3-b1 lifting both colours. */
-export const DEMO: readonly DemoMove[] = [
-  { move: [0, 1, 3], kinds: ['one'] },
-  { move: [6, 2, 0], kinds: ['onto'] },
-  { move: [1, 2, 5], kinds: ['diagonal'] },
-  { move: [0, 3, 1], kinds: ['three', 'mixed'] },
-];
 
 const rc = (i: number): [number, number] => [i % 3, Math.floor(i / 3)];
 
@@ -86,31 +70,82 @@ export function movePath(from: number, n: number, to: number): number[] {
   return path;
 }
 
-export interface DemoFrame {
-  /** Which move of DEMO this frame belongs to. */
-  move: number;
-  phase: 'announce' | 'lift' | 'step' | 'land';
-  /** The position drawn: before the move until it lands, after it once it has. */
+
+/** The moves that reach the position the figure shows: White a1-1-a2, Red a3-2-a1, White b1-2-c2. */
+export const FAN_PRELUDE: readonly Triple[] = [
+  [0, 1, 3],
+  [6, 2, 0],
+  [1, 2, 5],
+];
+/** The stack every move leaves from: a1. */
+export const FAN_FROM = 0;
+
+export type Count = 1 | 2 | 3;
+
+export interface FanGroup {
+  count: Count;
+  /** Every legal move from FAN_FROM lifting `count` pieces, by landing square. */
+  moves: Triple[];
+  /** The one the figure plays (see fan()). */
+  example: Triple;
+}
+
+export interface Fan {
+  state: State;
+  from: number;
+  groups: FanGroup[];
+}
+
+/** What a group’s example is chosen to show first: its count’s own line of the rules. */
+const SIGNATURE: Record<Count, MoveKind> = { 1: 'one', 2: 'diagonal', 3: 'three' };
+
+/**
+ * The position, the stack, and its moves by count. A group’s example is a move that shows its
+ * count’s line of the rules (one step; the diagonal; a neighbouring square), and among those the
+ * one that shows the most of the others (both colours lifted, an occupied square); the first by
+ * landing square on a tie. Throws if a count has no move: the figure would leave it out.
+ */
+export function fan(): Fan {
+  const state = replay([...FAN_PRELUDE]).at(-1)!;
+  const mine = legal(state).filter((m) => m.from_cell === FAN_FROM);
+  const groups = ([1, 2, 3] as const).map((count): FanGroup => {
+    const moves = mine
+      .filter((m) => m.num_pieces === count)
+      .map((m): Triple => [m.from_cell, m.num_pieces, m.to_cell])
+      .sort((a, b) => a[2] - b[2]);
+    if (moves.length === 0) throw new Error(`pogo-moves: no move lifts ${count} from ${FAN_FROM}`);
+    const score = (m: Triple): number => {
+      const kinds = kindsOf(state, m);
+      return (kinds.includes(SIGNATURE[count]) ? 10 : 0) + kinds.length;
+    };
+    const example = moves.reduce((best, m) => (score(m) > score(best) ? m : best));
+    return { count, moves, example };
+  });
+  return { state, from: FAN_FROM, groups };
+}
+
+export interface FanFrame {
+  /** The group whose example is playing; -1 on the frame where every group is at rest. */
+  group: number;
+  phase: 'rest' | 'lift' | 'step' | 'land';
+  /** The playing board’s position: before the move until it lands, after it once it has. */
   state: State;
   /** The pieces in the air: taken from `from`, now over `at`, the squares passed in `trail`. */
   carry?: { from: number; count: number; pieces: Colour[]; at: number; trail: number[] };
 }
 
-/** Every frame of the demonstration, from the start position (see the header). */
-export function demoFrames(): DemoFrame[] {
-  const frames: DemoFrame[] = [];
-  let s = initial();
-  DEMO.forEach((d, move) => {
-    const [from, count, to] = d.move;
-    const pieces = s.cells[from]!.slice(-count);
+/** The frame with every group at rest, then for each group its example: lifted, each square, landed. */
+export function fanFrames(f: Fan = fan()): FanFrame[] {
+  const frames: FanFrame[] = [{ group: -1, phase: 'rest', state: f.state }];
+  f.groups.forEach((g, group) => {
+    const [from, count, to] = g.example;
+    const pieces = f.state.cells[from]!.slice(-count);
     const path = movePath(from, count, to);
-    frames.push({ move, phase: 'announce', state: s });
-    frames.push({ move, phase: 'lift', state: s, carry: { from, count, pieces, at: from, trail: [] } });
+    frames.push({ group, phase: 'lift', state: f.state, carry: { from, count, pieces, at: from, trail: [] } });
     for (let k = 1; k <= count; k++) {
-      frames.push({ move, phase: 'step', state: s, carry: { from, count, pieces, at: path[k]!, trail: path.slice(0, k) } });
+      frames.push({ group, phase: 'step', state: f.state, carry: { from, count, pieces, at: path[k]!, trail: path.slice(0, k) } });
     }
-    s = play(s, d.move);
-    frames.push({ move, phase: 'land', state: s });
+    frames.push({ group, phase: 'land', state: play(f.state, g.example) });
   });
   return frames;
 }

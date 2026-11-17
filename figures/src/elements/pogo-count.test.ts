@@ -3,7 +3,9 @@ import { DEFAULT_GAME } from '../default-game';
 import { initial, key, replay, type Colour, type State } from '../engine';
 import { REDUCED_MOTION, intersect, leave, playState, resetMedia, setMedia } from '../test-dom';
 import { STRINGS } from '../kit/strings';
-import { BARS, PIECES, countFrames, fromRow, places } from './count-row';
+import { describeCell } from '../board-state';
+import { moveTop, rowItems, swapItems } from './count-edit';
+import { BARS, PIECES, countFrames, fromRow, places, type Row } from './count-row';
 import { PogoCount, SHOWN_PLIES, STEP_MS, sayFrame } from './pogo-count';
 
 if (!customElements.get('pogo-count')) customElements.define('pogo-count', PogoCount);
@@ -39,6 +41,17 @@ const drawnOrder = (el: PogoCount): Colour[] =>
   $$(el, '.pieces .pc')
     .sort((a, b) => Number(a.dataset.rank) - Number(b.dataset.rank))
     .map((p) => p.dataset.colour as Colour);
+const rowHit = (el: PogoCount, place: number) => $(el, `.row-hit[data-place="${place}"]`);
+const boardHit = (el: PogoCount, cell: number) => $(el, `.board-hit .cell-button[data-cell="${cell}"]`);
+const rowLabels = (el: PogoCount) => $$(el, '.row-hit').map((b) => b.getAttribute('aria-label'));
+const boardLabels = (el: PogoCount) =>
+  $$(el, '.board-hit .cell-button')
+    .sort((a, b) => Number(a.dataset.cell) - Number(b.dataset.cell))
+    .map((b) => b.getAttribute('aria-label'));
+const rowWords = (row: Row) =>
+  rowItems(row).map((x, k) => `Place ${k + 1}${NNBSP}: ${x === 'bar' ? 'séparateur' : x === 'White' ? 'pièce blanche' : 'pièce rouge'}`);
+const boardWords = (row: Row, turn: Colour) =>
+  Array.from({ length: 9 }, (_, i) => describeCell('fr', { cells: fromRow(row), to_move: turn, move_count: 0, history: [] }, i, null));
 const x = (node: Element): number => Number(/translate\(([-\d.]+)px/.exec((node as HTMLElement).style.transform)![1]);
 
 afterEach(() => {
@@ -90,7 +103,7 @@ describe('<pogo-count>', () => {
     expect($(el, '.traces').dataset.of).toBe('row');
     expect($$(el, '.traces .pc')).toHaveLength(PIECES);
     expect($$(el, '.traces .bar')).toHaveLength(BARS);
-    expect($(el, '.turn').textContent).toBe('Trait aux Blancs');
+    expect($(el, '.turn-text').textContent).toBe('Trait aux Blancs');
     expect($$(el, '.squares .cell')).toHaveLength(9);
   });
 
@@ -148,7 +161,7 @@ describe('<pogo-count>', () => {
       '…et c’est une autre position.',
       `Le trait passe aux Rouges${NNBSP}: encore une autre position.`,
     ]);
-    expect($(el, '.turn').textContent).toBe('Trait aux Rouges');
+    expect($(el, '.turn-text').textContent).toBe('Trait aux Rouges');
     expect($(el, '.turn').hasAttribute('data-passed')).toBe(true);
     expect($(el, '.line').getAttribute('aria-live')).toBe('polite');
   });
@@ -192,7 +205,81 @@ describe('<pogo-count>', () => {
     expect(playState(el)).toBe('play');
     expect(said(el)).toBe('A position is one pile of 12 pieces, cut by 8 separators.');
     expect($(el, '.count').dataset.solid).toBe('row');
-    expect($(el, '.turn').textContent).toBe('White to move');
+    expect($(el, '.turn-text').textContent).toBe('White to move');
+  });
+
+  it('invites the reader, in one short line, to change either side', async () => {
+    const fr = await mount('fr');
+    expect($(fr, '.invite').textContent).toBe(
+      `À vous${NNBSP}: échangez deux éléments de la rangée, ou déplacez une pièce d’une case à l’autre. L’autre côté suit.`,
+    );
+    const en = await mount('en');
+    expect($(en, '.invite').textContent).toBe('Your turn: swap two things in the row, or move a piece from one square to another. The other side follows.');
+  });
+
+  it('a tap on two places of the row swaps them, the telling pauses, and the board follows', async () => {
+    const el = await mount('fr');
+    intersect(el);
+    expect(playState(el)).toBe('pause');
+    rowHit(el, 1).click();
+    expect(rowHit(el, 1).getAttribute('aria-pressed')).toBe('true');
+    rowHit(el, 2).click();
+    // The reader's pause: the telling waits for ▶.
+    expect(playState(el)).toBe('play');
+    expect($(el, '.count').hasAttribute('data-edit')).toBe(true);
+    const row = swapItems(frames[0]!.row, 1, 2);
+    expect(rowLabels(el)).toEqual(rowWords(row));
+    // The board follows: drawn in full, the pieces where the new row puts them.
+    expect($(el, '.count').dataset.solid).toBe('board');
+    expect(boardLabels(el)).toEqual(boardWords(row, 'White'));
+    expect(boardLabels(el)[1]).toBe(`b1${NNBSP}: pile de 3, sommet blanc`);
+    expect(drawnOrder(el)).toEqual(row.order);
+    expect(rowHit(el, 1).getAttribute('aria-pressed')).toBe('false');
+  });
+
+  it('a piece moved from one square to another on the board, and the row follows', async () => {
+    const el = await mount('fr');
+    boardHit(el, 6).click();
+    expect(boardHit(el, 6).getAttribute('aria-pressed')).toBe('true');
+    boardHit(el, 4).click();
+    const row = moveTop(frames[0]!.row, 6, 4);
+    expect(boardLabels(el)).toEqual(boardWords(row, 'White'));
+    // The row follows: drawn in full, the separators where the new board puts them.
+    expect($(el, '.count').dataset.solid).toBe('row');
+    expect(rowLabels(el)).toEqual(rowWords(row));
+    expect(drawnOrder(el)).toEqual(row.order);
+  });
+
+  it('a second tap on what was picked puts it down; an empty square cannot be picked', async () => {
+    const el = await mount('fr');
+    boardHit(el, 4).click();
+    expect(boardHit(el, 4).getAttribute('aria-pressed')).toBe('false');
+    rowHit(el, 0).click();
+    rowHit(el, 0).click();
+    expect(rowHit(el, 0).getAttribute('aria-pressed')).toBe('false');
+    expect(rowLabels(el)).toEqual(rowWords(frames[0]!.row));
+  });
+
+  it('the turn line passes the turn when tapped: the third thing a position is', async () => {
+    const el = await mount('fr');
+    $(el, '.turn').click();
+    expect($(el, '.turn-text').textContent).toBe('Trait aux Rouges');
+    expect($(el, '.turn').dataset.turn).toBe('Red');
+    expect($(el, '.count').hasAttribute('data-edit')).toBe(true);
+    $(el, '.turn').click();
+    expect($(el, '.turn-text').textContent).toBe('Trait aux Blancs');
+  });
+
+  it('▶ after an edit takes the telling up again, where it was', async () => {
+    const el = await mount('fr');
+    next(el);
+    rowHit(el, 0).click();
+    rowHit(el, 19).click();
+    $(el, '[data-role="play"]').click();
+    expect($(el, '.count').hasAttribute('data-edit')).toBe(false);
+    expect(drawnOrder(el)).toEqual(frames[1]!.row.order);
+    expect(said(el)).toBe(sayFrame('fr', frames[1]!));
+    $(el, '[data-role="play"]').click();
   });
 
   it('stops playing once disconnected', async () => {

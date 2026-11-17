@@ -12,21 +12,21 @@
 /*
  * The room the figure keeps before it renders: the drawing follows the width (its
  * height over its width, per layout), the line and the transport do not. Measured
- * on the harness (2026-11-16).
+ * on the harness (2026-11-16; the invitation line added 2026-11-17).
  */
 .stage {
-  min-height: calc(126.1cqi + 142px);
+  min-height: calc(126.1cqi + 215px);
 }
 
 @container (min-width: 480px) {
   .stage {
-    min-height: calc(64.9cqi + 114px);
+    min-height: calc(64.9cqi + 168px);
   }
 }
 
 @container (min-width: 720px) {
   .stage {
-    min-height: calc(32.8cqi + 114px);
+    min-height: calc(32.8cqi + 168px);
   }
 }
 
@@ -82,9 +82,15 @@
 /*
  * The trace: where the pieces are not. Under a position, its row; over a row,
  * the position it folds into. One dimmed layer, so a stack keeps its look.
+ * Once the reader edits, both sides are theirs: the trace is drawn in full.
  */
 .traces {
   opacity: 0.3;
+}
+
+.count[data-edit] .traces {
+  opacity: 1;
+  animation: none;
 }
 
 .traces[data-fresh] {
@@ -97,8 +103,66 @@
   }
 }
 
-/* Whose turn: under the board, a piece of the colour and its words. */
+/*
+ * What the reader taps, over the drawing: the board's squares (board-input.ts, the kit's
+ * cell buttons) and the row's twenty places. Transparent; a picked one is framed in ink.
+ */
+.board-hit,
+.row-hits {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+}
+
+.board-hit .cells,
+.row-hit {
+  pointer-events: auto;
+}
+
+.board-hit .cells {
+  inset: 0;
+}
+
+.row-hit {
+  position: absolute;
+  appearance: none;
+  margin: 0;
+  padding: 0;
+  border: 0;
+  background: transparent;
+  cursor: pointer;
+}
+
+.board-hit .cell-button[data-actionable] {
+  cursor: pointer;
+}
+
+.row-hit:focus-visible {
+  outline: 2px solid var(--_ink);
+  outline-offset: 0;
+}
+
+.board-hit .cell-button[aria-pressed='true'],
+.row-hit[aria-pressed='true'] {
+  outline: 3px solid var(--_ink);
+  outline-offset: -3px;
+}
+
+/* The invitation, under the drawing, at the label size. */
+.invite {
+  max-width: 52ch;
+  font-size: 12.8px;
+  color: var(--_ink-2);
+}
+
+/* Whose turn: under the board, a piece of the colour and its words. A tap passes it. */
 .turn {
+  appearance: none;
+  margin: 0;
+  border: 0;
+  background: transparent;
+  font-family: inherit;
+  cursor: pointer;
   position: absolute;
   display: flex;
   align-items: center;

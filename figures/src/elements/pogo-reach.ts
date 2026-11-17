@@ -1,10 +1,12 @@
 // <pogo-reach>: the breadth-first exploration of game A, played level by level
 // from reach.json (reach-bars.ts). Each step lands the next ply's bar with its
-// number, the frontier swelling to move 10 and dying out at 15; the next step
+// number, in red while it is the level just explored (positions never seen
+// before), in ink once the next one lands; the frontier swelling to move 10 and dying out at 15; the next step
 // is the first ply with nothing new, where the exploration stops (the file
 // ends there because the search did: crates/search/src/retro.rs, `bfs`, breaks
 // on a level that finds nothing). Under the bars, one band stands for every
 // possible position, on its own linear scale: each level fills its part of it,
+// in red as it lands,
 // and at the end what is left empty, drawn to scale, is the positions no game
 // ever reaches. Every number is written whole when it lands, never counted up.
 // It plays by itself on screen (kit/autoplay.ts); under reduced motion, the
@@ -20,8 +22,11 @@ import { countNodes } from './count-steps';
 import reachCss from './pogo-reach.css?raw';
 import { reachChart, reachSteps, type ReachStep } from './reach-bars';
 
-/** How long a level is held, in automatic play: long enough to read its number. */
-export const LEVEL_MS = 900;
+/**
+ * How long a level is held, in automatic play: long enough to see its bar land in red and read its
+ * number. At 900 ms a reader could not follow the fifteen levels (dummy-visitor read, 2026-11-17).
+ */
+export const LEVEL_MS = 2000;
 /** The empty level and the total are held longer: they are the figure's two points. */
 export const STOP_MS = 2200;
 
@@ -58,7 +63,12 @@ export class PogoReach extends PogoFigure {
 
     const root = el('div', 'reach');
     const table = el('table', 'bars');
-    table.append(el('caption', 'say caption', t(lang, 'reachCaption')));
+    const caption = el('caption', 'say caption', t(lang, 'reachCaption'));
+    // What the one colour means: the positions this move sees for the first time.
+    const key = el('span', 'key');
+    key.append(el('span', 'key-swatch'), t(lang, 'reachFresh'));
+    caption.append(key);
+    table.append(caption);
     const thead = el('thead');
     const head = el('tr');
     const plyHead = el('th', 'label ply', t(lang, 'reachPly'));
@@ -108,9 +118,10 @@ export class PogoReach extends PogoFigure {
     const band = el('div', 'band');
     band.setAttribute('aria-hidden', 'true');
     const fill = el('div', 'fill');
+    const fresh = el('div', 'fresh');
     const sliver = el('div', 'sliver');
     sliver.style.width = pc(chart.unreached / chart.possible);
-    band.append(fill, sliver);
+    band.append(fill, fresh, sliver);
     const possible = el('p', 'possible');
     possible.append(...countNodes(lang, chart.possible), ` ${t(lang, 'reachAllPossible')}`);
     const total = el('div', 'total');
@@ -135,7 +146,10 @@ export class PogoReach extends PogoFigure {
       });
       stop.toggleAttribute('data-off', s.kind === 'level');
       stop.toggleAttribute('data-front', s.kind === 'stop');
-      fill.style.width = pc(s.reached / chart.possible);
+      // The level just explored is new, in red; everything before it, seen, in ink.
+      const now = s.kind === 'level' ? chart.rows[s.ply]!.count : 0;
+      fill.style.width = pc((s.reached - now) / chart.possible);
+      fresh.style.width = pc(now / chart.possible);
       total.toggleAttribute('data-off', s.kind !== 'total');
       root.dataset.step = s.kind;
     };

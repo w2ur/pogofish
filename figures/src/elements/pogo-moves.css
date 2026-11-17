@@ -1,9 +1,29 @@
 /*
- * <pogo-moves>: the start view is a board at up to 400px with the key to the
- * two sides; the moves view is the line announcing the move, the board, and the
- * transport, each centred in the figure. The line keeps the room of the longest
- * (its sizers), so the board under it never moves.
+ * <pogo-moves>: the start view is a board at up to 400px, alone. The moves
+ * view is the line that says how to read it, the three boards of one stack's
+ * moves (one per count), and the transport, each centred in the figure. The
+ * boards stand side by side from 480px and one under the other below; a board
+ * under 240px drops its coordinates (board-labels.ts: they would reach the
+ * pieces), never the count of a move's lifted pieces.
  */
+:host {
+  container-type: inline-size;
+}
+
+/*
+ * The room the moves view keeps before it renders, measured on the harness (2026-11-17):
+ * the three boards one under the other, or side by side at a third of the width each.
+ */
+:host([view='moves']) .stage {
+  min-height: 1010px;
+}
+
+@container (min-width: 480px) {
+  :host([view='moves']) .stage {
+    min-height: calc(min(33.3cqi - 11px, 300px) + 200px);
+  }
+}
+
 .moves {
   display: flex;
   flex-direction: column;
@@ -11,58 +31,91 @@
   gap: 12px;
 }
 
-/* The start view's board: the drawing fills its frame, the coordinates stay 12.8px. */
-.moves > .board-frame {
+/* A board fills its frame, whatever the frame's width; the coordinates stay 12.8px. */
+.moves .board-frame {
   width: min(100%, 400px);
 }
 
-.moves > .board-frame > .board {
+.moves .board-frame > .board {
   width: 100%;
   height: auto;
 }
 
-.said {
-  display: grid;
-  width: min(100%, 400px);
-}
-
-.said > * {
-  grid-area: 1 / 1;
-}
-
-.said .sizer {
-  visibility: hidden;
-}
-
-.line {
+.lead {
+  max-width: 52ch;
   margin: 0;
+  text-align: center;
   color: var(--_ink);
+}
+
+.fan {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  justify-items: center;
+  gap: 20px;
+  width: 100%;
+}
+
+/* Each group's caption, over its board. */
+.fan-group > .say {
+  text-align: center;
+}
+
+/* One under the other (under 480px), a board is kept small, so the three still read together. */
+.fan-group {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 8px;
+  width: 100%;
+  max-width: 220px;
+  margin: 0;
+}
+
+@container (min-width: 480px) {
+  .fan-group {
+    max-width: 300px;
+  }
+}
+
+@container (min-width: 480px) {
+  .fan {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 8px 16px;
+  }
+
+  /* The captions share one row, the boards the next: three boards on one line, however the captions wrap. */
+  .fan-group {
+    display: grid;
+    grid-template-rows: subgrid;
+    grid-row: span 2;
+    justify-items: center;
+  }
+
+  .fan-group > .say {
+    align-self: end;
+  }
+}
+
+.fan-board {
+  container-type: inline-size;
+  width: 100%;
+  text-align: center;
+  line-height: 0;
+}
+
+.fan-board .board-frame {
+  width: 100%;
+}
+
+@container (max-width: 239px) {
+  .fan-board .coord {
+    display: none;
+  }
 }
 
 .moves > .controls {
   justify-content: center;
-}
-
-/* The key to the two sides, under the start position. */
-.legend {
-  display: flex;
-  flex-wrap: wrap;
-  justify-content: center;
-  gap: 8px 24px;
-  margin: 0;
-  font-size: 12.8px;
-  color: var(--_ink);
-}
-
-.key {
-  display: inline-flex;
-  align-items: center;
-  gap: 8px;
-}
-
-.legend .key-disc {
-  display: inline-block;
-  max-width: none;
 }
 
 /* Read by assistive technology, not drawn. */

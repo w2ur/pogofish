@@ -63,7 +63,7 @@ describe('<pogo-reach>', () => {
     expect($(fr, '.stop-words').textContent).toBe('Plus aucune position nouvelle\u202f: l’exploration s’arrête.');
     const en = await mount('en');
     expect($$(en, 'tbody .value').map((n) => n.textContent)[10]).toBe('68,847,740');
-    expect($(en, 'caption').textContent).toBe('Positions first seen at each move');
+    expect($(en, 'caption').firstChild!.textContent).toBe('Positions first seen at each move');
     expect($(en, '.reached').textContent).toBe('230,015,628reachable positions of 232,792,560 possible');
     expect($(en, '.never').textContent).toBe('2,776,932 never reached');
     expect($(en, '.possible').textContent).toBe('232,792,560 possible positions');
@@ -90,10 +90,15 @@ describe('<pogo-reach>', () => {
       sum += reach.firstSeenAtPly[ply]!;
       expect(landed(el)).toBe(ply + 1);
       expect($$(el, 'tr[data-front]').map((r) => r.querySelector('th')!.textContent)).toEqual([String(ply)]);
-      expect(parseFloat($(el, '.fill').style.width)).toBeCloseTo((sum / reach.positionsTotal) * 100, 3);
+      // The band: what was seen before in ink, what this move sees for the first time in red, side by side.
+      expect(parseFloat($(el, '.fresh').style.width)).toBeCloseTo((reach.firstSeenAtPly[ply]! / reach.positionsTotal) * 100, 3);
+      expect(parseFloat($(el, '.fill').style.width) + parseFloat($(el, '.fresh').style.width)).toBeCloseTo((sum / reach.positionsTotal) * 100, 3);
     }
     $(el, '[data-role="next"]').click();
     expect($(el, 'tr.stop').hasAttribute('data-off')).toBe(false);
+    // Nothing new: nothing red.
+    expect(parseFloat($(el, '.fresh').style.width)).toBe(0);
+    expect($$(el, 'tr[data-front]:not(.stop)')).toHaveLength(0);
     expect($(el, '[data-role="counter"]').textContent).toBe('coup 16 sur 16');
     expect($(el, '.total').hasAttribute('data-off')).toBe(true);
     $(el, '[data-role="next"]').click();
@@ -124,7 +129,8 @@ describe('<pogo-reach>', () => {
     vi.advanceTimersByTime(STOP_MS);
     expect($(el, '.total').hasAttribute('data-off')).toBe(false);
     expect(playState(el)).toBe('replay');
-    expect(LEVEL_MS).toBeGreaterThanOrEqual(700);
+    // Slow enough to follow: a reader could not, at 900 ms a level (dummy-visitor read, 2026-11-17).
+    expect(LEVEL_MS).toBeGreaterThanOrEqual(1800);
   });
 
   it('pauses when it leaves the screen, and a reader’s pause holds', async () => {
@@ -146,6 +152,19 @@ describe('<pogo-reach>', () => {
     expect(landed(el)).toBe(16);
     expect($(el, '.total').hasAttribute('data-off')).toBe(false);
     expect(playState(el)).toBe('play');
+  });
+
+  it('paints in red the positions never seen before: the bar of the move just explored and its part of the band, with a key', async () => {
+    const el = await mount('fr');
+    expect($(el, '.key').textContent).toBe('En rouge, les positions jamais vues avant ce coup');
+    const css = readFileSync('src/elements/pogo-reach.css', 'utf8').replace(/\/\*[\s\S]*?\*\//g, '');
+    expect(css).toMatch(/\.level\[data-front\] \.bar \{[^}]*background: var\(--_red\);/);
+    expect(css).toMatch(/\.fresh \{[^}]*background: var\(--_red\);/);
+    expect(css).toMatch(/\.key-swatch \{[^}]*background: var\(--_red\);/);
+    // Bars of moves already explored stay ink: red is only what is new.
+    expect(css).toMatch(/\n\.bar \{[^}]*background: var\(--_ink\);/);
+    const en = await mount('en');
+    expect($(en, '.key').textContent).toBe('In red, positions never seen before this move');
   });
 
   // Regression: '.what .sep' gave the summary's second number twice the room of the line above
