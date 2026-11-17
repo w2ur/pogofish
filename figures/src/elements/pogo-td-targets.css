@@ -78,9 +78,11 @@
   justify-items: center;
 }
 
+/* A row's name stands on one line: its column takes the room it needs. */
 .row-name {
   font-size: 12.8px;
   line-height: 1.15;
+  white-space: nowrap;
   color: var(--_muted);
 }
 
@@ -289,6 +291,11 @@
     grid-template-columns: 4.6em minmax(0, 1fr);
     column-gap: 10px;
   }
+
+  /* With the rows of numbers, the names column is as wide as « note du réseau ». */
+  .film.strip {
+    grid-template-columns: max-content minmax(0, 1fr);
+  }
 }
 
 @container (min-width: 900px) {
@@ -349,12 +356,37 @@
   border-top: 1px solid var(--_edge);
 }
 
+/*
+ * The values are a disclosure, closed: its summary draws its own marker, a chevron that turns
+ * when it opens. As a flex box the summary had lost the browser's, and read as a heading over nothing.
+ */
 .values summary {
   font-size: 12.8px;
   cursor: pointer;
   min-height: 44px;
   display: flex;
   align-items: center;
+  gap: 10px;
+  list-style: none;
+}
+
+.values summary::-webkit-details-marker {
+  display: none;
+}
+
+.values summary::before {
+  content: '';
+  flex: none;
+  width: 7px;
+  height: 7px;
+  border-right: 2px solid currentColor;
+  border-bottom: 2px solid currentColor;
+  transform: rotate(-45deg);
+  transition: transform 200ms ease-out;
+}
+
+.values[open] summary::before {
+  transform: rotate(45deg);
 }
 
 .td-table {
@@ -394,4 +426,10 @@
   overflow: hidden;
   clip-path: inset(50%);
   white-space: nowrap;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .values summary::before {
+    transition: none;
+  }
 }

@@ -101,6 +101,18 @@ describe('<pogo-td-targets>', () => {
     expect($(el, '.hint').hasAttribute('data-off')).toBe(true);
   });
 
+  // Regression: the values' summary, a flex box, had lost its disclosure marker and read as a
+  // heading over nothing; and « note du réseau » wrapped in a 4.6em column, clipped by the next row.
+  it('the values read as a disclosure, and a row’s name stands on one line', async () => {
+    const el = await mount('fr');
+    expect($(el, 'details.values > summary').textContent).toBe('Les valeurs');
+    const css = readFileSync(resolve(process.cwd(), 'src/elements/pogo-td-targets.css'), 'utf8').replace(/\/\*[\s\S]*?\*\//g, '');
+    expect(css).toMatch(/\.values summary::before \{[^}]*border-right: 2px solid currentColor;/);
+    expect(css).toMatch(/\.values\[open\] summary::before \{[^}]*rotate\(45deg\)/);
+    expect(css).toMatch(/\.row-name \{[^}]*white-space: nowrap;/);
+    expect(css).toMatch(/\.film\.strip \{[^}]*grid-template-columns: max-content minmax\(0, 1fr\);/);
+  });
+
   it('a game under way changes nothing: only a finished game is taken', async () => {
     const s = makeStore();
     use(s);
