@@ -1,14 +1,33 @@
 {
   "_note": "Gzip bytes (Node's zlib.gzipSync, default level); raw is an optional second cap. Each cap is about one and a half times the size measured when it was set, or twice for the data files. Raising one needs a one-line reason in this file.",
   "js": {
-    "entry": { "gzip": 3200, "_reason": "dist/pogo-figures.js, the one file every page loads, holding no element: 2232 measured 2026-11-16, chunks under assets/; the plan's ceiling is 120000." },
-    "eager": { "gzip": 9100, "_reason": "The entry and the chunks it imports statically (the engine glue), fetched before any figure nears the screen: 6305 measured 2026-11-16 (the engine chunk now carries src/assets.ts)." },
-    "largestChunk": { "gzip": 21500, "_reason": "Any one JS file but the entry; the largest is the kit (figure, strings, theme, store), shared by every element: 14120 measured 2026-11-16." },
-    "total": { "gzip": 152000, "_reason": "Every JS file of dist/, what a page holding every element fetches: 100684 measured 2026-11-16. Raised from 151000 on 2026-11-17 (round 5, lot E): the kit's drag and drop and its toy pattern enter the bundle with <pogo-count> and <pogo-encoding>, their first users; 147718 before, 151649 after." }
+    "entry": {
+      "gzip": 3200,
+      "_reason": "dist/pogo-figures.js, the one file every page loads, holding no element: 2232 measured 2026-11-16, chunks under assets/; the plan's ceiling is 120000."
+    },
+    "eager": {
+      "gzip": 9100,
+      "_reason": "The entry and the chunks it imports statically (the engine glue), fetched before any figure nears the screen: 6305 measured 2026-11-16 (the engine chunk now carries src/assets.ts)."
+    },
+    "largestChunk": {
+      "gzip": 21500,
+      "_reason": "Any one JS file but the entry; the largest is the kit (figure, strings, theme, store), shared by every element: 14120 measured 2026-11-16."
+    },
+    "total": {
+      "gzip": 157000,
+      "_reason": "Every JS file of dist/, what a page holding every element fetches: 100684 measured 2026-11-16. Raised from 151000 on 2026-11-17 (round 5, lot E): the kit's drag and drop and its toy pattern enter the bundle with <pogo-count> and <pogo-encoding>, their first users; 147718 before, 151649 after. Raised to 157000 on 2026-11-17 (round 5 merged: lots E, T and O together, each within the +4000 the controller allowed per lot): 154916 measured after the merge."
+    }
   },
   "data": {
-    "table.json": { "gzip": 4000 },
-    "v5.json": { "gzip": 12000, "raw": 200000 },
-    "reach.json": { "gzip": 500 }
+    "table.json": {
+      "gzip": 4000
+    },
+    "v5.json": {
+      "gzip": 12000,
+      "raw": 200000
+    },
+    "reach.json": {
+      "gzip": 500
+    }
   }
 }
