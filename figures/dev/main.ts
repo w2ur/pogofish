@@ -9,6 +9,7 @@ import { controlButton, playFromAction, transport } from '../src/kit/controls';
 import { PogoFigure, kitSheet, type PlayFromDetail } from '../src/kit/figure';
 import { Stepper } from '../src/kit/stepper';
 import { t, type Lang } from '../src/kit/strings';
+import { conventions } from './conventions';
 import { ESSAY } from './essay';
 
 const lang = (): Lang => (document.documentElement.lang.startsWith('fr') ? 'fr' : 'en');
@@ -112,6 +113,7 @@ configureAssets({
 defineAll();
 
 customElements.define('kit-demo', demo());
+customElements.define('kit-conventions', conventions());
 
 async function build(): Promise<void> {
   await ready('/pogo/pogofish_wasm_bg.wasm');
@@ -221,6 +223,12 @@ async function build(): Promise<void> {
     );
   }
   app.append(kitBox(boards));
+
+  app.append(heading('Round 5 conventions · marks, taking pieces, drag and drop, a toy (dev/conventions.ts)'));
+  const conv = document.createElement('kit-conventions');
+  conv.id = 'kit-conventions';
+  conv.style.cssText = `display:block;max-width:${Number(new URLSearchParams(location.search).get('box')) || 640}px;margin-bottom:32px`;
+  app.append(conv);
 
   // The essay's figures in page order, as the page sets them: the paragraph the reader has
   // just read, then the figure, then the author's caption (dev/essay.ts).

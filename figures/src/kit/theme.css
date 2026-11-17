@@ -480,6 +480,16 @@ slot[hidden],
   outline-offset: -4px;
 }
 
+/* Said, not shown: a live region (drag.ts makes one), a name for assistive tech. */
+.sr {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  clip-path: inset(50%);
+  white-space: nowrap;
+}
+
 /*
  * Drag and drop (drag.ts). A place that holds something takeable keeps the page from scrolling
  * under the finger that starts on it; what is held is framed in ink as a lifted stack is ringed,

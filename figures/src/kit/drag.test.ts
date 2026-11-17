@@ -1,3 +1,5 @@
+import { readFileSync } from 'node:fs';
+import { resolve } from 'node:path';
 import { afterEach, describe, expect, it, vi } from 'vitest';
 import { DRAG_SLOP, dragAndDrop, type DragOptions } from './drag';
 
@@ -202,6 +204,11 @@ describe('dragAndDrop, without dragging (a tap, or the keyboard)', () => {
     expect(drag.live.getAttribute('aria-live')).toBe('polite');
     expect(drag.live.getAttribute('role')).toBe('status');
     expect(drag.live.className).toBe('sr');
+    // The kit's own sheet hides it: a figure that forgets the rule never shows the announcements.
+    const css = readFileSync(resolve(process.cwd(), 'src/kit/theme.css'), 'utf8');
+    const rule = /\n\.sr \{([^}]*)\}/.exec(css)?.[1] ?? '';
+    expect(rule).toContain('clip-path: inset(50%)');
+    expect(rule).toContain('position: absolute');
   });
 
   it('once the figure is gone it hears nothing', () => {
