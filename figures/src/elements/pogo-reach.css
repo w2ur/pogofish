@@ -1,12 +1,14 @@
 /*
- * <pogo-reach>: a table drawn as a bar chart. Each row is the move, a bar on
+ * <pogo-reach>: a table drawn as a bar chart, played level by level, over one
+ * band that stands for every possible position. Each row is the move, a bar on
  * one linear scale, and its number. Bars are ink, never red: no side owns them.
+ * A level still to come keeps its room: nothing below it moves when it lands.
  */
 .reach {
   container-type: inline-size;
   display: flex;
   flex-direction: column;
-  gap: 12px;
+  gap: 16px;
 }
 
 .bars {
@@ -44,6 +46,7 @@ tbody th.ply {
   font-weight: 400;
   text-align: right;
   color: var(--_muted);
+  transition: color 300ms;
 }
 
 .line {
@@ -62,31 +65,122 @@ tbody th.ply {
   border-left: 1px solid var(--_ink);
 }
 
+/* A bar lands from the zero line to its length: the length is the number, the motion is its arrival. */
 .bar {
+  width: var(--share);
   height: 14px;
   background: var(--_ink);
+  transition: width 650ms cubic-bezier(0.2, 0.7, 0.2, 1);
 }
 
 .value {
   font-size: 15px;
   text-align: right;
   white-space: nowrap;
+  color: var(--_ink-2);
+}
+
+/* A level still to come: its move number waits, its bar and its count are not there yet. */
+.level[data-off] .bar {
+  width: 0;
+}
+
+.level[data-off] .value {
+  visibility: hidden;
+}
+
+/* The frontier: the level that has just landed. */
+.level[data-front] th.ply,
+.level[data-front] .value {
+  color: var(--_ink);
+  font-weight: 800;
+}
+
+.stop .track {
+  padding: 4px 0 4px 8px;
+}
+
+.stop .stop-words {
+  margin: 0;
+  font-weight: 800;
+  line-height: 1.35;
   color: var(--_ink);
 }
 
-.scale {
+.stop[data-off] {
+  visibility: hidden;
+}
+
+/* Every possible position: an outlined band the levels fill, on its own linear scale. */
+.whole {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  padding-top: 12px;
+  border-top: 3px solid var(--_ink);
+}
+
+.possible {
   margin: 0;
   font-size: 12.8px;
   color: var(--_muted);
 }
 
+.band {
+  position: relative;
+  display: flex;
+  height: 32px;
+  border: 1px solid var(--_ink);
+}
+
+.fill {
+  height: 100%;
+  background: var(--_ink);
+  transition: width 650ms cubic-bezier(0.2, 0.7, 0.2, 1);
+}
+
+/* What no game reaches, at its true share: framed, and pointed at, once the exploration has stopped. */
+.sliver {
+  position: absolute;
+  top: -1px;
+  right: -1px;
+  bottom: -1px;
+  min-width: 3px;
+  outline: 2px solid var(--_ink);
+  visibility: hidden;
+}
+
+.sliver::after {
+  content: '';
+  position: absolute;
+  top: calc(100% + 2px);
+  right: 50%;
+  height: 12px;
+  border-right: 1px solid var(--_ink);
+}
+
+.reach[data-step='total'] .sliver {
+  visibility: visible;
+}
+
 .total {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 8px 24px;
+  padding-top: 8px;
+}
+
+.total[data-off] {
+  visibility: hidden;
+}
+
+.reached {
   display: flex;
   flex-direction: column;
   gap: 4px;
   margin: 0;
-  padding-top: 12px;
-  border-top: 3px solid var(--_ink);
 }
 
 .reachable {
@@ -96,6 +190,21 @@ tbody th.ply {
 
 .what {
   color: var(--_ink-2);
+}
+
+.never {
+  margin: 0;
+  margin-left: auto;
+  max-width: 24ch;
+  text-align: right;
+  color: var(--_ink-2);
+}
+
+.never-n {
+  display: block;
+  font-weight: 800;
+  font-size: 19px;
+  color: var(--_ink);
 }
 
 /* A digit-group separator, narrow no-break space or comma, given room to be seen. */
@@ -110,4 +219,12 @@ tbody th.ply {
 /* In the label cut at 12.8px the narrow space all but closes: the number there keeps its digits apart. */
 .what .sep {
   padding-inline: 0.12em;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .bar,
+  .fill,
+  tbody th.ply {
+    transition: none;
+  }
 }

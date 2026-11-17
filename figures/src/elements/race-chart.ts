@@ -126,3 +126,62 @@ export function raceChart(d: Pick<V5Data, 'programs' | 'references'>): RaceChart
     axis: { from, to, perDecade, ticks },
   };
 }
+
+// ---------------------------------------------------------------- the race
+//
+// <pogo-race> runs the chart as a race: one clock sweeps the log axis from its
+// left edge, stopping at every measured number of games (an event); each line
+// is drawn up to the clock and its name rides its head. Nothing here invents a
+// value: an event is a measured stage's games, the value shown for a program is
+// its last stage reached, and a head between two stages is only where its
+// straight segment is drawn.
+
+export interface RaceEvent {
+  /** Games trained at this stop; 0 for the start, before any training. */
+  games: number;
+  /** Its place across the log box, 0–1; the start is the box's left edge. */
+  x: number;
+}
+
+/** The start, then every games-trained count measured for any program, in order. */
+export function raceEvents(chart: RaceChart): RaceEvent[] {
+  const seen = new Map<number, number>();
+  for (const s of chart.series) for (const p of s.points) if (p.column === 'log') seen.set(p.gamesTrained, p.x);
+  const events = [...seen].sort((a, b) => a[0] - b[0]).map(([games, x]) => ({ games, x }));
+  return [{ games: 0, x: 0 }, ...events];
+}
+
+/** The program's last stage reached by `games` trained: stage 0 until its first measured stage. */
+export function lastReached(s: RaceSeries, games: number): RacePoint {
+  let last = s.points[0]!;
+  for (const p of s.points) if (p.gamesTrained <= games) last = p;
+  return last;
+}
+
+/**
+ * Where the program's line ends when drawn up to `x` (0–1 across the log box): on its
+ * straight segment there, at its last stage past it; null before its first stage on the axis.
+ */
+export function headAt(s: RaceSeries, x: number): { x: number; y: number } | null {
+  const on = s.points.filter((p) => p.column === 'log');
+  if (on.length === 0 || x < on[0]!.x - 1e-12) return null;
+  for (let k = 1; k < on.length; k++) {
+    const a = on[k - 1]!;
+    const b = on[k]!;
+    if (x <= b.x) return { x, y: a.y + ((x - a.x) / (b.x - a.x)) * (b.y - a.y) };
+  }
+  const end = on.at(-1)!;
+  return { x: end.x, y: end.y };
+}
+
+/** The programs in the order their whole interval first clears greedy's line, the ones that never do last. */
+export function crossingOrder(chart: RaceChart): RaceSeries[] {
+  const crossed = chart.series.filter((s) => s.firstAbove).sort((a, b) => a.firstAbove!.gamesTrained - b.firstAbove!.gamesTrained);
+  return [...crossed, ...chart.series.filter((s) => !s.firstAbove)];
+}
+
+/** The event at which a program's crossing lands: its first stage above greedy, or the race's end for one that never crosses. */
+export function crossingEvent(events: readonly RaceEvent[], s: RaceSeries): number {
+  if (!s.firstAbove) return events.length - 1;
+  return events.findIndex((e) => e.games === s.firstAbove!.gamesTrained);
+}

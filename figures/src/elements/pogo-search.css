@@ -1,59 +1,71 @@
 /*
- * <pogo-search>: the position, the board, the step's words (one grid cell for
- * every step, so the table never moves), the table of root moves, what its
- * scales are, then the controls. In each cell the number sits over a thin bar
- * on the scale the figure states: the preference on 0–100 %, the visits on
- * 0–100 simulations. The move played is marked in ink, never in red.
- */
-/*
- * The room the figure keeps before it renders, per width, measured on the harness
- * once the search has run (2026-11-16, with the scales under the table): the table
- * holds ten rows whatever the position, so this room does not change as the reader
- * plays. From 720px the board stands beside the table, and the figure is shorter.
+ * <pogo-search>: the position; then the board, the path a simulation follows
+ * under it, the frame's words and the controls; then the table of root moves.
+ * From 720px the board's column stands beside the table; below, they stack.
+ * A row's bars sit beside its numbers: the preference in grey on 0–100 %, the
+ * visits on 0–100 simulations, red when Red is to move (red is the Red side),
+ * ink otherwise. The move ahead is the row on the band, never red.
  */
 :host {
   container-type: inline-size;
 }
 
+/* The room the figure keeps before it renders, per width, measured on the harness once the search has run (2026-11-16). */
 .stage {
-  min-height: 1152px;
+  min-height: 1450px;
 }
 
-@container (min-width: 560px) {
+@container (min-width: 520px) {
   .stage {
-    min-height: 1045px;
+    min-height: 1170px;
   }
 }
 
 @container (min-width: 720px) {
   .stage {
-    min-height: 805px;
+    min-height: 630px;
   }
 }
 
-/*
- * From 720px the board stands beside what the search says of it, the words of the
- * position over both; below, they stack. Each is centred in its column.
- */
+.stage > .search {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.where-from {
+  margin: 0;
+  font-weight: 800;
+}
+
+.board-col {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 12px;
+}
+
+.board-col > .status,
+.board-col > .search-controls,
+.board-col > .path {
+  align-self: stretch;
+}
+
 @container (min-width: 720px) {
   .stage > .search {
     display: grid;
-    grid-template-columns: 240px minmax(0, 1fr);
-    column-gap: 32px;
+    grid-template-columns: 300px minmax(0, 1fr);
+    column-gap: 40px;
+    row-gap: 16px;
     align-items: start;
   }
 
-  .stage > .search > .where-from {
+  .where-from {
     grid-column: 1 / -1;
   }
 
-  .stage > .search > .board-slot {
-    grid-column: 1;
-    grid-row: 2 / span 6;
-  }
-
-  .stage > .search > :not(.where-from, .board-slot) {
-    grid-column: 2;
+  .board-col {
+    align-items: stretch;
   }
 }
 
@@ -62,8 +74,98 @@
   justify-content: center;
 }
 
-.search-controls > .controls {
-  justify-content: center;
+/* The root move's arrow: ink over a cut-out of the ground, so it reads across any stack. */
+.path-arrow .halo {
+  stroke: var(--_ground);
+  stroke-width: 12;
+  fill: var(--_ground);
+  stroke-linejoin: round;
+}
+
+.path-arrow .shaft {
+  stroke: var(--_ink);
+  stroke-width: 6;
+}
+
+.path-arrow .tip {
+  fill: var(--_ink);
+}
+
+/*
+ * The path: its moves from the root (the ones walked in ink), where it stopped,
+ * and the note it brings back. It keeps its room when no simulation is shown.
+ */
+.path {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  align-content: flex-start;
+  gap: 6px 8px;
+  min-height: 84px;
+}
+
+.path[data-off] {
+  visibility: hidden;
+}
+
+.path-label {
+  flex-basis: 100%;
+  font-size: 12.8px;
+  color: var(--_muted);
+}
+
+.chain {
+  display: inline-flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 2px 6px;
+}
+
+.chain .step {
+  font-variant-numeric: tabular-nums;
+  color: var(--_muted);
+  transition: color 200ms;
+}
+
+.chain .step[data-on] {
+  color: var(--_ink);
+  font-weight: 800;
+}
+
+.chain .sep {
+  color: var(--_muted);
+}
+
+.leaf-tag {
+  padding: 0 6px;
+  font-size: 12.8px;
+  border: 1px solid var(--_ink);
+}
+
+/* The note brought back: a stamp in ink, which travels to its row. */
+.chip {
+  display: inline-flex;
+  align-items: baseline;
+  gap: 6px;
+  padding: 2px 8px;
+  background: var(--_ink);
+  color: var(--_ground);
+}
+
+.note-for {
+  font-size: 12.8px;
+}
+
+.note-value {
+  font-weight: 800;
+  font-size: 19px;
+}
+
+/* Where it stopped and its note appear once the board has reached the leaf, and the note stays while it goes back. */
+.path:not([data-stage='leaf'], [data-stage='back']) .leaf-tag,
+.path:not([data-stage='leaf'], [data-stage='back']) .chip,
+.chip[data-gone] {
+  visibility: hidden;
 }
 
 .status {
@@ -72,6 +174,7 @@
 
 .status > p {
   grid-area: 1 / 1;
+  margin: 0;
 }
 
 .sizer {
@@ -83,37 +186,138 @@
   font-weight: 600;
 }
 
-/* Fixed columns, so the table holds 280px: the headers wrap, the numbers do not. */
+/* Under the board, centred with it; beside the table, at the column's edge. */
+.search-controls > .controls {
+  justify-content: center;
+}
+
+@container (min-width: 720px) {
+  .search-controls > .controls {
+    justify-content: flex-start;
+  }
+}
+
+/* ---- the table */
 .search-table {
+  width: 100%;
+  border-collapse: collapse;
   table-layout: fixed;
 }
 
 .search-table caption {
-  overflow-wrap: anywhere;
+  margin-bottom: 8px;
+  text-align: left;
+  caption-side: top;
 }
 
-/* Four headers over 280px: the reading cut, which wraps between words where the label cut would not fit. */
 .search-table thead th {
-  vertical-align: bottom;
+  padding: 0 0 4px;
+  font-size: 12.8px;
   font-stretch: 100%;
   font-weight: 600;
   letter-spacing: 0;
   text-transform: none;
+  color: var(--_muted);
+  text-align: left;
+  vertical-align: bottom;
+  border-bottom: 1px solid var(--_rule);
 }
 
 .search-table th.move,
 .search-table tbody th {
-  width: 5.4em;
+  width: 5.6em;
 }
 
 .search-table th.mean {
   width: 5em;
+  text-align: right;
+}
+
+.search-table tbody th,
+.search-table tbody td {
+  padding: 3px 0;
+  font-weight: 400;
+  text-align: left;
+  border-bottom: 1px solid var(--_rule);
+}
+
+.search-table td.prior,
+.search-table td.visits,
+.search-table th.prior {
+  padding-right: 12px;
+}
+
+.search-table td.mean {
+  text-align: right;
+  white-space: nowrap;
+}
+
+.line {
+  display: grid;
+  grid-template-columns: 3.6em minmax(0, 1fr);
+  align-items: center;
+  gap: 6px;
+}
+
+.track {
+  display: flex;
+  align-items: stretch;
+  height: 10px;
+  border-left: 1px solid var(--_edge);
+}
+
+.bar {
+  min-width: 0;
+  background: var(--_edge);
+  transition: width 600ms cubic-bezier(0.2, 0.7, 0.2, 1);
+}
+
+.visits .bar {
+  background: var(--_ink);
+}
+
+.search[data-side='red'] .visits .bar {
+  background: var(--_red);
+}
+
+.value {
+  text-align: right;
+  white-space: nowrap;
+}
+
+/* Narrow: each number over its bar, so four columns hold 280px. */
+@container (max-width: 519px) {
+  .line {
+    grid-template-columns: minmax(0, 1fr);
+    gap: 2px;
+  }
+
+  .line .value {
+    text-align: left;
+  }
+
+  .track {
+    height: 6px;
+  }
+
+  .search-table td.prior,
+  .search-table td.visits {
+    padding-right: 8px;
+  }
+
+  .search-table th.move,
+  .search-table tbody th {
+    width: 4.8em;
+  }
+
+  .search-table th.mean {
+    width: 4.2em;
+  }
 }
 
 /*
- * The move played (or leading) is the row on the band, in heavy figures, and the
- * words over the table name it; its tag is for assistive technology, so a row
- * never grows as the lead passes from one move to another.
+ * The move ahead (or played) is the row on the band, in heavy figures; its tag is
+ * for assistive technology, so a row never grows as the lead passes.
  */
 .search-table .tag {
   position: absolute;
@@ -124,59 +328,56 @@
   white-space: nowrap;
 }
 
-.search-table .line {
-  grid-template-columns: minmax(0, 1fr);
-  gap: 2px;
-}
-
-.search-table .line .value {
-  grid-area: 1 / 1;
-  text-align: left;
-}
-
-.search-table .line .track {
-  grid-area: 2 / 1;
-  height: 6px;
-}
-
-.search-table .line .bar {
-  height: 4px;
-}
-
-.search-table .mean {
-  text-align: right;
-}
-
-.search-table td.mean {
-  white-space: nowrap;
-}
-
-.search-table thead .mean {
-  text-align: right;
-}
-
 .search-table tr.played th,
 .search-table tr.played td {
   font-weight: 800;
   background: var(--_rule);
 }
 
-/*
- * The controls keep the room of the steps' row from the start: under 560px that
- * row (two arrows, the counter, play, « Jouer cette position contre l’ordinateur ») takes two lines where
- * « Lancer » took one, and the figure must not grow when the search runs.
- */
-.search-controls {
-  min-height: 96px;
+/* The row a note has just reached: its visits and mean flash as the note lands. */
+.search-table tr[data-fresh] .visits .value,
+.search-table tr[data-fresh] td.mean {
+  animation: fresh 1600ms 950ms both;
 }
 
-@container (min-width: 560px) {
-  .search-controls {
-    min-height: 44px;
+@keyframes fresh {
+  from {
+    background: var(--_ink);
+    color: var(--_ground);
   }
+
+  to {
+    background: transparent;
+    color: inherit;
+  }
+}
+
+.others,
+.scale-note {
+  margin: 8px 0 0;
+  font-size: 12.8px;
+  color: var(--_ink-2);
+}
+
+.others[hidden] {
+  display: none;
 }
 
 /* A move's name never breaks at its hyphens. */
 .move-name {
   white-space: nowrap;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .bar,
+  .chain .step {
+    transition: none;
+  }
+
+  .search-table tr[data-fresh] .visits .value,
+  .search-table tr[data-fresh] td.mean {
+    animation: none;
+    outline: 2px solid var(--_ink);
+    outline-offset: -2px;
+  }
 }

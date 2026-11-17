@@ -229,3 +229,35 @@ describe('Stepper', () => {
     expect(s.ended).toBe(true);
   });
 });
+
+describe('Stepper interval function', () => {
+  it('holds each step as long as `interval` says before the next, in automatic play', () => {
+    const seen: number[] = [];
+    const s = new Stepper(4, (i) => seen.push(i), { interval: (i) => [100, 2000, 300, 0][i]! });
+    s.play();
+    vi.advanceTimersByTime(99);
+    expect(seen).toEqual([]);
+    vi.advanceTimersByTime(1);
+    expect(seen).toEqual([1]);
+    vi.advanceTimersByTime(1999);
+    expect(seen).toEqual([1]);
+    vi.advanceTimersByTime(1);
+    expect(seen).toEqual([1, 2]);
+    vi.advanceTimersByTime(300);
+    expect(seen).toEqual([1, 2, 3]);
+    expect(s.playing).toBe(false);
+  });
+
+  it('a loop’s rest is added to its last step’s interval', () => {
+    const seen: number[] = [];
+    const s = new Stepper(2, (i) => seen.push(i), { interval: (i) => (i === 0 ? 100 : 200), wrapTo: 0, rest: 50 });
+    s.play();
+    vi.advanceTimersByTime(100);
+    expect(seen).toEqual([1]);
+    vi.advanceTimersByTime(249);
+    expect(seen).toEqual([1]);
+    vi.advanceTimersByTime(1);
+    expect(seen).toEqual([1, 0]);
+    s.destroy();
+  });
+});

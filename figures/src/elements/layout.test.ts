@@ -51,7 +51,7 @@ describe('every figure is centred in its box, and the wide ones use it', () => {
   it('pogo-search: the board beside the table from 720px, centred in its column below it', () => {
     const s = css('pogo-search');
     const w = wide(s);
-    expect(w).toMatch(/\.stage > \.search \{\s*display: grid;\s*grid-template-columns: 240px minmax\(0, 1fr\);/);
+    expect(w).toMatch(/\.stage > \.search \{\s*display: grid;\s*grid-template-columns: 300px minmax\(0, 1fr\);/);
     expect(s).toMatch(/^\.board-slot \{[^}]*justify-content: center/m);
     // Scoped to the figure's root: the table, also of class « search », is not a grid of two columns.
     expect(w).not.toMatch(/^\s*\.search \{/m);

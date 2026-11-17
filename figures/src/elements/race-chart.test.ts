@@ -1,7 +1,7 @@
 import { readFileSync } from 'node:fs';
 import { describe, expect, it } from 'vitest';
 import type { V5Data } from '../data';
-import { RACE_PROGRAMS, firstAboveGreedy, raceChart } from './race-chart';
+import { RACE_PROGRAMS, crossingEvent, crossingOrder, firstAboveGreedy, headAt, lastReached, raceChart, raceEvents } from './race-chart';
 
 const v5 = JSON.parse(readFileSync('public/data/v5.json', 'utf8')) as V5Data;
 const chart = raceChart(v5);
@@ -87,5 +87,60 @@ describe('raceChart', () => {
     const outOfRange = structuredClone(v5);
     outOfRange.references.table.score = 1.2;
     expect(() => raceChart(outOfRange)).toThrow('table');
+  });
+});
+
+describe('the race', () => {
+  const events = raceEvents(chart);
+
+  it('stops at the start, then at every measured games count, in order, each at its point’s place', () => {
+    const counts = [...new Set(RACE_PROGRAMS.flatMap((p) => v5.programs[p].stages.map((s) => s.gamesTrained)))].sort((a, b) => a - b);
+    expect(events.map((e) => e.games)).toEqual(counts);
+    expect(events[0]).toEqual({ games: 0, x: 0 });
+    for (const e of events.slice(1)) {
+      const p = chart.series.flatMap((s) => s.points).find((q) => q.gamesTrained === e.games)!;
+      expect(e.x).toBe(p.x);
+    }
+    for (let i = 1; i < events.length; i++) expect(events[i]!.x).toBeGreaterThan(events[i - 1]!.x);
+  });
+
+  it('the value shown for a program is its last measured stage reached, never one between two', () => {
+    const td = chart.series.find((s) => s.program === 'td')!;
+    expect(lastReached(td, 0).gamesTrained).toBe(0);
+    expect(lastReached(td, 499).gamesTrained).toBe(0);
+    expect(lastReached(td, 500).score).toBe(v5.programs.td.stages[1]!.score);
+    expect(lastReached(td, 10_000).gamesTrained).toBe(5000);
+    for (const s of chart.series) for (const e of events) expect(s.points).toContain(lastReached(s, e.games));
+  });
+
+  it('a head lies on its program’s straight segment, at its last point past it, and nowhere before its first', () => {
+    const az = chart.series.find((s) => s.program === 'az100')!;
+    const [a, b] = az.points.filter((p) => p.column === 'log');
+    expect(headAt(az, a!.x - 0.001)).toBeNull();
+    expect(headAt(az, a!.x)).toEqual({ x: a!.x, y: a!.y });
+    const mid = headAt(az, (a!.x + b!.x) / 2)!;
+    expect(mid.y).toBeCloseTo((a!.y + b!.y) / 2, 12);
+    const end = az.points.at(-1)!;
+    expect(headAt(az, 1)).toEqual({ x: end.x, y: end.y });
+    // At every event, a head that has started stands exactly on a measured point or between two.
+    for (const s of chart.series) {
+      for (const e of events) {
+        const h = headAt(s, e.x);
+        if (!h) continue;
+        const reached = lastReached(s, e.games);
+        if (reached.column === 'log' && reached.x === e.x) expect(h.y).toBe(reached.y);
+      }
+    }
+  });
+
+  it('crossings land in the order they happen: AlphaZero 500, TD(λ) 1 000, AlphaZero without search 5 000, Q-learning never, last', () => {
+    const order = crossingOrder(chart);
+    expect(order.map((s) => [s.program, s.firstAbove?.gamesTrained ?? null])).toEqual([
+      ['az100', 500],
+      ['td', 1000],
+      ['az0', 5000],
+      ['qtab', null],
+    ]);
+    expect(order.map((s) => events[crossingEvent(events, s)]!.games)).toEqual([500, 1000, 5000, 5_000_000]);
   });
 });
