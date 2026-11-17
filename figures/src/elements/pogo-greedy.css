@@ -10,9 +10,9 @@
   container-type: inline-size;
 }
 
-/* The room the figure keeps before it renders, measured on the harness (round 5, the table: 1042px at 320, 1122 at 558, 706 from 592 up). */
+/* The room the figure keeps before it renders, measured on the harness (round 5, the table: 1073px at 320, 1138 at 558, 706 from 592 up). */
 .stage {
-  min-height: calc(min(100cqi, 400px) + 724px);
+  min-height: calc(min(100cqi, 400px) + 754px);
 }
 
 @container (min-width: 560px) {
@@ -84,10 +84,6 @@
 .move {
   min-height: 1.55em;
   color: var(--_ink);
-}
-
-.what {
-  white-space: nowrap;
 }
 
 .what {
