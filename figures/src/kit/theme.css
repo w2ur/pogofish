@@ -366,11 +366,18 @@ slot[hidden],
 }
 
 /*
- * A possible move shown landing: the pieces it would put there, faded. Their outline stays
- * whole, so a faded white piece still reads on the light ground.
+ * A possible move shown landing: the pieces it would put there, faded, outlined in the edge
+ * grey instead of the ink. The outline is what tells a faded white piece from a real one on
+ * the light ground (both fills are near the ground there); at 60 % a faded piece keeps its
+ * colour on the dark ground instead of turning grey or brown.
  */
 .board .disc.landing {
-  fill-opacity: 0.45;
+  fill-opacity: 0.6;
+}
+
+.board .disc.landing + .ring {
+  stroke: var(--_edge);
+  mix-blend-mode: normal;
 }
 
 .board .picked {
