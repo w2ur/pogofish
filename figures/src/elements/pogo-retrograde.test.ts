@@ -70,10 +70,19 @@ describe('<pogo-retrograde>', () => {
 
   it('tells it right to left, as the analysis goes: the final positions, one move before, two, and so on', async () => {
     const el = await mount('fr');
-    // A column to come keeps its room: hidden, never taken out of the flow.
+    // A column to come is laid out from the first step: its heading, and its boards as empty
+    // ruled placeholders, so the figure never looks unloaded and nothing moves as steps land.
     const css = readFileSync('src/elements/pogo-retrograde.css', 'utf8');
-    expect(css).toMatch(/\.col\[data-off\],[^{]*\{\s*visibility: hidden;/);
+    // The column itself is never hidden: only what its step adds waits for it.
+    expect(css).not.toMatch(/\.col\[data-off\]\s*[,{]/);
     expect(css).not.toMatch(/display: none/);
+    const cols = $$(el, '.col');
+    expect(cols.map((c) => c.getAttribute('aria-hidden'))).toEqual(['true', 'true', 'true', null]);
+    expect(cols.slice(0, 3).every((c) => c.querySelector('.rule')!.textContent!.length > 0)).toBe(true);
+    // Every board still to come is drawn empty: a ruled grid, no disc.
+    const boards = $$(el, '.node svg.board');
+    expect(boards.map((b) => b.querySelectorAll('.cell').length)).toEqual([9, 9, 9, 9, 9]);
+    expect(boards.map((b) => b.querySelectorAll('.disc').length > 0)).toEqual([false, false, false, true, true]);
     expect($(el, '[data-role="counter"]').textContent).toBe('étape 1 sur 4');
     expect(shown(el)).toEqual([false, false, false, true]);
     expect(arrowsShown(el)).toEqual([false, false, false, false, false]);

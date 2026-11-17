@@ -2,10 +2,12 @@
  * <pogo-retrograde>: a tree of positions. From 720px, four columns read left
  * to right as the game is played: « et ainsi de suite », the position lost in
  * 2, the two won in 1, the two lost in 0, each column under the rule that
- * marks it. Below 720px the columns become rows, the final positions at the
- * bottom, each row over its rule. The arrows are an SVG laid over the tree
- * (pogo-retrograde.ts measures them); each carries its move's name. A column
- * still to come keeps its room, so nothing on the page moves at any step. The
+ * marks it. Below 720px the columns become rows in the order the analysis
+ * tells them, the final positions on top, each row over its rule, the arrows
+ * going up. The arrows are an SVG laid over the tree (pogo-retrograde.ts
+ * measures them); each carries its move's name. A column still to come is
+ * drawn from the first step, its heading over empty ruled boards, so the
+ * figure never looks unloaded and nothing on the page moves at any step. The
  * boards carry no coordinates: at their size the labels would reach the
  * pieces (board-labels.ts); each move is named on its arrow and marked on the
  * board it leads to.
@@ -48,7 +50,8 @@
 .tree {
   position: relative;
   display: flex;
-  flex-direction: column;
+  /* The analysis's order: lost in 0 on top, the first thing told. */
+  flex-direction: column-reverse;
   gap: 88px;
 }
 
@@ -187,15 +190,24 @@
   }
 }
 
-/* A step still to come keeps its room, out of sight and out of the reading order. */
-.col[data-off],
+/* A step still to come is a placeholder: its heading, muted, over its boards drawn empty
+   (pogo-retrograde.ts); what a step adds (who is to move, the mark, the arrows) waits for it. */
+.col[data-off] .rule {
+  color: var(--_muted);
+}
+
+.col[data-off] .turn,
+.col[data-off] .tag,
+.col[data-off] .marks,
 .arrow[data-off],
 .arrow-label[data-off] {
   visibility: hidden;
   opacity: 0;
 }
 
-.col,
+.turn,
+.tag,
+.marks,
 .arrow,
 .arrow-label {
   transition: opacity 500ms ease-out;
@@ -251,7 +263,9 @@
 }
 
 @media (prefers-reduced-motion: reduce) {
-  .col,
+  .turn,
+  .tag,
+  .marks,
   .arrow,
   .arrow-label {
     transition: none;

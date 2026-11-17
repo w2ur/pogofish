@@ -1,17 +1,18 @@
 // <pogo-retrograde>: retrograde analysis as a small tree, from the solved table
-// (retro-steps.ts). The game runs left to right (top to bottom when narrow):
-// a position lost in 2, the positions its moves lead to, won in 1, and the
-// final positions theirs lead to, lost in 0. An arrow joins a position to the
-// one a move leads to and carries the move's name, which explains itself
-// (kit/move-tip.ts). The telling runs the other way, as the analysis does:
-// the final positions first, then one move before, then two, each step with
-// the rule that marks it, then « et ainsi de suite ». Every position keeps its
-// room from the start, so nothing on the page moves at any step. The arrows
+// (retro-steps.ts). The game runs left to right when wide: a position lost in
+// 2, the positions its moves lead to, won in 1, and the final positions theirs
+// lead to, lost in 0. An arrow joins a position to the one a move leads to and
+// carries the move's name, which explains itself (kit/move-tip.ts). The telling
+// runs the other way, as the analysis does: the final positions first, then one
+// move before, then two, each step with the rule that marks it, then « et ainsi
+// de suite »; narrow, the rows run in that order from the top, the arrows going
+// up. Every column is laid out from the first step, those to come as their
+// heading over empty ruled boards, so nothing on the page moves. The arrows
 // are drawn over the laid-out tree, from one board to the other, and drawn
 // again whenever the figure's size changes.
 import { WASM_FILE, assetUrl } from '../assets';
 import type { TableData } from '../data';
-import { ready, type Colour, type Triple } from '../engine';
+import { ready, type Colour, type State, type Triple } from '../engine';
 import { autoplay } from '../kit/autoplay';
 import { drawBoard } from '../kit/board-svg';
 import { transport } from '../kit/controls';
@@ -91,6 +92,7 @@ export class PogoRetrograde extends PogoFigure {
       if (text) node.textContent = text;
       return node;
     };
+    const empty = (to_move: Colour): State => ({ cells: Array.from({ length: 9 }, () => []), to_move, move_count: 0, history: [] });
     const side = (c: Colour): string => `${t(lang, c === 'White' ? 'white' : 'red')} ${t(lang, 'toMove')}`;
     const tag = (s: Pick<RetroStepView, 'outcome' | 'plies'>): HTMLElement => {
       const node = el('span', 'tag label', stepName(lang, s));
@@ -120,6 +122,8 @@ export class PogoRetrograde extends PogoFigure {
         const title = `${t(lang, 'position')} ${stepName(lang, s).toLowerCase()}${colon(lang)} ${side(b.state.to_move)}.`;
         const move = incoming.get(`${k}.${n}`);
         draws.push((i) => {
+          // A column still to come shows its board as an empty ruled grid, drawn but not told.
+          if (i < k) return void slot.replaceChildren(drawBoard(empty(b.state.to_move)));
           const marked = move && i > k ? { from: move[0], to: move[2], moving: move[1] } : {};
           slot.replaceChildren(drawBoard(b.state, { title, ...marked }));
         });
@@ -171,10 +175,14 @@ export class PogoRetrograde extends PogoFigure {
       const rect = (node: Element): DOMRect => node.getBoundingClientRect();
       const board = (node: HTMLElement): Element => node.querySelector('.shot') ?? node;
       for (const e of edges) {
-        const [f, g] = [rect(wide ? board(e.from) : (e.from.closest('.col') ?? e.from)), rect(wide ? board(e.to) : e.to)];
-        const own = rect(e.from);
-        const a: Point = wide ? [f.right - box.left + PAD, f.top + f.height / 2 - box.top] : [own.left + own.width / 2 - box.left, f.bottom - box.top + PAD];
-        const b: Point = wide ? [g.left - box.left - PAD, g.top + g.height / 2 - box.top] : [g.left + g.width / 2 - box.left, g.top - box.top - PAD];
+        const [f, g] = [rect(wide ? board(e.from) : e.from), rect(wide ? board(e.to) : e.to)];
+        // « Et ainsi de suite » leaves from above its heading.
+        const own = rect(!wide && !e.label ? (e.from.closest('.col') ?? e.from) : e.from);
+        // Narrow, the rows run as the analysis tells it, the final positions on top: an arrow
+        // leaves the top of the position a move is played from and comes up under the row it
+        // leads to, at the board it reaches.
+        const a: Point = wide ? [f.right - box.left + PAD, f.top + f.height / 2 - box.top] : [own.left + own.width / 2 - box.left, own.top - box.top - PAD];
+        const b: Point = wide ? [g.left - box.left - PAD, g.top + g.height / 2 - box.top] : [g.left + g.width / 2 - box.left, rect(e.to.closest('.col') ?? e.to).bottom - box.top + PAD];
         // « Et ainsi de suite » comes in level, whatever the height of its marks.
         if (wide && !e.label) a[1] = b[1];
         const { line, head } = arrowGeometry(a, b);
@@ -199,6 +207,9 @@ export class PogoRetrograde extends PogoFigure {
     const show = (i: number): void => {
       all.forEach((c, k) => {
         c.toggleAttribute('data-off', k > i);
+        // A placeholder is drawn, not read: out of the reading order until its step comes.
+        if (k > i) c.setAttribute('aria-hidden', 'true');
+        else c.removeAttribute('aria-hidden');
         c.toggleAttribute('data-current', k === i);
       });
       for (const e of edges) {
