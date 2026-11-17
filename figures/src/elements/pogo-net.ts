@@ -1,5 +1,5 @@
 // <pogo-net kind="td|az">: a net at work, nodes and links (figs. 16 and 20).
-// At the left a position; then every unit of every layer as a node, the layers
+// At the left a position, an arrow taking it into the net; then every unit of every layer as a node, the layers
 // read from the loaded file's header (net-graph.ts) and laid out in columns
 // (net-layout.ts); between them, on one canvas (net-canvas.ts), each neuron's
 // strongest links for this position, by |weight × activation|, and the figure
@@ -18,15 +18,16 @@
 // (net-position.ts), and loops. When the reader has a game on the page's
 // board, the figure takes that game instead, rests on its latest position and
 // runs the flow each time the reader or the computer moves. The reader may
-// pause, step, hand the position to the board, and point at any node (or walk
-// the nodes with the arrow keys) to read its value and see its own links.
+// also play any move on the figure's own board (own-board.ts), from whatever
+// position it shows, invited to by one line under it: the walk stops, the
+// figure follows that line, and one control takes the game it left back. The
+// reader may pause, step, hand the position to the board, and point at any node
+// (or walk the nodes with the arrow keys) to read its value and see its own links.
 // Under reduced motion nothing moves: each position is drawn lit.
 import { DEFAULT_GAME } from '../default-game';
-import { LC1_2, key, moveName, replay, terminal, type Colour, type Move, type State, type Triple } from '../engine';
+import { LC1_2, key, moveName, play, replay, terminal, type Colour, type State, type Triple } from '../engine';
 import { autoplay, type Playable } from '../kit/autoplay';
-import { labelledBoard } from '../kit/board-labels';
-import { drawBoard } from '../kit/board-svg';
-import { playFromAction, progress, transport } from '../kit/controls';
+import { controlButton, playFromAction, progress, transport } from '../kit/controls';
 import { PogoFigure } from '../kit/figure';
 import { moveTip } from '../kit/move-tip';
 import { formatShare } from '../kit/score';
@@ -43,6 +44,7 @@ import { netGraph, signal, type GraphColumn, type NetGraph, type Signal } from '
 import { layoutNet, nodeAt, type NetLayout } from './net-layout';
 import { DEFAULT_PLY } from './net-position';
 import { azReadout, type PolicyRow } from './net-readout';
+import { ownBoard, type BoardMark } from './own-board';
 import netCss from './pogo-net.css?raw';
 
 export type NetKind = 'td' | 'az';
@@ -66,6 +68,26 @@ function el<K extends keyof HTMLElementTagNameMap>(tag: K, className = '', text 
   if (className) node.className = className;
   if (text) node.textContent = text;
   return node;
+}
+
+const SVG_NS = 'http://www.w3.org/2000/svg';
+
+/** The arrow from the position into the net: a shaft and a head, pointing right (pogo-net.css turns it down when stacked). */
+function enterArrow(): SVGSVGElement {
+  const svg = document.createElementNS(SVG_NS, 'svg');
+  svg.setAttribute('viewBox', '0 0 32 24');
+  svg.setAttribute('width', '32');
+  svg.setAttribute('height', '24');
+  svg.setAttribute('focusable', 'false');
+  const path = (className: string, d: string): void => {
+    const p = document.createElementNS(SVG_NS, 'path');
+    p.setAttribute('class', className);
+    p.setAttribute('d', d);
+    svg.append(p);
+  };
+  path('shaft', 'M2 12H26');
+  path('head', 'M19 4l9 8-9 8');
+  return svg;
 }
 
 const colourName = (lang: Lang, c: Colour): string => t(lang, c === 'White' ? 'white' : 'red');
@@ -165,8 +187,11 @@ export class PogoNet extends PogoFigure {
     const root = el('div', `net net-${kind}`);
     root.dataset.flow = 'arrived';
 
-    // The position.
+    // The position, on a board the reader may play on, and the arrow that takes it into the net.
     const boardSlot = el('div', 'board-slot');
+    const enter = el('div', 'enter');
+    enter.setAttribute('aria-hidden', 'true');
+    enter.append(enterArrow());
 
     // The net: labels above (the preference head's), the canvas, labels below.
     const draw = el('div', 'net-draw');
@@ -234,7 +259,7 @@ export class PogoNet extends PogoFigure {
     }
 
     const body = el('div', 'net-body');
-    body.append(boardSlot, draw, out);
+    body.append(boardSlot, enter, draw, out);
     const controls = el('div', 'controls-slot');
     const live = el('p', 'sr');
     live.setAttribute('role', 'status');
@@ -254,7 +279,10 @@ export class PogoNet extends PogoFigure {
     let probe: Probe | null = null;
     let tau = end;
     let frame = 0;
-    let marked: Move | null = null;
+    /** A move pointed at in AlphaZero's list: the board shows where it goes. */
+    let marked: Triple | null = null;
+    /** The line the reader played on the figure's own board, from a position it showed; null when none. */
+    let own: Shown[] | null = null;
     const ctx = typeof canvas.getContext === 'function' ? canvas.getContext('2d') : null;
 
     const readPalette = (): void => {
@@ -278,14 +306,35 @@ export class PogoNet extends PogoFigure {
       paint();
     };
 
-    const drawBoardPart = (): void => {
-      const p = positions[shown]!;
-      const marks = marked ? [{ cell: marked.from_cell, kind: 'picked' as const }, { cell: marked.to_cell, kind: 'target' as const }] : [];
-      const title = `${t(lang, 'position')}${colon(lang)} ${t(lang, 'ply')} ${shown}, ${colourName(lang, p.state.to_move)} ${t(lang, 'toMove')}`;
-      boardSlot.replaceChildren(
-        labelledBoard(drawBoard(p.state, { labelRoom: true, title, marks, ...(p.move && !marked ? { to: p.move[2], moving: p.move[1] } : {}) })),
-      );
-    };
+    const board = ownBoard({
+      lang,
+      keys: root,
+      id: `net-${kind}-counts-label`,
+      position: () => positions[shown]!,
+      onPlay: (m) => {
+        touch();
+        // The reader's line: the positions up to the one shown, then the move played from it.
+        const base = positions.slice(0, shown + 1);
+        own = [...base, { state: play(base.at(-1)!.state, m), move: m }];
+        mount();
+      },
+      onTouch: () => touch(),
+      marks: (): BoardMark[] | null => (marked ? [{ cell: marked[0], kind: 'picked' }, { cell: marked[2], kind: 'target' }] : null),
+      title: () => `${t(lang, 'position')}${colon(lang)} ${t(lang, 'ply')} ${shown}, ${colourName(lang, positions[shown]!.state.to_move)} ${t(lang, 'toMove')}`,
+    });
+    const invite = el('p', 'invite', t(lang, 'netInvite'));
+    const resume = controlButton('', () => {
+      own = null;
+      mount();
+    }, true);
+    resume.dataset.role = 'resume';
+    resume.classList.add('resume');
+    boardSlot.append(board.board, invite, board.counts, resume);
+    const drawBoardPart = (): void => board.draw();
+    /** The reader took the board: the walk stops, as a pause of theirs. */
+    function touch(): void {
+      stepper?.pauseByReader();
+    }
 
     const arrive = (): void => {
       previous = null;
@@ -374,7 +423,7 @@ export class PogoNet extends PogoFigure {
               name.append(
                 moveTip(lang, r.move, {
                   show: () => {
-                    marked = r.move;
+                    marked = [r.move.from_cell, r.move.num_pieces, r.move.to_cell];
                     drawBoardPart();
                   },
                   hide: () => {
@@ -411,7 +460,7 @@ export class PogoNet extends PogoFigure {
 
     // The line of positions, its stepper and its transport: rebuilt when the reader's game changes.
     let stepper: Stepper | null = null;
-    let own: AbortController | null = null;
+    let line: AbortController | null = null;
     /** The figure has come on screen once: from then on a new position sends its flow. */
     let seen = false;
     const count = progress(lang, 'move', true);
@@ -419,12 +468,15 @@ export class PogoNet extends PogoFigure {
       const before = stepper;
       const wasPlaying = before?.playing ?? false;
       const held = before?.readerPaused ?? false;
-      own?.abort();
-      own = new AbortController();
+      line?.abort();
+      line = new AbortController();
       const g = deps.store.current();
       const reader = !!g && g.states.length > 0;
       let start: number;
-      if (reader) {
+      if (own) {
+        positions = own;
+        start = own.length - 1;
+      } else if (reader) {
         positions = open(g.states, g.moves);
         if (positions.length === 0) positions = [{ state: g.states[0]! }];
         start = positions.length - 1;
@@ -433,8 +485,10 @@ export class PogoNet extends PogoFigure {
         positions = open(replay(line), line);
         start = Math.min(DEFAULT_PLY, positions.length - 1);
       }
-      root.dataset.game = reader ? 'reader' : 'default';
-      const s = new Stepper(positions.length, (i) => show(i, seen), { signal: own.signal, interval: positionMs(graph), wrapTo: 0 });
+      root.dataset.game = own ? 'own' : reader ? 'reader' : 'default';
+      resume.hidden = !own;
+      resume.textContent = t(lang, reader ? 'netBackMine' : 'netBackEssay');
+      const s = new Stepper(positions.length, (i) => show(i, seen), { signal: line.signal, interval: positionMs(graph), wrapTo: 0 });
       stepper = s;
       // The counter counts the moves played in the line shown; a line of one position says so.
       const row = transport(s, {
@@ -448,7 +502,7 @@ export class PogoNet extends PogoFigure {
       else show(0, seen);
       if (held) s.pauseByReader();
       // The essay's game loops by itself; the reader's own rests on its latest position.
-      else if (wasPlaying && !reader) s.play();
+      else if (wasPlaying && !reader && !own) s.play();
     };
 
     const playable: Playable = {
@@ -518,12 +572,16 @@ export class PogoNet extends PogoFigure {
     matchMedia('(prefers-color-scheme: dark)').addEventListener('change', retheme, { signal: signal_ });
 
     mount();
-    const off = deps.store.on('game', mount);
+    // A move on the page's board: the figure follows that game, and the reader's line here is let go.
+    const off = deps.store.on('game', () => {
+      own = null;
+      mount();
+    });
     signal_.addEventListener(
       'abort',
       () => {
         off();
-        own?.abort();
+        line?.abort();
         stopFlow();
       },
       { once: true },
