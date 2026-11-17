@@ -63,14 +63,20 @@ export interface StageScript {
   starts: number[];
 }
 
-/** Every stage's game, one after the other: `lengths[k]` positions for stage k. */
-export function stageScript(lengths: readonly number[]): StageScript {
+/**
+ * Every stage's game, one after the other: `lengths[k]` positions for stage k, shown from
+ * position `from[k]` (0 by default: the start), which must leave a move to play.
+ */
+export function stageScript(lengths: readonly number[], from: readonly number[] = lengths.map(() => 0)): StageScript {
+  if (from.length !== lengths.length) throw new Error(`pogo-stages: ${from.length} first positions for ${lengths.length} games`);
   const steps: StageStep[] = [];
   const starts: number[] = [];
   lengths.forEach((n, stage) => {
+    const first = from[stage]!;
     if (n < 2) throw new Error(`pogo-stages: the game of stage ${stage} has no move`);
+    if (!Number.isInteger(first) || first < 0 || first > n - 2) throw new Error(`pogo-stages: the game of stage ${stage} has no move after position ${first}`);
     starts.push(steps.length);
-    for (let ply = 0; ply < n; ply++) steps.push({ stage, ply, end: ply === n - 1 });
+    for (let ply = first; ply < n; ply++) steps.push({ stage, ply, end: ply === n - 1 });
   });
   return { steps, starts };
 }

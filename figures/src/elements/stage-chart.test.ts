@@ -47,4 +47,12 @@ describe('stageScript', () => {
   it('refuses a game with no move', () => {
     expect(() => stageScript([3, 1])).toThrow();
   });
+
+  it('can start each game further on: its first step is the given ply, and a game must keep a move after it', () => {
+    const { steps, starts } = stageScript([4, 3], [2, 1]);
+    expect(steps.map((s) => `${s.stage}.${s.ply}${s.end ? '!' : ''}`)).toEqual(['0.2', '0.3!', '1.1', '1.2!']);
+    expect(starts).toEqual([0, 2]);
+    expect(() => stageScript([4, 3], [3, 0])).toThrow();
+    expect(() => stageScript([4, 3], [0])).toThrow();
+  });
 });
