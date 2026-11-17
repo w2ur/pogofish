@@ -6,14 +6,16 @@
 // (openings-verdicts.ts). The only motion is the boards landing one after the
 // other the first time the figure comes on screen; at rest everything is
 // shown. A board offers « Jouer cette position contre l’ordinateur » when it
-// is pointed at, focused or tapped; nothing else is interactive.
+// is pointed at, focused or tapped; nothing else is interactive. Each block
+// of boards is two tab stops, one board's offer and its move name, and the
+// arrow keys move both to the next board (kit/controls.ts roving).
 import { announceMove } from '../board-state';
 import { WASM_FILE, assetUrl } from '../assets';
 import type { TableData } from '../data';
 import { moveName, ready } from '../engine';
 import type { ObserverCtor } from '../follow-panel';
 import { drawBoard } from '../kit/board-svg';
-import { controlButton } from '../kit/controls';
+import { controlButton, roving } from '../kit/controls';
 import { PogoFigure } from '../kit/figure';
 import { moveTip } from '../kit/move-tip';
 import { colon, t, type Lang } from '../kit/strings';
@@ -120,7 +122,11 @@ export class PogoOpenings extends PogoFigure {
       const boards = el('div', 'cards');
       boards.setAttribute('role', 'group');
       boards.setAttribute('aria-labelledby', id);
-      boards.append(...list.map(card));
+      const nodes = list.map(card);
+      boards.append(...nodes);
+      // One tab stop for the offers and one for the names, on one board; the arrows move among the boards.
+      const of = (sel: string) => nodes.map((n) => n.querySelector<HTMLElement>(sel)!);
+      roving(boards, [of('[data-role="play-from-here"]'), of('.move-name')], signal);
       section.append(title, boards);
       return section;
     };

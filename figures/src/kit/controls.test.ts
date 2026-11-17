@@ -1,7 +1,7 @@
 import { REDUCED_MOTION, resetMedia, setMedia } from '../test-dom';
 import { readFileSync } from 'node:fs';
 import { resolve } from 'node:path';
-import { choiceGroup, progress, transport } from './controls';
+import { choiceGroup, progress, roving, transport } from './controls';
 import { Stepper } from './stepper';
 
 beforeEach(() => {
@@ -228,5 +228,51 @@ describe('choiceGroup', () => {
     const rule = /\.choice\[aria-checked='true'\] \{([^}]*)\}/.exec(css)![1]!;
     expect(rule).toContain('background: var(--_action)');
     expect(rule).toContain('color: var(--_ground)');
+  });
+});
+
+describe('roving', () => {
+  const setup = () => {
+    const box = document.createElement('div');
+    const a = [0, 1, 2].map((i) => Object.assign(document.createElement('button'), { textContent: `a${i}` }));
+    const b = [0, 1, 2].map((i) => Object.assign(document.createElement('span'), { textContent: `b${i}` }));
+    a.forEach((x, i) => box.append(x, b[i]!));
+    document.body.append(box);
+    roving(box, [a, b]);
+    const stops = () => [...box.querySelectorAll<HTMLElement>('*')].filter((x) => x.tabIndex === 0).map((x) => x.textContent);
+    const key = (t: HTMLElement, k: string) => t.dispatchEvent(new KeyboardEvent('keydown', { key: k, bubbles: true }));
+    return { box, a, b, stops, key };
+  };
+  afterEach(() => (document.body.innerHTML = ''));
+
+  it('keeps one tab stop per kind, on the same item', () => {
+    const { stops } = setup();
+    expect(stops()).toEqual(['a0', 'b0']);
+  });
+
+  it('the arrows, Home and End move every kind to the next item and focus the same kind, wrapping', () => {
+    const { a, b, stops, key } = setup();
+    a[0]!.focus();
+    key(a[0]!, 'ArrowRight');
+    expect(document.activeElement).toBe(a[1]);
+    expect(stops()).toEqual(['a1', 'b1']);
+    key(a[1]!, 'ArrowDown');
+    key(a[2]!, 'ArrowRight');
+    expect(document.activeElement).toBe(a[0]);
+    b[0]!.focus();
+    key(b[0]!, 'ArrowLeft');
+    expect(document.activeElement).toBe(b[2]);
+    key(b[2]!, 'Home');
+    expect(stops()).toEqual(['a0', 'b0']);
+    key(b[0]!, 'End');
+    expect(document.activeElement).toBe(b[2]);
+    key(b[2]!, 'ArrowUp');
+    expect(document.activeElement).toBe(b[1]);
+  });
+
+  it('a focus by a click makes its item the current one', () => {
+    const { b, stops } = setup();
+    b[2]!.focus();
+    expect(stops()).toEqual(['a2', 'b2']);
   });
 });

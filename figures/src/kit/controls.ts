@@ -219,3 +219,52 @@ export function choiceGroup<T extends string>(o: {
   set(null);
   return { element, buttons, set };
 }
+
+/**
+ * A run of like items, each holding the same kinds of control (a board's offer,
+ * its move name): one tab stop per kind, on one current item, with roving
+ * tabindex. The arrow keys (and Home, End) move every kind to the previous or
+ * next item, in reading order, wrapping, and focus the same kind there; a focus
+ * by any other means (a click, a tap) makes its item the current one.
+ * `kinds[k][i]` is kind k's control in item i. Returns `go(i)`, which makes item
+ * i current without moving focus.
+ */
+export function roving(container: HTMLElement, kinds: readonly (readonly HTMLElement[])[], signal?: AbortSignal): (i: number) => void {
+  const n = kinds[0]?.length ?? 0;
+  let current = 0;
+  const go = (i: number): void => {
+    current = i;
+    for (const kind of kinds) kind.forEach((c, j) => (c.tabIndex = j === i ? 0 : -1));
+  };
+  const find = (target: EventTarget | null): [number, number] | null => {
+    for (let k = 0; k < kinds.length; k++) {
+      const i = kinds[k]!.findIndex((c) => c === target || (target instanceof Node && c.contains(target)));
+      if (i >= 0) return [k, i];
+    }
+    return null;
+  };
+  container.addEventListener(
+    'keydown',
+    (e) => {
+      const at = find(e.target);
+      if (!at || n === 0) return;
+      const [k, i] = at;
+      const to = { ArrowRight: i + 1, ArrowDown: i + 1, ArrowLeft: i - 1, ArrowUp: i - 1, Home: 0, End: n - 1 }[e.key];
+      if (to === undefined) return;
+      e.preventDefault();
+      go((to + n) % n);
+      kinds[k]![current]!.focus();
+    },
+    { signal },
+  );
+  container.addEventListener(
+    'focusin',
+    (e) => {
+      const at = find(e.target);
+      if (at && at[1] !== current) go(at[1]);
+    },
+    { signal },
+  );
+  go(0);
+  return go;
+}

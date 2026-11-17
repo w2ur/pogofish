@@ -109,6 +109,27 @@ describe('<pogo-openings>', () => {
     expect($(el, '.card.start').querySelector('button')).toBeNull();
   });
 
+  // Regression: every move name and every offer was its own tab stop, 33 in all.
+  it('five tab stops: White’s move, then in each block one board’s offer and its name, the arrows moving among the boards', async () => {
+    const el = await mount();
+    const stops = () => $$(el, 'button, [tabindex]').filter((n) => n.tabIndex >= 0);
+    const label = (n: HTMLElement) => (n.matches('[data-role="play-from-here"]') ? `offer ${n.closest<HTMLElement>('.reply')!.dataset.move}` : n.firstChild!.textContent);
+    const keep = $$(el, '.keep .reply').map((c) => c.dataset.move!);
+    const lose = $$(el, '.lose .reply').map((c) => c.dataset.move!);
+    expect(stops().map(label)).toEqual(['c1-1-b1', `offer ${keep[0]}`, keep[0], `offer ${lose[0]}`, lose[0]]);
+    const name = (m: string) => reply(el, m).querySelector<HTMLElement>('.move-name')!;
+    name(lose[0]!).focus();
+    name(lose[0]!).dispatchEvent(new KeyboardEvent('keydown', { key: 'ArrowRight', bubbles: true }));
+    expect(el.shadowRoot!.activeElement).toBe(name(lose[1]!));
+    // The offer's stop follows: Tab from a board's name, Shift+Tab to its offer, stay on one board.
+    expect(stops().map(label)).toEqual(['c1-1-b1', `offer ${keep[0]}`, keep[0], `offer ${lose[1]}`, lose[1]]);
+    name(lose[1]!).dispatchEvent(new KeyboardEvent('keydown', { key: 'End', bubbles: true }));
+    expect(el.shadowRoot!.activeElement).toBe(name(lose.at(-1)!));
+    // A click on another board's offer makes that board the current one.
+    reply(el, lose[3]!).querySelector<HTMLElement>('[data-role="play-from-here"]')!.focus();
+    expect(stops().map(label).slice(3)).toEqual([`offer ${lose[3]}`, lose[3]]);
+  });
+
   it('a tap on a board opens its offer and closes the one open before', async () => {
     const el = await mount();
     const [a, b] = [reply(el, 'a3-1-b3'), reply(el, 'b3-2-b1')];
