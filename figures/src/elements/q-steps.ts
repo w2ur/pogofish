@@ -35,6 +35,8 @@ export const QSTEPS_FIRST: Triple = [1, 1, 0];
 export const QSTEPS_GAMES = 5;
 
 export interface Candidate {
+  /** The move itself. */
+  move: Triple;
   /** The notebook row the move leads to, or null for a position the notebook does not keep. */
   to: string | null;
   q: number;
@@ -127,7 +129,7 @@ export function qSteps(prefix: readonly Triple[] = QSTEPS_PREFIX, first: Triple 
         update: {
           name,
           mover: s.to_move,
-          candidates: scored.map((c) => ({ to: nameOf(c.next), q: c.q, ends: c.ends })),
+          candidates: scored.map((c) => ({ move: triple(c.m), to: nameOf(c.next), q: c.q, ends: c.ends })),
           best,
           before,
           after,
@@ -179,13 +181,15 @@ export interface MoveGroup {
   to: string | null;
   count: number;
   q: number;
+  /** The group's moves, in the engine's order: the winning moves are shown by name and on the board. */
+  moves: Triple[];
 }
 
 export function moveGroups(u: Update): MoveGroup[] {
-  const named: MoveGroup[] = u.candidates.filter((c) => c.to !== null).map((c) => ({ kind: 'to', to: c.to, count: 1, q: c.q + 0 }));
+  const named: MoveGroup[] = u.candidates.filter((c) => c.to !== null).map((c) => ({ kind: 'to', to: c.to, count: 1, q: c.q + 0, moves: [c.move] }));
   const rest = u.candidates.filter((c) => c.to === null);
   const group = (kind: 'win' | 'lose' | 'unseen', q: number, of: Candidate[]): MoveGroup[] =>
-    of.length ? [{ kind, to: null, count: of.length, q }] : [];
+    of.length ? [{ kind, to: null, count: of.length, q, moves: of.map((c) => c.move) }] : [];
   const unseen = rest.filter((c) => !c.ends);
   // A position the notebook does not keep has never been valued: its note is 0, and so is the move.
   // (`+ 0` above: a note of 0 negated is −0, which is 0 to the reader.)

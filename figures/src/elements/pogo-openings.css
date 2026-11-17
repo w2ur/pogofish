@@ -1,8 +1,11 @@
 /*
- * <pogo-openings>, the tester: the line that asks for the next move, then the
- * board the reader plays on, with its count chooser under it, and beside it
- * (from 640px) or under it the verdicts of the moves played and the actions.
- * The verdicts' list keeps the room of two, so nothing moves as they arrive.
+ * <pogo-openings>, the tester: the line that asks for the next move (the toy's
+ * invitation), then the board the reader plays on, with its count chooser under
+ * it, an ink arrow, and the verdicts of the two moves with the actions. From
+ * 520px the verdicts stand beside the board, centred on its height, so the box
+ * has no empty half; narrower, they come under it and the arrow points down.
+ * White's row and Red's are there from the start, so nothing moves as the
+ * verdicts arrive, and each verdict keeps the room of its longest sentence.
  */
 :host {
   container-type: inline-size;
@@ -10,12 +13,12 @@
 
 /* The room the figure keeps before it renders: the board follows the width up to 400px. Measured on the harness (2026-11-17). */
 .stage {
-  min-height: calc(min(100cqi, 400px) + 335px);
+  min-height: calc(min(100cqi, 400px) + 388px);
 }
 
-@container (min-width: 640px) {
+@container (min-width: 520px) {
   .stage {
-    min-height: 500px;
+    min-height: calc(min(100cqi - 264px, 400px) + 110px);
   }
 }
 
@@ -27,15 +30,26 @@
   display: flex;
   flex-direction: column;
   align-items: center;
-  gap: 20px;
+  gap: 16px;
 }
 
-@container (min-width: 640px) {
+/* Under the board, the arrow points down at the verdicts. */
+.tester > .reads svg {
+  transform: rotate(90deg);
+}
+
+@container (min-width: 520px) {
   .tester {
-    flex-direction: row;
-    align-items: flex-start;
+    display: grid;
+    /* The verdicts take what the board leaves them, between 200 and 320px; the board the rest, up to 400px. */
+    grid-template-columns: minmax(0, 400px) auto clamp(200px, 100cqi - 480px, 320px);
+    align-items: center;
     justify-content: center;
-    gap: 32px;
+    gap: 12px;
+  }
+
+  .tester > .reads svg {
+    transform: none;
   }
 }
 
@@ -45,7 +59,6 @@
   align-items: center;
   gap: 12px;
   width: min(100%, 400px);
-  flex: none;
 }
 
 .board-col .play {
@@ -71,22 +84,25 @@
   width: min(100%, 400px);
 }
 
-/* Two lines kept for the longest request, so the board under it does not move. */
-.ask {
+@container (min-width: 520px) {
+  .side {
+    width: auto;
+  }
+}
+
+/* Two lines kept for the longest request, so the board under it does not move; centred over the box. */
+.openings .ask {
   display: flex;
   align-items: flex-end;
   justify-content: center;
-  min-height: 2.7em;
-  margin-bottom: 12px;
-  text-align: center;
-  color: var(--_ink);
+  min-height: 2.8em;
+  margin: 0 auto 12px;
 }
 
 .played {
   display: flex;
   flex-direction: column;
   gap: 12px;
-  min-height: 9em;
   margin: 0;
   padding: 0;
   list-style: none;
@@ -100,13 +116,24 @@
   border-left: 3px solid var(--_ink);
 }
 
+/* A row not played yet: its side named, its rule and its verdict quiet. */
+.verdict-row[data-pending] {
+  border-left-color: var(--_rule);
+}
+
+.verdict-row[data-pending] .verdict {
+  color: var(--_muted);
+}
+
 .move {
   font-size: 12.8px;
   font-weight: 800;
   color: var(--_ink-2);
 }
 
+/* The longest verdict (« Perd : les Rouges forcent la victoire en 11 coups. ») on three lines at the narrowest. */
 .verdict {
+  min-height: 4.2em;
   color: var(--_ink);
 }
 

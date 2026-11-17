@@ -129,8 +129,11 @@ describe('<pogo-reach>', () => {
     vi.advanceTimersByTime(STOP_MS);
     expect($(el, '.total').hasAttribute('data-off')).toBe(false);
     expect(playState(el)).toBe('replay');
-    // Slow enough to follow: a reader could not, at 900 ms a level (dummy-visitor read, 2026-11-17).
-    expect(LEVEL_MS).toBeGreaterThanOrEqual(1800);
+    // Slow enough to follow: a reader could not, at 900 ms a level (dummy-visitor read, 2026-11-17);
+    // fast enough not to drag: the owner found 2 s a level slow (round 5). The whole film under 25 s.
+    expect(LEVEL_MS).toBeGreaterThanOrEqual(1000);
+    expect(LEVEL_MS).toBeLessThanOrEqual(1300);
+    expect(LEVEL_MS * 15 + STOP_MS * 2).toBeLessThan(25_000);
   });
 
   it('pauses when it leaves the screen, and a reader’s pause holds', async () => {

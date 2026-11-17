@@ -71,3 +71,17 @@ export function outcomeText(lang: Lang, mover: Colour, v: Verdict): string {
   const unit = t(lang, o.moves === 1 ? 'ply' : 'movesUnit');
   return `${head}${colon(lang)} ${who} ${o.moves} ${unit}.`;
 }
+
+/**
+ * The two moves <pogo-openings> plays in its introduction, from the table: White's first move to
+ * the centre that loses (the essay's error, the first in the table's order), then Red's reply
+ * that forces the win soonest. Throws if the table has neither.
+ */
+export function introMoves(table: TableData): [Triple, Triple] {
+  const white = openingChoices(table).moves.find((m) => m.move[2] === 4 && m.verdict.kind === 'loses-in');
+  if (!white) throw new Error('pogo-openings: no losing first move to the centre');
+  const plies = (m: VerdictMove): number => (m.verdict.kind === 'wins-in' ? m.verdict.plies : Infinity);
+  const red = replyChoices(table, white.move).moves.reduce((best, m) => (plies(m) < plies(best) ? m : best));
+  if (red.verdict.kind !== 'wins-in') throw new Error(`pogo-openings: no winning reply to ${moveName(white.move)}`);
+  return [white.move, red.move];
+}

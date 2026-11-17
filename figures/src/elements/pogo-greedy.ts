@@ -1,27 +1,27 @@
 // <pogo-greedy>: one short game of the greedy player against itself under
 // lc1-2 (greedy-game.ts), with no position met twice and a real win at the
 // end. Beside the board, each move is told as greedy makes it, in this order:
-// whose turn it is; every legal move with the value greedy gives it, the gap
-// it would leave between the mover's stacks and the opponent's, one row per
-// value, the greatest first; the greatest marked, and the move drawn among its
-// ties; the move played, its pieces travelling; then the scoreboard, which
-// counts the stacks each colour owns, changing. A step forward plays these
-// beats one after the other; any other change of step, and reduced motion,
-// show the step settled. It ends on the result, and the transport then
-// replays it.
+// whose turn it is; the candidates' table, every legal move with the red
+// stacks and the white stacks it would leave and the gap between the mover's
+// and the opponent's, the greatest first (candidateRows); the greatest marked,
+// its ties with it, and the move drawn among them; the move played, its pieces
+// travelling. A row hovered or focused shows its move on the board, landing:
+// each number tied to the move that made it. A step forward plays these beats
+// one after the other; any other change of step, and reduced motion, show the
+// step settled. It ends on the result, and the transport then replays it.
 import { announceMove } from '../board-state';
 import { WASM_FILE, assetUrl } from '../assets';
 import { ready, type Colour, type Triple } from '../engine';
 import { autoplay } from '../kit/autoplay';
 import { labelledBoard } from '../kit/board-labels';
-import { animateMove, drawBoard } from '../kit/board-svg';
+import { animateMove, drawBoard, landing } from '../kit/board-svg';
 import { progress, transport } from '../kit/controls';
 import { PogoFigure } from '../kit/figure';
 import { moveText, moveTip } from '../kit/move-tip';
 import { Stepper } from '../kit/stepper';
 import { MOVE_TEMPO_MS } from '../kit/tempo';
 import { colon, t, type Lang } from '../kit/strings';
-import { endOf, gapText, greedyGame, valueRows, type GreedyChoice, type GreedyFrame } from './greedy-game';
+import { candidateRows, endOf, gapText, greedyGame, valueRows, type GreedyChoice, type GreedyFrame } from './greedy-game';
 import { plies } from './net-position';
 import greedyCss from './pogo-greedy.css?raw';
 import { resultWords } from './replay-view';
@@ -29,7 +29,7 @@ import { resultWords } from './replay-view';
 /**
  * When each beat of a step falls, in ms: whose turn is read; then every move weighed, held to
  * be read; then the greatest marked; then the move is played and held the kit's one tempo
- * before the scoreboard changes; and how long the whole step is held.
+ * before the result, if it is the last, is said; and how long the whole step is held.
  */
 export const BEATS = { weigh: 900, best: 900 + 2800, move: 900 + 2800 + 1400, score: 900 + 2800 + 1400 + MOVE_TEMPO_MS } as const;
 export const STEP_MS = BEATS.score + 1500;
@@ -65,7 +65,6 @@ export function weighedText(lang: Lang, c: GreedyChoice): string {
 
 const turnText = (lang: Lang, c: Colour): string => t(lang, c === 'White' ? 'greedyTurnWhite' : 'greedyTurnRed');
 const gapLabel = (lang: Lang, c: Colour): string => t(lang, c === 'White' ? 'greedyGapWhite' : 'greedyGapRed');
-const same = (a: Triple, b: Triple): boolean => a[0] === b[0] && a[1] === b[1] && a[2] === b[2];
 
 /** What a screen reader hears for a step: the move, what was weighed, the count, the gap and why, then the end. */
 export function spoken(lang: Lang, f: GreedyFrame): string {
@@ -109,58 +108,75 @@ export class PogoGreedy extends PogoFigure {
     const turn = el('p', 'turn say');
     const move = el('p', 'move');
 
-    // What greedy weighs: every legal move and the gap it would leave, one row per value.
-    // Every step's rows share one grid cell, so the panel keeps the room of the longest.
+    // What greedy weighs: the candidates' table, the owner's four columns. The head is drawn once;
+    // every step's rows are a table of their own, all in one grid cell, so the panel keeps the
+    // room of the longest and the columns line up with the head (pogo-greedy.css: fixed layout).
     const weigh = el('div', 'weigh');
-    weigh.append(el('p', 'say weigh-title', t(lang, 'greedyWeighTitle')), el('p', 'what weigh-unit', t(lang, 'greedyWeighUnit')));
+    weigh.append(el('p', 'what weigh-unit', t(lang, 'greedyWeighUnit')));
+    const columns = (): HTMLTableColElement[] => ['c-move', 'c-red', 'c-white', 'c-gap'].map((c) => el('col', c));
+    const head = el('table', 'cands-head');
+    head.setAttribute('aria-hidden', 'true');
+    const headRow = el('tr', '');
+    for (const k of ['greedyColMove', 'greedyStacksRed', 'greedyStacksWhite', 'greedyColGap'] as const) headRow.append(el('th', 'what', t(lang, k)));
+    head.append(el('colgroup', ''), el('thead', ''));
+    head.firstElementChild!.append(...columns());
+    head.lastElementChild!.append(headRow);
     const lists = el('div', 'lists');
-    weigh.append(lists);
+    weigh.append(head, lists);
+    /** The row shown on the board now, if any. */
+    let shownRow: HTMLElement | null = null;
     const blocks = frames.map((f, i) => {
-      const block = el('div', 'values');
-      block.toggleAttribute('data-off', true);
+      const table = el('table', 'cands');
+      table.toggleAttribute('data-off', true);
       const c = f.choice;
-      if (!c) return block;
-      for (const r of valueRows(c)) {
-        const line = el('div', 'vrow');
-        line.toggleAttribute('data-best', r.best);
-        line.dataset.score = String(r.score);
-        const chips = el('span', 'chips');
-        for (const m of r.moves) {
-          const chip = moveTip(lang, m, { show: () => mark(i, m), hide: () => redraw() });
-          chip.classList.add('chip', 'num');
-          chip.tabIndex = -1;
-          chip.toggleAttribute('data-chosen', same(m, c.move));
-          chips.append(chip);
-        }
-        line.append(el('span', 'vval num', valueText(lang, r.score)), chips);
-        block.append(line);
+      if (!c) return table;
+      table.setAttribute('aria-label', t(lang, 'greedyWeighTitle'));
+      // Read with its head by assistive tech: the visible head is drawn apart, for the grid cell.
+      const thead = el('thead', 'sr-head');
+      const tr = el('tr', '');
+      for (const k of ['greedyColMove', 'greedyStacksRed', 'greedyStacksWhite', 'greedyColGap'] as const) {
+        const th = el('th', '', t(lang, k));
+        th.scope = 'col';
+        tr.append(th);
       }
-      lists.append(block);
-      return block;
+      thead.append(tr);
+      const colgroup = el('colgroup', '');
+      colgroup.append(...columns());
+      const body = el('tbody', '');
+      for (const r of candidateRows(c)) {
+        const line = el('tr', 'cand');
+        line.toggleAttribute('data-best', r.best);
+        line.toggleAttribute('data-chosen', r.chosen);
+        const chip = moveTip(lang, r.move);
+        chip.classList.add('chip', 'num');
+        chip.tabIndex = -1;
+        const name = el('td', 'c-move');
+        name.append(chip);
+        line.append(name, el('td', 'num', String(r.stacks.red)), el('td', 'num', String(r.stacks.white)), el('td', 'num gap', valueText(lang, r.score)));
+        // The row's numbers came from its move: hovered or focused, the board shows that move landing.
+        const on = (): void => {
+          shownRow?.removeAttribute('data-shown');
+          shownRow = line;
+          line.setAttribute('data-shown', '');
+          mark(i, r.move);
+        };
+        const off = (): void => {
+          if (shownRow !== line) return;
+          line.removeAttribute('data-shown');
+          shownRow = null;
+          redraw();
+        };
+        line.addEventListener('pointerenter', on);
+        line.addEventListener('pointerleave', off);
+        line.addEventListener('focusin', on);
+        line.addEventListener('focusout', off);
+        body.append(line);
+      }
+      table.append(colgroup, thead, body);
+      lists.append(table);
+      return table;
     });
     const why = el('p', 'why');
-
-    // The scoreboard: a row per colour, its stacks counted as pieces and as a number.
-    const row = (colour: Colour): { row: HTMLElement; set(n: number, changed: boolean): void } => {
-      const line = el('div', 'count');
-      line.dataset.colour = colour;
-      const number = el('span', 'shout num number');
-      const pieces = el('span', 'pieces');
-      pieces.setAttribute('aria-hidden', 'true');
-      line.append(el('span', 'label what', t(lang, colour === 'White' ? 'greedyStacksWhite' : 'greedyStacksRed')), number, pieces);
-      return {
-        row: line,
-        set(n, changed) {
-          number.textContent = String(n);
-          pieces.replaceChildren(...Array.from({ length: n }, () => el('span', `piece ${colour === 'White' ? 'white' : 'red'}`)));
-          line.toggleAttribute('data-changed', changed);
-        },
-      };
-    };
-    const white = row('White');
-    const red = row('Red');
-    const board = el('div', 'scoreboard');
-    board.append(white.row, red.row);
 
     // The end: who wins, as the flyer's stamp, and how.
     const result = el('div', 'result');
@@ -169,7 +185,7 @@ export class PogoGreedy extends PogoFigure {
     result.append(who, how);
 
     const panel = el('div', 'panel');
-    panel.append(turn, weigh, why, move, board, result);
+    panel.append(turn, weigh, why, move, result);
     const live = el('p', 'sr');
     live.setAttribute('role', 'status');
     live.setAttribute('aria-live', 'polite');
@@ -182,6 +198,9 @@ export class PogoGreedy extends PogoFigure {
       const m = f.choice?.move;
       const next = drawBoard(f.state, { labelRoom: true, title: spoken(lang, f), ...(m ? { from: m[0], to: m[2], moving: m[1] } : {}) });
       const before = svg;
+      // A row shown on the board belongs to the step left.
+      shownRow?.removeAttribute('data-shown');
+      shownRow = null;
       slot.replaceChildren(labelledBoard(next));
       svg = next;
       if (travel && before && m) animateMove(before, next, m);
@@ -190,15 +209,12 @@ export class PogoGreedy extends PogoFigure {
         svg = next;
       };
     };
-    /** A move weighed at step `i`, marked on the position it is weighed from. */
+    /** A move weighed at step `i`, shown on the position it is weighed from: lifted, landing. */
     const mark = (i: number, m: Triple): void => {
       const from = frames[i - 1]!.state;
-      slot.replaceChildren(labelledBoard(drawBoard(from, { labelRoom: true, marks: [{ cell: m[0], kind: 'picked' }, { cell: m[2], kind: 'target' }] })));
-    };
-    const count = (i: number, flash: boolean): void => {
-      const [now, was] = [frames[i]!.stacks, frames[Math.max(0, i - 1)]!.stacks];
-      white.set(now.white, flash && now.white !== was.white);
-      red.set(now.red, flash && now.red !== was.red);
+      slot.replaceChildren(
+        labelledBoard(drawBoard(from, { labelRoom: true, marks: [{ cell: m[0], kind: 'picked' }, { cell: m[2], kind: 'target' }], landings: [landing(from, m)] })),
+      );
     };
     const said = (i: number): void => {
       const c = frames[i]!.choice;
@@ -231,7 +247,6 @@ export class PogoGreedy extends PogoFigure {
       turn.textContent = f.choice ? turnText(lang, f.choice.mover) : t(lang, 'startPosition');
       said(i);
       draw(i, false);
-      count(i, false);
       weighed(i, true);
       ending(i);
     };
@@ -267,10 +282,7 @@ export class PogoGreedy extends PogoFigure {
           said(i);
           draw(i, true);
         }, BEATS.move),
-        setTimeout(() => {
-          count(i, true);
-          ending(i);
-        }, BEATS.score),
+        setTimeout(() => ending(i), BEATS.score),
       ];
     };
 

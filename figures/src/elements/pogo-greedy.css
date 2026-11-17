@@ -1,29 +1,23 @@
 /*
  * <pogo-greedy>: the board, and beside it from 560px (under it below) the
- * panel that tells a move: whose turn, every move weighed under its value, the
- * greatest marked and why, the move, the scoreboard, then the result. Every
- * line of the panel keeps its room when it has nothing to say yet, and every
- * step's rows share one cell, so neither the board nor the transport under
- * them moves during the game.
+ * panel that tells a move: whose turn, the candidates' table (move, red
+ * stacks, white stacks, gap), the greatest marked and why, the move, then the
+ * result. Every line of the panel keeps its room when it has nothing to say
+ * yet, and every step's table shares one cell, so neither the board nor the
+ * transport under them moves during the game.
  */
 :host {
   container-type: inline-size;
 }
 
-/* The room the figure keeps before it renders, measured on the harness (2026-11-17: 1047px at 272, 731 at 566, 633 at 1100). */
+/* The room the figure keeps before it renders, measured on the harness (round 5, the table: 1073px at 320, 1138 at 558, 706 from 592 up). */
 .stage {
-  min-height: calc(100cqi + 770px);
+  min-height: calc(min(100cqi, 400px) + 754px);
 }
 
 @container (min-width: 560px) {
   .stage {
-    min-height: 720px;
-  }
-}
-
-@container (min-width: 800px) {
-  .stage {
-    min-height: 630px;
+    min-height: 710px;
   }
 }
 
@@ -92,72 +86,13 @@
   color: var(--_ink);
 }
 
-/* The scoreboard: the flyer's rule over and under, a row per colour. */
-.scoreboard {
-  display: flex;
-  flex-direction: column;
-  gap: 6px;
-  padding-block: 10px;
-  border-block: 3px solid var(--_ink);
-}
-
-.count {
-  display: grid;
-  grid-template-columns: auto minmax(2ch, auto) minmax(0, 1fr);
-  align-items: center;
-  column-gap: 10px;
-}
-
-.count .what {
-  white-space: nowrap;
-}
-
 .what {
   font-size: 12.8px;
   line-height: 1.2;
   color: var(--_ink-2);
 }
 
-/* The block is sized from the digit, with room on each side, so an inverted count never touches its edges. */
-.number {
-  justify-self: center;
-  padding: 0.08em 0.14em 0.04em;
-  font-size: 34px;
-  text-align: center;
-  color: var(--_ink);
-}
-
-.pieces {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 3px;
-  min-height: 14px;
-}
-
-/* A stack owned, as one piece of its colour: the page's only round thing, and its only red. */
-.piece {
-  flex: none;
-  width: 14px;
-  height: 14px;
-  border: 1.5px solid var(--_ink);
-  border-radius: 50%;
-}
-
-.piece.white {
-  background: var(--_white);
-}
-
-.piece.red {
-  background: var(--_red);
-}
-
-/* The count that has just changed: the number inverted, the flyer's stamp, for as long as the move is told. */
-.count[data-changed] .number {
-  background: var(--_ink);
-  color: var(--_ground);
-}
-
-/* What greedy weighs: a row per value, the greatest first, its moves after it. */
+/* What greedy weighs: the head once, then every step's table in one cell, the same columns. */
 .weigh {
   display: flex;
   flex-direction: column;
@@ -168,41 +103,67 @@
   margin-bottom: 4px;
 }
 
-/* Every step's rows in one cell: the block keeps the room of the longest. */
+.cands-head,
+.cands {
+  width: 100%;
+  table-layout: fixed;
+  border-collapse: collapse;
+}
+
+.cands-head {
+  border-bottom: 3px solid var(--_ink);
+}
+
+.cands-head th {
+  padding: 0 4px 4px;
+  font-weight: 400;
+  text-align: right;
+  vertical-align: bottom;
+}
+
+.cands-head th:first-child {
+  text-align: left;
+}
+
+.c-move {
+  width: 34%;
+}
+
+/* The head assistive tech reads with each step's table; the visible one is drawn apart. */
+.sr-head {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  clip-path: inset(50%);
+  white-space: nowrap;
+}
+
+/* Every step's table in one cell: the block keeps the room of the longest. */
 .lists {
   display: grid;
 }
 
-.values {
+.cands {
   grid-area: 1 / 1;
-  display: flex;
-  flex-direction: column;
-  border-top: 3px solid var(--_ink);
+  align-self: start;
 }
 
-.vrow {
-  display: grid;
-  grid-template-columns: 3.6em minmax(0, 1fr);
-  align-items: baseline;
-  column-gap: 10px;
-  padding-block: 5px;
+.cand td {
+  padding: 2px 4px;
   border-bottom: 1px solid var(--_rule);
-}
-
-.vval {
-  justify-self: start;
-  padding: 0.05em 0.3em;
-  font-weight: 800;
-  white-space: nowrap;
-  color: var(--_ink);
-}
-
-.chips {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 4px 10px;
   font-size: 15px;
+  line-height: 1.35;
+  text-align: right;
   color: var(--_ink);
+}
+
+.cand td:first-child {
+  text-align: left;
+}
+
+.cand .gap {
+  font-weight: 800;
 }
 
 .chip {
@@ -210,24 +171,25 @@
   border: 2px solid transparent;
 }
 
-/* Once greedy has chosen: the greatest value inverted, the other rows set back, the move drawn among its ties framed. */
-.values[data-chosen] .vrow[data-best] .vval {
+/* Once greedy has chosen: its ties in ink, the gap inverted, the other rows set back, the move it drew framed. */
+.cands[data-chosen] .cand:not([data-best]) td {
+  color: var(--_muted);
+}
+
+.cands[data-chosen] .cand[data-best] .gap {
   background: var(--_ink);
   color: var(--_ground);
 }
 
-.values[data-chosen] .vrow:not([data-best]) {
-  color: var(--_muted);
-}
-
-.values[data-chosen] .vrow:not([data-best]) .vval,
-.values[data-chosen] .vrow:not([data-best]) .chips {
-  color: var(--_muted);
-}
-
-.values[data-chosen] .chip[data-chosen] {
+.cands[data-chosen] .cand[data-chosen] .chip {
   border-color: var(--_ink);
   font-weight: 800;
+}
+
+/* The row shown on the board: its numbers are that move's. */
+.cand[data-shown] td {
+  background: color-mix(in srgb, var(--_ink) 10%, transparent);
+  color: var(--_ink);
 }
 
 .why {

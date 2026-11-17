@@ -12,15 +12,16 @@
 
 /*
  * The room the moves view keeps before it renders, measured on the harness (2026-11-17):
- * the three boards one under the other, or side by side at a third of the width each.
+ * the three boards one under the other, or side by side at a third of the width each, under a
+ * one-line lead (round 5).
  */
 :host([view='moves']) .stage {
-  min-height: 1010px;
+  min-height: 900px;
 }
 
 @container (min-width: 480px) {
   :host([view='moves']) .stage {
-    min-height: calc(min(33.3cqi - 11px, 300px) + 200px);
+    min-height: calc(min(33.3cqi - 11px, 300px) + 140px);
   }
 }
 

@@ -10,14 +10,19 @@
 // position further back: the columns keep every game, so the wave is seen at
 // rest too. The reader sets the formula's step, 10 % or 100 % (the essay's
 // « pourquoi 10 % et pas 100 % »): the walk is played again with it.
+// The moves that win the game (value +1) are named under their row, and from
+// the step that values the moves until the note is written, the board shows
+// them landing on the position updated (« quels sont les coups qui gagnent la
+// partie ? »); a move's name hovered or focused shows that move alone.
 import { WASM_FILE, assetUrl } from '../assets';
 import type { Colour } from '../engine';
-import { ready } from '../engine';
+import { ready, type State, type Triple } from '../engine';
 import { autoplay } from '../kit/autoplay';
 import { labelledBoard } from '../kit/board-labels';
-import { animateMove, drawBoard } from '../kit/board-svg';
+import { animateMove, drawBoard, landing, type BoardMark, type Landing } from '../kit/board-svg';
 import { choiceGroup, transport } from '../kit/controls';
 import { PogoFigure } from '../kit/figure';
+import { moveTip } from '../kit/move-tip';
 import { Stepper } from '../kit/stepper';
 import { colon, t, type Lang, type StringKey } from '../kit/strings';
 import { fly } from './motion';
@@ -111,6 +116,22 @@ export function groupWords(lang: Lang, g: MoveGroup): string {
   return `${g.count} ${t(lang, keys[g.kind][g.count > 1 ? 1 : 0])}`;
 }
 
+/**
+ * The board's marks for `moves` played from `s`: each origin lifted, each destination cornered and
+ * its pieces landing (one landing per square: the first move to it).
+ */
+export function shownMoves(s: State, moves: readonly Triple[]): { marks: BoardMark[]; landings: Landing[] } {
+  const marks: BoardMark[] = [];
+  const landings: Landing[] = [];
+  for (const m of moves) {
+    if (!marks.some((k) => k.kind === 'picked' && k.cell === m[0])) marks.push({ cell: m[0], kind: 'picked' });
+    if (landings.some((l) => l.to === m[2])) continue;
+    marks.push({ cell: m[2], kind: 'target' });
+    landings.push(landing(s, m));
+  }
+  return { marks, landings };
+}
+
 function el<K extends keyof HTMLElementTagNameMap>(tag: K, className = '', text = ''): HTMLElementTagNameMap[K] {
   const node = document.createElement(tag);
   if (className) node.className = className;
@@ -196,13 +217,19 @@ export class PogoQsteps extends PogoFigure {
     const list = el('ul', 'move-list');
     const moveRows = Array.from({ length: MOVE_ROWS }, () => {
       const li = el('li', 'move-row');
+      const label = el('span', 'move-label');
       const what = el('span', 'what');
+      const which = el('span', 'which');
+      label.append(what, which);
       const value = el('span', 'val num');
-      li.append(what, value);
+      li.append(label, value);
       list.append(li);
-      return { li, what, value };
+      return { li, what, which, value };
     });
     moves.append(el('p', 'say', t(lang, 'qMovesTitle')), list);
+    // The winning moves are named for every reader: the list is not hidden when it holds them.
+    moves.removeAttribute('aria-hidden');
+    for (const r of moveRows) r.li.setAttribute('aria-hidden', 'true');
 
     // The essay's formula, its numbers under its words.
     const formula = el('div', 'formula');
@@ -276,6 +303,10 @@ export class PogoQsteps extends PogoFigure {
     let landings: (() => void)[] = [];
     let svg: SVGSVGElement | undefined;
     let shown = -1;
+    /** The winning moves the board shows now, by name: the board is redrawn when they change. */
+    let winShown = '';
+    /** The board as the step left it, to come back to when a move's name is left. */
+    let restore: () => void = () => undefined;
 
     const show = (i: number): void => {
       for (const land of landings) land();
@@ -295,13 +326,27 @@ export class PogoQsteps extends PogoFigure {
       const previous = step.frame > 0 ? frames[step.frame - 1]! : undefined;
       const arrived = previous && previous.game === f.game ? previous.move : undefined;
       const changed = shown < 0 || script[shown]!.frame !== step.frame;
-      if (changed) {
-        const next = drawBoard(f.state, { labelRoom: true, title: said, ...(arrived ? { from: arrived[0], to: arrived[2], moving: arrived[1] } : {}) });
+      // From the step that values the moves until the note is written, the winning moves land on the board.
+      const wins = f.kind === 'update' && u && at >= 1 ? (moveGroups(u).find((g) => g.kind === 'win')?.moves ?? []) : [];
+      const winKey = wins.map((m) => m.join()).join(' ');
+      // The move that led here gives way while the winning moves are shown: two frames on one square would read as one.
+      const arrival = arrived && wins.length === 0 ? { from: arrived[0], to: arrived[2], moving: arrived[1] } : {};
+      if (changed || winKey !== winShown) {
+        const next = drawBoard(f.state, { labelRoom: true, title: said, ...arrival, ...shownMoves(f.state, wins) });
         const before = svg;
         slot.replaceChildren(labelledBoard(next));
         svg = next;
-        if (before && arrived && forward) animateMove(before, next, arrived);
+        if (changed && before && arrived && forward) animateMove(before, next, arrived);
+        winShown = winKey;
+        restore = () => {
+          slot.replaceChildren(labelledBoard(next));
+          svg = next;
+        };
       }
+      /** One move alone on this position: lifted, landing. */
+      const one = (m: Triple): void => {
+        slot.replaceChildren(labelledBoard(drawBoard(f.state, { labelRoom: true, ...shownMoves(f.state, [m]) })));
+      };
 
       // The notebook as it stands: past games, the game under way, nothing after it.
       const now = notesAt(walk, step);
@@ -319,13 +364,20 @@ export class PogoQsteps extends PogoFigure {
 
       // The moves, their values once given, the best once kept.
       const groups = u ? moveGroups(u) : [];
-      moveRows.forEach(({ li, what, value }, k) => {
+      moveRows.forEach(({ li, what, which, value }, k) => {
         const g = groups[k];
         li.toggleAttribute('data-off', !g);
         li.className = 'move-row';
         value.style.visibility = '';
+        which.replaceChildren();
+        li.setAttribute('aria-hidden', 'true');
         if (!g) return;
         what.textContent = groupWords(lang, g);
+        // The winning moves by name, each tied to the board: hovered or focused, it lands there alone.
+        if (g.kind === 'win' && f.kind === 'update') {
+          li.removeAttribute('aria-hidden');
+          for (const m of g.moves) which.append(moveTip(lang, m, { show: () => one(m), hide: () => restore() }));
+        }
         value.textContent = at >= 1 ? signedNote(lang, g.q) : '';
         value.classList.toggle('empty', at < 1);
         if (at >= 2) li.classList.add(g.q === u!.best + 0 ? 'best' : 'dim');

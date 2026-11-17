@@ -57,15 +57,10 @@ describe('<pogo-moves view="moves">', () => {
 
   it('shows, at rest, every move from the stack, one board per count, each landing ringed, the stack lifted', async () => {
     const el = await mount('moves');
-    expect($(el, '.lead').textContent).toBe(
-      'Depuis la pile de a1 : une, deux ou trois pièces. Les pièces estompées montrent chaque arrivée possible, jamais la case de départ.',
-    );
+    // Round 5: short legends, the boards show the rest.
+    expect($(el, '.lead').textContent).toBe('Tous les déplacements depuis la pile de a1.');
     const gs = groups(el);
-    expect(gs.map((g) => g.querySelector('.say')!.textContent)).toEqual([
-      '1 pièce, 1 mouvement',
-      '2 pièces, 2 mouvements, y compris la diagonale',
-      '3 pièces, 3 mouvements, y compris une case voisine',
-    ]);
+    expect(gs.map((g) => g.querySelector('.say')!.textContent)).toEqual(['1 pièce, 1 mouvement', '2 pièces, 2 mouvements', '3 pièces, 3 mouvements']);
     gs.forEach((g, k) => {
       expect(cellsOf(g, '.board .mark.target')).toEqual(f.groups[k]!.moves.map((m) => m[2]));
       expect(cellsOf(g, '.board .mark.picked')).toEqual([FAN_FROM]);
@@ -78,41 +73,41 @@ describe('<pogo-moves view="moves">', () => {
       expect(g.querySelector('.board .from')).toBeNull();
     });
     // Each board says its landings in words, for those who do not see the rings.
-    expect(gs[1]!.querySelector('svg.board title')!.textContent).toBe('2 pièces, 2 mouvements, y compris la diagonale : c1, b2 ou a3.');
+    expect(gs[1]!.querySelector('svg.board title')!.textContent).toBe('2 pièces, 2 mouvements : c1, b2 ou a3.');
     // No move notation yet: the essay defines it after this figure.
     expect($(el, '.moves').textContent).not.toMatch(/[abc][123]-[123]-[abc][123]/);
   });
 
-  it('plays one example per count on its own board, the other boards staying whole', async () => {
+  it('plays every move of every count, the three boards moving at the same time', async () => {
     const el = await mount('moves', 'en');
-    expect($(el, '.lead').textContent).toBe('From the stack on a1: one, two or three pieces. The faded pieces show each possible landing, never the square they left.');
-    const three = 2;
-    const g = f.groups[three]!;
-    const start = frames.findIndex((x) => x.group === three);
-    for (let k = 0; k < start; k++) role(el, 'next').click();
-    const board = () => groups(el)[three]!;
-    expect(carriedAt(board())).toBe(String(FAN_FROM));
-    // Lifted, the stack's landings stay ringed; the other boards rest whole.
-    expect(cellsOf(board(), '.board .mark.target')).toEqual(g.moves.map((m) => m[2]));
-    for (const k of [0, 1]) expect(cellsOf(groups(el)[k]!, '.board .mark.target')).toEqual(f.groups[k]!.moves.map((m) => m[2]));
-    const path: string[] = [];
-    for (let k = 0; k < g.count; k++) {
-      role(el, 'next').click();
-      path.push(carriedAt(board())!);
-    }
-    expect(path).toEqual(movePath(...g.example).slice(1).map(String));
+    expect($(el, '.lead').textContent).toBe('Every move from the stack on a1.');
     role(el, 'next').click();
-    // Landed: nothing in the air, the landing framed, the ring it left says how many pieces it lifted.
-    expect(carriedAt(board())).toBeUndefined();
-    expect(board().querySelector('.board .to')!.getAttribute('data-cell')).toBe(String(g.example[2]));
-    expect(board().querySelector('.lifted')!.textContent).toBe('3');
+    // Lifted together: each board carries its own example's pieces from a1.
+    groups(el).forEach((g, k) => {
+      expect(carriedAt(g)).toBe(String(FAN_FROM));
+      expect(cellsOf(g, '.board .mark.target')).toEqual(f.groups[k]!.moves.map((m) => m[2]));
+    });
+    // Played to the end, every board has landed every one of its moves, each on its square.
+    const landed: number[][] = f.groups.map(() => []);
+    for (let i = 2; i < frames.length; i++) {
+      role(el, 'next').click();
+      groups(el).forEach((g, k) => {
+        const to = g.querySelector('.board .to')?.getAttribute('data-cell');
+        if (to && landed[k]!.at(-1) !== Number(to)) landed[k]!.push(Number(to));
+      });
+    }
+    expect(landed).toEqual(f.groups.map((g) => g.played.map((m) => m[2])));
+    // The last frame: the three-piece board landed, the ring it left says how many pieces it lifted.
+    const three = groups(el)[2]!;
+    expect(three.querySelector('.lifted')!.textContent).toBe('3');
+    expect(carriedAt(three)).toBeUndefined();
   });
 
   it('each frame, lifted, carried, landed, is held the kit’s one tempo', async () => {
     vi.useFakeTimers();
     const el = await mountFake('moves');
     role(el, 'play').click();
-    const at = (k: number) => String(frames[k]!.carry?.at ?? frames[k]!.phase);
+    const at = (k: number) => String(frames[k]!.boards[0]!.carry?.at ?? frames[k]!.boards[0]!.phase);
     const shown = () => groups(el)[0]!.querySelector('.board .carried')?.getAttribute('data-cell') ?? (groups(el)[0]!.querySelector('.board .to') ? 'land' : 'rest');
     for (let k = 1; k < 4; k++) {
       vi.advanceTimersByTime(MOVE_TEMPO_MS - 1);
@@ -158,9 +153,9 @@ describe('<pogo-moves view="moves">', () => {
     const live = $(el, '.sr[aria-live]');
     expect(live.textContent).toBe('');
     role(el, 'next').click();
-    expect(live.textContent).toBe('De a1, 1 pièce, vers a2.');
+    expect(live.textContent).toBe('De a1, 1 pièce, vers a2. De a1, 2 pièces, vers b2. De a1, 3 pièces, vers a2.');
     role(el, 'next').click();
-    expect(live.textContent).toBe('De a1, 1 pièce, vers a2.');
+    expect(live.textContent).toBe('De a1, 1 pièce, vers a2. De a1, 2 pièces, vers b2. De a1, 3 pièces, vers a2.');
   });
 });
 

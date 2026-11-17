@@ -37,6 +37,8 @@ export interface GreedyOption {
   move: Triple;
   /** The gap it leaves, the mover's stacks minus the opponent's; WIN_SCORE or LOSS_SCORE when it ends the game, 0 for a drawn end. */
   score: number;
+  /** The stacks each colour owns once it is played: what the gap is read from. */
+  stacks: Stacks;
 }
 
 /** What chose a move. */
@@ -82,6 +84,7 @@ export function greedyGame(seed: number = GAME_SEED): GreedyGame {
     // The draw greedyMove makes, kept here to keep the reason with the move.
     const { move } = tied[Math.floor(rng() * tied.length)]!;
     const mover = s.to_move;
+    const before = s;
     s = play(s, move);
     const owned = stacks(s);
     const over = terminal(s, LC1_2);
@@ -91,7 +94,7 @@ export function greedyGame(seed: number = GAME_SEED): GreedyGame {
       stacks: owned,
       choice: {
         move: [move.from_cell, move.num_pieces, move.to_cell],
-        options: scored.map((x) => ({ move: [x.move.from_cell, x.move.num_pieces, x.move.to_cell], score: x.score })),
+        options: scored.map((x) => ({ move: [x.move.from_cell, x.move.num_pieces, x.move.to_cell], score: x.score, stacks: stacks(play(before, x.move)) })),
         mover,
         gap: mover === 'White' ? owned.white - owned.red : owned.red - owned.white,
         wins: best === WIN_SCORE,
@@ -115,6 +118,23 @@ export interface ValueRow {
 export function valueRows(c: GreedyChoice): ValueRow[] {
   const scores = [...new Set(c.options.map((o) => o.score))].sort((a, b) => b - a);
   return scores.map((score, k) => ({ score, moves: c.options.filter((o) => o.score === score).map((o) => o.move), best: k === 0 }));
+}
+
+/** A move weighed, as the figure's table shows it: the move, the stacks it leaves, its value. */
+export interface CandidateRow extends GreedyOption {
+  /** Its value is the greatest: greedy drew the move among these. */
+  best: boolean;
+  /** The move greedy played. */
+  chosen: boolean;
+}
+
+/** Every move weighed, the greatest value first, in engine order among equal values. */
+export function candidateRows(c: GreedyChoice): CandidateRow[] {
+  const top = Math.max(...c.options.map((o) => o.score));
+  return c.options
+    .map((o, k) => ({ o, k }))
+    .sort((a, b) => b.o.score - a.o.score || a.k - b.k)
+    .map(({ o }) => ({ ...o, best: o.score === top, chosen: o.move[0] === c.move[0] && o.move[1] === c.move[1] && o.move[2] === c.move[2] }));
 }
 
 /** Whether a value is an end: the move wins or loses the game. */
