@@ -19,6 +19,7 @@ import { PogoFigure } from '../kit/figure';
 import { keepCase } from '../kit/keep-case';
 import { formatInterval, formatShare } from '../kit/score';
 import { Stepper } from '../kit/stepper';
+import { MOVE_TEMPO_MS } from '../kit/tempo';
 import { colon, t, type Lang, type StringKey } from '../kit/strings';
 import { sharedV5 } from '../v5';
 import { seenText, type Frame } from './line-frames';
@@ -34,8 +35,7 @@ const NS = 'http://www.w3.org/2000/svg';
 /** The SVG's user space, stretched to the box. */
 const U = 1000;
 
-/** How long a move is held, and the end of a stage's game before the next stage starts. */
-export const MOVE_MS = 800;
+/** How long the end of a stage's game is held before the next stage starts; each of its moves is the kit's one tempo. */
 export const REST_MS = 2600;
 /** How long the curve takes to reach a new stage. */
 const DRAW_MS = 600;
@@ -288,7 +288,7 @@ export class PogoStages extends PogoFigure {
 
     const stepper = new Stepper(script.steps.length, show, {
       signal,
-      interval: (i) => (script.steps[i]!.end ? REST_MS : MOVE_MS),
+      interval: (i) => (script.steps[i]!.end ? REST_MS : MOVE_TEMPO_MS),
     });
     signal.addEventListener('abort', () => drawing?.(), { once: true });
     const counter = (i: number): string => {

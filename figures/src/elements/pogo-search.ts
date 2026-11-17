@@ -23,6 +23,7 @@ import { controlButton, playFromAction, playFromButton, transport } from '../kit
 import { PogoFigure } from '../kit/figure';
 import { formatShare } from '../kit/score';
 import { Stepper } from '../kit/stepper';
+import { MOVE_TEMPO_MS } from '../kit/tempo';
 import { asTriple, moveText, moveTip, type TipHooks } from '../kit/move-tip';
 import { colon, t, type Lang } from '../kit/strings';
 import type { SearchSnapshot } from '../mcts';
@@ -34,7 +35,7 @@ import { netPosition, positionWords } from './net-position';
 import { colourName, el } from './net-view';
 import searchCss from './pogo-search.css?raw';
 import { signedNote } from './q-steps';
-import { frameCounter, frameHold, frameWords, mostVisited, leader, noteFor, rootRow, searchScript, WALK_MS, type Frame } from './search-script';
+import { frameCounter, frameHold, frameWords, mostVisited, leader, noteFor, rootRow, searchScript, type Frame } from './search-script';
 import { PUZZLE5, SEARCH_SIMS, recordFull, rowOrder, type SearchRun } from './search-steps';
 
 export type SearchPosition = 'puzzle5' | 'reader';
@@ -348,7 +349,7 @@ export class PogoSearch extends PogoFigure {
             say();
           };
           if (forward) {
-            // The board walks the path, one move every WALK_MS, then the note appears where it stopped.
+            // The board walks the path, one move every MOVE_TEMPO_MS, then the note appears where it stopped.
             path.dataset.stage = 'walk';
             steps.forEach((st) => st.toggleAttribute('data-on', false));
             tr.moves.forEach((m, k) => {
@@ -358,10 +359,10 @@ export class PogoSearch extends PogoFigure {
                   const after = put(board(states[k + 1]!, { from: m.from_cell, to: m.to_cell, moving: m.num_pieces }));
                   animateMove(from, after, asTriple(m));
                   steps[k]?.toggleAttribute('data-on', true);
-                }, WALK_MS * k),
+                }, MOVE_TEMPO_MS * k),
               );
             });
-            timers.push(setTimeout(end, WALK_MS * tr.moves.length));
+            timers.push(setTimeout(end, MOVE_TEMPO_MS * tr.moves.length));
           } else {
             end();
           }

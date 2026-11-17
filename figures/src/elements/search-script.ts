@@ -14,6 +14,7 @@
 import { moveName, type Colour } from '../engine';
 import type { SearchSnapshot, SimulationTrace } from '../mcts';
 import { colon, t, type Lang } from '../kit/strings';
+import { MOVE_TEMPO_MS } from '../kit/tempo';
 import { formatCount } from './count-steps';
 import { signedNote } from './q-steps';
 import { STOPS, rowOrder } from './search-steps';
@@ -27,10 +28,8 @@ export type Frame =
   | SimFrame
   | { kind: 'stop' | 'end'; sim: number; snap: SearchSnapshot };
 
-/** How long each kind of frame is held in automatic play, in milliseconds; a leaf adds WALK_MS per move of its path. */
+/** How long each kind of frame is held in automatic play, in milliseconds; a leaf adds MOVE_TEMPO_MS per move of its path. */
 export const HOLD = { before: 3000, path: 2600, leaf: 2400, back: 2800, stop: 2200, end: 0 } as const;
-/** How long the board takes over each move of a path it walks. */
-export const WALK_MS = 700;
 
 /** The first simulation after the slow ones that ends on a finished game, if the search has one. */
 export function deepSim(traces: readonly SimulationTrace[]): number | null {
@@ -71,7 +70,7 @@ export function searchScript(before: SearchSnapshot, snaps: readonly SearchSnaps
 /** How long frame `i` is held before the next, in automatic play. */
 export function frameHold(frames: readonly Frame[], i: number): number {
   const f = frames[i]!;
-  if (f.kind === 'leaf') return HOLD.leaf + WALK_MS * f.trace.moves.length;
+  if (f.kind === 'leaf') return HOLD.leaf + MOVE_TEMPO_MS * f.trace.moves.length;
   return HOLD[f.kind];
 }
 

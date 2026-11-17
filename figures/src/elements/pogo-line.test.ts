@@ -4,6 +4,7 @@ import { intersect, leave, playState, resetMedia, shownText } from '../test-dom'
 import type { TableData } from '../data';
 import { key, replay } from '../engine';
 import type { PlayFromDetail } from '../kit/figure';
+import { MOVE_TEMPO_MS } from '../kit/tempo';
 import { LOOP_REST, PogoLine } from './pogo-line';
 
 if (!customElements.get('pogo-line')) customElements.define('pogo-line', PogoLine);
@@ -94,7 +95,7 @@ describe('<pogo-line>', () => {
       vi.useFakeTimers();
       role(el, 'play').click();
       // The loop rests on its last position before it goes round again.
-      vi.advanceTimersByTime(1100 + LOOP_REST - 1);
+      vi.advanceTimersByTime(MOVE_TEMPO_MS + LOOP_REST - 1);
       expect(counter(el)).toBe('coup 4 sur 4');
       vi.advanceTimersByTime(1);
       expect(counter(el)).toBe('coup 1 sur 4');
@@ -105,14 +106,27 @@ describe('<pogo-line>', () => {
     }
   });
 
+  it('plays one move every MOVE_TEMPO_MS, the kit’s one tempo', async () => {
+    const el = await mount('shortestWin', 'A');
+    vi.useFakeTimers();
+    role(el, 'play').click();
+    expect(counter(el)).toMatch(/^coup 0 sur /);
+    vi.advanceTimersByTime(MOVE_TEMPO_MS - 1);
+    expect(counter(el)).toMatch(/^coup 0 sur /);
+    vi.advanceTimersByTime(1);
+    expect(counter(el)).toMatch(/^coup 1 sur /);
+    vi.advanceTimersByTime(MOVE_TEMPO_MS);
+    expect(counter(el)).toMatch(/^coup 2 sur /);
+  });
+
   it('under game A the loop plays on without end and counts nothing', async () => {
     const el = await mount('loop', 'A');
     vi.useFakeTimers();
     role(el, 'play').click();
-    vi.advanceTimersByTime(1100 * 4);
+    vi.advanceTimersByTime(MOVE_TEMPO_MS * 4);
     expect(counter(el)).toBe('coup 4 sur 4');
     expect(current(el)).toContain('Retour au départ');
-    vi.advanceTimersByTime(1100 * 3 + LOOP_REST);
+    vi.advanceTimersByTime(MOVE_TEMPO_MS * 3 + LOOP_REST);
     expect(counter(el)).toBe('coup 3 sur 4');
     expect(playState(el)).toBe('pause');
     expect(el.shadowRoot!.textContent).not.toContain('Cette position pour la');
@@ -145,11 +159,11 @@ describe('<pogo-line>', () => {
     const el = await mount('loop', 'A');
     vi.useFakeTimers();
     role(el, 'play').click();
-    vi.advanceTimersByTime(1100);
+    vi.advanceTimersByTime(MOVE_TEMPO_MS);
     const shown = $(el, '.counter');
     expect(shown.textContent).toBe('coup 1 sur 4');
     el.parentElement!.removeChild(el);
-    vi.advanceTimersByTime(1100 * 10);
+    vi.advanceTimersByTime(MOVE_TEMPO_MS * 10);
     expect(shown.textContent).toBe('coup 1 sur 4');
     expect(vi.getTimerCount()).toBe(0);
   });

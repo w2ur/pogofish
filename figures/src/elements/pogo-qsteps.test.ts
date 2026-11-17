@@ -1,6 +1,7 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { REDUCED_MOTION, intersect, resetMedia, setMedia, leave, playState } from '../test-dom';
-import { FAST_MS, PogoQsteps, SLOW_MS, groupWords, qWords } from './pogo-qsteps';
+import { MOVE_TEMPO_MS } from '../kit/tempo';
+import { PogoQsteps, SLOW_MS, groupWords, qWords } from './pogo-qsteps';
 import { ALPHA, qScript, qSteps } from './q-steps';
 
 if (!customElements.get('pogo-qsteps')) customElements.define('pogo-qsteps', PogoQsteps);
@@ -208,8 +209,23 @@ describe('<pogo-qsteps>', () => {
     vi.advanceTimersByTime(1);
     expect(counter.textContent).toBe('partie 1 sur 5 · étape 1 sur 8');
     expect(SLOW_MS).toBeGreaterThanOrEqual(2500);
-    expect(FAST_MS).toBeLessThan(SLOW_MS);
+    expect(MOVE_TEMPO_MS).toBeLessThan(SLOW_MS);
     expect(script.filter((s) => s.phase !== null).every((s) => s.slow)).toBe(true);
+  });
+
+  it('a step of a game already seen is a move played at the kit’s one tempo', async () => {
+    const el = await mount();
+    const fast = script.findIndex((s, i) => i > 0 && !s.slow);
+    expect(fast).toBeGreaterThan(0);
+    for (let i = 0; i < fast; i++) role(el, 'next').click();
+    const counter = role(el, 'counter');
+    const at = counter.textContent;
+    vi.useFakeTimers();
+    role(el, 'play').click();
+    vi.advanceTimersByTime(MOVE_TEMPO_MS - 1);
+    expect(counter.textContent).toBe(at);
+    vi.advanceTimersByTime(1);
+    expect(counter.textContent).toBe(words('fr', fast + 1).counter);
   });
 
   it('an aborted signal stops a running walk', async () => {

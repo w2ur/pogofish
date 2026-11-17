@@ -3,7 +3,8 @@ import { resolve } from 'node:path';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { REDUCED_MOTION, intersect, leave, playState, resetMedia, setMedia, shownText } from '../test-dom';
 import { greedyGame } from './greedy-game';
-import { BEATS, MOVE_MS, PogoGreedy, spoken, whyText } from './pogo-greedy';
+import { MOVE_TEMPO_MS } from '../kit/tempo';
+import { BEATS, PogoGreedy, STEP_MS, spoken, whyText } from './pogo-greedy';
 
 if (!customElements.get('pogo-greedy')) customElements.define('pogo-greedy', PogoGreedy);
 PogoGreedy.deps = { engine: () => Promise.resolve() };
@@ -103,7 +104,10 @@ describe('<pogo-greedy>', () => {
     expect(numbers(el)).toEqual(['4', '3']);
     expect(line(el, '.lead')).toBeNull();
     // Beat 3: the scoreboard changes, and says which count did.
-    vi.advanceTimersByTime(BEATS.score - BEATS.move);
+    // The move is held the kit's one tempo before anything else happens.
+    vi.advanceTimersByTime(MOVE_TEMPO_MS - 1);
+    expect(numbers(el)).toEqual(['4', '3']);
+    vi.advanceTimersByTime(1);
     expect(numbers(el)).toEqual(['3', '4']);
     expect(pieces(el)).toEqual([3, 4]);
     expect(changed(el)).toEqual([true, true]);
@@ -117,10 +121,10 @@ describe('<pogo-greedy>', () => {
   });
 
   it('holds each move at least three seconds, its last beat well before the next move', () => {
-    expect(MOVE_MS).toBeGreaterThanOrEqual(3000);
+    expect(STEP_MS).toBeGreaterThanOrEqual(3000);
     expect(BEATS.move).toBeLessThan(BEATS.score);
     expect(BEATS.score).toBeLessThan(BEATS.gap);
-    expect(MOVE_MS - BEATS.gap).toBeGreaterThanOrEqual(1000);
+    expect(STEP_MS - BEATS.gap).toBeGreaterThanOrEqual(1000);
   });
 
   it('a step back, or a jump, shows the step settled at once, and drops the beats under way', async () => {
@@ -172,7 +176,7 @@ describe('<pogo-greedy>', () => {
     const el = await mount();
     vi.useFakeTimers();
     role(el, 'play').click();
-    vi.advanceTimersByTime(MOVE_MS * last + BEATS.gap);
+    vi.advanceTimersByTime(STEP_MS * last + BEATS.gap);
     expect(counter(el)).toBe(`coup ${last} sur ${last}`);
     expect(playState(el)).toBe('replay');
     expect(line(el, '.result')).toBe('Rouge gagneToutes les piles ont un sommet rouge.');

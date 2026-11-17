@@ -17,6 +17,7 @@ import { animateMove, drawBoard } from '../kit/board-svg';
 import { transport } from '../kit/controls';
 import { PogoFigure } from '../kit/figure';
 import { Stepper } from '../kit/stepper';
+import { MOVE_TEMPO_MS } from '../kit/tempo';
 import { colon, t, type Lang, type StringKey } from '../kit/strings';
 import { fly } from './motion';
 import qstepsCss from './pogo-qsteps.css?raw';
@@ -38,9 +39,8 @@ import {
 import replayCss from './replay.css?raw';
 import { colourKey, resultWords } from './replay-view';
 
-/** How long a step is held: one read for the first time, and one of a game the reader already knows. */
+/** How long a step read for the first time is held; a step of a game the reader already knows is a move, at the kit's one tempo. */
 export const SLOW_MS = 2800;
-export const FAST_MS = 1500;
 
 const colourName = (lang: Lang, c: Colour): string => t(lang, colourKey(c));
 const pct = (lang: Lang, x: number): string => `${Math.round(x * 100)}${lang === 'fr' ? '\u202f' : ''}%`;
@@ -344,7 +344,7 @@ export class PogoQsteps extends PogoFigure {
       shown = i;
     };
 
-    const stepper = new Stepper(script.length, show, { signal, interval: (i) => (script[i]!.slow ? SLOW_MS : FAST_MS) });
+    const stepper = new Stepper(script.length, show, { signal, interval: (i) => (script[i]!.slow ? SLOW_MS : MOVE_TEMPO_MS) });
     signal.addEventListener('abort', () => landings.forEach((land) => land()), { once: true });
     const row = transport(stepper, { lang, counter: (i) => words[i]!.counter });
     show(0);

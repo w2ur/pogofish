@@ -12,6 +12,7 @@ import { playFromAction, progress, transport } from '../kit/controls';
 import { autoplay } from '../kit/autoplay';
 import { PogoFigure } from '../kit/figure';
 import { Stepper } from '../kit/stepper';
+import { MOVE_TEMPO_MS } from '../kit/tempo';
 import { t, type Lang, type StringKey } from '../kit/strings';
 import { sharedTable } from '../table';
 import { lineFrames, parseLine, parseRules, seenText, type Frame, type LineName } from './line-frames';
@@ -98,7 +99,7 @@ export class PogoLine extends PogoFigure {
       }
     };
 
-    const stepper = new Stepper(frames.length, show, { signal, interval: 1100, ...(cyclic ? { wrapTo: 1, rest: LOOP_REST } : {}) });
+    const stepper = new Stepper(frames.length, show, { signal, interval: MOVE_TEMPO_MS, ...(cyclic ? { wrapTo: 1, rest: LOOP_REST } : {}) });
     const row = transport(stepper, {
       lang,
       unit: 'move',

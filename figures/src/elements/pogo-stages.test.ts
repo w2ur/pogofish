@@ -2,7 +2,8 @@ import { readFileSync } from 'node:fs';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import type { V5Data } from '../data';
 import { REDUCED_MOTION, intersect, resetMedia, setMedia, shownText, leave, playState } from '../test-dom';
-import { MOVE_MS, PogoStages, REST_MS } from './pogo-stages';
+import { MOVE_TEMPO_MS } from '../kit/tempo';
+import { PogoStages, REST_MS } from './pogo-stages';
 import { formatInterval, formatShare } from '../kit/score';
 
 if (!customElements.get('pogo-stages')) customElements.define('pogo-stages', PogoStages);
@@ -191,7 +192,7 @@ describe('<pogo-stages>', () => {
     vi.useFakeTimers();
     role(el, 'play').click();
     const moves = v5.programs.td.stages[0]!.game.length;
-    vi.advanceTimersByTime(MOVE_MS * moves);
+    vi.advanceTimersByTime(MOVE_TEMPO_MS * moves);
     expect(role(el, 'counter').textContent).toBe(`étape 1 sur 8 · coup ${moves} sur ${moves}`);
     expect($(el, '.score').textContent).toBe('7,1 %');
     vi.advanceTimersByTime(REST_MS - 1);
@@ -201,18 +202,31 @@ describe('<pogo-stages>', () => {
     expect(choices(el)[1]!.getAttribute('aria-checked')).toBe('true');
     // The number is set, never counted: it is the next stage's score at once.
     expect($(el, '.score').textContent).toBe('45,1 %');
-    expect(REST_MS).toBeGreaterThan(MOVE_MS);
+    expect(REST_MS).toBeGreaterThan(MOVE_TEMPO_MS);
+  });
+
+  it('plays its game’s moves at the kit’s one tempo, MOVE_TEMPO_MS each', async () => {
+    const el = await mount('td');
+    vi.useFakeTimers();
+    role(el, 'play').click();
+    expect(role(el, 'counter').textContent).toMatch(/· coup 0 sur /);
+    vi.advanceTimersByTime(MOVE_TEMPO_MS - 1);
+    expect(role(el, 'counter').textContent).toMatch(/· coup 0 sur /);
+    vi.advanceTimersByTime(1);
+    expect(role(el, 'counter').textContent).toMatch(/· coup 1 sur /);
+    vi.advanceTimersByTime(MOVE_TEMPO_MS);
+    expect(role(el, 'counter').textContent).toMatch(/· coup 2 sur /);
   });
 
   it('choosing a stage plays its game; under reduced motion it waits for the reader', async () => {
     const el = await mount('td');
     vi.useFakeTimers();
     choices(el)[3]!.click();
-    vi.advanceTimersByTime(MOVE_MS);
+    vi.advanceTimersByTime(MOVE_TEMPO_MS);
     expect(role(el, 'counter').textContent).toMatch(/^étape 4 sur 8 · coup 1 sur /);
     setMedia(REDUCED_MOTION, true);
     choices(el)[4]!.click();
-    vi.advanceTimersByTime(MOVE_MS * 3);
+    vi.advanceTimersByTime(MOVE_TEMPO_MS * 3);
     expect(role(el, 'counter').textContent).toMatch(/^étape 5 sur 8 · coup 0 sur /);
     expect(vi.getTimerCount()).toBe(0);
   });
@@ -230,11 +244,11 @@ describe('<pogo-stages>', () => {
     const el = await mount('az100');
     vi.useFakeTimers();
     choices(el)[2]!.click();
-    vi.advanceTimersByTime(MOVE_MS);
+    vi.advanceTimersByTime(MOVE_TEMPO_MS);
     const shown = role(el, 'counter');
     expect(shown.textContent).toMatch(/· coup 1 sur /);
     el.parentElement!.removeChild(el);
-    vi.advanceTimersByTime(MOVE_MS * 10);
+    vi.advanceTimersByTime(MOVE_TEMPO_MS * 10);
     expect(shown.textContent).toMatch(/· coup 1 sur /);
     expect(vi.getTimerCount()).toBe(0);
   });

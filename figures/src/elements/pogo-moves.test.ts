@@ -1,7 +1,8 @@
 import { afterEach, describe, expect, it, vi } from 'vitest';
 import { REDUCED_MOTION, intersect, leave, playState, resetMedia, setMedia, shownText } from '../test-dom';
 import { DEMO, demoFrames, movePath } from './moves-demo';
-import { DEMO_INTERVAL, DEMO_REST, PogoMoves } from './pogo-moves';
+import { MOVE_TEMPO_MS } from '../kit/tempo';
+import { DEMO_REST, PogoMoves } from './pogo-moves';
 
 if (!customElements.get('pogo-moves')) customElements.define('pogo-moves', PogoMoves);
 PogoMoves.deps = { engine: () => Promise.resolve() };
@@ -83,6 +84,24 @@ describe('<pogo-moves view="moves">', () => {
     expect(el.shadowRoot!.querySelector('.board .to')!.getAttribute('data-cell')).toBe(String(to));
   });
 
+  it('each frame of a move, lifted, carried, landed, is held the kit’s one tempo', async () => {
+    vi.useFakeTimers();
+    const el = await mountFake('moves');
+    role(el, 'play').click();
+    const frames = demoFrames();
+    // The first frames: the announcement, the lift, the one square, the landing.
+    for (let k = 1; k < 4; k++) {
+      vi.advanceTimersByTime(MOVE_TEMPO_MS - 1);
+      expect(el.shadowRoot!.querySelector('.board .carried')?.getAttribute('data-cell') ?? 'land').toBe(
+        String(frames[k - 1]!.carry?.at ?? 'land'),
+      );
+      vi.advanceTimersByTime(1);
+      expect(el.shadowRoot!.querySelector('.board .carried')?.getAttribute('data-cell') ?? 'land').toBe(
+        String(frames[k]!.carry?.at ?? 'land'),
+      );
+    }
+  });
+
   it('starts by itself on screen, pauses off screen, and loops after a rest on the last landing', async () => {
     vi.useFakeTimers();
     const el = await mountFake('moves');
@@ -93,10 +112,10 @@ describe('<pogo-moves view="moves">', () => {
     expect(playState(el)).toBe('play');
     intersect(el);
     const frames = demoFrames();
-    vi.advanceTimersByTime(DEMO_INTERVAL * (frames.length - 1));
+    vi.advanceTimersByTime(MOVE_TEMPO_MS * (frames.length - 1));
     expect(role(el, 'counter').textContent).toBe(`coup ${DEMO.length} sur ${DEMO.length}`);
     expect(el.shadowRoot!.querySelector('.board .to')).not.toBeNull();
-    vi.advanceTimersByTime(DEMO_INTERVAL + DEMO_REST - 1);
+    vi.advanceTimersByTime(MOVE_TEMPO_MS + DEMO_REST - 1);
     expect(el.shadowRoot!.querySelector('.board .to')).not.toBeNull();
     vi.advanceTimersByTime(1);
     expect(line(el)).toBe('Une pièce, un mouvement. Blanc joue a1-1-a2.');

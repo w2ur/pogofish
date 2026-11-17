@@ -7,6 +7,7 @@ import { bestMove, search, type SearchSnapshot, type SimulationTrace } from '../
 import { parseAz, type AzNet } from '../nets';
 import { createStore, type Store } from '../store';
 import { REDUCED_MOTION, intersect, playState, resetMedia, setMedia, shownText } from '../test-dom';
+import { MOVE_TEMPO_MS } from '../kit/tempo';
 import { MAX_ROWS, PogoSearch, shownRows } from './pogo-search';
 import { signedNote } from './q-steps';
 import { frameHold, searchScript } from './search-script';
@@ -224,6 +225,24 @@ describe('<pogo-search>', () => {
     role(el, 'next').click();
     expect($(el, '.leaf-tag').textContent).toBe('partie finie');
     expect($(el, '.chip .note-value').textContent).toBe('+1,00');
+  });
+
+  it('the board walks a simulation’s path one move per MOVE_TEMPO_MS, the kit’s one tempo', async () => {
+    const el = await mount('puzzle5', 'fr');
+    await ran(el);
+    while (!(frame(el) === 'path' && $$(el, '.path .step').length > 1)) role(el, 'next').click();
+    setMedia(REDUCED_MOTION, false);
+    vi.useFakeTimers();
+    role(el, 'next').click();
+    const walked = () => $$(el, '.path .step[data-on]').length;
+    vi.advanceTimersByTime(0);
+    expect(walked()).toBe(1);
+    vi.advanceTimersByTime(MOVE_TEMPO_MS - 1);
+    expect(walked()).toBe(1);
+    vi.advanceTimersByTime(1);
+    expect(walked()).toBe(2);
+    vi.advanceTimersByTime(MOVE_TEMPO_MS);
+    expect(walked()).toBe(3);
   });
 
   it('under reduced motion it never advances by itself', async () => {

@@ -2,7 +2,7 @@
 // position to read, with a key to the two sides. `view="moves"` is the computer
 // showing every kind of move the rules list (moves-demo.ts): each move is
 // announced by one short line, then its pieces are lifted, carried square by
-// square along their path, and land. It plays by itself on screen and loops
+// square along their path, and land, each frame at the kit's one tempo. It plays by itself on screen and loops
 // after a rest on its last landing (kit/autoplay.ts); the reader steps or pauses
 // it with the transport, and plays nothing: the article's own illustration did
 // the same, and a playable board would repeat the one further down the page.
@@ -16,14 +16,13 @@ import { transport } from '../kit/controls';
 import { PogoFigure } from '../kit/figure';
 import { moveText } from '../kit/move-tip';
 import { Stepper } from '../kit/stepper';
+import { MOVE_TEMPO_MS } from '../kit/tempo';
 import { t, type Lang, type StringKey } from '../kit/strings';
 import { DEMO, demoFrames, type MoveKind } from './moves-demo';
 import movesCss from './pogo-moves.css?raw';
 
 const NS = 'http://www.w3.org/2000/svg';
 
-/** Milliseconds between two frames of the demonstration. */
-export const DEMO_INTERVAL = 900;
 /** How long the last landing is held before the demonstration starts again, in ms. */
 export const DEMO_REST = 2400;
 
@@ -150,7 +149,7 @@ export class PogoMoves extends PogoFigure {
       }
     };
 
-    const stepper = new Stepper(frames.length, show, { signal, interval: DEMO_INTERVAL, wrapTo: 0, rest: DEMO_REST });
+    const stepper = new Stepper(frames.length, show, { signal, interval: MOVE_TEMPO_MS, wrapTo: 0, rest: DEMO_REST });
     const of = t(lang, 'outOf');
     const row = transport(stepper, { lang, unit: 'move', counter: (i) => `${t(lang, 'ply')} ${frames[i]!.move + 1} ${of} ${DEMO.length}` });
     show(0);

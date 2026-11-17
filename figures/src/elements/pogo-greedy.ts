@@ -17,14 +17,18 @@ import { progress, transport } from '../kit/controls';
 import { PogoFigure } from '../kit/figure';
 import { moveText } from '../kit/move-tip';
 import { Stepper } from '../kit/stepper';
+import { MOVE_TEMPO_MS } from '../kit/tempo';
 import { colon, t, type Lang } from '../kit/strings';
 import { gapText, greedyGame, type GreedyChoice, type GreedyFrame } from './greedy-game';
 import greedyCss from './pogo-greedy.css?raw';
 import { resultWords } from './replay-view';
 
-/** How long a move is held, in ms, and when each of its beats falls. */
-export const MOVE_MS = 3800;
-export const BEATS = { move: 900, score: 1700, gap: 2500 } as const;
+/**
+ * When each beat of a step falls, in ms: whose turn is read, then the move is played and held the
+ * kit's one tempo before the scoreboard changes, then the gap; and how long the whole step is held.
+ */
+export const BEATS = { move: 900, score: 900 + MOVE_TEMPO_MS, gap: 900 + MOVE_TEMPO_MS + 800 } as const;
+export const STEP_MS = BEATS.gap + 1300;
 
 /** « Un des 6 coups à +1, sur 16 possibles. » */
 export function whyText(lang: Lang, c: GreedyChoice): string {
@@ -205,7 +209,7 @@ export class PogoGreedy extends PogoFigure {
       ];
     };
 
-    const stepper = new Stepper(frames.length, show, { signal, interval: MOVE_MS });
+    const stepper = new Stepper(frames.length, show, { signal, interval: STEP_MS });
     show(0);
     const body = el('div', 'game');
     body.append(slot, panel);

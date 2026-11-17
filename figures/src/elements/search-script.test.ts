@@ -4,11 +4,12 @@
 import { readFileSync } from 'node:fs';
 import { resolve } from 'node:path';
 import { beforeAll, describe, expect, it } from 'vitest';
+import { MOVE_TEMPO_MS } from '../kit/tempo';
 import { LC1_2, legal, moveName, play, terminal } from '../engine';
 import { search, type SearchSnapshot, type SimulationTrace } from '../mcts';
 import { parseAz, policyIndex } from '../nets';
 import { C_PUCT } from '../search-handler';
-import { frameCounter, frameHold, frameWords, deepSim, leader, mostVisited, rootRow, searchScript, SLOW, WALK_MS, type Frame, type SimFrame } from './search-script';
+import { frameCounter, frameHold, frameWords, deepSim, leader, mostVisited, rootRow, searchScript, SLOW, type Frame, type SimFrame } from './search-script';
 import { PUZZLE5, SEARCH_SIMS, STOPS, recordFull, rowOrder } from './search-steps';
 
 const b = readFileSync(resolve(process.cwd(), 'public/nets/az-lc1-s1.pfw'));
@@ -61,13 +62,13 @@ describe('searchScript', () => {
     }
   });
 
-  it('lasts between 35 and 50 seconds, no frame of a slowed simulation held under 2 seconds', () => {
+  it('lasts between 35 and 55 seconds (its walks at the kit’s one tempo), no frame of a slowed simulation held under 2 seconds', () => {
     const total = frames.reduce((a, _, i) => a + frameHold(frames, i), 0);
     expect(total).toBeGreaterThanOrEqual(35_000);
-    expect(total).toBeLessThanOrEqual(50_000);
+    expect(total).toBeLessThanOrEqual(55_000);
     frames.forEach((f, i) => {
       if (f.kind === 'end') return;
-      const own = f.kind === 'leaf' ? frameHold(frames, i) - WALK_MS * f.trace.moves.length : frameHold(frames, i);
+      const own = f.kind === 'leaf' ? frameHold(frames, i) - MOVE_TEMPO_MS * f.trace.moves.length : frameHold(frames, i);
       expect(own, `${f.kind}${f.sim}`).toBeGreaterThanOrEqual(2000);
     });
   });
