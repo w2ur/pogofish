@@ -1,6 +1,6 @@
 // <pogo-encoding>: a position as the nets read it (fig. 17), live. The reader
-// plays on the figure's own board, both colours in turn, legal moves only
-// (board-state.ts decides, as on every board of the page), and the 127 inputs
+// plays on the figure's own board (own-board.ts, shared with <pogo-net>), both
+// colours in turn, legal moves only, invited to by one line under it, and the 127 inputs
 // of features() (mover-relative-repetition, crates/infer/src/features.rs)
 // follow at once: per cell a row of 14, the 12 slots of the stack bottom to
 // top, the top's owner and the height ÷ 12, then the 127th input, the
@@ -11,7 +11,8 @@
 // The figure shows the two effects of a move apart (encoding-diff.ts): an
 // input that says something new about the board is marked, and an input that
 // is the same piece seen from the other side turns over; the line above the
-// grid says whose turn it is and what +1 means now. A slot that holds a piece
+// grid says whose turn it is and what +1 means now, in the essay's words (« +1
+// pour le joueur dont c'est le tour ») and who that player is. A slot that holds a piece
 // is drawn in that piece's colour, so a stack on the board and its row read
 // alike whoever is to move.
 //
@@ -21,13 +22,10 @@
 // reader's first touch stops the demonstration for good; its own controls
 // replay it on request. The game played here is the figure's alone: it never
 // touches the page's game, though the reader may bring that game's position in.
-import { boardInput } from '../board-input';
-import { announceMove, chooseCount, counts, describeCell, destinations, origins, tap, type Selection } from '../board-state';
-import { LC1_2, features, key, legal, play, terminal, winner, type Move, type State, type Triple } from '../engine';
+import { announceMove } from '../board-state';
+import { LC1_2, features, key, play, terminal, winner, type State, type Triple } from '../engine';
 import { autoplay } from '../kit/autoplay';
-import { boardLabels } from '../kit/board-labels';
-import { drawBoard } from '../kit/board-svg';
-import { choiceGroup, controlButton, progress, transport } from '../kit/controls';
+import { controlButton, progress, transport } from '../kit/controls';
 import { PogoFigure } from '../kit/figure';
 import { Stepper } from '../kit/stepper';
 import { colon, t, type Lang } from '../kit/strings';
@@ -36,6 +34,7 @@ import { encodingDemo } from './encoding-demo';
 import { encodingDiff, pieceColour, type Encoded } from './encoding-diff';
 import { CELLS, HEIGHT_DIVISOR, INPUTS, PER_CELL, REPETITION_DIVISOR, SLOTS, encodingRows } from './encoding-rows';
 import { inputText } from './input-text';
+import { ownBoard } from './own-board';
 import encodingCss from './pogo-encoding.css?raw';
 
 export { inputText };
@@ -43,9 +42,7 @@ export { inputText };
 /** Milliseconds a position of the demonstration is held: time to see the grid turn over and read it. */
 export const DEMO_INTERVAL = 2800;
 
-type CountValue = '1' | '2' | '3';
-
-/** « Aux Rouges de jouer : +1 = pièce rouge, −1 = pièce blanche, 0 = pas de pièce. », in its two parts. */
+/** « Aux Rouges de jouer : +1 pour le joueur dont c’est le tour, ici les Rouges ; … », in its two parts. */
 export function keyWords(lang: Lang, s: State): { turn: string; meaning: string } {
   const red = s.to_move === 'Red';
   return { turn: t(lang, red ? 'encTurnRed' : 'encTurnWhite'), meaning: `${t(lang, red ? 'encKeyRed' : 'encKeyWhite')}.` };
@@ -67,7 +64,7 @@ interface Ply {
 export class PogoEncoding extends PogoFigure {
   static override styles = encodingCss;
   /** A floor only: pogo-encoding.css keeps the measured room, by width. */
-  static override stageMinHeight = '543px';
+  static override stageMinHeight = '589px';
 
   /** The page's game and the engine; a test swaps it. */
   static deps: { store: Store } = { store };
@@ -82,7 +79,6 @@ export class PogoEncoding extends PogoFigure {
 
     /** The figure's own game: the position shown is its last. */
     let plies: Ply[] = [{ state: opening }];
-    let selection: Selection = null;
     /** What the grid last drew, to mark what the next position changes. */
     let drawn: Encoded | null = null;
     /** The reader has left the demonstration: the board is theirs. */
@@ -91,35 +87,24 @@ export class PogoEncoding extends PogoFigure {
 
     const root = el('div', 'encoding');
     const now = (): State => plies.at(-1)!.state;
-    const moves = (): Move[] => (terminal(now(), LC1_2) ? [] : legal(now()));
 
-    // The board, the reader's.
-    const playBox = el('div', 'play');
-    const input = boardInput({
-      label: t(lang, 'board'),
-      onCell: (i) => onCell(i),
+    // The board, the reader's: any move played on it is a new position for the grid.
+    const board = ownBoard({
+      lang,
       keys: root,
-      lifted: () => selection !== null,
-      onCount: (n) => {
-        selection = chooseCount(selection, moves(), n);
-        drawBoardPart();
-      },
-      onDrop: () => {
-        selection = null;
-        drawBoardPart();
-      },
-    });
-    playBox.append(boardLabels(), input.grid);
-    const count = choiceGroup<CountValue>({
-      label: `${t(lang, 'pieces')}${colon(lang)}`,
       id: 'encoding-counts-label',
-      choices: (['1', '2', '3'] as const).map((n) => ({ value: n, label: n })),
-      onChoose: (n) => {
-        selection = chooseCount(selection, moves(), Number(n));
-        drawBoardPart();
+      position: () => plies.at(-1)!,
+      onPlay: (m) => {
+        touch();
+        show([...plies, { state: play(now(), m), move: m }]);
+      },
+      onTouch: (from) => {
+        touch();
+        // The lifted stack's row answers on the grid.
+        rows.forEach((r, i) => r.row.classList.toggle('on', from === i));
       },
     });
-    count.element.classList.add('counts');
+    const invite = el('p', 'invite', t(lang, 'encInvite'));
 
     // The grid: a row per cell, built once and filled on each position.
     const table = el('div', 'enc-table');
@@ -181,36 +166,9 @@ export class PogoEncoding extends PogoFigure {
     live.setAttribute('aria-live', 'polite');
 
     const drawBoardPart = (): void => {
-      const s = now();
-      const legalMoves = moves();
-      const lift = origins(legalMoves);
-      const land = selection ? destinations(legalMoves, selection.from, selection.count) : [];
-      const last = plies.at(-1)!.move;
-      const marks = selection
-        ? [{ cell: selection.from, kind: 'picked' as const }, ...land.map((cell) => ({ cell, kind: 'target' as const }))]
-        : lift.map((cell) => ({ cell, kind: 'target' as const }));
-      const svg = drawBoard(s, {
-        labelRoom: true,
-        marks,
-        // The move just played keeps its frame until a stack is lifted.
-        ...(last && !selection ? { to: last[2], moving: last[1] } : {}),
-      });
-      playBox.querySelector(':scope > svg')?.remove();
-      playBox.prepend(svg);
-      input.cells.forEach((b, i) => {
-        const mark = selection?.from === i ? 'selected' : land.includes(i) ? 'target' : !selection && lift.includes(i) ? 'can-lift' : null;
-        const actionable = mark !== null || lift.includes(i);
-        b.setAttribute('aria-label', describeCell(lang, s, i, mark));
-        b.toggleAttribute('data-actionable', actionable);
-        b.setAttribute('aria-disabled', String(!actionable));
-      });
-      input.syncFocus();
-      const available = selection ? counts(legalMoves, selection.from) : [];
-      count.element.toggleAttribute('data-off', selection === null);
-      count.buttons.forEach((b, k) => (b.hidden = !available.includes(k + 1)));
-      count.set(selection ? (String(selection.count) as CountValue) : null);
-      // The lifted stack's row answers on the grid.
-      rows.forEach((r, i) => r.row.classList.toggle('on', selection?.from === i));
+      board.draw();
+      const from = board.lifted();
+      rows.forEach((r, i) => r.row.classList.toggle('on', from === i));
     };
 
     /** Fills the grid for the position shown, and marks what it changes from the one drawn before. */
@@ -277,7 +235,7 @@ export class PogoEncoding extends PogoFigure {
     /** Shows a new game line: its last position on the board and in the grid. */
     const show = (next: Ply[], say = true): void => {
       plies = next;
-      selection = null;
+      board.drop();
       drawGrid();
       drawBoardPart();
       syncActions();
@@ -306,22 +264,10 @@ export class PogoEncoding extends PogoFigure {
       stepper.pauseByReader();
     }
 
-    function onCell(i: number): void {
-      const r = tap(selection, moves(), i);
-      if ('play' in r) {
-        touch();
-        show([...plies, { state: play(now(), r.play), move: r.play }]);
-        return;
-      }
-      if (r.selection !== selection) touch();
-      selection = r.selection;
-      drawBoardPart();
-    }
-
     const actions = el('div', 'controls actions');
     actions.append(undo, reset, take);
     const side = el('div', 'enc-side');
-    side.append(playBox, count.element, demoRow, actions);
+    side.append(board.board, invite, board.counts, demoRow, actions);
     const main = el('div', 'enc-main');
     main.append(keyLine, wrap, repetition);
     const body = el('div', 'enc-body');

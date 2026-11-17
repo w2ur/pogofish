@@ -2,13 +2,13 @@ import { readFileSync } from 'node:fs';
 import { resolve } from 'node:path';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { DEFAULT_GAME } from '../default-game';
-import { key, legal, replay, type State, type Triple } from '../engine';
+import { key, legal, play, replay, type State, type Triple } from '../engine';
 import { formatShare } from '../kit/score';
 import { t } from '../kit/strings';
 import { parseAz, parseTd, policyIndex } from '../nets';
 import { createStore, type Store } from '../store';
 import { REDUCED_MOTION, intersect, leave, playState, resetMedia, setMedia } from '../test-dom';
-import { flowEnd } from './net-canvas';
+import { LINK_ALPHA, LINK_WIDTH, flowEnd } from './net-canvas';
 import { netGraph, signal } from './net-graph';
 import { DEFAULT_PLY, defaultPosition } from './net-position';
 import { PER_NODE, PogoNet, STEP_MS, TOP_MOVES, drawnWords, inputWords, netNumber, outputMove, positionMs, probeWords } from './pogo-net';
@@ -54,6 +54,13 @@ async function mount(kind: string, lang = 'fr'): Promise<PogoNet> {
 const $ = (el: Element, s: string) => el.shadowRoot!.querySelector<HTMLElement>(s)!;
 const $$ = (el: Element, s: string) => [...el.shadowRoot!.querySelectorAll<HTMLElement>(s)];
 const net = (el: Element) => $(el, '.net');
+const cellButton = (el: Element, i: number) => $(el, `.cell-button[data-cell="${i}"]`) as HTMLButtonElement;
+/** Plays `m` on the figure's board as a reader does: the stack, the count, the landing. */
+function playByHand(el: Element, [from, n, to]: Triple): void {
+  cellButton(el, from).click();
+  if (n > 1) ($(el, `.counts [data-value="${n}"]`) as HTMLButtonElement).click();
+  cellButton(el, to).click();
+}
 const press = (el: Element, k: string) => $(el, '.canvas-wrap').dispatchEvent(new KeyboardEvent('keydown', { key: k, bubbles: true }));
 
 /** A canvas context that draws nothing and counts its strokes: happy-dom has none. */
@@ -152,6 +159,27 @@ describe('<pogo-net>', () => {
     expect(g.links).toBe(24512);
     expect($(el, '.legend').textContent).toContain('positif');
     expect($(el, '.legend').textContent).toContain('négatif');
+  });
+
+  // The owner could not tell magnitudes apart (« plus c'est vif, on ne distingue pas »), and red stood for
+  // positive: positive is now ink and negative red, the usual sign colours, and the legend draws the
+  // canvas's own three strengths.
+  it('positive is ink and negative red, in the legend, the note and its marker', () => {
+    expect(sheet).toMatch(/\.dot\.positive \{\s*background: var\(--_ink\);/);
+    expect(sheet).toMatch(/\.dot\.negative \{\s*background: var\(--_red\);/);
+    expect(sheet).toMatch(/\.note\[data-sign='negative'\] \.note-number \{\s*color: var\(--_red-text\);/);
+    expect(sheet).toMatch(/\.note\[data-sign='negative'\] \.marker \{\s*background: var\(--_red\);/);
+    expect(sheet).not.toMatch(/data-sign='positive'\] \.(note-number|marker) \{\s*(color|background): var\(--_red/);
+  });
+
+  it('the legend draws the three strengths the canvas uses, from weak to strong', async () => {
+    const el = await mount('td');
+    const weights = $$(el, '.legend .weight');
+    expect(weights.map((w) => w.style.height)).toEqual(LINK_WIDTH.map((w) => `${w}px`));
+    expect(weights.map((w) => Number(w.style.opacity))).toEqual([...LINK_ALPHA]);
+    expect($(el, '.legend .strengths').textContent).toBe('faiblefort');
+    expect($(await mount('td', 'en'), '.legend .strengths').textContent).toBe('weakstrong');
+    expect(el.shadowRoot!.textContent).not.toContain('vif');
   });
 
   it('AlphaZero lists its preferred moves with their shares, the rest summed: all the legal moves share 100 %', async () => {
@@ -374,12 +402,108 @@ describe('<pogo-net>', () => {
     error.mockRestore();
   });
 
-  it('wide: the position, the net, then the output where the signal arrives; stacked in that order when narrow', async () => {
+  it('wide: the position, the arrow into the net, the net, then the output where the signal arrives; stacked in that order when narrow', async () => {
     const el = await mount('td');
-    expect([...$(el, '.net-body').children].map((c) => c.className)).toEqual(['board-slot', 'net-draw', 'net-out']);
+    expect([...$(el, '.net-body').children].map((c) => c.className)).toEqual(['board-slot', 'enter', 'net-draw', 'net-out']);
     expect($(el, '.net-body').nextElementSibling!.classList.contains('controls-slot')).toBe(true);
     const wide = sheet.slice(sheet.indexOf('@container (min-width: 900px)'));
-    expect(wide).toMatch(/\.net-body \{[^}]*grid-template-columns: 220px minmax\(0, 1fr\) 210px/);
+    expect(wide).toMatch(/\.net-body \{[^}]*grid-template-columns: 220px 32px minmax\(0, 1fr\) 210px/);
+    const mid = sheet.slice(sheet.indexOf('@container (min-width: 560px)', sheet.indexOf('.sr {')));
+    expect(mid).toMatch(/\.net-body \{[^}]*grid-template-columns: 190px 32px minmax\(0, 1fr\)/);
+  });
+
+  // The owner: « il manque une flèche pour dire que la position entre dans le réseau ».
+  it('an arrow goes from the position into the net: across when they stand side by side, down when stacked', async () => {
+    const el = await mount('td');
+    const enter = $(el, '.enter');
+    expect(enter.getAttribute('aria-hidden')).toBe('true');
+    expect(enter.querySelector('svg .shaft')).not.toBeNull();
+    expect(enter.querySelector('svg .head')).not.toBeNull();
+    // Narrow the arrow points down; from 560px, where the board stands beside the net, it points right.
+    const narrow = sheet.slice(0, sheet.indexOf('@container (min-width: 560px)', sheet.indexOf('.sr {')));
+    expect(narrow).toMatch(/\.enter svg \{[^}]*transform: rotate\(90deg\)/);
+    const mid = sheet.slice(sheet.indexOf('@container (min-width: 560px)', sheet.indexOf('.sr {')));
+    expect(mid).toMatch(/\.enter svg \{[^}]*transform: none/);
+  });
+
+  it('invites the reader to play on its board, in one line under it', async () => {
+    const el = await mount('td');
+    expect($(el, '.invite').textContent).toBe('Jouez un coup sur le plateau\u202f: le réseau note la nouvelle position.');
+    expect($(el, '.invite').previousElementSibling!.classList.contains('play')).toBe(true);
+    expect($(await mount('az', 'en'), '.invite').textContent).toBe('Play a move on the board: the net scores the new position.');
+  });
+
+  it('the reader plays any move on the net’s board, either colour in turn: the net computes the new position, its note follows', async () => {
+    const el = await mount('td');
+    let s = defaultPosition();
+    const line = [s];
+    for (let n = 0; n < 3; n++) {
+      const m = legal(s)[(n * 7) % legal(s).length]!;
+      playByHand(el, [m.from_cell, m.num_pieces, m.to_cell]);
+      s = play(s, [m.from_cell, m.num_pieces, m.to_cell]);
+      line.push(s);
+      expect(net(el).dataset.game).toBe('own');
+      expect(net(el).dataset.position).toBe(key(s));
+      expect(Number(net(el).dataset.value)).toBeCloseTo(td.value(s), 5);
+      expect($(el, '.note-number').textContent).toBe(netNumber('fr', td.value(s), true));
+      expect($(el, '.note-for').textContent).toBe(`pour ${s.to_move === 'Red' ? 'Rouge' : 'Blanc'}, à qui c’est le tour`);
+      expect($(el, '[data-role="counter"]').textContent).toBe(`coup ${DEFAULT_PLY + n + 1} sur ${DEFAULT_PLY + n + 1}`);
+    }
+    // The board shows the move played: its origin ring.
+    expect($(el, '.board .from')).not.toBeNull();
+    // The reader's line can be walked back, and a move from an earlier position replaces what followed.
+    $(el, '[data-role="previous"]').click();
+    expect(net(el).dataset.position).toBe(key(line[2]!));
+    const m = legal(line[2]!).find((x) => key(play(line[2]!, [x.from_cell, x.num_pieces, x.to_cell])) !== key(line[3]!))!;
+    playByHand(el, [m.from_cell, m.num_pieces, m.to_cell]);
+    expect(net(el).dataset.position).toBe(key(play(line[2]!, [m.from_cell, m.num_pieces, m.to_cell])));
+    expect($(el, '[data-role="counter"]').textContent).toBe(`coup ${DEFAULT_PLY + 3} sur ${DEFAULT_PLY + 3}`);
+  });
+
+  it('AlphaZero: a move played on its board lists the new position’s preferred moves', async () => {
+    const el = await mount('az');
+    const m = legal(defaultPosition())[0]!;
+    const s = play(defaultPosition(), [m.from_cell, m.num_pieces, m.to_cell]);
+    playByHand(el, [m.from_cell, m.num_pieces, m.to_cell]);
+    const out = az.evaluate(s);
+    const best = legal(s).map((x) => ({ x, p: out.priors.get(policyIndex(x))! })).sort((a, b) => b.p - a.p)[0]!;
+    expect($(el, '.move-row .share').textContent).toBe(formatShare('fr', best.p));
+    expect(Number(net(el).dataset.value)).toBeCloseTo(out.value, 5);
+  });
+
+  it('the reader’s first touch on the board stops the walk; « Revenir à la partie de l’article » takes the essay’s game back', async () => {
+    vi.useFakeTimers();
+    const el = mountSync('td');
+    await vi.advanceTimersByTimeAsync(0);
+    const every = positionMs(netGraph(td.header));
+    const back = $(el, '[data-role="resume"]') as HTMLButtonElement;
+    expect(back.hidden).toBe(true);
+    intersect(el);
+    expect(playState(el)).toBe('pause');
+    // A stack lifted is enough to stop the walk.
+    const m = legal(defaultPosition())[0]!;
+    cellButton(el, m.from_cell).click();
+    await vi.advanceTimersByTimeAsync(every * 2);
+    expect(net(el).dataset.position).toBe(key(defaultPosition()));
+    expect(playState(el)).toBe('play');
+    cellButton(el, m.from_cell).click();
+    playByHand(el, [m.from_cell, m.num_pieces, m.to_cell]);
+    await vi.advanceTimersByTimeAsync(every * 2);
+    expect(net(el).dataset.game).toBe('own');
+    expect(back.hidden).toBe(false);
+    expect(back.textContent).toBe('Revenir à la partie de l’article');
+    back.click();
+    expect(net(el).dataset.game).toBe('default');
+    expect(net(el).dataset.position).toBe(key(defaultPosition()));
+    expect(back.hidden).toBe(true);
+    // With a game on the page's board, the way back is to that game.
+    st.newGame('White', 'normal');
+    playByHand(el, [0, 1, 3]);
+    expect(net(el).dataset.game).toBe('own');
+    expect(back.textContent).toBe('Revenir à ma partie');
+    back.click();
+    expect(net(el).dataset.game).toBe('reader');
+    expect(net(el).dataset.position).toBe(key(st.current()!.states[0]!));
   });
 });
 

@@ -88,14 +88,32 @@ describe('<pogo-encoding>', () => {
     expect(wrap.getAttribute('aria-label')).toBe('Les 127 entrées du réseau');
   });
 
-  it('says whose turn it is and what +1 means now', async () => {
+  // A visitor read « +1 = pièce rouge » without seeing the essay's « +1 pour le joueur dont c'est le
+  // tour » in it: the line now says the essay's words, and who that is now.
+  it('says whose turn it is and what +1 means now, in the essay’s words: the player to move, and who that is', async () => {
     const el = await mount();
-    expect($(el, '.key').textContent).toBe('Aux Rouges de jouer : +1 = pièce rouge, −1 = pièce blanche, 0 = pas de pièce.');
+    expect($(el, '.key').textContent).toBe('Aux Rouges de jouer : +1 pour le joueur dont c’est le tour, ici les Rouges ; −1 pour l’adversaire, ici les Blancs ; 0 s’il n’y a pas de pièce.');
     playByHand(el, [6, 1, 3]);
-    expect($(el, '.key').textContent).toBe('Aux Blancs de jouer : +1 = pièce blanche, −1 = pièce rouge, 0 = pas de pièce.');
+    expect($(el, '.key').textContent).toBe('Aux Blancs de jouer : +1 pour le joueur dont c’est le tour, ici les Blancs ; −1 pour l’adversaire, ici les Rouges ; 0 s’il n’y a pas de pièce.');
     expect($(el, '.key').hasAttribute('data-turned')).toBe(true);
     const en = await mount('en');
-    expect($(en, '.key').textContent).toBe('Red to move: +1 = a Red piece, −1 = a White piece, 0 = no piece.');
+    expect($(en, '.key').textContent).toBe('Red to move: +1 for the player whose turn it is, here Red; −1 for the opponent, here White; 0 if there is no piece.');
+  });
+
+  it('invites the reader to play on its board, in one line under it', async () => {
+    const el = await mount();
+    expect($(el, '.invite').textContent).toBe('Jouez sur le plateau, les deux couleurs tour à tour : les 127 nombres suivent.');
+    expect($(el, '.invite').previousElementSibling!.classList.contains('play')).toBe(true);
+    expect($(await mount('en'), '.invite').textContent).toBe('Play on the board, both colours in turn: the 127 numbers follow.');
+  });
+
+  it('the board keeps the move just played: its origin ring and the pieces it lifted', async () => {
+    const el = await mount();
+    const s = defaultPosition();
+    const m = legal(s).find((x) => x.num_pieces === 2)!;
+    playByHand(el, [m.from_cell, 2, m.to_cell]);
+    expect($(el, '.board .from')?.getAttribute('data-cell')).toBe(String(m.from_cell));
+    expect($(el, '.board-labels .lifted').textContent).toBe('2');
   });
 
   it('a slot holding a piece takes that piece’s colour whoever is to move; an empty slot is none', async () => {
