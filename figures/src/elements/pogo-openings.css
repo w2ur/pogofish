@@ -52,6 +52,18 @@
   width: 100%;
 }
 
+/* The count chooser, centred under the board; its label on a line of its own when the column is narrow. */
+.board-col .counts {
+  justify-content: center;
+}
+
+@container (max-width: 400px) {
+  .board-col .counts > .label {
+    flex-basis: 100%;
+    text-align: center;
+  }
+}
+
 .side {
   display: flex;
   flex-direction: column;

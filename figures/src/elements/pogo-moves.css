@@ -56,23 +56,9 @@
   width: 100%;
 }
 
-@container (min-width: 480px) {
-  .fan {
-    grid-template-columns: repeat(3, minmax(0, 1fr));
-    gap: 8px 16px;
-  }
-
-  /* The captions share one row, the boards the next: three boards on one line, however the captions wrap. */
-  .fan-group {
-    display: grid;
-    grid-template-rows: subgrid;
-    grid-row: span 2;
-    justify-items: center;
-  }
-
-  .fan-group > .say {
-    align-self: end;
-  }
+/* Each group's caption, over its board. */
+.fan-group > .say {
+  text-align: center;
 }
 
 /* One under the other (under 480px), a board is kept small, so the three still read together. */
@@ -92,9 +78,23 @@
   }
 }
 
-/* Each group's caption, over its board. */
-.fan-group > .say {
-  text-align: center;
+@container (min-width: 480px) {
+  .fan {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 8px 16px;
+  }
+
+  /* The captions share one row, the boards the next: three boards on one line, however the captions wrap. */
+  .fan-group {
+    display: grid;
+    grid-template-rows: subgrid;
+    grid-row: span 2;
+    justify-items: center;
+  }
+
+  .fan-group > .say {
+    align-self: end;
+  }
 }
 
 .fan-board {
