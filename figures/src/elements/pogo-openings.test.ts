@@ -55,7 +55,7 @@ function playMove(el: PogoOpenings, name: string): void {
 
 const toyPhase = (el: PogoOpenings) => $(el, '.openings').dataset.toy;
 
-const ASK_WHITE = 'Jouez un premier coup des Blancs.';
+const ASK_WHITE = 'Jouez un premier coup des Blancs\u202f: soulevez une pile, puis choisissez où la poser.';
 
 beforeEach(() => {
   PogoOpenings.deps = { engine: () => Promise.resolve(), table: () => Promise.resolve(table) };
