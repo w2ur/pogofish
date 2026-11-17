@@ -37,15 +37,15 @@
 .plot {
   --_plot-h: 300px;
   display: grid;
-  grid-template-columns: 28px 36px 12px minmax(0, 1fr);
-  grid-template-rows: var(--_plot-h) 24px;
+  grid-template-columns: 28px 64px 12px minmax(0, 1fr);
+  grid-template-rows: var(--_plot-h) 40px;
   margin-top: 40px;
 }
 
 @container (min-width: 480px) {
   .plot {
     --_plot-h: 360px;
-    grid-template-columns: 36px 48px 18px minmax(0, 1fr);
+    grid-template-columns: 36px 80px 18px minmax(0, 1fr);
   }
 }
 
@@ -109,12 +109,6 @@
   stroke-dasharray: 12 6;
 }
 
-/* Each point's 95 % interval: a vertical stroke in the muted tint, under the lines. */
-.lines .ci {
-  stroke: var(--_muted);
-  stroke-width: 2px;
-}
-
 .lines .run {
   stroke: var(--_ink);
   stroke-linejoin: miter;
@@ -171,6 +165,36 @@
 }
 
 /*
+ * A point's 95 % interval: an ink stroke from its low end to its high one,
+ * capped at both. Round 5's intervals are about a marker tall, so one drawn
+ * through its point hid under the marker: it stands beside it, past half the
+ * widest marker (the triangle, 12px) and a gap.
+ */
+.ci {
+  position: absolute;
+  width: 0;
+  border-left: 1.5px solid var(--_ink);
+  transform: translateX(9px);
+}
+
+.ci::before,
+.ci::after {
+  content: '';
+  position: absolute;
+  left: -3.75px;
+  width: 6px;
+  border-top: 1.5px solid var(--_ink);
+}
+
+.ci::before {
+  top: -0.75px;
+}
+
+.ci::after {
+  bottom: -0.75px;
+}
+
+/*
  * A line's name at its end, on the ground so a reference line under it does
  * not cross the words. Placed against the end point, by program: AlphaZero
  * with search above it (its line ends just under the table's), the two that
@@ -185,7 +209,7 @@
   line-height: 1.2;
   color: var(--_ink);
   background: var(--_ground);
-  transform: translate(8px, -50%);
+  transform: translate(14px, -50%);
 }
 
 /* Lifted clear of the table's name, which sits just under it at the left. */
@@ -244,6 +268,14 @@
 .x-axis .tick {
   top: 6px;
   transform: translateX(-50%);
+}
+
+/* The points before training: their column's name, on two lines, wider than the column. */
+.zero-axis .tick {
+  width: 96px;
+  white-space: normal;
+  line-height: 1.2;
+  text-align: center;
 }
 
 /* At phone width every other decade keeps its gridline and drops its number. */

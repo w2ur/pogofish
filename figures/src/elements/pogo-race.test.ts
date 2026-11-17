@@ -52,15 +52,46 @@ afterEach(() => {
 });
 
 describe('<pogo-race>', () => {
-  it('says what a vertical stroke is and why the 0 column stands apart, under the chart, in its own text', async () => {
+  it('says what a vertical stroke is under the chart, and nothing about the 0 column: its own label says it', async () => {
     const en = await mount('en');
     const notes = $$(en, '.race > .axis-note').map((p) => p.textContent);
     expect(notes).toEqual([
       'Horizontal axis: training games, each mark ten times the one before.',
-      'Each vertical stroke is its point’s 95% confidence interval: the shorter it is, the more precise the measure.',
-      'The 0 column, before any training, stands apart: on this scale, 0 has no place.',
+      'The vertical stroke right of each point is its 95% confidence interval: the shorter it is, the more precise the measure.',
     ]);
+    expect(en.shadowRoot!.textContent).not.toMatch(/has no place/);
     expect(en.shadowRoot!.querySelector('.as-of')).toBeNull();
+    const fr = await mount('fr');
+    expect(fr.shadowRoot!.textContent).not.toMatch(/n’a pas de place/);
+  });
+
+  it('names the column of the points before training under it, in words, never as a 0 on the axis', async () => {
+    const fr = await mount('fr');
+    expect($$(fr, '.zero-axis .tick').map((n) => n.textContent)).toEqual(['avant l’entraînement']);
+    const en = await mount('en');
+    expect($$(en, '.zero-axis .tick').map((n) => n.textContent)).toEqual(['before training']);
+  });
+
+  it('draws every point’s 95 % interval as a capped stroke beside its marker, in ink, from its data', async () => {
+    const el = await mount('en');
+    const chart = raceChart(v5);
+    const bars = (sel: string) => $$(el, sel).map((b) => [b.style.left, b.style.top, b.style.height]);
+    const want = (column: 'zero' | 'log') =>
+      chart.series
+        .flatMap((s) => s.points.filter((p) => p.column === column))
+        .map((p) => [`${(p.x * 100).toFixed(3)}%`, `${((1 - p.hi) * 100).toFixed(3)}%`, `${((p.hi - p.lo) * 100).toFixed(3)}%`]);
+    // Same points, any drawing order.
+    expect(bars('.zero .marks .ci').sort()).toEqual(want('zero').sort());
+    expect(bars('.log .ink .ci').sort()).toEqual(want('log').sort());
+    // No interval left in the stretched SVG, where it hid under its marker in the muted tint.
+    expect(el.shadowRoot!.querySelector('svg .ci')).toBeNull();
+    const css = readFileSync('src/elements/pogo-race.css', 'utf8').replace(/\/\*[\s\S]*?\*\//g, '');
+    const rule = css.match(/\n\.ci \{[^}]*\}/)?.[0] ?? '';
+    expect(rule).toMatch(/border-left: [^;]*var\(--_ink\)/);
+    // Beside the marker (half its width and a gap), never under it.
+    expect(rule).toMatch(/transform: translateX\(\d+px\)/);
+    // Its two caps.
+    expect(css).toMatch(/\.ci::before,\s*\.ci::after \{[^}]*border-top: [^;]*var\(--_ink\)/);
   });
 
   it('shows its fallback when the data load fails', async () => {
@@ -131,7 +162,7 @@ describe('<pogo-race>', () => {
     expect($$(el, '.cross').every((f) => !f.hasAttribute('data-off'))).toBe(true);
     expect($$(el, '.cross')).toHaveLength(3);
     expect($(el, '[data-role="counter"]').textContent).toBe('5\u202f000\u202f000 parties');
-    expect($(el, '.ink').style.clipPath).toContain('calc(4.000% - 7px)');
+    expect($(el, '.ink').style.clipPath).toContain('calc(4.000% - 14px)');
   });
 
   it('runs once on screen: the clock sweeps at one speed, each sentence landing when its crossing is reached', async () => {
