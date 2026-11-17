@@ -1,5 +1,12 @@
 import { describe, expect, it } from 'vitest';
-import { NODE_SHARE, flowEnd, linkProgress, nodeProgress, strength } from './net-canvas';
+import { readFileSync } from 'node:fs';
+import { resolve } from 'node:path';
+import { parseTd } from '../nets';
+import { replay, type Triple } from '../engine';
+import { DEFAULT_GAME } from '../default-game';
+import { netGraph, signal } from './net-graph';
+import { layoutNet } from './net-layout';
+import { NODE_SHARE, drawNet, flowEnd, linkProgress, nodeProgress, strength } from './net-canvas';
 
 describe('the signal’s crossing, in ranks', () => {
   it('lights a rank’s nodes first, then sends its links, which arrive as the next rank lights', () => {
@@ -33,5 +40,37 @@ describe('the signal’s crossing, in ranks', () => {
 
   it('sorts a share of the scale into three strengths', () => {
     expect([0, 0.1, 0.2, 0.4, 0.6, 1, 3].map(strength)).toEqual([0, 0, 1, 1, 2, 2, 2]);
+  });
+});
+
+describe('drawNet between two passes', () => {
+  const b = readFileSync(resolve(process.cwd(), 'public/nets/td-s1.pfv'));
+  const td = parseTd(b.buffer.slice(b.byteOffset, b.byteOffset + b.byteLength) as ArrayBuffer);
+  const graph = netGraph(td.header);
+  const layout = layoutNet(graph, 600, 440, { padX: 44 });
+  const states = replay(DEFAULT_GAME as Triple[]);
+  const pass = (i: number) => signal(td, graph, td.forward(states[i]!), 6);
+  const palette = { red: 'R', ink: 'I', ground: 'G', rule: 'L', edge: 'E' };
+  /** The colours stroked and filled, as a recording context sees them. */
+  const colours = (previous: ReturnType<typeof pass> | null) => {
+    const used = new Set<string>();
+    const ctx = new Proxy({} as Record<string, unknown>, {
+      get: (target, prop) => (prop === 'stroke' ? () => used.add(String(target.strokeStyle)) : prop === 'fill' ? () => used.add(String(target.fillStyle)) : prop in target ? target[prop as string] : () => {}),
+      set: (target, prop, value) => ((target[prop as string] = value), true),
+    }) as unknown as CanvasRenderingContext2D;
+    drawNet(ctx, { layout, graph, signal: pass(4), tau: 0, palette, previous });
+    return used;
+  };
+
+  // Regression: at the start of a crossing every link was grey (the rule colour) and no node lit.
+  it('at the start of a crossing, with no pass before, the net is unlit: rule and edge only', () => {
+    const used = colours(null);
+    expect(used.has('R')).toBe(false);
+  });
+
+  it('at the start of a crossing, a previous pass stays drawn, lit, in red and ink', () => {
+    const used = colours(pass(3));
+    expect(used.has('R')).toBe(true);
+    expect(used.has('I')).toBe(true);
   });
 });

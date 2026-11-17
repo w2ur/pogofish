@@ -59,11 +59,18 @@ export interface NetView {
   tau: number;
   palette: Palette;
   probe?: Probe | null;
+  /**
+   * The pass drawn before this one: where the new signal has not reached yet (a layer's links before
+   * they leave, a rank's nodes before they light), the previous pass stays drawn, lit, so the net never
+   * blanks between two positions; the new one replaces it as it crosses.
+   */
+  previous?: Signal | null;
 }
 
 export function drawNet(ctx: CanvasRenderingContext2D, v: NetView): void {
-  const { layout, graph, signal: sig, tau, palette } = v;
+  const { layout, graph, tau, palette } = v;
   const probe = v.probe ?? null;
+  const previous = v.previous ?? null;
   // With a node under the pointer, the rest steps back and its own links come forward.
   const dim = probe ? 0.3 : 1;
   ctx.clearRect(0, 0, layout.width, layout.height);
@@ -72,7 +79,10 @@ export function drawNet(ctx: CanvasRenderingContext2D, v: NetView): void {
   graph.layers.forEach((g, n) => {
     const a = layout.columns[g.from]!;
     const b = layout.columns[g.to]!;
-    const d = sig.links[n]!;
+    const travelled = linkProgress(tau, graph.columns[g.from]!.rank);
+    // Links the new signal has not left on yet: the previous pass's, whole.
+    const held = travelled <= 0 && previous !== null;
+    const d = (held ? previous : v.signal).links[n]!;
     ctx.beginPath();
     for (let k = 0; k < d.count; k++) {
       ctx.moveTo(a.x[d.from[k]!]!, a.y[d.from[k]!]!);
@@ -83,7 +93,7 @@ export function drawNet(ctx: CanvasRenderingContext2D, v: NetView): void {
     ctx.lineWidth = 0.6;
     ctx.stroke();
 
-    const linear = linkProgress(tau, graph.columns[g.from]!.rank);
+    const linear = held ? 1 : travelled;
     if (linear <= 0 || d.max === 0) return;
     const p = 1 - (1 - linear) * (1 - linear);
     for (const positive of [false, true]) {
@@ -110,8 +120,11 @@ export function drawNet(ctx: CanvasRenderingContext2D, v: NetView): void {
 
   graph.columns.forEach((c, i) => {
     const L = layout.columns[i]!;
+    const reached = nodeProgress(tau, c.rank);
+    // A rank the new signal has not lit yet keeps the previous pass's values, lit.
+    const sig = reached <= 0 && previous !== null ? previous : v.signal;
+    const lit = sig === previous ? 1 : reached;
     const values = sig.values[i]!;
-    const lit = nodeProgress(tau, c.rank);
     if (c.units === 1) {
       const value = values[0]!;
       ctx.globalAlpha = 1;
@@ -178,6 +191,7 @@ export function drawNet(ctx: CanvasRenderingContext2D, v: NetView): void {
     ctx.globalAlpha = 1;
     return;
   }
+  const sig = v.signal;
   // The probed node's own links, plain, and a ring around it.
   graph.layers.forEach((g, n) => {
     const incoming = g.to === probe.column;

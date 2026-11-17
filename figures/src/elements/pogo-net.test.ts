@@ -241,6 +241,39 @@ describe('<pogo-net>', () => {
     }
   });
 
+  // Regression: between two positions the note vanished and every link turned grey for the length of
+  // a crossing (the audit's frame, dark, step 4). The previous pass now stays drawn, its outputs written,
+  // until the new signal has crossed; then they swap.
+  it('between two positions the previous pass stays drawn, its note written, until the new one arrives', async () => {
+    const canvas = fakeCanvas();
+    vi.useFakeTimers({ toFake: ['setTimeout', 'clearTimeout', 'requestAnimationFrame', 'cancelAnimationFrame', 'performance', 'Date'] });
+    try {
+      const el = mountSync('az');
+      await vi.advanceTimersByTimeAsync(0);
+      intersect(el);
+      const crossing = flowEnd(netGraph(az.header).ranks) * STEP_MS;
+      await vi.advanceTimersByTimeAsync(crossing + 50);
+      expect(net(el).dataset.flow).toBe('arrived');
+      const before = $(el, '.note-number').textContent;
+      const movesBefore = $$(el, '.move-row').map((r) => r.dataset.move);
+      $(el, '[data-role="pause"], [data-role="play"]').click();
+      $(el, '[data-role="next"]').click();
+      expect(net(el).dataset.position).toBe(key(GAME[4]!));
+      // Crossing: the old note and moves are still written, and shown (no « running » hiding them).
+      expect(net(el).dataset.flow).toBe('swapping');
+      expect($(el, '.note-number').textContent).toBe(before);
+      expect($$(el, '.move-row').map((r) => r.dataset.move)).toEqual(movesBefore);
+      await vi.advanceTimersByTimeAsync(crossing / 2);
+      expect($(el, '.note-number').textContent).toBe(before);
+      await vi.advanceTimersByTimeAsync(crossing / 2 + 50);
+      expect(net(el).dataset.flow).toBe('arrived');
+      expect($(el, '.note-number').textContent).toBe(netNumber('fr', Number(net(el).dataset.value), true));
+      expect($(el, '.note-number').textContent).not.toBe(before);
+    } finally {
+      canvas.restore();
+    }
+  });
+
   it('under reduced motion nothing moves: each position is drawn lit, and nothing plays by itself', async () => {
     const canvas = fakeCanvas();
     setMedia(REDUCED_MOTION, true);

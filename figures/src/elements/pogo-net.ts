@@ -10,7 +10,9 @@
 // positive number, ink a negative one, the stronger the plainer. Everything
 // drawn is computed in the page from the real weights.
 //
-// Then another position, and the flow again: the figure walks through the
+// Then another position, and the flow again, the previous pass held (its colours
+// and its note) wherever the new signal has not reached yet, so the figure never
+// blanks between two positions. The figure walks through the
 // essay's game, starting on the position <pogo-encoding> opens on
 // (net-position.ts), and loops. When the reader has a game on the page's
 // board, the figure takes that game instead, rests on its latest position and
@@ -232,6 +234,10 @@ export class PogoNet extends PogoFigure {
     let positions: Shown[] = [];
     let shown = 0;
     let sig: Signal | null = null;
+    /** The pass drawn before the one crossing now: held where the new signal has not reached yet. */
+    let previous: Signal | null = null;
+    /** Writes the new position's outputs: at once, or when its signal arrives if a pass is held. */
+    let pendingOut: (() => void) | null = null;
     let layout: NetLayout | null = null;
     let palette: Palette | null = null;
     let probe: Probe | null = null;
@@ -246,7 +252,7 @@ export class PogoNet extends PogoFigure {
     };
     const paint = (): void => {
       if (!ctx || !layout || !sig || !palette) return;
-      drawNet(ctx, { layout, graph, signal: sig, tau, palette, probe });
+      drawNet(ctx, { layout, graph, signal: sig, tau, palette, probe, previous });
     };
     /** The canvas takes its box's size, at the screen's own density, and the nodes their places. */
     const resize = (width: number, height: number): void => {
@@ -271,6 +277,10 @@ export class PogoNet extends PogoFigure {
     };
 
     const arrive = (): void => {
+      previous = null;
+      const out = pendingOut;
+      pendingOut = null;
+      out?.();
       root.dataset.flow = 'arrived';
     };
     const stopFlow = (): void => {
@@ -287,7 +297,9 @@ export class PogoNet extends PogoFigure {
         return;
       }
       readPalette();
-      root.dataset.flow = 'running';
+      // With a previous pass held, its outputs stay written until the new signal arrives;
+      // with none (the first crossing), the outputs' room waits empty.
+      root.dataset.flow = previous ? 'swapping' : 'running';
       const start = performance.now();
       const step = (now: number): void => {
         tau = Math.min(end, (now - start) / STEP_MS);
@@ -313,6 +325,8 @@ export class PogoNet extends PogoFigure {
 
     /** Computes and shows position `i`: the board, the signal, the outputs; `run` sends the flow. */
     const show = (i: number, run: boolean): void => {
+      // A new position while a pass is drawn: that pass is held until the new one has crossed.
+      previous = run && sig && i !== shown ? (previous ?? sig) : null;
       shown = i;
       marked = null;
       const p = positions[i]!;
@@ -330,45 +344,53 @@ export class PogoNet extends PogoFigure {
       root.dataset.position = key(p.state);
       root.dataset.value = String(value);
       drawBoardPart();
-      noteNumber.textContent = netNumber(lang, value, true);
-      note.dataset.sign = value > 0 ? 'positive' : value < 0 ? 'negative' : 'zero';
-      marker.style.left = `${(((Math.max(-1, Math.min(1, value)) + 1) / 2) * 100).toFixed(3)}%`;
-      noteFor.textContent = `${t(lang, 'netForBefore')} ${colourName(lang, p.state.to_move)}${t(lang, 'netForAfter')}`;
-      drawnLine.textContent = drawnWords(lang, sig.drawn, graph.links);
-      if (moves) {
-        const best = rows.slice(0, TOP_MOVES);
-        moveList.replaceChildren(
-          ...best.map((r) => {
-            const li = el('li', 'move-row');
-            li.dataset.move = r.name;
-            const name = el('span', 'move num');
-            name.append(
-              moveTip(lang, r.move, {
-                show: () => {
-                  marked = r.move;
-                  drawBoardPart();
-                },
-                hide: () => {
-                  marked = null;
-                  drawBoardPart();
-                },
-              }),
-            );
-            const bar = el('span', 'bar');
-            bar.style.setProperty('--share', r.prior.toFixed(4));
-            li.append(name, el('span', 'share num', formatShare(lang, r.prior)), bar);
-            return li;
-          }),
-        );
-        const rest = rows.slice(TOP_MOVES);
-        const share = rest.reduce((a, r) => a + r.prior, 0);
-        others.textContent = rest.length ? `${rest.length} ${t(lang, rest.length === 1 ? 'netOtherMove' : 'netOtherMoves')}${colon(lang)} ${formatShare(lang, share)}` : '';
-      }
-      const said = `${t(lang, 'netNoteTitle')}${colon(lang)} ${netNumber(lang, value, true)} ${noteFor.textContent}.`;
+      const now = sig;
+      const forWords = `${t(lang, 'netForBefore')} ${colourName(lang, p.state.to_move)}${t(lang, 'netForAfter')}`;
+      // The outputs: written at once, or, while a previous pass is held, when the new signal arrives.
+      pendingOut = (): void => {
+        noteNumber.textContent = netNumber(lang, value, true);
+        note.dataset.sign = value > 0 ? 'positive' : value < 0 ? 'negative' : 'zero';
+        marker.style.left = `${(((Math.max(-1, Math.min(1, value)) + 1) / 2) * 100).toFixed(3)}%`;
+        noteFor.textContent = forWords;
+        drawnLine.textContent = drawnWords(lang, now.drawn, graph.links);
+        if (moves) {
+          const best = rows.slice(0, TOP_MOVES);
+          moveList.replaceChildren(
+            ...best.map((r) => {
+              const li = el('li', 'move-row');
+              li.dataset.move = r.name;
+              const name = el('span', 'move num');
+              name.append(
+                moveTip(lang, r.move, {
+                  show: () => {
+                    marked = r.move;
+                    drawBoardPart();
+                  },
+                  hide: () => {
+                    marked = null;
+                    drawBoardPart();
+                  },
+                }),
+              );
+              const bar = el('span', 'bar');
+              bar.style.setProperty('--share', r.prior.toFixed(4));
+              li.append(name, el('span', 'share num', formatShare(lang, r.prior)), bar);
+              return li;
+            }),
+          );
+          const rest = rows.slice(TOP_MOVES);
+          const share = rest.reduce((a, r) => a + r.prior, 0);
+          others.textContent = rest.length ? `${rest.length} ${t(lang, rest.length === 1 ? 'netOtherMove' : 'netOtherMoves')}${colon(lang)} ${formatShare(lang, share)}` : '';
+        }
+      };
+      const said = `${t(lang, 'netNoteTitle')}${colon(lang)} ${netNumber(lang, value, true)} ${forWords}.`;
       live.textContent = rows[0] ? `${said} ${t(lang, 'netTopMoves')}${colon(lang)} ${rows[0].name}, ${formatShare(lang, rows[0].prior)}.` : said;
       if (probe) probeLine.textContent = probeWords(lang, graph, sig, probe);
-      if (run) flow();
-      else {
+      if (run && previous) flow();
+      else if (run) {
+        pendingOut();
+        flow();
+      } else {
         stopFlow();
         tau = end;
         paint();
