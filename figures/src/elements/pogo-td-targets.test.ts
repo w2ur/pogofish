@@ -81,10 +81,22 @@ describe('<pogo-td-targets>', () => {
     el.remove();
   });
 
-  it('puts the transport right under the film it steps, before the legend and the table', async () => {
+  it('puts the transport right under the film it steps, then the legend', async () => {
     const el = await mount('fr');
     expect($(el, '.film').nextElementSibling!.classList.contains('controls')).toBe(true);
     expect($(el, '.controls').nextElementSibling!.classList.contains('legend')).toBe(true);
+  });
+
+  // The owner, 2026-11-17: the rows « note du réseau » and « cible » stood still while the curves moved,
+  // and the table of values said again what the curves say. The curves alone carry the values.
+  it('has no row of numbers and no table of values: the curves carry them, the step’s sum gives its own numbers', async () => {
+    const el = await mount('fr');
+    expect($$(el, '.cell.notes, .cell.targets, .row-name.notes, .row-name.targets')).toHaveLength(0);
+    expect($$(el, 'details, table, .td-table')).toHaveLength(0);
+    expect($(el, '.legend').nextElementSibling!.classList.contains('sr')).toBe(true);
+    role(el, 'next').click();
+    role(el, 'next').click();
+    expect(said(el).querySelector('.calc')!.textContent).toMatch(/^cible = 70\u202f% × /);
   });
 
   it('pogo-td-targets uses lastFinished when there is one, DEFAULT_GAME otherwise, and says which', async () => {
@@ -92,35 +104,29 @@ describe('<pogo-td-targets>', () => {
     use(s);
     const el = await mount('fr');
     expect($(el, '.where-from').textContent).toBe('Partie : l’erreur d’ouverture, 9 coups, victoire des Blancs.');
-    expect($$(el, '.td-table tbody tr')).toHaveLength(DEFAULT_GAME.length + 1);
+    expect($$(el, '.mk.note, .mk.result')).toHaveLength(DEFAULT_GAME.length + 1);
     expect($(el, '.hint').hasAttribute('data-off')).toBe(false);
     s.newGame('Red', 'easy');
     for (const m of [...LOOP, ...LOOP]) s.play(m);
     expect($(el, '.where-from').textContent).toBe('Partie : la dernière partie terminée du plateau, 8 coups, victoire des Blancs.');
-    expect($$(el, '.td-table tbody tr')).toHaveLength(9);
+    expect($$(el, '.mk.note, .mk.result')).toHaveLength(9);
     expect($(el, '.hint').hasAttribute('data-off')).toBe(true);
   });
 
-  // Regression: the values' summary, a flex box, had lost its disclosure marker and read as a
-  // heading over nothing; and « note du réseau » wrapped in a 4.6em column, clipped by the next row.
-  it('the values read as a disclosure, and a row’s name stands on one line', async () => {
-    const el = await mount('fr');
-    expect($(el, 'details.values > summary').textContent).toBe('Les valeurs');
+  // Regression: a row's name wrapped in a 4.6em column, clipped by the next row.
+  it('a row’s name stands on one line', () => {
     const css = readFileSync(resolve(process.cwd(), 'src/elements/pogo-td-targets.css'), 'utf8').replace(/\/\*[\s\S]*?\*\//g, '');
-    expect(css).toMatch(/\.values summary::before \{[^}]*border-right: 2px solid currentColor;/);
-    expect(css).toMatch(/\.values\[open\] summary::before \{[^}]*rotate\(45deg\)/);
     expect(css).toMatch(/\.row-name \{[^}]*white-space: nowrap;/);
-    expect(css).toMatch(/\.film\.strip \{[^}]*grid-template-columns: max-content minmax\(0, 1fr\);/);
   });
 
   it('a game under way changes nothing: only a finished game is taken', async () => {
     const s = makeStore();
     use(s);
     const el = await mount('fr');
-    const table = $(el, '.td-table');
+    const film = $(el, '.film');
     s.newGame('White', 'normal');
     s.play(DEFAULT_GAME[0]!);
-    expect($(el, '.td-table')).toBe(table);
+    expect($(el, '.film')).toBe(film);
   });
 
   it('lays the game’s boards, the chart’s marks and the numbers on one column per position', async () => {
@@ -169,8 +175,7 @@ describe('<pogo-td-targets>', () => {
       expect(mover).toBe(w.returns[t]);
       expect(Math.abs(mover - fixture.openingWin.returns[t]!)).toBeLessThanOrEqual(1e-5);
     });
-    expect($$(el, '.td-table .target-cell').slice(0, T).map((c) => c.textContent)).toEqual(w.white.targets.map((x) => signedNote('en', x)));
-    expect($$(el, '.cell.targets').slice(0, T).map((c) => c.textContent)).toEqual(w.white.targets.map((x) => signedNote('en', x)));
+    expect(squares.map((sq) => Number(sq.dataset.target))).toEqual(w.white.targets);
   });
 
   it('walks backwards: the result first, then each target from the next, its sum written and its two sources marked', async () => {

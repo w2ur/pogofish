@@ -72,6 +72,10 @@ export interface QFrame {
 
 export interface QWalk {
   rows: string[];
+  /** Each row's position: the figure draws A, B and every C beside their notes. */
+  states: Record<string, State>;
+  /** The step size the notes were updated with. */
+  alpha: number;
   frames: QFrame[];
 }
 
@@ -80,7 +84,7 @@ const same = (m: Move, t: Triple): boolean => m.from_cell === t[0] && m.num_piec
 /** A position's key without its history, as qsteps.mjs keys its notebook. */
 const bare = (s: State): string => key({ ...s, history: [] });
 
-export function qSteps(prefix: readonly Triple[] = QSTEPS_PREFIX, first: Triple = QSTEPS_FIRST, games = QSTEPS_GAMES): QWalk {
+export function qSteps(prefix: readonly Triple[] = QSTEPS_PREFIX, first: Triple = QSTEPS_FIRST, games = QSTEPS_GAMES, alpha = ALPHA): QWalk {
   const A = prefix.reduce((s, m) => play(s, m), initial());
   const firstMove = legal(A).find((m) => same(m, first));
   if (!firstMove) throw new Error('q-steps: the first move is illegal at A');
@@ -110,7 +114,7 @@ export function qSteps(prefix: readonly Triple[] = QSTEPS_PREFIX, first: Triple 
       });
       const best = Math.max(...scored.map((c) => c.q));
       const before = v(s);
-      const after = qUpdate(before, best, ALPHA);
+      const after = qUpdate(before, best, alpha);
       V.set(bare(s), after);
       const pick = ply === 0 ? scored.find((c) => same(c.m, first))! : scored.find((c) => c.q === best)!;
       const name = nameOf(s) ?? '?';
@@ -149,7 +153,7 @@ export function qSteps(prefix: readonly Triple[] = QSTEPS_PREFIX, first: Triple 
       path.push(nameOf(s) ?? '?');
     }
   }
-  return { rows, frames };
+  return { rows, states: stateOf, alpha, frames };
 }
 
 /**

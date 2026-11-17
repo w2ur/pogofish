@@ -69,6 +69,31 @@ describe('qSteps', () => {
     expect(frames.filter((f) => f.update?.name === 'A').every((f) => f.move!.join() === QSTEPS_FIRST.join())).toBe(true);
   });
 
+  it('takes the step size: at 100 % each note copies the value of the best move at once', () => {
+    const w = qSteps(QSTEPS_PREFIX, QSTEPS_FIRST, QSTEPS_GAMES, 1);
+    expect(w.alpha).toBe(1);
+    expect(qSteps().alpha).toBe(0.1);
+    for (const f of w.frames.filter((x) => x.kind === 'update')) expect(f.update!.after).toBeCloseTo(f.update!.best, 12);
+    expect(notebookColumns(w).map((c) => w.rows.map((r) => noteText('fr', c[r]!)).join(' '))).toEqual([
+      '0,00 0,00 0,00 0,00',
+      '0,00 0,00 1,00 0,00',
+      '0,00 0,00 1,00 1,00',
+      '0,00 −1,00 1,00 1,00',
+      '1,00 −1,00 1,00 1,00',
+      '1,00 −1,00 1,00 1,00',
+    ]);
+  });
+
+  it('keeps each row’s position, so the figure can draw A, B, C1 and C2 at every step', () => {
+    const w = qSteps();
+    expect(Object.keys(w.states)).toEqual(w.rows);
+    const A = replay(QSTEPS_PREFIX).at(-1)!;
+    expect(w.states.A!.cells).toEqual(A.cells);
+    expect(w.states.B!.cells).toEqual(play(A, legal(A).find((m) => [m.from_cell, m.num_pieces, m.to_cell].join() === QSTEPS_FIRST.join())!).cells);
+    // Every update frame shows its row's position.
+    for (const f of w.frames.filter((x) => x.kind === 'update')) expect(f.state.cells).toEqual(w.states[f.update!.name]!.cells);
+  });
+
   it('refuses an endgame whose first move is illegal', () => {
     expect(() => qSteps(QSTEPS_PREFIX, [4, 3, 4], 1)).toThrow();
   });

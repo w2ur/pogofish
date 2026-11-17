@@ -1,12 +1,13 @@
 // What <pogo-greedy> plays, apart from the DOM: one game of the greedy player
 // against itself under lc1-2, drawn from a seed as tools/article-visuals/greedy.mjs
 // draws it (mulberry32, ties drawn from the moves in engine order). Each move
-// comes with what made greedy choose it: the gap it leaves between the mover's
-// stacks and the opponent's, how many legal moves there were, and how many of
-// them tied for the best. The figure shows one fixed game, GAME_SEED's: short,
-// ended by a real win, and with no position met twice.
+// comes with what made greedy choose it: every legal move and the value greedy
+// gives it (the gap it leaves between the mover's stacks and the opponent's, or
+// the end it brings), the gap of the move played, and how many moves tied for
+// the best. The figure shows one fixed game, GAME_SEED's: short enough for every
+// move weighed to be read, ended by a real win, and with no position met twice.
 import { LC1_2, initial, play, terminal, winner, type Colour, type State, type Triple } from '../engine';
-import { WIN_SCORE, greedyScores, mulberry32 } from '../players';
+import { LOSS_SCORE, WIN_SCORE, greedyScores, mulberry32 } from '../players';
 
 /** greedy.mjs stops a game that has not ended after this many moves. */
 export const MAX_PLIES = 200;
@@ -15,10 +16,10 @@ export const MAX_PLIES = 200;
  * The game the figure shows: the first seed whose game is short, ends with every
  * stack to one colour and never meets a position twice (greedy-game.test.ts looks for it).
  */
-export const GAME_SEED = 2;
+export const GAME_SEED = 78;
 
-/** A short game: at most this many moves, so a full play stays under a minute. */
-export const SHORT_PLIES = 12;
+/** A short game: at most this many moves, so that each can show every move weighed and stay under a minute in all. */
+export const SHORT_PLIES = 6;
 
 /** The stacks each colour owns: those whose top piece is its own. */
 export interface Stacks {
@@ -31,9 +32,18 @@ export function stacks(s: State): Stacks {
   return { white: tops.filter((c) => c === 'White').length, red: tops.filter((c) => c === 'Red').length };
 }
 
+/** A legal move and what greedy gives it (players.ts greedyScores). */
+export interface GreedyOption {
+  move: Triple;
+  /** The gap it leaves, the mover's stacks minus the opponent's; WIN_SCORE or LOSS_SCORE when it ends the game, 0 for a drawn end. */
+  score: number;
+}
+
 /** What chose a move. */
 export interface GreedyChoice {
   move: Triple;
+  /** Every legal move, in engine order, with its value: what greedy weighed. */
+  options: GreedyOption[];
   mover: Colour;
   /** The mover's stacks minus the opponent's once the move is played: what greedy maximises. */
   gap: number;
@@ -81,6 +91,7 @@ export function greedyGame(seed: number = GAME_SEED): GreedyGame {
       stacks: owned,
       choice: {
         move: [move.from_cell, move.num_pieces, move.to_cell],
+        options: scored.map((x) => ({ move: [x.move.from_cell, x.move.num_pieces, x.move.to_cell], score: x.score })),
         mover,
         gap: mover === 'White' ? owned.white - owned.red : owned.red - owned.white,
         wins: best === WIN_SCORE,
@@ -93,6 +104,21 @@ export function greedyGame(seed: number = GAME_SEED): GreedyGame {
   }
   return { seed, frames, finished: false };
 }
+
+/** The moves weighed, one row per value, the greatest first: the first row is greedy's choice and its ties. */
+export interface ValueRow {
+  score: number;
+  moves: Triple[];
+  best: boolean;
+}
+
+export function valueRows(c: GreedyChoice): ValueRow[] {
+  const scores = [...new Set(c.options.map((o) => o.score))].sort((a, b) => b - a);
+  return scores.map((score, k) => ({ score, moves: c.options.filter((o) => o.score === score).map((o) => o.move), best: k === 0 }));
+}
+
+/** Whether a value is an end: the move wins or loses the game. */
+export const endOf = (score: number): 'win' | 'loss' | null => (score === WIN_SCORE ? 'win' : score === LOSS_SCORE ? 'loss' : null);
 
 /** A gap as the reader reads it: signed, with a true minus (« +2 », « −1 », « 0 »). */
 export function gapText(gap: number): string {

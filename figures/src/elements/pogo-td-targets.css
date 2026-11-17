@@ -12,20 +12,20 @@
   container-type: inline-size;
 }
 
-/* The room kept before rendering, per width (measured on the harness, 2026-11-16, default game). */
+/* The room kept before rendering, per width (measured on the harness, 2026-11-17, default game: 733px at 272, 646 at 566, 711 at 1100). */
 .stage {
-  min-height: 785px;
+  min-height: 735px;
 }
 
 @container (min-width: 520px) {
   .stage {
-    min-height: 750px;
+    min-height: 645px;
   }
 }
 
 @container (min-width: 900px) {
   .stage {
-    min-height: 820px;
+    min-height: 710px;
   }
 }
 
@@ -246,20 +246,13 @@
   outline-offset: 3px;
 }
 
-.cell.ticks,
-.cell.notes,
-.cell.targets {
+.cell.ticks {
   font-size: 12.8px;
   line-height: 1.3;
 }
 
 .cell.ticks {
   color: var(--_muted);
-}
-
-.cell.targets {
-  font-weight: 800;
-  min-height: 1.3em;
 }
 
 .axis-x {
@@ -269,12 +262,8 @@
   color: var(--_muted);
 }
 
-/* Under 520px a column is too narrow for a board or a number: the words name the position, the table has the numbers. */
+/* Under 520px a column is too narrow for a board: the words name the position, the step’s sum gives its numbers. */
 @container (max-width: 519.98px) {
-  .row.notes,
-  .row.targets,
-  .row-name.notes,
-  .row-name.targets,
   .row.boards,
   .row-name.boards {
     display: none;
@@ -292,7 +281,7 @@
     column-gap: 10px;
   }
 
-  /* With the rows of numbers, the names column is as wide as « note du réseau ». */
+  /* With the strip, the names column is as wide as its widest name, the ends of the scale. */
   .film.strip {
     grid-template-columns: max-content minmax(0, 1fr);
   }
@@ -356,69 +345,6 @@
   border-top: 1px solid var(--_edge);
 }
 
-/*
- * The values are a disclosure, closed: its summary draws its own marker, a chevron that turns
- * when it opens. As a flex box the summary had lost the browser's, and read as a heading over nothing.
- */
-.values summary {
-  font-size: 12.8px;
-  cursor: pointer;
-  min-height: 44px;
-  display: flex;
-  align-items: center;
-  gap: 10px;
-  list-style: none;
-}
-
-.values summary::-webkit-details-marker {
-  display: none;
-}
-
-.values summary::before {
-  content: '';
-  flex: none;
-  width: 7px;
-  height: 7px;
-  border-right: 2px solid currentColor;
-  border-bottom: 2px solid currentColor;
-  transform: rotate(-45deg);
-  transition: transform 200ms ease-out;
-}
-
-.values[open] summary::before {
-  transform: rotate(45deg);
-}
-
-.td-table {
-  width: 100%;
-  table-layout: fixed;
-  overflow-wrap: anywhere;
-  border-collapse: collapse;
-  font-size: 15px;
-}
-
-.td-table th,
-.td-table td {
-  padding: 4px 8px 4px 0;
-  border-bottom: 1px solid var(--_rule);
-  text-align: right;
-}
-
-.td-table th:first-child,
-.td-table td:nth-child(2) {
-  text-align: left;
-}
-
-.td-table thead th {
-  font-size: 12.8px;
-  color: var(--_muted);
-  border-bottom: 3px solid var(--_ink);
-}
-
-.td-table tbody th {
-  font-weight: 400;
-}
-
 .sr {
   position: absolute;
   width: 1px;
@@ -426,10 +352,4 @@
   overflow: hidden;
   clip-path: inset(50%);
   white-space: nowrap;
-}
-
-@media (prefers-reduced-motion: reduce) {
-  .values summary::before {
-    transition: none;
-  }
 }

@@ -143,6 +143,14 @@
   font-weight: 800;
 }
 
+/* The move the simulation is on: underlined, so the eye finds its place in the path. */
+.chain .step[data-now] {
+  color: var(--_ink);
+  text-decoration: underline;
+  text-decoration-thickness: 2px;
+  text-underline-offset: 3px;
+}
+
 .chain .sep {
   color: var(--_muted);
 }

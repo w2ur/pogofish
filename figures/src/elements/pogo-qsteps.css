@@ -1,30 +1,31 @@
-/* The room kept before rendering, per width (measured on the harness, 2026-11-16). */
+/* The room kept before rendering, per width (measured on the harness, 2026-11-17: 1263px at 272, 897 at 566, 618 at 1100). */
 :host {
   container-type: inline-size;
 }
 
 .stage {
-  min-height: 1060px;
+  min-height: 1250px;
 }
 
 @container (min-width: 520px) {
   .stage {
-    min-height: 730px;
+    min-height: 880px;
   }
 }
 
 @container (min-width: 900px) {
   .stage {
-    min-height: 450px;
+    min-height: 600px;
   }
 }
 
 /*
  * <pogo-qsteps>: the step's words (one grid cell for all, replay.css), then the
- * position, its moves and their values, the notebook and the formula, then the
- * transport. One column under 520px; the moves beside the board from 520px;
- * the board, the moves and the notebook side by side from 900px, the formula
- * under the moves and the notebook. Ink only: what is read or written is the
+ * position, its moves and their values, the notes of the positions (each drawn
+ * beside its name) and the formula, then the transport; over all of it, the
+ * step the reader sets. One column under 520px; the moves beside the board from
+ * 520px; the board, the moves and the notes side by side from 900px, the
+ * formula under the moves and the notes. Ink only: what is read or written is the
  * flyer's stamp (an inverted block), never red.
  */
 .qsteps {
@@ -33,6 +34,15 @@
   display: flex;
   flex-direction: column;
   gap: 16px;
+}
+
+/* The walk under the step control is rebuilt when the step changes: its parts stay items of the column. */
+.walk {
+  display: contents;
+}
+
+.rate {
+  justify-content: flex-start;
 }
 
 .status {
@@ -166,7 +176,7 @@
   pointer-events: none;
 }
 
-/* The notebook. */
+/* The notes of the positions. */
 .notebook {
   width: 100%;
   border-collapse: collapse;
@@ -197,7 +207,7 @@
 }
 
 .notebook .name-col {
-  width: 4.6em;
+  width: 5.6em;
 }
 
 .notebook .corner,
@@ -224,6 +234,19 @@
 .notebook .name {
   font-weight: 800;
   font-stretch: 125%;
+}
+
+/* The position beside its name: small, but the stacks are there to see. */
+.notebook .name {
+  white-space: nowrap;
+}
+
+.notebook .name .board {
+  display: inline-block;
+  vertical-align: middle;
+  width: 42px;
+  height: 42px;
+  margin-left: 6px;
 }
 
 /* The row of the position the program is in. */
@@ -264,11 +287,22 @@
   }
 
   .notebook .name-col {
-    width: 1.9em;
+    width: 2.6em;
   }
 
   .notebook .name {
     font-stretch: 100%;
+  }
+
+  /* The name over its position, the position smaller: the games keep their columns. */
+  .notebook .name .row-label {
+    display: block;
+  }
+
+  .notebook .name .board {
+    width: 30px;
+    height: 30px;
+    margin-left: 0;
   }
 
   .notebook th,
@@ -298,7 +332,7 @@
     display: none;
   }
 
-  .qsteps > .controls > .counter {
+  .walk > .controls > .counter {
     min-width: 0;
     flex-basis: 100%;
   }
@@ -364,7 +398,7 @@
   white-space: nowrap;
 }
 
-.qsteps > .controls {
+.walk > .controls {
   justify-content: center;
 }
 

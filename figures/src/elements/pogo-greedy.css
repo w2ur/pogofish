@@ -1,28 +1,29 @@
 /*
  * <pogo-greedy>: the board, and beside it from 560px (under it below) the
- * panel that tells a move: whose turn, the move, the scoreboard, the gap the
- * move leaves and how many moves did as well, then the result. Every line of
- * the panel keeps its room when it has nothing to say yet, so neither the
- * board nor the transport under them moves during the game.
+ * panel that tells a move: whose turn, every move weighed under its value, the
+ * greatest marked and why, the move, the scoreboard, then the result. Every
+ * line of the panel keeps its room when it has nothing to say yet, and every
+ * step's rows share one cell, so neither the board nor the transport under
+ * them moves during the game.
  */
 :host {
   container-type: inline-size;
 }
 
-/* The room the figure keeps before it renders, measured on the harness (2026-11-16). */
+/* The room the figure keeps before it renders, measured on the harness (2026-11-17: 1047px at 272, 731 at 566, 633 at 1100). */
 .stage {
-  min-height: calc(100cqi + 445px);
+  min-height: calc(100cqi + 770px);
 }
 
 @container (min-width: 560px) {
   .stage {
-    min-height: 400px;
+    min-height: 720px;
   }
 }
 
-@container (min-width: 720px) {
+@container (min-width: 800px) {
   .stage {
-    min-height: 420px;
+    min-height: 630px;
   }
 }
 
@@ -47,10 +48,17 @@
   grid-template-columns: minmax(0, 400px);
 }
 
+/* Beside the board from 560px: the two share the width, then the board stops at 360px. */
 @container (min-width: 560px) {
   .game {
-    grid-template-columns: minmax(0, 360px) minmax(220px, 300px);
+    grid-template-columns: minmax(0, 1fr) minmax(240px, 1fr);
     align-items: center;
+  }
+}
+
+@container (min-width: 800px) {
+  .game {
+    grid-template-columns: minmax(0, 360px) minmax(240px, 420px);
   }
 }
 
@@ -149,20 +157,77 @@
   color: var(--_ground);
 }
 
-.lead {
-  display: grid;
-  grid-template-columns: minmax(0, 1fr) auto;
-  align-items: end;
-  column-gap: 10px;
+/* What greedy weighs: a row per value, the greatest first, its moves after it. */
+.weigh {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
 }
 
-.value {
-  font-size: 56px;
-  min-width: 2ch;
-  /* The shout cut sits tight on its box: room so the last digit is never cut. */
-  padding-right: 3px;
-  text-align: right;
+.weigh-unit {
+  margin-bottom: 4px;
+}
+
+/* Every step's rows in one cell: the block keeps the room of the longest. */
+.lists {
+  display: grid;
+}
+
+.values {
+  grid-area: 1 / 1;
+  display: flex;
+  flex-direction: column;
+  border-top: 3px solid var(--_ink);
+}
+
+.vrow {
+  display: grid;
+  grid-template-columns: 3.6em minmax(0, 1fr);
+  align-items: baseline;
+  column-gap: 10px;
+  padding-block: 5px;
+  border-bottom: 1px solid var(--_rule);
+}
+
+.vval {
+  justify-self: start;
+  padding: 0.05em 0.3em;
+  font-weight: 800;
   white-space: nowrap;
+  color: var(--_ink);
+}
+
+.chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px 10px;
+  font-size: 15px;
+  color: var(--_ink);
+}
+
+.chip {
+  padding: 0 2px;
+  border: 2px solid transparent;
+}
+
+/* Once greedy has chosen: the greatest value inverted, the other rows set back, the move drawn among its ties framed. */
+.values[data-chosen] .vrow[data-best] .vval {
+  background: var(--_ink);
+  color: var(--_ground);
+}
+
+.values[data-chosen] .vrow:not([data-best]) {
+  color: var(--_muted);
+}
+
+.values[data-chosen] .vrow:not([data-best]) .vval,
+.values[data-chosen] .vrow:not([data-best]) .chips {
+  color: var(--_muted);
+}
+
+.values[data-chosen] .chip[data-chosen] {
+  border-color: var(--_ink);
+  font-weight: 800;
 }
 
 .why {

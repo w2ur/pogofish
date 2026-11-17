@@ -1,9 +1,10 @@
 // What <pogo-search> plays, apart from the DOM: the recorded search, cut into
 // frames, and the words of each frame, built from what the search did.
 //
-// The first three simulations are shown one at a time and slowly, each in
-// three frames: its path (the moves it follows from the root), its leaf (where
-// it stops, and the note brought back from there), and the way back (the note
+// The first three simulations are shown one at a time and slowly: its path
+// (the root move it takes), then one frame per move down to where it stops, so
+// the reader follows it from the root to the leaf, then its leaf (where it
+// stops, and the note brought back from there), and the way back (the note
 // counted in the root move's row). Then the search accelerates through the
 // stops of search-steps.ts (5, 10, 20, 50, 100 simulations). One more
 // simulation is slowed down on the way, in its place in time: the first that
@@ -11,6 +12,7 @@
 // a result, not the net, giving the note. The last frame plays the most
 // visited move. Every number shown is a snapshot or a trace of the one search
 // run (mcts.ts), never a value made up between two.
+import { announceMove } from '../board-state';
 import { moveName, type Colour } from '../engine';
 import type { SearchSnapshot, SimulationTrace } from '../mcts';
 import { colon, t, type Lang } from '../kit/strings';
@@ -22,14 +24,20 @@ import { STOPS, rowOrder } from './search-steps';
 /** The simulations shown one by one, slowly: the first three. */
 export const SLOW = [1, 2, 3] as const;
 
-export type SimFrame = { kind: 'path' | 'leaf' | 'back'; sim: number; trace: SimulationTrace; snap: SearchSnapshot };
+export type SimFrame =
+  | { kind: 'path' | 'leaf' | 'back'; sim: number; trace: SimulationTrace; snap: SearchSnapshot }
+  /** One move of the path, `step` from 1: the board after it. */
+  | { kind: 'walk'; sim: number; step: number; trace: SimulationTrace; snap: SearchSnapshot };
 export type Frame =
   | { kind: 'before'; sim: 0; snap: SearchSnapshot }
   | SimFrame
   | { kind: 'stop' | 'end'; sim: number; snap: SearchSnapshot };
 
-/** How long each kind of frame is held in automatic play, in milliseconds; a leaf adds MOVE_TEMPO_MS per move of its path. */
-export const HOLD = { before: 3000, path: 2600, leaf: 2400, back: 2800, stop: 2200, end: 0 } as const;
+/**
+ * How long each kind of frame is held in automatic play, in milliseconds. A step of a walk is a
+ * move: it takes the kit's one tempo, then its words are read.
+ */
+export const HOLD = { before: 4000, path: 3600, walk: MOVE_TEMPO_MS + 1600, leaf: 3600, back: 3600, stop: 3200, end: 0 } as const;
 
 /** The first simulation after the slow ones that ends on a finished game, if the search has one. */
 export function deepSim(traces: readonly SimulationTrace[]): number | null {
@@ -53,6 +61,7 @@ export function searchScript(before: SearchSnapshot, snaps: readonly SearchSnaps
     const trace = traces[sim - 1]!;
     return [
       { kind: 'path', sim, trace, snap: at(sim - 1) },
+      ...trace.moves.map((_, k): SimFrame => ({ kind: 'walk', sim, step: k + 1, trace, snap: at(sim - 1) })),
       { kind: 'leaf', sim, trace, snap: at(sim - 1) },
       { kind: 'back', sim, trace, snap: at(sim) },
     ];
@@ -69,9 +78,7 @@ export function searchScript(before: SearchSnapshot, snaps: readonly SearchSnaps
 
 /** How long frame `i` is held before the next, in automatic play. */
 export function frameHold(frames: readonly Frame[], i: number): number {
-  const f = frames[i]!;
-  if (f.kind === 'leaf') return HOLD.leaf + MOVE_TEMPO_MS * f.trace.moves.length;
-  return HOLD[f.kind];
+  return HOLD[frames[i]!.kind];
 }
 
 /** The most visited move, the first in root order among equals (mcts.ts `bestMove`); -1 before any visit. */
@@ -128,6 +135,14 @@ export function frameWords(lang: Lang, f: Frame, toMove: Colour): string {
       }
       const isPreferred = moveName(first) === moveName(preferred.move);
       return isPreferred && f.sim === 1 ? `${head}${t(lang, 'searchFirstPath')} ${moveName(first)}.` : `${head}${t(lang, 'searchPathFollows')} ${moveName(first)}.`;
+    }
+    case 'walk': {
+      const n = f.trace.moves.length;
+      const m = f.trace.moves[f.step - 1]!;
+      // The root's player moves first, then the two sides in turn.
+      const mover: Colour = f.step % 2 === 1 ? toMove : toMove === 'Red' ? 'White' : 'Red';
+      const head = `${t(lang, 'searchSimulation')} ${f.sim}, ${t(lang, 'ply')} ${f.step} ${t(lang, 'outOf')} ${n}${c} ${announceMove(lang, mover, [m.from_cell, m.num_pieces, m.to_cell])}.`;
+      return f.step < n ? `${head} ${t(lang, 'searchWalkKnown')}${c} ${t(lang, 'searchWalkOn')}.` : head;
     }
     case 'leaf': {
       const v = f.trace.value;

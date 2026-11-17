@@ -8,7 +8,9 @@
 // the large one and the headline score is its own. The points are the controls:
 // a radio group, so the reader picks a stage on the curve itself. The curve is
 // drawn, the number never counts. The game's first moves are the bench's random
-// opening (`openingPlies`, from the game file) and say so.
+// opening (`openingPlies`, from the game file): each game is shown from the
+// opening's end, said as drawn at random and already played, so the figure plays
+// only the program's moves and greedy's.
 import { announceMove } from '../board-state';
 import { WASM_FILE, assetUrl } from '../assets';
 import type { V5Data, V5Stage } from '../data';
@@ -23,6 +25,7 @@ import { MOVE_TEMPO_MS } from '../kit/tempo';
 import { colon, t, type Lang, type StringKey } from '../kit/strings';
 import { sharedV5 } from '../v5';
 import { seenText, type Frame } from './line-frames';
+import { plies } from './net-position';
 import { tween } from './motion';
 import stagesCss from './pogo-stages.css?raw';
 import type { ReferenceKey } from './race-chart';
@@ -36,7 +39,7 @@ const NS = 'http://www.w3.org/2000/svg';
 const U = 1000;
 
 /** How long the end of a stage's game is held before the next stage starts; each of its moves is the kit's one tempo. */
-export const REST_MS = 2600;
+export const REST_MS = 2000;
 /** How long the curve takes to reach a new stage. */
 const DRAW_MS = 600;
 
@@ -80,7 +83,10 @@ export function stageWords(lang: Lang, program: StageProgram, stage: V5Stage): S
 function say(lang: Lang, f: Frame, programColour: Colour, openingPlies: number): Spoken {
   let move = t(lang, 'startPosition');
   let note = '';
-  if (f.move && f.mover) {
+  if (openingPlies > 0 && f.ply === openingPlies) {
+    // Where the figure takes the game up: the opening, set down at once.
+    move = `${t(lang, 'stagesOpening')}${colon(lang)} ${plies(lang, openingPlies)}, ${t(lang, 'stagesOpeningPlayed')}`;
+  } else if (f.move && f.mover) {
     const opening = f.ply <= openingPlies;
     const who = f.mover === programColour ? t(lang, 'stagesProgram') : t(lang, 'stagesGreedy');
     move = opening ? announceMove(lang, f.mover, f.move) : `${t(lang, colourKey(f.mover))} (${who}) ${t(lang, 'plays')} ${moveName(f.move)}`;
@@ -120,6 +126,8 @@ function svgEl(tag: string, attrs: Record<string, string | number>, parent?: Ele
 
 export class PogoStages extends PogoFigure {
   static override styles = replayCss + stagesCss;
+  /** Its fallback is the letter's video link: with the figure on the page it would read as a stray URL. */
+  static override quietFallback = true;
 
   /** The engine and the data; a test swaps them. */
   static deps: { engine: () => Promise<void>; v5: () => Promise<V5Data> } = {
@@ -137,7 +145,10 @@ export class PogoStages extends PogoFigure {
     const stages = chart.points.map((p) => data.programs[program].stages.find((s) => s.pct === p.pct)!);
     // Every game is replayed before anything is drawn: one that ends otherwise than the data says fails the figure.
     const games = stages.map(stageFrames);
-    const script = stageScript(games.map((g) => g.length));
+    const script = stageScript(
+      games.map((g) => g.length),
+      stages.map((s) => s.openingPlies),
+    );
     const words = stages.map((s) => stageWords(lang, program, s));
     const n = stages.length;
     const of = t(lang, 'outOf');
@@ -154,8 +165,8 @@ export class PogoStages extends PogoFigure {
       lang,
       steps: script.steps.map((s) => games[s.stage]![s.ply]!),
       spoken: script.steps.map((s) => say(lang, games[s.stage]![s.ply]!, stages[s.stage]!.playerColour, stages[s.stage]!.openingPlies)),
-      // A move travels within a game; a new stage sets its own start position down.
-      forward: (from, to) => to === from + 1 && script.steps[to]!.ply > 0,
+      // A move travels within a game; a new stage sets its opening's end down.
+      forward: (from, to) => to === from + 1 && script.steps[to]!.stage === script.steps[from]!.stage,
       reducedMotion: () => this.reducedMotion(),
     });
     const game = el('div', 'game');

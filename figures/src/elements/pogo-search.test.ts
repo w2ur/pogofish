@@ -10,7 +10,7 @@ import { REDUCED_MOTION, intersect, playState, resetMedia, setMedia, shownText }
 import { MOVE_TEMPO_MS } from '../kit/tempo';
 import { MAX_ROWS, PogoSearch, shownRows } from './pogo-search';
 import { signedNote } from './q-steps';
-import { frameHold, searchScript } from './search-script';
+import { HOLD, frameHold, searchScript } from './search-script';
 import { PUZZLE5 } from './search-steps';
 import { formatShare } from '../kit/score';
 
@@ -75,6 +75,7 @@ const ran = async (el: Element) => {
   await until(() => !!el.shadowRoot!.querySelector('[data-role="counter"]'));
 };
 const frame = (el: Element) => $(el, '.search').dataset.frame;
+const said = (el: Element) => shownText($(el, '.said-now'));
 const toEnd = (el: Element) => {
   for (let i = 0; i < 30; i++) role(el, 'next').click();
 };
@@ -201,6 +202,13 @@ describe('<pogo-search>', () => {
     expect($$(el, '.board-slot .path-arrow')).toHaveLength(1);
     expect($$(el, '.path .step').map((s) => s.textContent)).toEqual(first.moves.map(moveName));
     role(el, 'next').click();
+    // Its one move, played: the board after it, its name lit, no note yet.
+    expect(frame(el)).toBe('walk');
+    expect($(el, '.board-slot .to').getAttribute('data-cell')).toBe(String(first.moves[0]!.to_cell));
+    expect($$(el, '.path .step[data-on]')).toHaveLength(1);
+    // The note and where it stopped show only at the leaf (pogo-search.css).
+    expect($(el, '.path').dataset.stage).toBe('walk');
+    role(el, 'next').click();
     // Its leaf: the board at the position it stopped on, the note brought back.
     expect(frame(el)).toBe('leaf');
     expect($(el, '.path').dataset.stage).toBe('leaf');
@@ -227,22 +235,42 @@ describe('<pogo-search>', () => {
     expect($(el, '.chip .note-value').textContent).toBe('+1,00');
   });
 
-  it('the board walks a simulation’s path one move per MOVE_TEMPO_MS, the kit’s one tempo', async () => {
+  // The owner, 2026-11-17: « ça va très vite ». The reader follows one simulation from the root to its leaf.
+  it('follows the deep simulation from the root to its leaf, one frame per move: the move on the board, its name, the next one arrowed', async () => {
     const el = await mount('puzzle5', 'fr');
     await ran(el);
     while (!(frame(el) === 'path' && $$(el, '.path .step').length > 1)) role(el, 'next').click();
+    const deep = traced[35]!;
+    expect($$(el, '.path .step[data-now]').map((s) => s.textContent)).toEqual([moveName(deep.moves[0]!)]);
+    deep.moves.forEach((m, k) => {
+      role(el, 'next').click();
+      expect(frame(el), `move ${k + 1}`).toBe('walk');
+      expect($(el, '.board-slot .to').getAttribute('data-cell')).toBe(String(m.to_cell));
+      expect($$(el, '.path .step[data-on]')).toHaveLength(k + 1);
+      expect($$(el, '.path .step[data-now]').map((s) => s.textContent)).toEqual([moveName(m)]);
+      // The move it takes next, arrowed from where it now stands; none at the last.
+      expect($$(el, '.board-slot .path-arrow')).toHaveLength(k < deep.moves.length - 1 ? 1 : 0);
+      expect(said(el)).toMatch(new RegExp(`^Simulation 36, coup ${k + 1} sur ${deep.moves.length}`));
+    });
+    role(el, 'next').click();
+    expect(frame(el)).toBe('leaf');
+  });
+
+  it('holds each move of a walk the tempo and the time to read it, then the next', async () => {
+    const el = await mount('puzzle5', 'fr');
+    await ran(el);
+    while (frame(el) !== 'walk') role(el, 'next').click();
+    role(el, 'previous').click();
     setMedia(REDUCED_MOTION, false);
     vi.useFakeTimers();
     role(el, 'next').click();
-    const walked = () => $$(el, '.path .step[data-on]').length;
-    vi.advanceTimersByTime(0);
-    expect(walked()).toBe(1);
-    vi.advanceTimersByTime(MOVE_TEMPO_MS - 1);
-    expect(walked()).toBe(1);
+    expect(frame(el)).toBe('walk');
+    role(el, 'play').click();
+    vi.advanceTimersByTime(HOLD.walk - 1);
+    expect(frame(el)).toBe('walk');
     vi.advanceTimersByTime(1);
-    expect(walked()).toBe(2);
-    vi.advanceTimersByTime(MOVE_TEMPO_MS);
-    expect(walked()).toBe(3);
+    expect(frame(el)).toBe('leaf');
+    expect(HOLD.walk).toBeGreaterThan(MOVE_TEMPO_MS);
   });
 
   it('under reduced motion it never advances by itself', async () => {

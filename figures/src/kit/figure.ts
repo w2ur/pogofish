@@ -48,6 +48,12 @@ export abstract class PogoFigure extends HTMLElement {
   static stageMinHeight = '0px';
   /** The element's own CSS, adopted after the kit sheet. */
   static styles?: string;
+  /**
+   * The fallback is for a page without script only: once the element is defined it stays
+   * hidden, while the render is pending too, and only a failure shows it. For a fallback
+   * that would read wrongly beside the figure (<pogo-stages>' video link).
+   */
+  static quietFallback = false;
 
   /** Where `render()` draws. */
   protected stage!: HTMLDivElement;
@@ -117,7 +123,7 @@ export abstract class PogoFigure extends HTMLElement {
     // Until then its fallback stands in, so there is no blank gap.
     this.rendered = false;
     this.stage.replaceChildren();
-    this.fallback.hidden = false;
+    this.fallback.hidden = (this.constructor as typeof PogoFigure).quietFallback;
     this.removeAttribute('data-failed');
     // It renders afresh when it comes back: its reserve with it.
     this.stage.style.setProperty('--_stage-min', (this.constructor as typeof PogoFigure).stageMinHeight);
@@ -134,6 +140,7 @@ export abstract class PogoFigure extends HTMLElement {
     this.stage.className = 'stage';
     this.stage.style.setProperty('--_stage-min', ctor.stageMinHeight);
     this.fallback = document.createElement('slot');
+    this.fallback.hidden = ctor.quietFallback;
     frame.append(this.stage, this.fallback);
     root.append(frame);
   }

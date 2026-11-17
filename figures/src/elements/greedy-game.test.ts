@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import { LC1_2, initial, legal, play, terminal, winner, type Colour, type State } from '../engine';
-import { greedyMove, mulberry32 } from '../players';
-import { GAME_SEED, SHORT_PLIES, gapText, greedyGame, positionKey, stacks, suits } from './greedy-game';
+import { LOSS_SCORE, WIN_SCORE, greedyMove, mulberry32 } from '../players';
+import { GAME_SEED, SHORT_PLIES, gapText, greedyGame, positionKey, stacks, suits, valueRows } from './greedy-game';
 
 // `node tools/article-visuals/greedy.mjs OUT moves SEED`, run on 2026-11-16: the tool's games.
 const GREEDY_MJS = {
@@ -104,6 +104,48 @@ describe('the game the figure shows', () => {
       }
       expect(c.tied).toBeGreaterThanOrEqual(1);
     });
+  });
+
+  it('is short enough to show every move greedy weighs: six moves at most', () => {
+    expect(SHORT_PLIES).toBe(6);
+    expect(frames.length - 1).toBeLessThanOrEqual(6);
+  });
+
+  it('each move carries every legal move with what greedy gives it: the gap it leaves, or the end it brings', () => {
+    frames.slice(1).forEach((f, i) => {
+      const before = frames[i]!.state;
+      const mover = before.to_move;
+      const c = f.choice!;
+      const options = legal(before);
+      expect(c.options.map((o) => o.move)).toEqual(options.map((m) => [m.from_cell, m.num_pieces, m.to_cell]));
+      c.options.forEach((o, k) => {
+        const next = play(before, options[k]!);
+        // Recounted here from the position the move leads to.
+        const expected = terminal(next, LC1_2)
+          ? winner(next, LC1_2) === null
+            ? 0
+            : winner(next, LC1_2) === (mover === 'White' ? 'W' : 'R')
+              ? WIN_SCORE
+              : LOSS_SCORE
+          : tops(next, mover) - tops(next, other(mover));
+        expect(o.score, `move ${i + 1}, option ${k}`).toBe(expected);
+      });
+    });
+  });
+
+  it('valueRows: one row per value, the greatest first, the move played in the first row, ties counted', () => {
+    for (const f of frames.slice(1)) {
+      const c = f.choice!;
+      const rows = valueRows(c);
+      const scores = rows.map((r) => r.score);
+      expect(scores).toEqual([...new Set(c.options.map((o) => o.score))].sort((a, b) => b - a));
+      expect(rows.flatMap((r) => r.moves)).toHaveLength(c.options.length);
+      expect(rows.map((r) => r.best)).toEqual(rows.map((_, k) => k === 0));
+      expect(rows[0]!.moves).toContainEqual(c.move);
+      expect(rows[0]!.moves).toHaveLength(c.tied);
+    }
+    // The figure's game shows a move where the best greedy can do still leaves it behind.
+    expect(frames.slice(1).some((f) => valueRows(f.choice!)[0]!.score < 0)).toBe(true);
   });
 
   it('each frame counts the stacks of its own position', () => {
