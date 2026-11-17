@@ -6,8 +6,9 @@
  * The grid is one row per cell: its name, the 12 slots of its stack, the top's
  * owner, the height. A slot holding a piece takes that piece's colour (the Red
  * pieces' red, the White pieces' white, outlined in ink) whoever is to move; an
- * empty slot is a hairline. Its type follows the grid's width, so the fifteen
- * columns hold at 320px without scrolling.
+ * empty slot is a hairline. Its type follows the grid's width, never under the
+ * page's 12.8px: under 500px the grid keeps the width that size needs and
+ * scrolls sideways inside the figure; the page itself never does.
  *
  * Two marks show what a move did. `changed` (the input says something new
  * about the board): an ink frame that fades. `flipped` (the same piece, seen
@@ -97,13 +98,23 @@ p {
 
 .enc-wrap {
   container-type: inline-size;
+  overflow-x: auto;
+  overscroll-behavior-x: contain;
+}
+
+/* Narrow: the digits at the page's floor, the grid at the width they need, scrolled in its box. */
+@container (max-width: 499px) {
+  .enc-table {
+    min-width: 388px;
+    font-size: 12.8px;
+  }
 }
 
 .enc-table {
   display: flex;
   flex-direction: column;
   gap: 2px;
-  font-size: clamp(9.5px, 3.3cqi, 13px);
+  font-size: clamp(12.8px, 3.3cqi, 13px);
 }
 
 .enc-row {

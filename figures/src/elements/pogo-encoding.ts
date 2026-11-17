@@ -158,7 +158,11 @@ export class PogoEncoding extends PogoFigure {
       table.append(row);
       return { row, name };
     });
+    // Narrow, the grid scrolls sideways in its box (pogo-encoding.css): a region the keyboard can reach.
     const wrap = el('div', 'enc-wrap');
+    wrap.tabIndex = 0;
+    wrap.setAttribute('role', 'region');
+    wrap.setAttribute('aria-label', t(lang, 'encTable'));
     wrap.append(table);
 
     const repetition = el('p', 'enc-rep');

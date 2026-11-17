@@ -75,6 +75,19 @@ describe('<pogo-encoding>', () => {
     expect($(el, '.enc-rep').textContent).toBe('127ᵉ nombre0nombre de fois où la position est déjà apparue, ÷ 2');
   });
 
+  // Regression: at 390px the grid's digits were set at ~9px (clamp from 9.5px at 3.3cqi), under the
+  // page's 12.8px floor. Narrow, the grid now scrolls sideways in its own box at 12.8px.
+  it('never sets the grid under 12.8px: narrow, it scrolls sideways inside the figure', async () => {
+    expect(sheet).toMatch(/\.enc-table \{[^}]*font-size: clamp\(12\.8px,/);
+    expect(sheet).toMatch(/\.enc-wrap \{[^}]*overflow-x: auto;/);
+    expect(sheet).toMatch(/@container \(max-width: 499px\) \{\s*\.enc-table \{[^}]*font-size: 12\.8px;/);
+    const el = await mount('fr');
+    const wrap = $(el, '.enc-wrap');
+    expect(wrap.tabIndex).toBe(0);
+    expect(wrap.getAttribute('role')).toBe('region');
+    expect(wrap.getAttribute('aria-label')).toBe('Les 127 entrées du réseau');
+  });
+
   it('says whose turn it is and what +1 means now', async () => {
     const el = await mount();
     expect($(el, '.key').textContent).toBe('Aux Rouges de jouer : +1 = pièce rouge, −1 = pièce blanche, 0 = pas de pièce.');
@@ -273,10 +286,12 @@ describe('<pogo-encoding>', () => {
     expect($$(el, '.cell-button[data-actionable]')).toHaveLength(0);
   });
 
-  it('the board stands beside the grid in the wide box, and above it otherwise; the grid never scrolls', () => {
+  it('the board stands beside the grid in the wide box, and above it otherwise; only the grid’s own box may scroll', () => {
     const wide = sheet.slice(sheet.indexOf('@container (min-width: 860px)', sheet.indexOf('.sr {')));
     expect(wide).toMatch(/\.enc-body \{[^}]*grid-template-columns: 300px minmax\(0, 640px\)/);
-    expect(sheet).not.toMatch(/overflow-x|overflow: auto|overflow: scroll/);
+    // The grid's box is the one thing that scrolls, and only under 500px, where it keeps a width.
+    expect(sheet.match(/overflow-x|overflow: auto|overflow: scroll/g)).toEqual(['overflow-x']);
+    expect(sheet).toMatch(/\.enc-wrap \{[^}]*overflow-x: auto;/);
     expect(sheet).toMatch(/\.enc-row \{[^}]*grid-template-columns: 2\.1em repeat\(12, minmax\(0, 1fr\)\)/);
   });
 });
