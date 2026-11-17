@@ -20,20 +20,20 @@
   container-type: inline-size;
 }
 
-/* The room the figure takes, kept before it renders (measured 2026-11-16 on the harness, by width). */
+/* The room the figure takes, kept before it renders (measured 2026-11-17 on the harness, by width). */
 :host .stage {
-  min-height: 875px;
+  min-height: 1024px;
 }
 
 @container (min-width: 480px) {
   :host .stage {
-    min-height: 916px;
+    min-height: 962px;
   }
 }
 
 @container (min-width: 860px) {
   :host .stage {
-    min-height: 543px;
+    min-height: 589px;
   }
 }
 

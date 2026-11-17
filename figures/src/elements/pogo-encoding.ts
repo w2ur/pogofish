@@ -64,7 +64,7 @@ interface Ply {
 export class PogoEncoding extends PogoFigure {
   static override styles = encodingCss;
   /** A floor only: pogo-encoding.css keeps the measured room, by width. */
-  static override stageMinHeight = '543px';
+  static override stageMinHeight = '589px';
 
   /** The page's game and the engine; a test swaps it. */
   static deps: { store: Store } = { store };

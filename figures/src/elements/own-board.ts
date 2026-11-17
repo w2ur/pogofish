@@ -107,11 +107,10 @@ export function ownBoard(o: OwnBoardOptions): OwnBoard {
     const lift = origins(legalMoves);
     const land = selection ? destinations(legalMoves, selection.from, selection.count) : [];
     const theirs = selection ? null : (o.marks?.() ?? null);
+    // At rest nothing is marked: a dashed ring on every stack that may lift read as the dashed ring
+    // the move just played leaves where it came from. The invitation under the board says what to do.
     const marks: BoardMark[] =
-      theirs ??
-      (selection
-        ? [{ cell: selection.from, kind: 'picked' }, ...land.map((cell) => ({ cell, kind: 'target' as const }))]
-        : lift.map((cell) => ({ cell, kind: 'target' as const })));
+      theirs ?? (selection ? [{ cell: selection.from, kind: 'picked' }, ...land.map((cell) => ({ cell, kind: 'target' as const }))] : []);
     const svg = drawBoard(state, {
       labelRoom: true,
       marks,
