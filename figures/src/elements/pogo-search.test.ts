@@ -296,6 +296,22 @@ describe('<pogo-search>', () => {
     expect(detail.label).toBe('la recherche d’AlphaZero');
   });
 
+  it('« Jouer cette position » is away while the search runs, and back, in the transport, once it rests', async () => {
+    let finish: (() => void) | undefined;
+    use(makeStore(), (s, net, o) => new Promise<void>((r) => (finish = r)).then(() => spySearch(s, net, o)));
+    const el = await mount('puzzle5');
+    expect(role(el, 'play-from').hasAttribute('data-away')).toBe(false);
+    role(el, 'run').click();
+    await flush();
+    expect(role(el, 'play-from').hasAttribute('data-away')).toBe(true);
+    finish!();
+    await until(() => !!el.shadowRoot!.querySelector('[data-role="counter"]'));
+    // Reduced motion: the steps wait for the reader, the figure is at rest.
+    const icon = role(el, 'action');
+    expect(icon.classList.contains('play-from')).toBe(true);
+    expect(icon.hasAttribute('data-away')).toBe(false);
+  });
+
   it('position="reader" searches the position the net figures show, and follows the store', async () => {
     const s = makeStore();
     use(s);

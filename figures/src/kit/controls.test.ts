@@ -234,16 +234,96 @@ describe('choiceGroup', () => {
     expect(rule).toContain('color: var(--_muted)');
   });
 
-  // Regression: « Jouer cette position contre l’ordinateur » wrapped on two tight lines in its 400px
-  // block. The label is the short form; the full sentence is the button's description and tooltip.
-  it('« Jouer cette position »: a short label, the full sentence as its description', () => {
-    const b = playFromButton('fr', () => {});
-    expect(b.textContent).toBe('Jouer cette position');
-    expect(b.title).toBe('Jouer cette position contre l’ordinateur');
+  it('« Jouer cette position » is an icon drawn by the kit, named by its full sentence, shown in a tooltip on hover and focus', () => {
+    const go = vi.fn();
+    const b = playFromButton('fr', go);
+    document.body.append(b);
+    expect(b.classList.contains('icon')).toBe(true);
+    expect(b.classList.contains('play-from')).toBe(true);
+    // Drawn: an SVG of the kit's, no text, no emoji, no font glyph.
+    expect(drawn(b)).toBe('');
+    expect(b.querySelector('svg path')).not.toBeNull();
+    expect(b.getAttribute('aria-label')).toBe('Jouer cette position contre l’ordinateur');
+    // The tooltip, not the browser's: no title.
+    expect(b.title).toBe('');
+    const tip = b.querySelector<HTMLElement>('[role="tooltip"]')!;
+    expect(tip.textContent).toBe('Jouer cette position contre l’ordinateur');
+    expect(tip.hasAttribute('data-open')).toBe(false);
+    b.dispatchEvent(new PointerEvent('pointerenter'));
+    expect(tip.hasAttribute('data-open')).toBe(true);
+    b.dispatchEvent(new PointerEvent('pointerleave'));
+    expect(tip.hasAttribute('data-open')).toBe(false);
+    b.focus();
+    expect(tip.hasAttribute('data-open')).toBe(true);
+    b.click();
+    expect(go).toHaveBeenCalledTimes(1);
+    b.remove();
     const a = playFromAction('en', () => {});
-    expect([a.label, a.title]).toEqual(['Play this position', 'Play this position against the computer']);
-    const row = transport(new Stepper(2, () => {}), { lang: 'fr', actions: [a] });
-    expect(row.querySelector<HTMLButtonElement>('[data-role="action"]')!.title).toBe('Play this position against the computer');
+    const row = transport(new Stepper(2, () => {}), { lang: 'en', actions: [a] });
+    const icon = row.querySelector<HTMLButtonElement>('[data-role="action"]')!;
+    expect(icon.classList.contains('play-from')).toBe(true);
+    expect(icon.getAttribute('aria-label')).toBe('Play this position against the computer');
+  });
+
+  it('in a transport, « Jouer cette position » is away while the figure plays, and there when paused, ended or at rest', () => {
+    const s = new Stepper(3, () => {});
+    const row = transport(s, { lang: 'fr', actions: [playFromAction('fr', () => {})] });
+    document.body.append(row);
+    const icon = row.querySelector<HTMLButtonElement>('[data-role="action"]')!;
+    const { play } = parts(row);
+    const away = () => icon.hasAttribute('data-away');
+    // At rest.
+    expect(away()).toBe(false);
+    play.click();
+    expect(s.playing).toBe(true);
+    expect(away()).toBe(true);
+    // It keeps its place: never removed, never display: none.
+    expect(icon.isConnected).toBe(true);
+    expect(icon.hidden).toBe(false);
+    play.click();
+    expect(away()).toBe(false);
+    play.click();
+    vi.advanceTimersByTime(900 * 2);
+    expect(s.ended).toBe(true);
+    expect(away()).toBe(false);
+    row.remove();
+  });
+
+  it('under reduced motion the figure is at rest: the icon is there', () => {
+    setMedia(REDUCED_MOTION, true);
+    const s = new Stepper(3, () => {});
+    s.play();
+    const row = transport(s, { lang: 'fr', actions: [playFromAction('fr', () => {})] });
+    expect(row.querySelector('[data-role="action"]')!.hasAttribute('data-away')).toBe(false);
+  });
+
+  it('going away, it closes its tooltip and hands its focus to play/pause', () => {
+    const s = new Stepper(3, () => {});
+    const row = transport(s, { lang: 'fr', actions: [playFromAction('fr', () => {})] });
+    document.body.append(row);
+    const icon = row.querySelector<HTMLButtonElement>('[data-role="action"]')!;
+    icon.focus();
+    const tip = icon.querySelector<HTMLElement>('[role="tooltip"]')!;
+    expect(tip.hasAttribute('data-open')).toBe(true);
+    // Autoplay starts it while the reader is on the icon.
+    s.play();
+    expect(tip.hasAttribute('data-open')).toBe(false);
+    expect(document.activeElement).toBe(parts(row).play);
+    // Pointed at, not focused: the pointer never leaves, the tooltip goes all the same.
+    s.pauseByReader();
+    parts(row).play.blur();
+    icon.dispatchEvent(new PointerEvent('pointerenter'));
+    expect(tip.hasAttribute('data-open')).toBe(true);
+    s.playByReader();
+    expect(tip.hasAttribute('data-open')).toBe(false);
+    row.remove();
+  });
+
+  it('the theme keeps the place of an icon that is away: hidden, not removed', () => {
+    const css = readFileSync(resolve(process.cwd(), 'src/kit/theme.css'), 'utf8');
+    const rule = /\.control\[data-away\] \{([^}]*)\}/.exec(css)![1]!;
+    expect(rule).toContain('visibility: hidden');
+    expect(rule).not.toContain('display');
   });
 
   it('the theme draws a checked choice as the filled block', () => {

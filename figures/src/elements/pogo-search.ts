@@ -19,7 +19,7 @@ import { LC1_2, key, legal, moveName, play, type Move, type State, type Triple }
 import { labelledBoard } from '../kit/board-labels';
 import { animateMove, cellCentre, drawBoard } from '../kit/board-svg';
 import { autoplay, type Playable } from '../kit/autoplay';
-import { controlButton, playFromAction, playFromButton, transport } from '../kit/controls';
+import { controlButton, playFromAction, playFromButton, setAway, transport } from '../kit/controls';
 import { PogoFigure } from '../kit/figure';
 import { formatShare } from '../kit/score';
 import { Stepper } from '../kit/stepper';
@@ -418,7 +418,7 @@ export class PogoSearch extends PogoFigure {
     const playFrom = (): void => this.playFrom(s, t(lang, 'searchLabel'));
     const launch = controlButton(t(lang, 'searchRun'), () => void start());
     launch.dataset.role = 'run';
-    const fromHere = playFromButton(lang, playFrom, true);
+    const fromHere = playFromButton(lang, playFrom);
     fromHere.dataset.role = 'play-from';
     const first = el('div', 'controls');
     first.append(launch, fromHere);
@@ -449,6 +449,8 @@ export class PogoSearch extends PogoFigure {
     const start = async (): Promise<void> => {
       running = true;
       launch.disabled = true;
+      // The search is under way: the figure plays, so the offer is away until it rests.
+      setAway(fromHere, true, launch);
       launch.textContent = t(lang, 'searchRunning');
       let recorded: Awaited<ReturnType<typeof recordFull>>;
       try {
@@ -459,6 +461,7 @@ export class PogoSearch extends PogoFigure {
         said.textContent = t(lang, 'searchStopped');
         running = false;
         launch.disabled = false;
+        setAway(fromHere, false);
         launch.textContent = t(lang, 'searchRun');
         return;
       }

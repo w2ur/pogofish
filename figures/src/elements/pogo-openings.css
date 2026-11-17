@@ -134,19 +134,22 @@
 }
 
 /*
- * The offer: over the foot of its board, shown while the board is pointed at,
+ * The offer: the kit's « Jouer cette position » icon, in its board's bottom
+ * right corner on the ground colour, shown while the board is pointed at,
  * holds the focus or was tapped. Out of sight it keeps its place in the tab
  * order, and coming into focus shows it.
  */
 .offer {
   position: absolute;
-  inset: auto 0 0 0;
-  min-height: 44px;
-  padding: 6px 4px;
-  font-size: 11.5px;
-  line-height: 1.15;
+  inset: auto 0 0 auto;
   opacity: 0;
   pointer-events: none;
+}
+
+/* Over the pieces: the kit's outlined block on the ground, never see-through. */
+.control.secondary.offer,
+.control.secondary.offer:hover:enabled {
+  background: var(--_ground);
 }
 
 .reply:hover .offer,

@@ -96,8 +96,11 @@ describe('<pogo-openings>', () => {
     try {
       const card = reply(el, 'a3-1-b3');
       const offer = card.querySelector<HTMLButtonElement>('[data-role="play-from-here"]')!;
-      expect(offer.textContent).toBe('Jouer cette position');
-      expect(offer.title).toBe('Jouer cette position contre l’ordinateur');
+      // The kit's icon, named by the full sentence, which its tooltip shows.
+      expect(offer.classList.contains('play-from')).toBe(true);
+      expect(offer.getAttribute('aria-label')).toBe('Jouer cette position contre l’ordinateur');
+      expect(offer.textContent).toBe('Jouer cette position contre l’ordinateur');
+      expect(offer.querySelector('svg')).not.toBeNull();
       offer.click();
       expect(got).toHaveLength(1);
       expect(got[0]!.label).toBe('les premiers coups, c1-1-b1 a3-1-b3');

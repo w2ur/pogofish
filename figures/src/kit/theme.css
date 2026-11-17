@@ -203,8 +203,21 @@ slot[hidden],
   fill: currentColor;
 }
 
+/* « Jouer cette position »: a board and the arrow leaving it, finer than the chevrons so its grid reads. */
+.control .board-out {
+  fill: none;
+  stroke: currentColor;
+  stroke-width: 1.5px;
+  stroke-linecap: square;
+}
+
 .control[hidden] {
   display: none;
+}
+
+/* Away while its figure plays (controls.ts setAway): out of sight and of reach, its place kept. */
+.control[data-away] {
+  visibility: hidden;
 }
 
 /*

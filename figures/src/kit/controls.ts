@@ -9,6 +9,10 @@
 // Every icon button is named by a full verb phrase, shown on hover, focus and
 // tap (move-tip.ts's labelTip), and the counter says the progress in words
 // (« étape 2 sur 5 », « coup 3 sur 9 », progress()).
+// « Jouer cette position » is an icon of the kit's too (playFromButton), named by
+// its full sentence, shown in its tooltip; in a transport it is there only while
+// the figure is at rest, paused or ended, and away (its place kept) while it
+// plays.
 // A figure puts this row right under the visual it drives.
 import { keepCase } from './keep-case';
 import { labelTip } from './move-tip';
@@ -22,6 +26,8 @@ export interface TransportAction {
   onClick: () => void;
   /** The control's description, when its label is the short form of a sentence: its title too. */
   title?: string;
+  /** « Jouer cette position »: drawn as the kit's icon, `label` its name, there only while the figure is at rest. */
+  playFrom?: boolean;
 }
 
 export interface TransportOptions {
@@ -47,17 +53,45 @@ export function controlButton(label: string, onClick: () => void, secondary = fa
 }
 
 /**
- * « Jouer cette position »: the action every figure offers to hand its position to the board. The
- * label stays on one line in a 400px block; the full sentence, « … contre l’ordinateur », is its
- * description and tooltip.
+ * « Jouer cette position »: the action every figure offers to hand its position to the board, in a
+ * transport. It is the kit's icon (playFromButton), there only while the figure is at rest, paused
+ * or ended.
  */
 export function playFromAction(lang: Lang, onClick: () => void): TransportAction {
-  return { label: t(lang, 'playFromHere'), title: t(lang, 'playFromHereLong'), onClick };
+  return { label: t(lang, 'playFromHereLong'), onClick, playFrom: true };
 }
 
-/** The same action as a button of its own, outside a transport. */
-export function playFromButton(lang: Lang, onClick: () => void, secondary = false): HTMLButtonElement {
-  return controlButton(t(lang, 'playFromHere'), onClick, secondary, t(lang, 'playFromHereLong'));
+/** The tooltips of the « Jouer cette position » icons, to close when one goes out of sight. */
+const playFromTips = new WeakMap<HTMLButtonElement, { hide(): void }>();
+
+/**
+ * The same action as an icon button of its own: a board and an arrow leaving it, drawn by the kit.
+ * Its full sentence, « Jouer cette position contre l’ordinateur », is its name and, on hover, focus
+ * and tap, its tooltip. A caller outside a transport says when it is away (setAway).
+ */
+export function playFromButton(lang: Lang, onClick: () => void): HTMLButtonElement {
+  return playFromIcon(t(lang, 'playFromHereLong'), onClick);
+}
+
+function playFromIcon(label: string, onClick: () => void): HTMLButtonElement {
+  const b = controlButton('', onClick, true);
+  b.classList.add('icon', 'play-from');
+  b.setAttribute('aria-label', label);
+  b.append(icon('board-out', PLAY_FROM));
+  playFromTips.set(b, labelTip(b, label));
+  return b;
+}
+
+/**
+ * Takes a « Jouer cette position » icon out of sight while its figure plays, keeping its place, or
+ * brings it back. Going away, it closes its tooltip and hands its focus to `focusTo`.
+ */
+export function setAway(b: HTMLButtonElement, away: boolean, focusTo?: HTMLElement): void {
+  if (b.hasAttribute('data-away') === away) return;
+  b.toggleAttribute('data-away', away);
+  if (!away) return;
+  playFromTips.get(b)?.hide();
+  if ((b.getRootNode() as Document | ShadowRoot).activeElement === b) focusTo?.focus();
 }
 
 /** A 16px icon, drawn in the button's own colour, hidden from assistive tech: the button's label names it. */
@@ -81,6 +115,8 @@ const PLAY = 'M4 2.5v11L13.5 8z';
 const PAUSE = 'M3.5 2.5h3v11h-3zM9.5 2.5h3v11h-3z';
 /** Replay: an open circle and its arrowhead, stroked like the chevrons. */
 const REPLAY = 'M12.5 8a4.5 4.5 0 1 1-1.32-3.18M11.5 1.5v3.5H8';
+/** « Jouer cette position »: a board of three by three, and an arrow leaving it for the board you play on. */
+const PLAY_FROM = 'M1.5 5.5h9v9h-9zM4.5 5.5v9M7.5 5.5v9M1.5 8.5h9M1.5 11.5h9M9 7l5.5-5.5M10 1.5h4.5V6';
 
 /**
  * A square icon control of the kit's size: its `label`, a full verb phrase, is its
@@ -133,10 +169,11 @@ export function transport(stepper: Stepper, o: TransportOptions): HTMLElement {
   const playTip = labelTip(play, t(o.lang, 'play'));
 
   const extras = (o.actions ?? []).map((a) => {
-    const b = controlButton(a.label, a.onClick, true, a.title);
+    const b = a.playFrom ? playFromIcon(a.label, a.onClick) : controlButton(a.label, a.onClick, true, a.title);
     b.dataset.role = 'action';
     return b;
   });
+  const restOnly = extras.filter((b) => b.classList.contains('play-from'));
 
   const sync = (): void => {
     const last = stepper.steps - 1;
@@ -154,6 +191,7 @@ export function transport(stepper: Stepper, o: TransportOptions): HTMLElement {
     playIcon.style.display = state === 'play' ? '' : 'none';
     pauseIcon.style.display = state === 'pause' ? '' : 'none';
     replayIcon.style.display = state === 'replay' ? '' : 'none';
+    for (const b of restOnly) setAway(b, stepper.playing, play);
   };
 
   row.append(prev, play, next, counter, ...extras);

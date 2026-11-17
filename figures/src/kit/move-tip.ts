@@ -86,7 +86,7 @@ export const TAP_TIP_MS = 1800;
  * Shows `tip` for `holder` on hover and focus, hides it on leave, blur, Escape and scroll.
  * `describe` makes the tip the holder's accessible description; `tap` shows it on a touch press too.
  */
-function wire(holder: HTMLElement, tip: HTMLElement, hooks: TipHooks = {}, o: { describe?: boolean; tap?: boolean } = {}): void {
+function wire(holder: HTMLElement, tip: HTMLElement, hooks: TipHooks = {}, o: { describe?: boolean; tap?: boolean } = {}): () => void {
   if (o.describe !== false) {
     const described = holder.getAttribute('aria-describedby');
     holder.setAttribute('aria-describedby', described ? `${described} ${tip.id}` : tip.id);
@@ -146,6 +146,7 @@ function wire(holder: HTMLElement, tip: HTMLElement, hooks: TipHooks = {}, o: { 
     e.stopPropagation();
     hide();
   });
+  return hide;
 }
 
 /** A move's name as its own element: a tab stop carrying its explanation. */
@@ -159,19 +160,23 @@ export function moveTip(lang: Lang, move: Move | Triple, hooks?: TipHooks): HTML
   return name;
 }
 
-/** An icon control's name, `text`, shown as its tooltip (see the header); `set` changes it with the control's state. */
-export function labelTip(control: HTMLElement, text: string): { set(text: string): void } {
+/**
+ * An icon control's name, `text`, shown as its tooltip (see the header); `set` changes it with the
+ * control's state, `hide` closes it (a control that goes out of sight takes its tooltip with it).
+ */
+export function labelTip(control: HTMLElement, text: string): { set(text: string): void; hide(): void } {
   const tip = document.createElement('span');
   tip.className = 'move-tip';
   tip.id = `label-tip-${++seq}`;
   tip.setAttribute('role', 'tooltip');
   tip.setAttribute('aria-hidden', 'true');
   tip.textContent = text;
-  wire(control, tip, {}, { describe: false, tap: true });
+  const hide = wire(control, tip, {}, { describe: false, tap: true });
   return {
     set(next) {
       if (tip.textContent !== next) tip.textContent = next;
     },
+    hide,
   };
 }
 
