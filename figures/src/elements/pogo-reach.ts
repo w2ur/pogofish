@@ -146,7 +146,9 @@ export class PogoReach extends PogoFigure {
       interval: (i) => (steps[i + 1]?.kind === 'level' ? LEVEL_MS : STOP_MS),
     });
     const controls = transport(stepper, { lang, counter: (i) => reachCounter(lang, steps[i]!, end) });
-    root.append(table, whole, controls);
+    // The transport right under the bars it lands; the band and the total after it. The total keeps
+    // its room while the levels land: at the figure's foot, it leaves no blank between chart and controls.
+    root.append(table, controls, whole);
     this.stage.append(root);
     autoplay(this, stepper, { signal, still: () => stepper.go(stepper.steps - 1) });
   }

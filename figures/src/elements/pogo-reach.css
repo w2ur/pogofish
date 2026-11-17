@@ -11,6 +11,10 @@
   gap: 16px;
 }
 
+.reach > .controls {
+  justify-content: center;
+}
+
 .bars {
   width: 100%;
   border-collapse: collapse;
@@ -78,6 +82,12 @@ tbody th.ply {
   text-align: right;
   white-space: nowrap;
   color: var(--_ink-2);
+}
+
+/* A landed level always shows a mark: on the linear scale moves 0 to 5 are under a pixel, so a bar is
+   never under 2px once its level has landed. */
+.level:not([data-off]) .bar {
+  min-width: 2px;
 }
 
 /* A level still to come: its move number waits, its bar and its count are not there yet. */

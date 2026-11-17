@@ -159,6 +159,25 @@ describe('<pogo-reach>', () => {
     expect(rules).toEqual(['.sep { padding-inline: 0.06em; }']);
   });
 
+  // Regression: a landed level whose bar is under a pixel (moves 0 to 5 on the linear scale) read as
+  // not landed. It gets a 2px tick; a level still to come keeps none.
+  it('a landed level always shows a mark: its bar is never under 2px', () => {
+    const css = readFileSync('src/elements/pogo-reach.css', 'utf8').replace(/\/\*[\s\S]*?\*\//g, '');
+    expect(css).toMatch(/\.level:not\(\[data-off\]\) \.bar \{[^}]*min-width: 2px;/);
+    expect(css).toMatch(/\.level\[data-off\] \.bar \{[^}]*width: 0;/);
+  });
+
+  // Regression: the transport sat under the total, whose room is kept empty while the levels land,
+  // so ~110px of blank stood between the chart and its controls, and the row was flush left.
+  it('puts the transport right under the bars it lands, centred, the band and the total after it', async () => {
+    const el = await mount('fr');
+    const order = [...$(el, '.reach').children].map((c) => c.className);
+    expect(order).toEqual(['bars', 'controls', 'whole']);
+    expect($(el, '.whole').lastElementChild!.className).toBe('total');
+    const css = readFileSync('src/elements/pogo-reach.css', 'utf8');
+    expect(css).toMatch(/\.reach > \.controls \{[^}]*justify-content: center;/);
+  });
+
   it('a file that does not add up shows the fallback, not a wrong chart', async () => {
     const error = vi.spyOn(console, 'error').mockImplementation(() => {});
     PogoReach.deps = { reach: () => Promise.resolve({ ...reach, reachable: 1 }) };
