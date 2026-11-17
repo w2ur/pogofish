@@ -159,6 +159,8 @@ export class PogoGreedy extends PogoFigure {
       }
       const end = f.result ? resultWords(lang, f.result) : null;
       result.toggleAttribute('data-off', !end);
+      // Once the game is over nobody is to play: the turn line goes, keeping its room.
+      turn.toggleAttribute('data-off', !!end);
       who.textContent = end?.who ?? '';
       how.textContent = end?.how ?? '';
     };

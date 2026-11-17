@@ -182,6 +182,32 @@ describe('<pogo-greedy>', () => {
     remove(el);
   });
 
+  // Regression: the turn line kept « Aux Rouges de jouer » beside the result once the game was over.
+  it('once the game is over, the turn line no longer says whose turn it is', async () => {
+    const el = await mount();
+    vi.useFakeTimers();
+    for (let i = 0; i < last - 1; i++) role(el, 'previous').click();
+    for (let i = 1; i < last; i++) role(el, 'next').click();
+    vi.advanceTimersByTime(BEATS.gap);
+    role(el, 'next').click();
+    // The winning move is not played yet: it is still Red to play.
+    expect(line(el, '.turn')).toBe('Aux Rouges de jouer');
+    vi.advanceTimersByTime(BEATS.gap);
+    expect(line(el, '.result')).toBe('Rouge gagneToutes les piles ont un sommet rouge.');
+    expect(line(el, '.turn')).toBeNull();
+    // A step back shows the turn again; the end, reached by a jump, settled, has none.
+    role(el, 'previous').click();
+    expect(line(el, '.turn')).not.toBeNull();
+    role(el, 'previous').click();
+    role(el, 'next').click();
+    role(el, 'next').click();
+    vi.advanceTimersByTime(BEATS.gap);
+    expect(line(el, '.turn')).toBeNull();
+    role(el, 'play').click();
+    expect(line(el, '.turn')).toBe('Position de départ');
+    remove(el);
+  });
+
   it('reads each step whole to a screen reader, and titles the board with it', async () => {
     const el = await mount();
     expect($(el, '[role="status"]').textContent).toBe(`Position de départ. Piles blanches${NNBSP}: 3, piles rouges${NNBSP}: 3.`);
