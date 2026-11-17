@@ -255,3 +255,44 @@ describe('PogoFigure', () => {
     expect(signal.aborted).toBe(true);
   });
 });
+
+/** A figure whose fallback is for a page without script only, as <pogo-stages>' video link is. */
+class Quiet extends Slow {
+  static override quietFallback = true;
+}
+class QuietBroken extends Broken {
+  static override quietFallback = true;
+}
+customElements.define('kit-quiet', Quiet);
+customElements.define('kit-quiet-broken', QuietBroken);
+
+describe('quietFallback', () => {
+  it('a figure that asks for it hides its fallback from the moment it is defined: before, during and after its render, and once moved', async () => {
+    const el = mount<Quiet>('kit-quiet');
+    expect(slot(el).hidden).toBe(true);
+    intersect(el);
+    await flush();
+    expect(el.calls).toBe(1);
+    expect(slot(el).hidden).toBe(true);
+    el.release[0]!();
+    await flush();
+    expect(slot(el).hidden).toBe(true);
+    el.remove();
+    expect(slot(el).hidden).toBe(true);
+    // The control: a figure that does not ask shows it while its render is pending.
+    const loud = mount<Slow>('kit-slow');
+    intersect(loud);
+    await flush();
+    expect(slot(loud).hidden).toBe(false);
+  });
+
+  it('a failure still shows it', async () => {
+    const error = vi.spyOn(console, 'error').mockImplementation(() => {});
+    const el = mount<QuietBroken>('kit-quiet-broken');
+    intersect(el);
+    await flush();
+    expect(el.hasAttribute('data-failed')).toBe(true);
+    expect(slot(el).hidden).toBe(false);
+    error.mockRestore();
+  });
+});
