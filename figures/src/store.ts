@@ -208,7 +208,11 @@ export function createStore(o: StoreOptions): Store {
   let prefs: { readerColour: Colour; level: Level } = { readerColour: 'White', level: 'normal' };
   let followSize: FollowSize = FOLLOW_SIZE_DEFAULT;
   let followClosed = false;
-  let restored = false;
+  let settingsRead = false;
+  /** The saved games as read, until the engine can rebuild them: written back as they were meanwhile. */
+  let unread: { current: Saved | null; lastFinished: Saved | null } | null = null;
+  /** The engine has loaded (`ready()`): a record it refuses from then on is dropped, not kept for later. */
+  let engineUp = false;
   let readyPromise: Promise<void> | undefined;
 
   const emit = (ev: StoreEvent): void => {
@@ -226,8 +230,8 @@ export function createStore(o: StoreOptions): Store {
   const write = (): void => {
     const file: SavedFile = {
       v: 1,
-      current: current && toSaved(current),
-      lastFinished: last && toSaved(last),
+      current: unread ? unread.current : current && toSaved(current),
+      lastFinished: unread ? unread.lastFinished : last && toSaved(last),
       prefs,
       followSize,
       followClosed,
@@ -239,10 +243,9 @@ export function createStore(o: StoreOptions): Store {
     }
   };
 
-  /** Runs once, before the first change and at `ready()`: the engine is usable by then. */
-  const restore = (): void => {
-    if (restored) return;
-    restored = true;
+  /** The saved preferences and follow board, once; the saved games stay unread. */
+  const readSettings = (): void => {
+    settingsRead = true;
     const raw = read();
     if (raw === null) return;
     let file: Partial<SavedFile>;
@@ -256,13 +259,31 @@ export function createStore(o: StoreOptions): Store {
     if (p && isColour(p.readerColour) && isLevel(p.level)) prefs = { readerColour: p.readerColour, level: p.level };
     followSize = isFollowSize(file.followSize) ? file.followSize : file.followOpen === true ? 'open' : FOLLOW_SIZE_DEFAULT;
     followClosed = file.followClosed === true;
+    unread = { current: file.current ?? null, lastFinished: file.lastFinished ?? null };
+  };
+
+  /**
+   * Before the first change and at `ready()`. The settings are read once; the saved games
+   * are rebuilt once the engine can: a board opened before the wasm has loaded (open()
+   * sizes it) leaves them unread, written back as they were, until `ready()`.
+   */
+  const restore = (): void => {
+    if (!settingsRead) readSettings();
+    if (unread === null) return;
+    let lastFinished: GameRecord | null;
+    let saved: GameRecord | null;
     try {
-      const lastFinished = file.lastFinished ? rebuild(file.lastFinished) : null;
-      if (lastFinished?.finished) last = lastFinished;
-      if (file.current) current = rebuild(file.current);
+      lastFinished = unread.lastFinished ? rebuild(unread.lastFinished) : null;
+      saved = unread.current ? rebuild(unread.current) : null;
     } catch {
-      // A record the engine refuses is dropped like any other invalid one.
+      // The engine's functions throw before it has loaded: the save waits for it.
+      if (!engineUp) return;
+      // A record the loaded engine refuses is dropped like any other invalid one.
+      lastFinished = saved = null;
     }
+    unread = null;
+    if (lastFinished?.finished && last === null) last = lastFinished;
+    if (saved !== null && current === null) current = saved;
     if (current !== null || last !== null) emit('game');
   };
 
@@ -319,7 +340,10 @@ export function createStore(o: StoreOptions): Store {
     },
 
     ready() {
-      readyPromise ??= (o.loadEngine ?? (() => ready(assetUrl(WASM_FILE))))().then(restore);
+      readyPromise ??= (o.loadEngine ?? (() => ready(assetUrl(WASM_FILE))))().then(() => {
+        engineUp = true;
+        restore();
+      });
       return readyPromise;
     },
 
