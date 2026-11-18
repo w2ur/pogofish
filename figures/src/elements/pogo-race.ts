@@ -3,7 +3,7 @@
 // by games trained on a log axis, with the exact-table player, greedy and the
 // random player as horizontal references (public/data/v5.json, seed 1;
 // race-chart.ts places every point). Stage 0 sits in its own column, detached
-// from the axis and named « avant l’entraînement » under it. Each point's 95 %
+// from the axis and named « avant l’entrainement » under it. Each point's 95 %
 // interval is a capped ink stroke beside its marker. Ink only: the programs differ by line style and marker shape.
 //
 // It runs as a race when it comes on screen (kit/autoplay.ts): one clock sweeps
@@ -108,7 +108,7 @@ function interval(p: Pick<RacePoint, 'x' | 'lo' | 'hi'>): HTMLElement {
   return bar;
 }
 
-/** « AlphaZero, 100 simulations : au-dessus du glouton dès 500 parties d’entraînement. » */
+/** « AlphaZero, 100 simulations : au-dessus du glouton dès 500 parties d’entrainement. » */
 export function passWords(lang: Lang, s: RaceSeries): { name: string; rest: string; games: number } {
   const name = `${t(lang, NAME[s.program])}${colon(lang)} `;
   if (s.firstAbove) {
@@ -117,7 +117,7 @@ export function passWords(lang: Lang, s: RaceSeries): { name: string; rest: stri
   return { name, rest: `${t(lang, 'raceNeverIn')} `, games: s.points.at(-1)!.gamesTrained };
 }
 
-/** The clock's place in words: « 1 000 parties », « avant l’entraînement » at the start. */
+/** The clock's place in words: « 1 000 parties », « avant l’entrainement » at the start. */
 export function clockWords(lang: Lang, e: RaceEvent): string {
   return e.games === 0 ? t(lang, 'raceBefore') : `${formatCount(lang, e.games)} ${t(lang, 'stagesGames')}`;
 }

@@ -46,7 +46,7 @@ function el<K extends keyof HTMLElementTagNameMap>(tag: K, className = '', text 
   return node;
 }
 
-/** « 5 % de l’entraînement effectué »: a stage's number never stands alone, or it reads as games won. */
+/** « 5 % de l’entrainement effectué »: a stage's number never stands alone, or it reads as games won. */
 export function doneText(lang: Lang, pct: number): string {
   return `${pctText(lang, pct)} ${t(lang, 'mosaicOfTraining')}`;
 }

@@ -51,7 +51,7 @@ const pc = (f: number): string => `${(f * 100).toFixed(3)}%`;
 const Y = (score: number): number => (1 - score) * U;
 
 export interface StageWords {
-  /** « Q-learning · après 50 000 parties, 1 % de l’entraînement » */
+  /** « Q-learning · après 50 000 parties, 1 % de l’entrainement » */
   where: string;
   /** « 3,2 % » */
   score: string;
@@ -59,7 +59,7 @@ export interface StageWords {
   interval: string;
   /** « Partie montrée : le programme est Blanc, le glouton Rouge. » */
   shown: string;
-  /** The stage as its point names it: « 1 % de l’entraînement : 3,2 % de parties gagnées contre le glouton ». */
+  /** The stage as its point names it: « 1 % de l’entrainement : 3,2 % de parties gagnées contre le glouton ». */
   point: string;
 }
 
@@ -67,7 +67,7 @@ export interface StageWords {
 export function stageWords(lang: Lang, program: StageProgram, stage: V5Stage): StageWords {
   const c = colon(lang);
   const share = `${pctText(lang, stage.pct)} ${t(lang, 'stagesOfTraining')}`;
-  // Stage 0 has trained on nothing: « avant tout entraînement », as <pogo-mosaic> says it (whenText).
+  // Stage 0 has trained on nothing: « avant tout entrainement », as <pogo-mosaic> says it (whenText).
   const when = stage.gamesTrained === 0 ? whenText(lang, 0) : `${whenText(lang, stage.gamesTrained)}, ${share}`;
   const score = formatShare(lang, stage.score);
   return {

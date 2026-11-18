@@ -84,9 +84,9 @@ describe('<pogo-stages>', () => {
     expect(where.querySelector('.keep-case')!.textContent).toBe('λ');
   });
 
-  it('stage 0 reads « avant tout entraînement », not « 0 % de l’entraînement : 0 parties »', async () => {
+  it('stage 0 reads « avant tout entrainement », not « 0 % de l’entrainement : 0 parties »', async () => {
     for (const [lang, text] of [
-      ['fr', 'TD(λ) · avant tout entraînement'],
+      ['fr', 'TD(λ) · avant tout entrainement'],
       ['en', 'TD(λ) · before any training'],
     ] as const) {
       const el = await mount('td', lang);
@@ -99,12 +99,12 @@ describe('<pogo-stages>', () => {
 
   it('the points of the curve are the stage picker: one radio per stage of the data, named by its score, the first chosen', async () => {
     const el = await mount('qtab');
-    expect($(el, '[role="radiogroup"]').getAttribute('aria-label')).toBe('Étape de l’entraînement');
+    expect($(el, '[role="radiogroup"]').getAttribute('aria-label')).toBe('Étape de l’entrainement');
     expect(choices(el)).toHaveLength(v5.stagesPct.length);
     expect(choices(el).map((b) => b.getAttribute('aria-checked'))).toEqual(['true', ...v5.stagesPct.slice(1).map(() => 'false')]);
     expect(choices(el).map((b) => b.tabIndex)).toEqual([0, ...v5.stagesPct.slice(1).map(() => -1)]);
-    expect(choices(el)[0]!.getAttribute('aria-label')).toBe('avant tout entraînement : 3,1 % de parties gagnées contre le glouton');
-    expect(choices(el)[7]!.getAttribute('aria-label')).toBe('100 % de l’entraînement : 17,8 % de parties gagnées contre le glouton');
+    expect(choices(el)[0]!.getAttribute('aria-label')).toBe('avant tout entrainement : 3,1 % de parties gagnées contre le glouton');
+    expect(choices(el)[7]!.getAttribute('aria-label')).toBe('100 % de l’entrainement : 17,8 % de parties gagnées contre le glouton');
   });
 
   it('places each point at its stage’s measured score, and names the three references with their scores', async () => {
@@ -117,7 +117,7 @@ describe('<pogo-stages>', () => {
     expect($$(el, '.lines .ref')).toHaveLength(3);
     expect($$(el, '.x-axis .tick').map((x) => x.textContent)).toEqual(v5.stagesPct.map(String));
     // The stages are evenly spaced although their shares are not: the chart says so.
-    expect($(el, '.unit-x').textContent).toBe('part de l’entraînement, en % (l’axe n’est pas à l’échelle)');
+    expect($(el, '.unit-x').textContent).toBe('part de l’entrainement, en % (l’axe n’est pas à l’échelle)');
     expect($(el, '.unit-y').textContent).toBe('parties gagnées, en %');
   });
 
@@ -142,7 +142,7 @@ describe('<pogo-stages>', () => {
   it('says what the score is, where in training, and who is who in the game shown', async () => {
     const el = await mount('az100');
     choices(el)[7]!.click();
-    expect($(el, '.where').textContent).toBe('AlphaZero, 100 simulations · après 10 000 parties, 100 % de l’entraînement');
+    expect($(el, '.where').textContent).toBe('AlphaZero, 100 simulations · après 10 000 parties, 100 % de l’entrainement');
     expect($(el, '.headline').textContent).toBe('Score contre le glouton89,1 %intervalle à 95 % : 87,8 à 90,3 %');
     expect($(el, '.shown').textContent).toBe('Partie montrée : le programme est Blanc, le glouton Rouge.');
   });

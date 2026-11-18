@@ -67,7 +67,7 @@ describe('<pogo-race>', () => {
 
   it('names the column of the points before training under it, in words, never as a 0 on the axis', async () => {
     const fr = await mount('fr');
-    expect($$(fr, '.zero-axis .tick').map((n) => n.textContent)).toEqual(['avant l’entraînement']);
+    expect($$(fr, '.zero-axis .tick').map((n) => n.textContent)).toEqual(['avant l’entrainement']);
     const en = await mount('en');
     expect($$(en, '.zero-axis .tick').map((n) => n.textContent)).toEqual(['before training']);
   });
@@ -159,7 +159,7 @@ describe('<pogo-race>', () => {
     const el = await mountFake('fr');
     intersect(el);
     expect(playState(el)).toBe('pause');
-    expect($(el, '[data-role="counter"]').textContent).toBe('avant l’entraînement');
+    expect($(el, '[data-role="counter"]').textContent).toBe('avant l’entrainement');
     expect(said(el)).toHaveLength(0);
     const events = raceEvents(raceChart(v5));
     const landedAt: Record<string, number> = {};

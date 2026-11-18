@@ -75,7 +75,7 @@ describe('<pogo-mosaic>', () => {
   it('writes under each mosaic how far the program has trained and its games won, counted from the games', async () => {
     const el = await mount();
     const cell = (k: number, program: string) => rows(el)[k]!.querySelector<HTMLElement>(`.cell[data-program="${program}"]`)!;
-    expect(cell(0, 'az100').querySelector('.count')!.textContent).toBe(`avant tout entraînement · ${wins('az100', 0)} gagnées sur 100`);
+    expect(cell(0, 'az100').querySelector('.count')!.textContent).toBe(`avant tout entrainement · ${wins('az100', 0)} gagnées sur 100`);
     expect(cell(4, 'az100').querySelector('.count')!.textContent).toBe(`après 1 000 parties · ${wins('az100', 4)} gagnées sur 100`);
     expect(cell(7, 'qtab').querySelector('.count')!.textContent).toBe(`après 5 000 000 parties · ${wins('qtab', 7)} gagnées sur 100`);
     expect(cell(7, 'td').querySelector('.count strong')!.textContent).toBe(`${wins('td', 7)} gagnées sur 100`);
@@ -90,7 +90,7 @@ describe('<pogo-mosaic>', () => {
     expect($$(el, '.head .program').map((h) => h.textContent)).toEqual(['AlphaZero, 100 simulations', 'TD(λ)', 'Q-learning']);
     expect($$(el, '.stage-label .pct').map((h) => h.textContent)).toEqual(v5.stagesPct.map((p) => `${p} %`));
     // « 0 %, 1 %, 2 % » alone read as games won: the words stay by every number.
-    expect($$(el, '.stage-label .of').map((o) => o.textContent)).toEqual(v5.stagesPct.map(() => 'de l’entraînement effectué'));
+    expect($$(el, '.stage-label .of').map((o) => o.textContent)).toEqual(v5.stagesPct.map(() => 'de l’entrainement effectué'));
     expect(sheet).not.toMatch(/\.of \{[^}]*display: none/);
     const en = await mount('en');
     expect($(en, '.stage-label .of').textContent).toBe('of training done');
@@ -123,7 +123,7 @@ describe('<pogo-mosaic>', () => {
     expect(playState(el)).toBe('pause');
     await vi.advanceTimersByTimeAsync(SWEEP_INTERVAL);
     expect(shown(el)).toEqual(upTo(1));
-    expect($(el, '[data-role="counter"]').textContent).toBe('étape 2 sur 8 · 1 % de l’entraînement effectué');
+    expect($(el, '[data-role="counter"]').textContent).toBe('étape 2 sur 8 · 1 % de l’entrainement effectué');
     await vi.advanceTimersByTimeAsync(SWEEP_INTERVAL * 10);
     expect(shown(el)).toEqual(upTo(7));
     expect(playState(el)).toBe('replay');
@@ -186,7 +186,7 @@ describe('<pogo-mosaic>', () => {
     $(el, '[data-role="play"]').click();
     $(el, '[data-role="next"]').click();
     expect($(el, '.sr').textContent).toBe(
-      `1 % de l’entraînement effectué : AlphaZero, 100 simulations, ${wins('az100', 1)} gagnées sur 100 ; TD(λ), ${wins('td', 1)} gagnées sur 100 ; Q-learning, ${wins('qtab', 1)} gagnées sur 100.`,
+      `1 % de l’entrainement effectué : AlphaZero, 100 simulations, ${wins('az100', 1)} gagnées sur 100 ; TD(λ), ${wins('td', 1)} gagnées sur 100 ; Q-learning, ${wins('qtab', 1)} gagnées sur 100.`,
     );
   });
 

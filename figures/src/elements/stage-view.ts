@@ -23,12 +23,12 @@ export function pctText(lang: Lang, pct: number): string {
   return lang === 'fr' ? `${pct} %` : `${pct}%`;
 }
 
-/** « après 500 parties », or « avant tout entraînement » for stage 0, as text. */
+/** « après 500 parties », or « avant tout entrainement » for stage 0, as text. */
 export function whenText(lang: Lang, gamesTrained: number): string {
   return gamesTrained === 0 ? t(lang, 'beforeTraining') : `${t(lang, 'mosaicAfter')} ${formatCount(lang, gamesTrained)} ${t(lang, 'stagesGames')}`;
 }
 
-/** « après 500 parties », or « avant tout entraînement » for stage 0, as nodes (the count's digit groups get room). */
+/** « après 500 parties », or « avant tout entrainement » for stage 0, as nodes (the count's digit groups get room). */
 export function whenNodes(lang: Lang, gamesTrained: number): (string | HTMLElement)[] {
   if (gamesTrained === 0) return [t(lang, 'beforeTraining')];
   return [`${t(lang, 'mosaicAfter')} `, ...countNodes(lang, gamesTrained), ` ${t(lang, 'stagesGames')}`];
