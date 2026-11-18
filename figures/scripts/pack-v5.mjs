@@ -43,8 +43,10 @@ const MOSAICS = ['qtab', 'td', 'az100'];
 const SEED = '1';
 
 function packStage(key, stage) {
+  const name = `${key} stage ${stage?.pct}`;
+  check(typeof stage?.game?.file === 'string', `${name}: no game file in curves.json`);
   const game = readJson(`${V5}${stage.game.file}`);
-  const name = `${key} stage ${stage.pct}`;
+  check(Array.isArray(game.moves), `${name}: game file has no moves`);
   check(stage.unfinished === 0, `${name}: unfinished games in the bench`);
   check(game.rules === 'lc1-2' && game.opponent === 'greedy', `${name}: game file is not lc1-2 against greedy`);
   check(game.player_result === stage.game.result, `${name}: game file says ${game.player_result}, curves.json ${stage.game.result}`);
@@ -70,9 +72,11 @@ function packStage(key, stage) {
 function packMosaic(key, entry) {
   const arena = readJson(`${V5}${entry.file}`);
   const name = `${key} mosaic ${entry.pct}`;
+  check(Array.isArray(arena.game_list), `${name}: no game_list`);
   check(arena.game_list.length === entry.games, `${name}: ${arena.game_list.length} games, curves.json ${entry.games}`);
   const games = arena.game_list.map((g) => {
     check(g.result === 'win' || g.result === 'loss', `${name}: a game ended ${g.result}`);
+    check(Array.isArray(g.player_moves), `${name}: a game has no player_moves`);
     const mistakes = g.player_moves.filter((m) => m.verdict === 'mistake').length;
     const keeps = g.player_moves.filter((m) => m.verdict === 'keep').length;
     return { result: g.result, mistakes, judged: mistakes + keeps };
@@ -88,17 +92,22 @@ const sameList = (a, b) => a.length === b.length && a.every((x, i) => x === b[i]
 function packV5() {
   const curves = readJson(`${V5}curves.json`);
   check(curves.rules === 'lc1-2' && curves.opponent === 'greedy', 'curves.json is not lc1-2 against greedy');
+  // A field missing from the source is a finding like a field that disagrees, never a TypeError (exit 2).
+  check(Array.isArray(curves.stages_pct), 'curves.json has no stages_pct');
   const programs = {};
   for (const key of PROGRAMS) {
-    const program = curves.programs[key];
-    check(program !== undefined && program.seeds[SEED]?.length === curves.stages_pct.length, `${key}: no seed-${SEED} stages`);
-    check(sameList(program.seeds[SEED].map((s) => s.pct), curves.stages_pct), `${key}: stages are not stages_pct`);
-    programs[key] = { label: program.label, stages: program.seeds[SEED].map((s) => packStage(key, s)) };
+    const program = curves.programs?.[key];
+    const stages = program?.seeds?.[SEED];
+    check(Array.isArray(stages) && stages.length === curves.stages_pct.length, `${key}: no seed-${SEED} stages`);
+    check(sameList(stages.map((s) => s?.pct), curves.stages_pct), `${key}: stages are not stages_pct`);
+    programs[key] = { label: program.label, stages: stages.map((s) => packStage(key, s)) };
   }
   const mosaics = {};
   for (const key of MOSAICS) {
-    check(sameList(curves.mosaics[key].map((m) => m.pct), curves.stages_pct), `${key}: mosaic stages are not stages_pct`);
-    mosaics[key] = curves.mosaics[key].map((m) => packMosaic(key, m));
+    const entries = curves.mosaics?.[key];
+    check(Array.isArray(entries), `${key}: no mosaic in curves.json`);
+    check(sameList(entries.map((m) => m?.pct), curves.stages_pct), `${key}: mosaic stages are not stages_pct`);
+    mosaics[key] = entries.map((m) => packMosaic(key, m));
   }
   return {
     rules: curves.rules,
@@ -116,7 +125,7 @@ function packV5() {
 function packReach() {
   const report = readJson(SOLVE);
   const counts = report.reachable_first_seen_at_ply;
-  check(counts.length === 16, `reach.json lists ${counts.length} plies, not 16`);
+  check(Array.isArray(counts) && counts.length === 16, `reach.json lists ${counts?.length} plies, not 16`);
   check(counts.reduce((a, b) => a + b, 0) === report.reachable, 'first-seen counts do not add up to the reachable total');
   return {
     positionsTotal: report.positions_total,
