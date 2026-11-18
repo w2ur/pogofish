@@ -52,9 +52,9 @@ export type NetKind = 'td' | 'az';
 /** Links drawn into each neuron: its strongest for the position shown. */
 export const PER_NODE = 6;
 /** Milliseconds the signal takes from one layer to the next. */
-export const STEP_MS = 850;
+export const STEP_MS = 1275;
 /** Milliseconds a position stays lit, its value shown, before the next. */
-export const HOLD_MS = 2800;
+export const HOLD_MS = 4200;
 /** Preferred moves listed for AlphaZero. */
 export const TOP_MOVES = 5;
 

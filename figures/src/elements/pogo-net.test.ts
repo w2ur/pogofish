@@ -11,7 +11,7 @@ import { REDUCED_MOTION, intersect, leave, playState, resetMedia, setMedia } fro
 import { LINK_ALPHA, LINK_WIDTH, flowEnd } from './net-canvas';
 import { netGraph, signal } from './net-graph';
 import { DEFAULT_PLY, defaultPosition } from './net-position';
-import { PER_NODE, PogoNet, STEP_MS, TOP_MOVES, drawnWords, inputWords, netNumber, outputMove, positionMs, probeWords } from './pogo-net';
+import { HOLD_MS, PER_NODE, PogoNet, STEP_MS, TOP_MOVES, drawnWords, inputWords, netNumber, outputMove, positionMs, probeWords } from './pogo-net';
 import { PogoEncoding } from './pogo-encoding';
 
 if (!customElements.get('pogo-net')) customElements.define('pogo-net', PogoNet);
@@ -105,6 +105,11 @@ afterEach(() => {
 });
 
 describe('<pogo-net>', () => {
+  it('reads slowly: a layer takes 1 275 ms to cross and a position stays lit 4 200 ms (round 6, the first pace was a little fast)', () => {
+    expect(STEP_MS).toBe(1275);
+    expect(HOLD_MS).toBe(4200);
+  });
+
   it('draws every layer as a column of nodes, its size read from the header: TD 127 → 128 → 64 → 1', async () => {
     const el = await mount('td');
     expect($$(el, '.col-label').map((l) => l.textContent)).toEqual(['127entrées', '128neurones', '64neurones', '1note']);
