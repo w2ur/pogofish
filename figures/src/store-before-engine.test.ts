@@ -23,7 +23,7 @@ function memory() {
 }
 
 describe('a follow board opened before the engine has loaded', () => {
-  // Regression: <fix> — open() closed/sized the board before ready(): restore() ran without the engine,
+  // Regression: 09d1abb — open() closed/sized the board before ready(): restore() ran without the engine,
   // dropped the saved game, latched, and the next write erased it from sessionStorage.
   it('keeps the saved game, in storage and once the engine is there', async () => {
     const storage = memory();

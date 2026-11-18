@@ -104,7 +104,7 @@ describe('dragAndDrop, by pointer (mouse, pen, touch)', () => {
     expect(dragged.at(-1)).toBeNull();
   });
 
-  // Regression: <fix> — the places were measured once, at the press: a page scrolled during the drag
+  // Regression: 4562e97 — the places were measured once, at the press: a page scrolled during the drag
   // (a mouse wheel) dropped on the place that used to be under the pointer, not the one under it now.
   it('the page scrolled during a drag: what is under the pointer now is where it drops', () => {
     const { places, pointer, dragged, dropped } = setup();

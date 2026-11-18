@@ -7,7 +7,7 @@ const within = (p: Promise<unknown>) => Promise.race([p, new Promise((r) => setT
 
 // A file of its own: the entry's lazy definition is set up once per page, and so once per file here.
 describe('openBoard settles when no board can open', () => {
-  // Regression: <fix> — it awaited whenDefined('pogo-board') forever when there was no board,
+  // Regression: d3aa2d8 — it awaited whenDefined('pogo-board') forever when there was no board,
   // defineAll() had not run, or the board's module failed to load.
   it('with no board on the page', async () => {
     expect(await within(openBoard())).toBe(false);

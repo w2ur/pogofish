@@ -39,7 +39,7 @@ describe('check-dist: the entry imports statically only the engine chunk', () =>
     expect(check(`import { s as E } from "./${ENGINE}";\n${LOADER}`)).toMatchObject({ status: 0 });
   });
 
-  // Regression: <fix> — the check matched only `import … from "…"` at a line's start, double-quoted:
+  // Regression: ec3f90c — the check matched only `import … from "…"` at a line's start, double-quoted:
   // a side-effect, single-quoted, minified or re-exporting import, or one made by the engine chunk, passed.
   it.each([
     ['a side-effect import', `import "./${ELEMENT}";\n`],

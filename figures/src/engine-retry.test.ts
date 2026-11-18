@@ -5,7 +5,7 @@ import { describe, expect, it, vi } from 'vitest';
 const WASM = pathToFileURL(resolve(process.cwd(), '../wasm-pkg/pogofish_wasm_bg.wasm')).href;
 
 describe('ready()', () => {
-  // Regression: <fix> — a failed load was kept forever: every later ready() rejected without trying again.
+  // Regression: 67520a4 — a failed load was kept forever: every later ready() rejected without trying again.
   it('a load that failed is tried again by the next call', async () => {
     // A fresh module: the setup file has already loaded this one's engine.
     vi.resetModules();

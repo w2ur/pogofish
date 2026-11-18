@@ -42,7 +42,7 @@ describe('pack-v5, on a source that contradicts itself', () => {
     expect(written()).toEqual([]);
   });
 
-  // Regression: <fix> — a missing seed list or mosaic list threw a TypeError, read as « could not run » (exit 2).
+  // Regression: 25da136 — a missing seed list or mosaic list threw a TypeError, read as « could not run » (exit 2).
   it('a missing field is a finding too, not a script that could not run', () => {
     const cases: [string, (c: Curves) => void][] = [
       ['programs.td.seeds', (c) => delete c.programs!.td!.seeds],

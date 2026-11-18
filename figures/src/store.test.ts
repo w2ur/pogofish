@@ -379,7 +379,7 @@ function afterTheEnd(): Triple {
 }
 
 describe('ready', () => {
-  // Regression: <fix> — a failed engine load was kept forever: every later ready() rejected without trying again.
+  // Regression: 67520a4 — a failed engine load was kept forever: every later ready() rejected without trying again.
   it('a load that failed is tried again by the next call', async () => {
     const load = vi.fn().mockRejectedValueOnce(new Error('offline')).mockResolvedValue(undefined);
     const store = createStore({ storage: memory(), loadEngine: load });
