@@ -63,11 +63,14 @@
   grid-area: result;
 }
 
-/* Beside the board from 560px: the two share the width, then the board stops at 360px. */
+/* Beside the board from 560px: the two share the width, then the board stops at 360px.
+   The table runs down the right; the transport and the result stack under the board,
+   so no empty band opens between the board and its controls (owner, 2026-11-18). */
 @container (min-width: 560px) {
   .game {
     grid-template-columns: minmax(0, 1fr) minmax(240px, 1fr);
-    grid-template-areas: "board panel" "controls result";
+    grid-template-areas: "board panel" "controls panel" "result panel";
+    grid-template-rows: auto auto 1fr;
     align-items: start;
   }
 }
