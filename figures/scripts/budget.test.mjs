@@ -15,6 +15,7 @@ import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import { fileURLToPath } from 'node:url';
 import { gzipSync } from 'node:zlib';
+import { dynamicImports as readDynamic, eagerClosure as closure, staticImports as readStatic, staticSpecifiers } from './dist-imports.mjs';
 
 const ROOT = resolve(dirname(fileURLToPath(import.meta.url)), '..');
 const DIST = resolve(ROOT, 'dist');
@@ -36,20 +37,10 @@ const jsFiles = readdirSync(DIST, { recursive: true })
 /** A relative specifier, as a path of dist/, from the file that holds it. */
 const under = (from, spec) => posix.normalize(posix.join(posix.dirname(from), spec));
 
-/** The files a file imports statically (`import … from "./x.js"`, `import "../x.js"`), as paths of dist/. */
-const staticImports = (f) =>
-  [...text(f).matchAll(/^import\s+(?:[^'";]*?\s+from\s+)?["'](\.{1,2}\/[^"']+)["']/gm)].map((m) => under(f, m[1]));
-
-/** The files a file imports dynamically (`import("./x.js")`), as paths of dist/. */
-const dynamicImports = (f) => [...text(f).matchAll(/\bimport\(\s*["'](\.{1,2}\/[^"']+)["']\s*\)/g)].map((m) => under(f, m[1]));
-
-/** The entry and every chunk reachable from it by static imports. */
-function eagerClosure() {
-  const seen = new Set([ENTRY]);
-  const queue = [ENTRY];
-  while (queue.length) for (const dep of staticImports(queue.pop())) if (!seen.has(dep)) seen.add(dep), queue.push(dep);
-  return [...seen];
-}
+// What a file imports, read the way scripts/check-dist.sh reads it (scripts/dist-imports.mjs).
+const staticImports = (f) => readStatic(DIST, f);
+const dynamicImports = (f) => readDynamic(DIST, f);
+const eagerClosure = () => closure(DIST, ENTRY);
 
 /** `"pogo-x": () => import("./assets/pogo-x-HASH.js").then((m) => m.PogoX)` in the entry, as tag → [chunk, export]. */
 function loaders() {
@@ -92,8 +83,8 @@ test('the entry imports statically only the engine glue: no element, wasm, net o
   );
   // The engine chunk names the files (src/assets.ts), and fetches them only when asked.
   for (const f of eager)
-    for (const m of text(f).matchAll(/^import\s+(?:[^'";]*?\s+from\s+)?["']([^"']+)["']/gm))
-      assert.doesNotMatch(m[1], /\.(wasm|pfw|pfv|json)$/, `${f} imports ${m[1]} statically`);
+    for (const spec of staticSpecifiers(DIST, f))
+      assert.doesNotMatch(spec, /\.(wasm|pfw|pfv|json)$/, `${f} imports ${spec} statically`);
 });
 
 test('every import of every JS file, static or dynamic, resolves to a file of dist/', () => {

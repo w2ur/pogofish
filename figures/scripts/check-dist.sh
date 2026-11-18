@@ -25,8 +25,11 @@ unhashed=$(find dist/assets -type f | grep -Ev -- "$HASHED")
 [ -z "$unhashed" ] || { echo "check-dist: unhashed file(s) under dist/assets/: $unhashed" >&2; status=1; }
 roothashed=$(find dist -maxdepth 1 -type f | grep -E -- "$HASHED")
 [ -z "$roothashed" ] || { echo "check-dist: hashed file(s) at the root of dist/: $roothashed" >&2; status=1; }
-eager=$(grep -o '^import [^;]* from "[^"]*"' dist/pogo-figures.js | grep -v 'from "./assets/engine-' | wc -l | tr -d ' ')
-[ "$eager" = "0" ] || { echo "check-dist: pogo-figures.js statically imports $eager chunk(s) besides the engine" >&2; status=1; }
+# The eager closure, by the detection budget.test.mjs uses (scripts/dist-imports.mjs): any
+# import form, quoted either way, minified or not, and what the engine chunk imports in turn.
+closure=$(node scripts/dist-imports.mjs eager dist pogo-figures.js) || { echo "check-dist: could not read the entry's imports" >&2; exit 2; }
+eager=$(printf '%s\n' "$closure" | grep -Ev '^(pogo-figures\.js|assets/engine-[A-Za-z0-9_-]{8}\.js)$' | tr '\n' ' ')
+[ -z "$eager" ] || { echo "check-dist: pogo-figures.js loads eagerly a chunk besides the engine: $eager" >&2; status=1; }
 parser=$(grep -c 'PFW1\|PFV1' dist/pogo-figures.js)
 [ "$parser" = "0" ] || { echo "check-dist: pogo-figures.js holds the net parser ($parser match)" >&2; status=1; }
 [ "$status" = 0 ] && echo "check-dist: entry, worker and binaries at the root, unhashed; every hashed chunk under assets/; nothing inlined; the parser and the search load on demand"
