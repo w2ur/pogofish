@@ -377,3 +377,14 @@ function afterTheEnd(): Triple {
   const m = legal(replay([...LOOP, ...LOOP])[8]!)[0]!;
   return [m.from_cell, m.num_pieces, m.to_cell];
 }
+
+describe('ready', () => {
+  // Regression: <fix> — a failed engine load was kept forever: every later ready() rejected without trying again.
+  it('a load that failed is tried again by the next call', async () => {
+    const load = vi.fn().mockRejectedValueOnce(new Error('offline')).mockResolvedValue(undefined);
+    const store = createStore({ storage: memory(), loadEngine: load });
+    await expect(store.ready()).rejects.toThrow('offline');
+    await expect(store.ready()).resolves.toBeUndefined();
+    expect(load).toHaveBeenCalledTimes(2);
+  });
+});

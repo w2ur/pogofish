@@ -43,7 +43,7 @@ export interface Store {
   /** Opens the board on `s` (the reader plays the side to move), emits 'game' then 'playfrom'. A finished position is ignored. */
   playFrom(s: State, label: string): void;
   on(ev: StoreEvent, fn: () => void): () => void;
-  /** Loads the engine, then restores the saved games once. Await it before reading a saved game. */
+  /** Loads the engine, then restores the saved games once. Await it before reading a saved game. A failed load is tried again by the next call. */
   ready(): Promise<void>;
   /** Abandons any game under way and starts one from the initial position. */
   newGame(readerColour: Colour, level: Level): void;
@@ -343,6 +343,10 @@ export function createStore(o: StoreOptions): Store {
       readyPromise ??= (o.loadEngine ?? (() => ready(assetUrl(WASM_FILE))))().then(() => {
         engineUp = true;
         restore();
+      }).catch((error: unknown) => {
+        // A failed load is not kept: the next caller tries again.
+        readyPromise = undefined;
+        throw error;
       });
       return readyPromise;
     },

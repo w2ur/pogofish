@@ -53,13 +53,16 @@ async function loadBytes(url: URL): Promise<BufferSource> {
   return response.arrayBuffer();
 }
 
-/** Loads the engine once; later calls return the same promise. */
+/** Loads the engine once; later calls return the same promise, or try again after a failure. */
 export function ready(wasmUrl?: string): Promise<void> {
   readyPromise ??= (async () => {
     // Relative to the package's root, not to this module: it sits in a chunk under assets/.
     const url = new URL(wasmUrl ?? WASM_FILE, assetUrl(HERE));
     wasm.initSync({ module: await loadBytes(url) });
-  })();
+  })().catch((error: unknown) => {
+    readyPromise = undefined;
+    throw error;
+  });
   return readyPromise;
 }
 
