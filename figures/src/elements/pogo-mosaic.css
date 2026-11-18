@@ -1,8 +1,8 @@
 /*
  * <pogo-mosaic>: three programs side by side, a row per stage of training, in
- * each cell a hundred squares. A game won is a white square, a game lost a
- * black one; every square is framed by a hairline drawn over the fills, so
- * white stands off the light ground and black off the dark one. The programs
+ * each cell a hundred squares. A game won is a full square in the page's one
+ * red; a game lost is an empty square with a hairline, which stands off the
+ * ground in either theme. The programs
  * are told apart by their columns and headings, never by hue. The SVG scales as a whole;
  * it holds no text, and its hairlines keep their width.
  *
@@ -124,19 +124,13 @@
   vector-effect: non-scaling-stroke;
 }
 
-/* A game, won or lost: filled at its own delay, at once; emptied at once when its stage is taken back. */
+/* A game won: filled at its own delay, at once; emptied at once when its stage is taken back. */
 .mosaic .won {
-  fill: var(--_white);
+  fill: var(--_red);
   opacity: 0;
 }
 
-.mosaic .lost {
-  fill: var(--_black);
-  opacity: 0;
-}
-
-.stage-row[data-on] .won,
-.stage-row[data-on] .lost {
+.stage-row[data-on] .won {
   opacity: 1;
   transition: opacity 0s linear var(--d);
 }
@@ -261,7 +255,6 @@
 
 @media (prefers-reduced-motion: reduce) {
   .stage-row[data-on] .won,
-  .stage-row[data-on] .lost,
   .stage-row[data-on] .count {
     transition: none;
   }

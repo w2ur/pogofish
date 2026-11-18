@@ -2,9 +2,9 @@
 // one per program; eight rows, one per stage of training; in each cell the
 // first 100 games of the program's bench against greedy at that stage
 // (public/data/v5.json; mosaic-grid.ts), one square per game in the order they
-// were played, 20 to a row. A game won is a white square, a game lost a black
-// one, each framed by a hairline so both stand off the ground in either theme:
-// the picture reads from afar, white spreading down the columns of the
+// were played, 20 to a row. A game won is a full square in the kit's red, a game
+// lost an empty square with a hairline, so it stands off the ground in either
+// theme: the picture reads from afar, red spreading down the columns of the
 // programs that learn. Each row says, by its number, that the number is the
 // share of the training done (read alone, « 0 %, 1 %, 2 % » passed for games
 // won). Under each mosaic, how far the program has trained and its games won.
@@ -57,8 +57,8 @@ export function winsWords(lang: Lang, s: Pick<MosaicStage, 'wins' | 'games'>): s
 }
 
 /**
- * One stage of one program: a filled square per game, won or lost, which carries its
- * game's number and its delay, then every game's frame in one path over them all.
+ * One stage of one program: every game's hairline square in one path, and a filled
+ * square over it for each game won, which carries its game's number and its delay.
  */
 export function mosaicSvg(stage: Pick<MosaicStage, 'squares'>): SVGSVGElement {
   const rows = Math.max(1, Math.ceil(stage.squares.length / MOSAIC_COLUMNS));
@@ -70,23 +70,24 @@ export function mosaicSvg(stage: Pick<MosaicStage, 'squares'>): SVGSVGElement {
   const slots = document.createElementNS(NS, 'path');
   slots.setAttribute('class', 'slots');
   let d = '';
-  const fills: SVGRectElement[] = [];
+  const won: SVGRectElement[] = [];
   stage.squares.forEach((q, k) => {
     const x = q.col * CELL + INSET;
     const y = q.row * CELL + INSET;
     d += `M${x} ${y}h${SIDE}v${SIDE}h${-SIDE}z`;
+    if (q.result !== 'win') return;
     const r = document.createElementNS(NS, 'rect');
-    r.setAttribute('class', q.result === 'win' ? 'won' : 'lost');
+    r.setAttribute('class', 'won');
     r.setAttribute('x', String(x));
     r.setAttribute('y', String(y));
     r.setAttribute('width', String(SIDE));
     r.setAttribute('height', String(SIDE));
     r.dataset.game = String(k);
     r.style.setProperty('--d', `${sweepDelay(k)}ms`);
-    fills.push(r);
+    won.push(r);
   });
   slots.setAttribute('d', d);
-  svg.append(...fills, slots);
+  svg.append(slots, ...won);
   return svg;
 }
 

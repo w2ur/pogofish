@@ -48,7 +48,7 @@ afterEach(() => {
 });
 
 describe('<pogo-mosaic>', () => {
-  it('draws the three programs side by side, one row per stage: 100 framed squares each, filled won or lost, in the data’s order', async () => {
+  it('draws the three programs side by side, one row per stage: 100 framed squares each, a red one filled per game won, in the data’s order', async () => {
     const el = await mount();
     expect(rows(el)).toHaveLength(v5.stagesPct.length);
     rows(el).forEach((row, k) => {
@@ -56,17 +56,15 @@ describe('<pogo-mosaic>', () => {
       expect(cells.map((c) => c.dataset.program)).toEqual([...MOSAIC_PROGRAMS]);
       cells.forEach((cell, p) => {
         const games = v5.mosaics[MOSAIC_PROGRAMS[p]!][k]!.games;
-        // Every game has its frame, drawn over the fills so each square keeps its edge on any ground.
+        // Every game has its frame, under the red: a lost game is the empty frame.
         const slots = cell.querySelector('.slots')!;
         expect((slots.getAttribute('d') ?? '').split('M').length - 1).toBe(100);
-        expect(slots.parentElement!.lastElementChild).toBe(slots);
-        // And one filled square, won or lost, at its own place.
+        expect(slots.parentElement!.firstElementChild).toBe(slots);
+        // And one filled square per game won, at its own place; a lost game has none.
         const won = [...cell.querySelectorAll<SVGRectElement>('rect.won')];
-        const lost = [...cell.querySelectorAll<SVGRectElement>('rect.lost')];
         expect(won.map((r) => Number(r.dataset.game))).toEqual(games.flatMap((g, i) => (g.result === 'win' ? [i] : [])));
-        expect(lost.map((r) => Number(r.dataset.game))).toEqual(games.flatMap((g, i) => (g.result === 'loss' ? [i] : [])));
-        expect(won.length + lost.length).toBe(100);
-        for (const r of [...won, ...lost]) {
+        expect(cell.querySelectorAll('rect.lost')).toHaveLength(0);
+        for (const r of won) {
           const i = Number(r.dataset.game);
           expect([Number(r.getAttribute('x')), Number(r.getAttribute('y'))]).toEqual([(i % 20) * 10 + 1, Math.floor(i / 20) * 10 + 1]);
         }
@@ -100,18 +98,17 @@ describe('<pogo-mosaic>', () => {
 
   it('says what a square is in one line, and nothing else: no note, no disclosure, no table of values', async () => {
     const el = await mount();
-    expect($(el, '.key').textContent).toBe('Une case par partie : blanche si le programme gagne, noire s’il perd.');
-    expect($(await mount('en'), '.key').textContent).toBe('One square per game: white if the program wins, black if it loses.');
+    expect($(el, '.key').textContent).toBe('Une case par partie : rouge si le programme gagne, vide s’il perd.');
+    expect($(await mount('en'), '.key').textContent).toBe('One square per game: red if the program wins, empty if it loses.');
     expect(el.shadowRoot!.querySelector('details')).toBeNull();
     expect(el.shadowRoot!.querySelector('table')).toBeNull();
     expect($$(el, '.mosaics > p').map((p) => p.className)).toEqual(['say title', 'key', 'sr']);
   });
 
-  it('a won square is white, a lost one black, each framed so both stand off the ground in either theme: no other colour', () => {
-    expect(sheet).toMatch(/\.mosaic \.won \{[^}]*fill: var\(--_white\)/);
-    expect(sheet).toMatch(/\.mosaic \.lost \{[^}]*fill: var\(--_black\)/);
+  it('a won square is the page’s red, a lost one is its empty frame, readable in light and dark: no other colour', () => {
+    expect(sheet).toMatch(/\.mosaic \.won \{[^}]*fill: var\(--_red\)/);
+    expect(sheet).not.toMatch(/--_white|--_black|\.lost/);
     expect(sheet).toMatch(/\.mosaic \.slots \{[^}]*fill: none;[^}]*stroke: var\(--_edge\)/);
-    expect(sheet).not.toMatch(/--_red/);
     expect(sheet).not.toMatch(/#[0-9a-f]{3,6}\b|rgb\(|hsl\(/i);
   });
 
@@ -154,10 +151,11 @@ describe('<pogo-mosaic>', () => {
   it('a stage fills square by square in the order of the games, and its count comes once the last has filled', async () => {
     const el = await mount();
     const cell = rows(el)[3]!.querySelector<HTMLElement>('.cell[data-program="az100"]')!;
-    const fills = cell.querySelectorAll<SVGRectElement>('rect');
-    expect(fills).toHaveLength(100);
+    const fills = cell.querySelectorAll<SVGRectElement>('rect.won');
+    expect(fills.length).toBeGreaterThan(0);
+    expect(fills.length).toBeLessThan(100);
     for (const r of fills) expect(r.style.getPropertyValue('--d')).toBe(`${Number(r.dataset.game) * SWEEP_STEP_MS}ms`);
-    expect(sheet).toMatch(/\.stage-row\[data-on\] \.won,\s*\.stage-row\[data-on\] \.lost \{[^}]*opacity: 1;[^}]*transition: opacity 0s linear var\(--d\)/);
+    expect(sheet).toMatch(/\.stage-row\[data-on\] \.won \{[^}]*opacity: 1;[^}]*transition: opacity 0s linear var\(--d\)/);
     expect($(el, '.table').style.getPropertyValue('--sweep')).toBe(`${SWEEP_MS}ms`);
     expect(sheet).toMatch(/\.stage-row\[data-on\] \.count \{[^}]*visibility: visible;[^}]*transition: visibility 0s linear var\(--sweep\)/);
     // The interval leaves the sweep time to end and the stage time to be read.
@@ -179,7 +177,7 @@ describe('<pogo-mosaic>', () => {
     await vi.advanceTimersByTimeAsync(SWEEP_INTERVAL * 3);
     expect(shown(el)).toEqual(upTo(7));
     expect(playState(el)).toBe('play');
-    expect(sheet).toMatch(/@media \(prefers-reduced-motion: reduce\) \{[^@]*\.won,[^@]*\.lost,[^@]*\.count \{\s*transition: none/);
+    expect(sheet).toMatch(/@media \(prefers-reduced-motion: reduce\) \{[^@]*\.won,[^@]*\.count \{\s*transition: none/);
   });
 
   it('puts the transport right under the mosaics, and says each stage once to a screen reader', async () => {

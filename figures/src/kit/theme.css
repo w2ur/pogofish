@@ -29,7 +29,6 @@
   --_white: var(--pogo-white, #f2f2ee);
   --_on-red: var(--pogo-on-red, #0a0a0a);
   /* Black in both themes (a mosaic's game lost): the ground in dark, the ink in light. */
-  --_black: var(--pogo-black, #0a0a0a);
   --_action: var(--pogo-action, #f2f2ee);
   --_font: var(--pogo-font, Archivo, system-ui, sans-serif);
   --_font-display: var(--pogo-font-display, Archivo, system-ui, sans-serif);
