@@ -127,7 +127,7 @@ describe('<pogo-search>', () => {
     ]);
     expect(el.shadowRoot!.textContent).not.toMatch(/az-lc1-s1|puzzle 5|bench/);
     expect($(el, '.search').dataset.position).toBe(key(PUZZLE5));
-    expect($(el, '.where-from').textContent).toBe('Position: a test problem, Red to move.');
+    expect($(el, '.where-from').textContent).toBe('Position: an example position, Red to move.');
     expect([...visits(el).values()].every((v) => v === 0)).toBe(true);
     expect(shownText($(el, '.said-now'))).toBe('Before the search: the net’s preferences alone. The net alone prefers b2-2-a3.');
     // Every move name explains itself, in the words and in the table, and marks itself on the board.
