@@ -27,6 +27,7 @@
 // introduction are the same twelve all along. Each has a twin on the other
 // side: dimmed while the introduction plays, whole once the toy is ready.
 import { WASM_FILE, assetUrl } from '../assets';
+import { cellName } from '../board-state';
 import { DEFAULT_GAME } from '../default-game';
 import { ready, replay, type Colour, type State, type Triple } from '../engine';
 import { boardLabels } from '../kit/board-labels';
@@ -65,7 +66,6 @@ function svgEl<K extends keyof SVGElementTagNameMap>(tag: K, attrs: Record<strin
 }
 
 const transformOf = (s: Spot): string => `translate(${s.x.toFixed(2)}px, ${s.y.toFixed(2)}px) scale(${s.scale.toFixed(4)})`;
-const cellName = (i: number): string => `${'abc'[i % 3]}${Math.floor(i / 3) + 1}`;
 
 /** A piece as the kit draws it, centred on its own origin: the cut-out, the disc, the ink ring. */
 function piece(colour: Colour, parent: Element): SVGGElement {
