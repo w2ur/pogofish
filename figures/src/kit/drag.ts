@@ -41,7 +41,7 @@ export const DRAG_SLOP = 6;
 export interface DragMove {
   /** The place the drag started from. */
   from: number;
-  /** How far the pointer is from where it pressed, in CSS pixels. */
+  /** How far the pointer is from where it pressed, in CSS pixels; a scroll moves that point with the page. */
   dx: number;
   dy: number;
   /** The place a release would drop on now, or null. */
@@ -92,7 +92,18 @@ export function dragAndDrop(o: DragOptions): Drag {
   /** Taken by a tap or a key. */
   let held: number | null = null;
   /** A pointer pressed on a takeable place: `dragging` once it has moved past the slop. */
-  let press: { from: number; id: number; x: number; y: number; dragging: boolean; over: number | null; rects: DOMRect[] } | null = null;
+  let press: {
+    from: number;
+    id: number;
+    /** Where it pressed, on the screen, moved with the page when it scrolls. */
+    x: number;
+    y: number;
+    /** Where the pointer is now. */
+    at: { x: number; y: number };
+    dragging: boolean;
+    over: number | null;
+    rects: DOMRect[];
+  } | null = null;
   /** The click that follows the release of a drag is not a tap. */
   let swallowClick = false;
   let stop = 0;
@@ -145,6 +156,16 @@ export function dragAndDrop(o: DragOptions): Drag {
     return i < 0 ? null : i;
   };
 
+  const measure = (): DOMRect[] => places.map((p) => p.getBoundingClientRect());
+
+  /** The place under the pointer, the marks, and the figure told how far it is from where it was taken. */
+  const dragTo = (p: NonNullable<typeof press>): void => {
+    const at = placeAt(p.rects, p.at.x, p.at.y);
+    p.over = at !== null && canDrop(p.from, at) ? at : null;
+    sync();
+    o.onDrag?.({ from: p.from, dx: p.at.x - p.x, dy: p.at.y - p.y, over: p.over });
+  };
+
   const endDrag = (): void => {
     const was = press;
     press = null;
@@ -153,14 +174,32 @@ export function dragAndDrop(o: DragOptions): Drag {
     o.onDrag?.(null);
   };
 
+  // The page, or a box around the places, scrolled under a pointer that holds something: the places
+  // moved on the screen, and the point where it was taken moved with them.
+  document.addEventListener(
+    'scroll',
+    () => {
+      if (!press) return;
+      const rects = measure();
+      const [was, now] = [press.rects[press.from], rects[press.from]];
+      if (was && now) {
+        press.x += now.left - was.left;
+        press.y += now.top - was.top;
+      }
+      press.rects = rects;
+      if (press.dragging) dragTo(press);
+    },
+    { capture: true, passive: true, signal },
+  );
+
   places.forEach((place, i) => {
     place.addEventListener(
       'pointerdown',
       (e) => {
         swallowClick = false;
         if (!e.isPrimary || e.button !== 0 || !o.canTake(i)) return;
-        // Measured once per drag: nothing is laid out afresh while the pointer moves.
-        press = { from: i, id: e.pointerId, x: e.clientX, y: e.clientY, dragging: false, over: null, rects: places.map((p) => p.getBoundingClientRect()) };
+        // Measured at the press, and again only when the page scrolls: nothing is laid out afresh while the pointer moves.
+        press = { from: i, id: e.pointerId, x: e.clientX, y: e.clientY, at: { x: e.clientX, y: e.clientY }, dragging: false, over: null, rects: measure() };
         // Every later event of this pointer comes here, wherever it goes.
         try {
           place.setPointerCapture(e.pointerId);
@@ -174,6 +213,7 @@ export function dragAndDrop(o: DragOptions): Drag {
       'pointermove',
       (e) => {
         if (!press || e.pointerId !== press.id) return;
+        press.at = { x: e.clientX, y: e.clientY };
         const [dx, dy] = [e.clientX - press.x, e.clientY - press.y];
         if (!press.dragging && Math.hypot(dx, dy) < DRAG_SLOP) return;
         if (!press.dragging) {
@@ -181,10 +221,7 @@ export function dragAndDrop(o: DragOptions): Drag {
           // A drag takes over from a tap in progress.
           held = null;
         }
-        const at = placeAt(press.rects, e.clientX, e.clientY);
-        press.over = at !== null && canDrop(press.from, at) ? at : null;
-        sync();
-        o.onDrag?.({ from: press.from, dx, dy, over: press.over });
+        dragTo(press);
       },
       { signal },
     );

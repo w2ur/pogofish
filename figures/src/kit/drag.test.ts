@@ -104,6 +104,26 @@ describe('dragAndDrop, by pointer (mouse, pen, touch)', () => {
     expect(dragged.at(-1)).toBeNull();
   });
 
+  // Regression: <fix> — the places were measured once, at the press: a page scrolled during the drag
+  // (a mouse wheel) dropped on the place that used to be under the pointer, not the one under it now.
+  it('the page scrolled during a drag: what is under the pointer now is where it drops', () => {
+    const { places, pointer, dragged, dropped } = setup();
+    pointer('pointerdown', 0, 20);
+    pointer('pointermove', 0, 60, 20);
+    expect(dragged.at(-1)).toEqual({ from: 0, dx: 40, dy: 0, over: 1 });
+    // The page scrolls 100px down: every place is 100px higher on the screen, the pointer has not moved.
+    places.forEach((p, i) => {
+      p.getBoundingClientRect = () => ({ left: 40 * i, right: 40 * i + 40, top: -100, bottom: -60, width: 40, height: 40, x: 40 * i, y: -100 }) as DOMRect;
+    });
+    document.dispatchEvent(new Event('scroll'));
+    // Nothing lies under the pointer now, and what is dragged stays under it: 100px further down from where it was taken.
+    expect(dragged.at(-1)).toEqual({ from: 0, dx: 40, dy: 100, over: null });
+    pointer('pointermove', 0, 140, -80);
+    expect(dragged.at(-1)).toEqual({ from: 0, dx: 120, dy: 0, over: 3 });
+    pointer('pointerup', 0, 140, -80);
+    expect(dropped).toEqual([[0, 3]]);
+  });
+
   it('what may not be taken does not drag, nor does a second button or a second finger', () => {
     const { pointer, dragged, places } = setup();
     pointer('pointerdown', 2, 100);
