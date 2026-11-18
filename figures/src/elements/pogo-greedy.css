@@ -1,23 +1,24 @@
 /*
- * <pogo-greedy>: the board, and beside it from 560px (under it below) the
- * panel that tells a move: whose turn, the candidates' table (move, red
- * stacks, white stacks, gap), the greatest marked and why, the move, then the
- * result. Every line of the panel keeps its room when it has nothing to say
- * yet, and every step's table shares one cell, so neither the board nor the
- * transport under them moves during the game.
+ * <pogo-greedy>: one grid of four cells. From 560px the board and the panel that
+ * tells a move (whose turn, the candidates' table, the greatest marked and why,
+ * the move) share the top row, aligned at the top; under them the transport sits
+ * in the board's column and the result on its row, in the table's. Below 560px
+ * the four stack: board, panel, result, transport. Every line keeps its room when
+ * it has nothing to say yet, and every step's table shares one cell, so nothing
+ * moves during the game.
  */
 :host {
   container-type: inline-size;
 }
 
-/* The room the figure keeps before it renders, measured on the harness (round 5, the table: 1073px at 320, 1138 at 558, 706 from 592 up). */
+/* The room the figure keeps before it renders, measured on the harness (round 7: 1079px at 320, 1144 at 558, 653 from 592 up). */
 .stage {
-  min-height: calc(min(100cqi, 400px) + 754px);
+  min-height: calc(min(100cqi, 400px) + 760px);
 }
 
 @container (min-width: 560px) {
   .stage {
-    min-height: 710px;
+    min-height: 653px;
   }
 }
 
@@ -31,22 +32,43 @@
   margin: 0;
 }
 
-.greedy > .controls {
-  justify-content: center;
-}
-
 .game {
   display: grid;
   gap: 16px 32px;
   justify-content: center;
   grid-template-columns: minmax(0, 400px);
+  grid-template-areas: "board" "panel" "result" "controls";
+}
+
+.game > .board-slot {
+  grid-area: board;
+}
+
+.game > .panel {
+  grid-area: panel;
+}
+
+.game > .controls {
+  grid-area: controls;
+  justify-content: center;
+}
+
+@container (min-width: 560px) {
+  .game > .controls {
+    justify-content: flex-start;
+  }
+}
+
+.game > .result {
+  grid-area: result;
 }
 
 /* Beside the board from 560px: the two share the width, then the board stops at 360px. */
 @container (min-width: 560px) {
   .game {
     grid-template-columns: minmax(0, 1fr) minmax(240px, 1fr);
-    align-items: center;
+    grid-template-areas: "board panel" "controls result";
+    align-items: start;
   }
 }
 

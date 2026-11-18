@@ -185,7 +185,7 @@ export class PogoGreedy extends PogoFigure {
     result.append(who, how);
 
     const panel = el('div', 'panel');
-    panel.append(turn, weigh, why, move, result);
+    panel.append(turn, weigh, why, move);
     const live = el('p', 'sr');
     live.setAttribute('role', 'status');
     live.setAttribute('aria-live', 'polite');
@@ -289,8 +289,8 @@ export class PogoGreedy extends PogoFigure {
     const stepper = new Stepper(frames.length, show, { signal, interval: STEP_MS });
     show(0);
     const body = el('div', 'game');
-    body.append(slot, panel);
-    root.append(body, transport(stepper, { lang, unit: 'move', counter: progress(lang, 'move', true) }), live);
+    body.append(slot, panel, transport(stepper, { lang, unit: 'move', counter: progress(lang, 'move', true) }), result);
+    root.append(body, live);
     autoplay(this, stepper, { signal, still: () => stepper.go(stepper.steps - 1) });
     this.stage.append(root);
   }

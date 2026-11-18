@@ -53,6 +53,15 @@ afterEach(() => {
 });
 
 describe('<pogo-greedy>', () => {
+  // Round 7: the transport sits under the board, and the result on its row, in the table's column: both are cells of the one grid.
+  it('lays the board, the panel, the transport and the result as the four cells of one grid, the result outside the panel', async () => {
+    const el = await mount();
+    const game = $(el, '.game');
+    expect([...game.children].map((c) => c.className.split(' ')[0])).toEqual(['board-slot', 'panel', 'controls', 'result']);
+    expect($(el, '.panel .result')).toBeNull();
+    remove(el);
+  });
+
   it('starts by itself once half of it is on screen, pauses when it leaves, and resumes when it comes back', async () => {
     const el = await mount('fr');
     expect(playState(el)).toBe('play');
