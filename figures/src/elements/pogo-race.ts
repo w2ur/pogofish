@@ -23,9 +23,8 @@
 import type { V5Data } from '../data';
 import { autoplay } from '../kit/autoplay';
 import { transport } from '../kit/controls';
-import { keepCase } from '../kit/keep-case';
 import { PogoFigure } from '../kit/figure';
-import { formatScore, formatShare } from '../kit/score';
+import { formatShare } from '../kit/score';
 import { Stepper } from '../kit/stepper';
 import { colon, t, type Lang, type StringKey } from '../kit/strings';
 import { sharedV5 } from '../v5';
@@ -47,7 +46,6 @@ import {
   type RaceSeries,
   type ReferenceKey,
 } from './race-chart';
-import { pctText } from './stage-view';
 
 const NS = 'http://www.w3.org/2000/svg';
 /** The SVG's user space: 0–1000 both ways, stretched to the box (preserveAspectRatio none). */
@@ -60,7 +58,6 @@ const SEEK_MS = 300;
 const NAME: Record<RaceProgram, StringKey> = { az100: 'progAz100', az0: 'progAz0', td: 'progTd', qtab: 'progQtab' };
 const SHORT: Record<RaceProgram, StringKey> = { az100: 'raceShortAz100', az0: 'raceShortAz0', td: 'progTd', qtab: 'progQtab' };
 const REF_NAME: Record<ReferenceKey, StringKey> = { table: 'refTable', greedy: 'refGreedy', random: 'refRandom' };
-const REF_WHO: Record<ReferenceKey, StringKey> = { table: 'refTableWho', greedy: 'refGreedyWho', random: 'refRandomWho' };
 
 const pc = (f: number): string => `${(f * 100).toFixed(3)}%`;
 
@@ -298,7 +295,6 @@ export class PogoRace extends PogoFigure {
       controls,
       passes.element,
       ...(['raceAxis', 'raceCi'] as const).map((k) => el('p', 'axis-note', t(lang, k))),
-      this.values(lang, chart, data),
     );
     this.stage.append(root);
     autoplay(this, stepper, { signal, still: () => stepper.go(last) });
@@ -455,51 +451,5 @@ export class PogoRace extends PogoFigure {
     }
     box.append(list);
     return { element: box, items };
-  }
-
-  /** Every value of the chart, as a table per program, then the references. */
-  private values(lang: Lang, chart: RaceChart, data: V5Data): HTMLElement {
-    const details = el('details', 'values');
-    details.append(el('summary', 'label', t(lang, 'raceValues')));
-    const th = (text: string, scope: 'col' | 'row', className = ''): HTMLTableCellElement => {
-      const cell = el('th', className, text);
-      cell.scope = scope;
-      return cell;
-    };
-    for (const s of chart.series) {
-      const table = el('table', `table table-${s.program}`);
-      const caption = el('caption', 'label');
-      caption.append(...keepCase(t(lang, NAME[s.program])));
-      table.append(caption);
-      const head = el('tr');
-      head.append(th(t(lang, 'raceStage'), 'col'), th(t(lang, 'raceGames'), 'col'), th(t(lang, 'raceScore'), 'col'));
-      const body = el('tbody');
-      for (const p of s.points) {
-        const row = el('tr');
-        const games = el('td', 'num');
-        games.append(...countNodes(lang, p.gamesTrained));
-        row.append(th(pctText(lang, p.pct), 'row', 'num'), games, el('td', 'num', formatScore(lang, p)));
-        body.append(row);
-      }
-      const thead = el('thead');
-      thead.append(head);
-      table.append(thead, body);
-      details.append(table);
-    }
-    const refs = el('table', 'table table-refs');
-    refs.append(el('caption', 'label', t(lang, 'raceReferences')));
-    const head = el('tr');
-    head.append(th(t(lang, 'raceReference'), 'col'), th(t(lang, 'raceScore'), 'col'));
-    const thead = el('thead');
-    thead.append(head);
-    const body = el('tbody');
-    for (const r of chart.references) {
-      const row = el('tr');
-      row.append(th(t(lang, REF_WHO[r.key]), 'row'), el('td', 'num', formatScore(lang, data.references[r.key])));
-      body.append(row);
-    }
-    refs.append(thead, body);
-    details.append(refs);
-    return details;
   }
 }

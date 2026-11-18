@@ -110,21 +110,10 @@ describe('<pogo-race>', () => {
     }
   });
 
-  it('every value is in a table, as the kit prints a score', async () => {
+  it('carries no table of measured values: the chart and the pass list say it', async () => {
     for (const lang of ['fr', 'en'] as const) {
       const el = await mount(lang);
-      for (const program of RACE_PROGRAMS) {
-        const rows = $$(el, `.table-${program} tbody tr`);
-        const stages = v5.programs[program].stages;
-        expect(rows).toHaveLength(stages.length);
-        rows.forEach((row, i) => {
-          const cells = [...row.children].map((c) => c.textContent);
-          expect(cells[1]).toBe(new Intl.NumberFormat(lang === 'fr' ? 'fr-FR' : 'en-GB').format(stages[i]!.gamesTrained));
-          expect(cells[2]).toBe(formatScore(lang, stages[i]!));
-        });
-      }
-      const refs = $$(el, '.table-refs tbody td').map((c) => c.textContent);
-      expect(refs).toEqual(['table', 'greedy', 'random'].map((k) => formatScore(lang, v5.references[k as 'table'])));
+      expect($$(el, 'details, table')).toHaveLength(0);
     }
   });
 
