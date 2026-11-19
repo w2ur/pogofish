@@ -13,16 +13,13 @@ export type { CountValue };
 export const COLOURS: readonly Colour[] = ['White', 'Red'];
 export const colourKey = (c: Colour): StringKey => (c === 'White' ? 'white' : 'red');
 
-/** The follow board's controls: its bar, and the dot it shrinks to. */
+/** The follow board's controls: its bar. */
 export interface PanelUi {
   bar: HTMLElement;
   status: HTMLElement;
   /** Open ↔ bar, in words: « Réduire », « Ouvrir ». */
   toggle: HTMLButtonElement;
-  toDot: HTMLButtonElement;
   close: HTMLButtonElement;
-  /** The dot: one square that says what it is and reopens the board. */
-  dot: HTMLButtonElement;
 }
 
 export interface Ui {
@@ -68,18 +65,11 @@ export interface Handlers {
   retry(): void;
   /** The follow board: open ↔ bar. */
   toggle(): void;
-  toDot(): void;
   close(): void;
-  /** The dot was pressed: the board opens. */
-  reopen(): void;
 }
 
-/** Shrink to a dot: a square, and a smaller one filled in its corner. */
-const DOT_ICON = 'M2.5 2.5h11v11h-11zM8.5 8.5h3v3h-3z';
 /** Close: a cross. */
 const CLOSE_ICON = 'M3.5 3.5l9 9M12.5 3.5l-9 9';
-/** The board itself: three by three squares. */
-const BOARD_ICON = 'M2 2h12v12H2zM6 2v12M10 2v12M2 6h12M2 10h12';
 
 /** « Vous gagnez. » as the stamp says it: the sentence without its full stop. */
 export const stamp = (you: string): string => you.replace(/\.$/, '');
@@ -105,19 +95,13 @@ export function buildView(lang: Lang, mode: 'inline' | 'follow', h: Handlers, ta
     const toggle = controlButton(t(lang, 'collapse'), h.toggle, true);
     toggle.dataset.role = 'size';
     toggle.setAttribute('aria-controls', body.id);
-    const toDot = iconControl(t(lang, 'boardToDot'), DOT_ICON, h.toDot);
-    toDot.dataset.role = 'dot-size';
     const close = iconControl(t(lang, 'boardClose'), CLOSE_ICON, h.close);
     close.dataset.role = 'close';
     const actions = el('div', 'bar-actions');
-    actions.append(toggle, toDot, close);
+    actions.append(toggle, close);
     bar.append(status, actions);
-    const dot = iconControl(t(lang, 'boardReopen'), BOARD_ICON, h.reopen);
-    dot.classList.add('dot');
-    dot.dataset.role = 'dot';
-    dot.hidden = true;
-    root.append(bar, dot);
-    panel = { bar, status, toggle, toDot, close, dot };
+    root.append(bar);
+    panel = { bar, status, toggle, close };
   }
 
   const caption = el('p', 'caption');

@@ -1,8 +1,8 @@
 // <pogo-board>: the reader plays Pogo against the AlphaZero net. `mode="inline"`
 // is the full figure; `mode="follow"` is the page's board, compact and bound to
 // the same game: an opaque panel the page fixes to a corner, shown once a game is
-// under way or once the page calls open(), in three sizes the reader chooses
-// (open, a bar, a dot), closable, and hidden while an inline board is on screen
+// under way or once the page calls open(), in two sizes the reader chooses
+// (open, a bar), closable, and hidden while an inline board is on screen
 // (follow-panel.ts). Both offer side and level before each game, and « Nouvelle
 // partie » asks once before abandoning one, which then leaves the setup for the
 // next. Every board shows the store's one game; the driver plays the AI's side
@@ -168,11 +168,6 @@ export class PogoBoard extends PogoFigure {
   private setSize(size: FollowSize): void {
     this.deps.store.setFollowSize(size);
     this.update();
-    const panel = this.ui?.panel;
-    if (!panel) return;
-    // Shrunk to its dot, the board keeps focus on it, pressed by a click that focused nothing (Safari) or by a key.
-    // Any other control that went away hands focus on in update() (repairFocus).
-    if (size === 'dot') panel.dot.focus();
   }
 
   protected async render(signal: AbortSignal): Promise<void> {
@@ -202,8 +197,6 @@ export class PogoBoard extends PogoFigure {
       },
       retry: () => this.deps.driver().retry(),
       toggle: () => this.setSize(this.deps.store.followSize() === 'open' ? 'bar' : 'open'),
-      toDot: () => this.setSize('dot'),
-      reopen: () => this.setSize('open'),
       close: () => {
         this.summoned = false;
         this.deps.store.setFollowClosed(true);
@@ -379,8 +372,6 @@ export class PogoBoard extends PogoFigure {
       panel.toggle.textContent = t(lang, size === 'open' ? 'collapse' : 'expand');
       panel.toggle.setAttribute('aria-expanded', String(size === 'open'));
       ui.body.hidden = size !== 'open';
-      panel.bar.hidden = size === 'dot';
-      panel.dot.hidden = size !== 'dot';
       ui.root.dataset.size = size;
       this.syncPanel();
     }
@@ -469,8 +460,7 @@ export class PogoBoard extends PogoFigure {
     if (!active) return;
     const gone = active.closest('[hidden], [data-off]') !== null || (active as HTMLButtonElement).disabled === true;
     if (!gone) return;
-    if (ui.panel && !ui.panel.dot.hidden) ui.panel.dot.focus();
-    else if (ui.body.hidden) ui.panel?.toggle.focus();
+    if (ui.body.hidden) ui.panel?.toggle.focus();
     else this.take?.focus();
   }
 }

@@ -141,9 +141,9 @@ describe('the follow board’s size and its close', () => {
     expect(store.followSize()).toBe('bar');
     store.newGame('White', 'normal');
     expect(store.followSize()).toBe('bar');
-    store.setFollowSize('dot');
+    store.setFollowSize('open');
     store.newGame('Red', 'easy');
-    expect(store.followSize()).toBe('dot');
+    expect(store.followSize()).toBe('open');
     store.playFrom(replay(DEFAULT_GAME.slice(0, 2)).at(-1)!, 'coup 2');
     expect(store.followSize()).toBe('open');
   });
@@ -177,14 +177,14 @@ describe('the follow board’s size and its close', () => {
     const storage = memory();
     const first = make(storage);
     first.newGame('White', 'normal');
-    first.setFollowSize('dot');
+    first.setFollowSize('open');
     first.setFollowClosed(true);
     const saved = JSON.parse(storage.data.get(STORAGE_KEY)!);
-    expect(saved.followSize).toBe('dot');
+    expect(saved.followSize).toBe('open');
     expect(saved.followClosed).toBe(true);
     const second = make(storage);
     await second.ready();
-    expect(second.followSize()).toBe('dot');
+    expect(second.followSize()).toBe('open');
     expect(second.followClosed()).toBe(true);
 
     // A record written before them: folded is a bar, open stays open.
@@ -200,6 +200,11 @@ describe('the follow board’s size and its close', () => {
       expect(third.followSize()).toBe(size);
       expect(third.followClosed()).toBe(false);
     }
+    // The dot size an earlier session may have stored reads as a bar.
+    storage.setItem(STORAGE_KEY, JSON.stringify({ ...saved, followSize: 'dot' }));
+    const dotted = make(storage);
+    await dotted.ready();
+    expect(dotted.followSize()).toBe('bar');
     // A size the store does not know restores a bar.
     storage.setItem(STORAGE_KEY, JSON.stringify({ ...saved, followSize: 'huge' }));
     const fourth = make(storage);

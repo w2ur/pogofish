@@ -69,7 +69,7 @@ export interface Store {
    */
   hasSaved(): boolean;
   /**
-   * The follow board's size, open, bar or dot: the reader's choice, kept in the storage
+   * The follow board's size, open or bar: the reader's choice, kept in the storage
    * record for the page's session. A bar by default; `playFrom` opens it, `newGame`
    * and moves leave it (follow-panel.ts).
    */
