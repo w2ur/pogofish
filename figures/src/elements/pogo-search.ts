@@ -20,6 +20,7 @@ import { LC1_2, key, legal, moveName, play, type Move, type State, type Triple }
 import { labelledBoard } from '../kit/board-labels';
 import { animateMove, cellCentre, drawBoard } from '../kit/board-svg';
 import { autoplay, type Playable } from '../kit/autoplay';
+import { exporting } from '../kit/export';
 import { controlButton, playFromAction, playFromButton, setAway, transport } from '../kit/controls';
 import { PogoFigure } from '../kit/figure';
 import { formatShare } from '../kit/score';
@@ -42,6 +43,8 @@ export type SearchPosition = 'puzzle5' | 'reader';
 
 /** At most this many rows: past it, the net's least preferred moves are summed in one line. */
 export const MAX_ROWS = 15;
+/** On the last frame, how long the position is held before the move chosen is played on it. */
+export const END_MOVE_MS = 400;
 /** The board's side, in CSS pixels. */
 const BOARD = 264;
 const NS = 'http://www.w3.org/2000/svg';
@@ -404,7 +407,7 @@ export class PogoSearch extends PogoFigure {
             setTimeout(() => {
               const to = put(after());
               animateMove(from, to, asTriple(best));
-            }, 400),
+            }, END_MOVE_MS),
           );
         } else {
           showBoard();
@@ -482,7 +485,7 @@ export class PogoSearch extends PogoFigure {
         said,
       );
       running = false;
-      const steps = new Stepper(frames.length, show, { signal, interval: (i) => frameHold(frames, i) });
+      const steps = new Stepper(frames.length, show, { signal, interval: (i) => frameHold(frames, i), beats: (i) => (frames[i]!.kind === 'end' ? [0, END_MOVE_MS] : [0]) });
       stepper = steps;
       const row = transport(steps, {
         lang,
@@ -492,10 +495,13 @@ export class PogoSearch extends PogoFigure {
       controls.replaceChildren(row);
       if (reduced()) steps.go(1);
       // Under reduced motion `play` does nothing: the reader steps. Off screen it waits for the figure to come back.
-      else if (!heldOffScreen) steps.play();
+      // Drawn for a picture, it waits for the capture (kit/export.ts).
+      else if (!heldOffScreen && !exporting(this)) steps.play();
     };
     // On screen, the search runs by itself; under reduced motion it waits for « Lancer ».
     autoplay(this, playable, { signal });
+    // Drawn for a picture: the search runs at once, and its steps are the capture's.
+    if (exporting(this)) void start();
 
     // The bars' and the mean value's scales: the table cannot be read without them.
     const lower = (x: string): string => x.charAt(0).toLowerCase() + x.slice(1);

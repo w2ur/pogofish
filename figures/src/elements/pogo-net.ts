@@ -27,6 +27,7 @@
 import { DEFAULT_GAME } from '../default-game';
 import { LC1_2, key, moveName, play, replay, terminal, type Colour, type State, type Triple } from '../engine';
 import { autoplay, type Playable } from '../kit/autoplay';
+import { exporting, offerSequence } from '../kit/export';
 import { controlButton, playFromAction, progress, transport } from '../kit/controls';
 import { PogoFigure } from '../kit/figure';
 import { moveTip } from '../kit/move-tip';
@@ -98,6 +99,16 @@ export function netNumber(lang: Lang, x: number, signed = false): string {
   const text = Math.abs(rounded).toFixed(2);
   const sign = rounded < 0 ? '−' : signed && rounded > 0 ? '+' : '';
   return sign + (lang === 'fr' ? text.replace('.', ',') : text);
+}
+
+/**
+ * What a capture shows of the crossing (kit/export.ts): a frame every half layer, from 0 until the
+ * signal has arrived, `end` being flowEnd(ranks); the last is then held with the position.
+ */
+export function crossingBeats(end: number): number[] {
+  const beats: number[] = [];
+  for (let k = 0; k * 0.5 < end; k++) beats.push(Math.round(k * 0.5 * STEP_MS));
+  return beats;
 }
 
 /** How long a position is shown: the signal's crossing, then the hold. */
@@ -587,6 +598,11 @@ export class PogoNet extends PogoFigure {
       { once: true },
     );
     this.stage.append(root);
+    // Drawn for a picture: one crossing, on the position the figure opens on, and its hold.
+    if (exporting(this)) {
+      seen = true;
+      offerSequence(root, { steps: 1, loops: false, go: () => show(stepper?.index ?? 0, true), hold: () => positionMs(graph), beats: () => crossingBeats(end) });
+    }
     autoplay(this, playable, { signal: signal_ });
   }
 }

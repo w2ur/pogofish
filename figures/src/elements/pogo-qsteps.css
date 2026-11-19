@@ -425,3 +425,8 @@
 .qsteps .counter {
   min-width: 30ch;
 }
+
+/* Export mode (kit/export.ts): the choice of learning rate is for a reader's hand; the update line still says the rate. */
+:host([export]) .group {
+  display: none !important;
+}

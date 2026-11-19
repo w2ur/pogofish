@@ -534,3 +534,8 @@
   clip-path: inset(50%);
   white-space: nowrap;
 }
+
+/* Export mode (kit/export.ts): the invitation to finish a game on the board is for a reader's hand. */
+:host([export]) .hint {
+  display: none !important;
+}

@@ -11,7 +11,7 @@ import { REDUCED_MOTION, intersect, leave, playState, resetMedia, setMedia } fro
 import { LINK_ALPHA, LINK_WIDTH, flowEnd } from './net-canvas';
 import { netGraph, signal } from './net-graph';
 import { DEFAULT_PLY, defaultPosition } from './net-position';
-import { HOLD_MS, PER_NODE, PogoNet, STEP_MS, TOP_MOVES, drawnWords, inputWords, netNumber, outputMove, positionMs, probeWords } from './pogo-net';
+import { HOLD_MS, PER_NODE, PogoNet, STEP_MS, TOP_MOVES, crossingBeats, drawnWords, inputWords, netNumber, outputMove, positionMs, probeWords } from './pogo-net';
 import { PogoEncoding } from './pogo-encoding';
 
 if (!customElements.get('pogo-net')) customElements.define('pogo-net', PogoNet);
@@ -269,6 +269,44 @@ describe('<pogo-net>', () => {
       expect(canvas.strokes()).toBe(done);
       expect(sheet).toMatch(/\.net\[data-flow='running'\] \.late \{\s*visibility: hidden/);
       expect($(el, '.note-number').classList.contains('late')).toBe(true);
+    } finally {
+      canvas.restore();
+    }
+  });
+
+  it('a capture’s crossing: a frame every half layer, from 0 until the signal has arrived', () => {
+    expect(crossingBeats(3.4)).toEqual([0, 638, 1275, 1913, 2550, 3188, 3825]);
+    expect(crossingBeats(1)).toEqual([0, 638]);
+    for (const end of [0.6, 2, 3.4, 5.2]) {
+      const beats = crossingBeats(end);
+      expect(beats[0]).toBe(0);
+      expect(beats.at(-1)!).toBeLessThan(end * STEP_MS);
+      expect(beats.at(-1)! + STEP_MS / 2).toBeGreaterThanOrEqual(end * STEP_MS - 1);
+    }
+  });
+
+  it('drawn for a picture, it offers one crossing on the position it opens on, and its hold (kit/export.ts)', async () => {
+    const canvas = fakeCanvas();
+    vi.useFakeTimers({ toFake: ['setTimeout', 'clearTimeout', 'requestAnimationFrame', 'cancelAnimationFrame', 'performance', 'Date'] });
+    try {
+      const el = document.createElement('pogo-net') as PogoNet;
+      el.setAttribute('kind', 'td');
+      el.setAttribute('export', '');
+      document.body.append(el);
+      await vi.advanceTimersByTimeAsync(0);
+      await el.whenRendered();
+      const seq = el.exportSequence()!;
+      const end = flowEnd(netGraph(td.header).ranks);
+      expect(seq.steps).toBe(1);
+      expect(seq.hold(0)).toBe(positionMs(netGraph(td.header)));
+      expect(seq.beats(0)).toEqual(crossingBeats(end));
+      // Nothing crosses until the capture shows the step; then the signal does, from the start.
+      expect(net(el).dataset.flow).toBe('arrived');
+      seq.go(0);
+      expect(net(el).dataset.flow).toBe('running');
+      expect(net(el).dataset.position).toBe(key(GAME[DEFAULT_PLY]!));
+      await vi.advanceTimersByTimeAsync(end * STEP_MS + 50);
+      expect(net(el).dataset.flow).toBe('arrived');
     } finally {
       canvas.restore();
     }

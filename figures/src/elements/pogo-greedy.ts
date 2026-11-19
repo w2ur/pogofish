@@ -34,6 +34,16 @@ import { resultWords } from './replay-view';
 export const BEATS = { weigh: 900, best: 900 + 2800, move: 900 + 2800 + 1400, score: 900 + 2800 + 1400 + MOVE_TEMPO_MS } as const;
 export const STEP_MS = BEATS.score + 1500;
 
+/**
+ * When step `i` of `steps` changes as automatic play tells it, from 0 (kit/export.ts): the first
+ * step is the position alone, and only the last says a result.
+ */
+export function stepBeats(i: number, steps: number): number[] {
+  if (i === 0) return [0];
+  const beats = [0, BEATS.weigh, BEATS.best, BEATS.move];
+  return i === steps - 1 ? [...beats, BEATS.score] : beats;
+}
+
 /** A value as the figure writes it: a signed gap, or the end the move brings. */
 export function valueText(lang: Lang, score: number): string {
   const end = endOf(score);
@@ -286,7 +296,7 @@ export class PogoGreedy extends PogoFigure {
       ];
     };
 
-    const stepper = new Stepper(frames.length, show, { signal, interval: STEP_MS });
+    const stepper = new Stepper(frames.length, show, { signal, interval: STEP_MS, beats: (i) => stepBeats(i, frames.length) });
     show(0);
     const body = el('div', 'game');
     body.append(slot, panel, transport(stepper, { lang, unit: 'move', counter: progress(lang, 'move', true) }), result);

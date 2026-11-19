@@ -431,3 +431,9 @@ ol {
     font-size: 12.8px;
   }
 }
+
+/* Export mode (kit/export.ts): the invitation to play on the board and the hint to point at a neuron are for a reader's hand. */
+:host([export]) .invite,
+:host([export]) .probe {
+  display: none !important;
+}

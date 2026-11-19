@@ -324,6 +324,35 @@ describe('<pogo-greedy>', () => {
     remove(el);
     expect(vi.getTimerCount()).toBe(0);
   });
+
+  it('offers a capture each move’s beats, at the moments the step changes by itself (kit/export.ts)', async () => {
+    const el = document.createElement('pogo-greedy') as PogoGreedy;
+    el.setAttribute('export', '');
+    document.body.append(el);
+    await el.whenRendered();
+    const seq = el.exportSequence()!;
+    expect(seq.steps).toBe(game.frames.length);
+    expect(seq.beats(0)).toEqual([0]);
+    expect(seq.hold(1)).toBe(STEP_MS);
+    vi.useFakeTimers();
+    // Each step after the first, in order as a capture shows them; the last also says the result.
+    for (let i = 1; i < last; i++) seq.go(i);
+    expect(seq.beats(1)).toEqual(seq.beats(last).slice(0, -1));
+    seq.go(last);
+    const offsets = seq.beats(last);
+    expect(offsets[0]).toBe(0);
+    // Every beat after the first changes what is shown, at its moment and not before.
+    let seen = el.shadowRoot!.innerHTML;
+    for (let k = 1; k < offsets.length; k++) {
+      vi.advanceTimersByTime(offsets[k]! - offsets[k - 1]! - 1);
+      expect(el.shadowRoot!.innerHTML).toBe(seen);
+      vi.advanceTimersByTime(1);
+      expect(el.shadowRoot!.innerHTML).not.toBe(seen);
+      seen = el.shadowRoot!.innerHTML;
+    }
+    expect(offsets.at(-1)).toBeLessThan(seq.hold(last));
+    remove(el);
+  });
 });
 
 describe('<pogo-greedy> transport', () => {

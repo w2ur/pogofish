@@ -8,7 +8,7 @@ import { parseAz, type AzNet } from '../nets';
 import { createStore, type Store } from '../store';
 import { REDUCED_MOTION, intersect, playState, resetMedia, setMedia, shownText } from '../test-dom';
 import { MOVE_TEMPO_MS } from '../kit/tempo';
-import { MAX_ROWS, PogoSearch, shownRows } from './pogo-search';
+import { END_MOVE_MS, MAX_ROWS, PogoSearch, shownRows } from './pogo-search';
 import { signedNote } from './q-steps';
 import { HOLD, frameHold, searchScript } from './search-script';
 import { PUZZLE5 } from './search-steps';
@@ -292,6 +292,34 @@ describe('<pogo-search>', () => {
     expect($(el, '[data-role="counter"]').textContent).toBe('100 simulations of 100');
     expect(frame(el)).toBe('end');
     expect(playState(el)).toBe('replay');
+  });
+
+  it('drawn for a picture, it searches at once and offers its frames, the last in two beats, without playing them (kit/export.ts)', async () => {
+    setMedia(REDUCED_MOTION, false);
+    use(makeStore());
+    const el = document.createElement('pogo-search') as PogoSearch;
+    el.setAttribute('position', 'puzzle5');
+    el.setAttribute('export', '');
+    document.body.append(el);
+    await el.whenRendered();
+    await until(() => el.exportSequence() !== undefined);
+    const seq = el.exportSequence()!;
+    const frames = searchScript({ sim: 0, root: emitted[0]!.root.map((r) => ({ ...r, visits: 0, meanValue: 0 })) }, emitted, traced);
+    expect(seq.steps).toBe(frames.length);
+    expect(seq.hold(1)).toBe(frameHold(frames, 1));
+    expect(playState(el)).toBe('play');
+    const last = seq.steps - 1;
+    expect(frames[last]!.kind).toBe('end');
+    expect(seq.beats(last)).toEqual([0, END_MOVE_MS]);
+    expect(seq.beats(last - 1)).toEqual([0]);
+    // The move chosen is played on the board at the second beat, not before.
+    vi.useFakeTimers();
+    for (let i = 0; i <= last; i++) seq.go(i);
+    const before = $(el, '.board-slot').innerHTML;
+    vi.advanceTimersByTime(END_MOVE_MS - 1);
+    expect($(el, '.board-slot').innerHTML).toBe(before);
+    vi.advanceTimersByTime(1);
+    expect($(el, '.board-slot').innerHTML).not.toBe(before);
   });
 
   it('a search still running at disconnect is aborted', async () => {
