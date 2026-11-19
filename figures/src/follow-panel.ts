@@ -1,9 +1,8 @@
 // What the follow board (<pogo-board mode="follow">) decides about itself, apart
 // from the board: its size, whether it is shown at all, and what Escape does. It
-// is the page's one board, a small panel fixed to a corner: it comes in three
-// sizes, the reader's choice (open: board and controls; bar: one line; dot: one
-// small square that reopens it), and it can be closed. It shows with a game
-// under way, or once the page opens it (open()) with none, and gives way to an
+// is the page's one board, a small panel fixed to a corner: it comes in two
+// sizes, the reader's choice (open: board and controls; bar: one line), and it
+// can be closed. It shows with a game under way, or once the page opens it (open()) with none, and gives way to an
 // inline board on screen.
 //
 // Size and close are the reader's choice and last for the page's session: the
@@ -15,9 +14,9 @@
 /** How a game started: on a board (inline, or the follow board's own « Nouvelle partie »), or from a figure's « Jouer cette position ». */
 export type FollowStart = 'board' | 'figure';
 
-/** Open: the board and its controls; bar: one line, the turn and the controls; dot: one small square that reopens it. */
-export type FollowSize = 'open' | 'bar' | 'dot';
-export const FOLLOW_SIZES: readonly FollowSize[] = ['open', 'bar', 'dot'];
+/** Open: the board and its controls; bar: one line, the turn and the controls. */
+export type FollowSize = 'open' | 'bar';
+export const FOLLOW_SIZES: readonly FollowSize[] = ['open', 'bar'];
 export const isFollowSize = (x: unknown): x is FollowSize => FOLLOW_SIZES.includes(x as FollowSize);
 
 /** A bar until the reader opens it, or a figure hands a position over. */
@@ -47,7 +46,7 @@ export type EscapeAction = 'keep-game' | 'put-down' | 'fold' | 'none';
 
 /**
  * What Escape does, nearest first: it puts away the abandon question, then a
- * lifted stack, then, on an open follow board, folds it to its bar. A bar or a dot it leaves.
+ * lifted stack, then, on an open follow board, folds it to its bar. A bar it leaves.
  */
 export function escapeAction(o: { confirming: boolean; lifted: boolean; follow: boolean; size: FollowSize }): EscapeAction {
   if (o.confirming) return 'keep-game';

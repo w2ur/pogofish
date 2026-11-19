@@ -192,30 +192,8 @@
   margin-left: auto;
 }
 
-.bar[hidden],
-.dot[hidden] {
+.bar[hidden] {
   display: none;
-}
-
-/*
- * The smallest size: one square in the page's corner that says what it is and
- * reopens the board. The panel gives up its frame; the square keeps the kit's
- * outline, on the page's ground so no text shows through it.
- */
-.pb[data-size='dot'] {
-  align-items: flex-end;
-  padding: 0;
-  border: 0;
-  background: none;
-}
-
-.dot {
-  width: 44px;
-  height: 44px;
-}
-
-.control.secondary.dot {
-  background: var(--_ground);
 }
 
 .bar-status {

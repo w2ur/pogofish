@@ -742,30 +742,22 @@ describe('<pogo-board mode="follow"> is the page’s board', () => {
     expect(el.shadowRoot!.activeElement!.closest('.setup')).not.toBeNull();
   });
 
-  it('three sizes, the reader’s: open, a bar, a dot of at most 48px that says what it is and reopens it', async () => {
+  it('two sizes, the reader’s: open and a bar; no control shrinks the board to a « pastille »', async () => {
     const el = await mount('fr', { mode: 'follow' });
     store.newGame('White', 'normal');
     await flush();
-    const dotSize = $<HTMLButtonElement>(el, '[data-role="dot-size"]');
-    expect(dotSize.getAttribute('aria-label')).toBe('Réduire le plateau à une pastille');
-    expect(dotSize.querySelector('[role="tooltip"]')!.textContent).toBe('Réduire le plateau à une pastille');
-    dotSize.click();
-    expect(el.dataset.size).toBe('dot');
-    expect(store.followSize()).toBe('dot');
-    expect($(el, '.bar').hidden).toBe(true);
-    expect($(el, '.body').hidden).toBe(true);
-    const dot = $<HTMLButtonElement>(el, '[data-role="dot"]');
-    expect(dot.hidden).toBe(false);
-    expect(dot.getAttribute('aria-label')).toBe('Rouvrir le plateau de Pogo');
-    expect(el.shadowRoot!.activeElement).toBe(dot);
-    const css = readFileSync(resolve(process.cwd(), 'src/elements/pogo-board.css'), 'utf8');
-    const rule = /\.dot \{([^}]*)\}/.exec(css)![1]!;
-    const px = (p: string) => Number(new RegExp(`${p}: (\\d+)px`).exec(rule)![1]);
-    expect(px('width')).toBeLessThanOrEqual(48);
-    expect(px('height')).toBeLessThanOrEqual(48);
-    dot.click();
+    expect(el.shadowRoot!.querySelector('[data-role="dot-size"], [data-role="dot"]')).toBeNull();
+    const labels = [...el.shadowRoot!.querySelectorAll('button')].map((b) => b.getAttribute('aria-label') ?? b.textContent ?? '');
+    expect(labels.some((l) => /pastille|dot/i.test(l))).toBe(false);
+    const size = $<HTMLButtonElement>(el, '[data-role="size"]');
+    expect(el.dataset.size).toBe('bar');
+    size.click();
     expect(el.dataset.size).toBe('open');
     expect($(el, '.body').hidden).toBe(false);
+    size.click();
+    expect(el.dataset.size).toBe('bar');
+    expect($(el, '.body').hidden).toBe(true);
+    expect($(el, '.bar').hidden).toBe(false);
   });
 
   it('the close control hides it until the next open() or the next position handed over', async () => {

@@ -5,11 +5,12 @@ describe('the follow board, its size and its close', () => {
   it('starts as a bar; a game started on a board keeps the reader’s size, a figure’s « Jouer cette position » opens it', () => {
     expect(FOLLOW_SIZE_DEFAULT).toBe('bar');
     expect(sizeAtStart('bar', 'board')).toBe('bar');
-    expect(sizeAtStart('dot', 'board')).toBe('dot');
     expect(sizeAtStart('open', 'board')).toBe('open');
-    for (const size of ['open', 'bar', 'dot'] as const) expect(sizeAtStart(size, 'figure')).toBe('open');
-    expect(['open', 'bar', 'dot'].every(isFollowSize)).toBe(true);
+    for (const size of ['open', 'bar'] as const) expect(sizeAtStart(size, 'figure')).toBe('open');
+    expect(['open', 'bar'].every(isFollowSize)).toBe(true);
     expect(isFollowSize('folded')).toBe(false);
+    // The dot size is gone: a value an earlier session stored is not a size.
+    expect(isFollowSize('dot')).toBe(false);
   });
 
   it('is shown with a game, or once the page opened it; never once closed; and gives way to an inline board on screen unless it holds focus', () => {
@@ -29,7 +30,6 @@ describe('the follow board, its size and its close', () => {
     expect(escapeAction({ ...base, lifted: true })).toBe('put-down');
     expect(escapeAction(base)).toBe('fold');
     expect(escapeAction({ ...base, size: 'bar' })).toBe('none');
-    expect(escapeAction({ ...base, size: 'dot' })).toBe('none');
     // An inline board has nothing to fold.
     expect(escapeAction({ ...base, follow: false })).toBe('none');
   });
