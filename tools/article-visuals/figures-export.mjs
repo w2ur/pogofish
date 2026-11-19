@@ -284,7 +284,7 @@ function encodeGif(frames, dir, target) {
   let n = 0;
   for (const f of frames) for (let k = 0; k < ticks(f.ms); k++) linkSync(f.file, join(seq, `t${String(n++).padStart(5, '0')}.png`));
   const files = Array.from({ length: n }, (_, k) => join(seq, `t${String(k).padStart(5, '0')}.png`));
-  execFileSync('gifski', ['--quiet', '--fps', String(1000 / TICK_MS), '--width', String(WIDTH), '--quality', '90', '-o', target, ...files]);
+  execFileSync('gifski', ['--quiet', '--fps', String(1000 / TICK_MS), '--width', String(WIDTH), '--quality', '90', '--motion-quality', '100', '-o', target, ...files]);
 }
 
 function encodeWebp(frame, target) {
