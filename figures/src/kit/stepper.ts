@@ -25,6 +25,12 @@ export interface StepperOptions {
   wrapTo?: number;
   /** For a loop: extra milliseconds the last step is held before it starts again (default 0). */
   rest?: number;
+  /**
+   * For a step that tells itself in beats (its own timers, set by `onStep`): the offsets in
+   * ms, after the step is shown, at which it changes, the first being 0. Nothing here plays
+   * them; they are what a capture of the figure reads (kit/export.ts). Default: [0].
+   */
+  beats?: (i: number) => number[];
   /** Aborting it destroys the stepper: a figure passes its own, aborted at disconnect. */
   signal?: AbortSignal;
 }
@@ -37,6 +43,7 @@ export class Stepper {
   private readonly rest: number;
   private readonly onEnd: (() => void) | undefined;
   private readonly wrapTo: number | undefined;
+  private readonly beatsOf: ((i: number) => number[]) | undefined;
   private readonly listeners = new Set<() => void>();
   private destroyed = false;
   private heldByReader = false;
@@ -55,6 +62,7 @@ export class Stepper {
     this.rest = options.rest ?? 0;
     this.onEnd = options.onEnd;
     this.wrapTo = options.wrapTo;
+    this.beatsOf = options.beats;
     this.media = matchMedia(REDUCED_MOTION);
     if (options.signal?.aborted) {
       this.destroyed = true;
@@ -71,6 +79,11 @@ export class Stepper {
 
   get playing(): boolean {
     return this.timer !== undefined;
+  }
+
+  /** A loop: automatic play goes on past the last step (`wrapTo`) rather than resting on it. */
+  get loops(): boolean {
+    return this.wrapTo !== undefined;
   }
 
   get index(): number {
@@ -151,12 +164,22 @@ export class Stepper {
     return true;
   }
 
-  /** One step after `interval`; on a loop's last step, after `interval + rest`. */
+  /** How long automatic play holds step `i`: its interval, and on a loop's last step the rest too. */
+  hold(i: number): number {
+    const held = typeof this.interval === 'function' ? this.interval(i) : this.interval;
+    return this.wrapTo !== undefined && i === this.steps - 1 ? held + this.rest : held;
+  }
+
+  /** The beats of step `i` (the `beats` option), always from 0. */
+  beats(i: number): number[] {
+    return this.beatsOf?.(i) ?? [0];
+  }
+
+  /** One step after `hold(i)`. */
   private schedule(): void {
     const last = this.steps - 1;
     const wrapTo = this.wrapTo;
-    const held = typeof this.interval === 'function' ? this.interval(this.i) : this.interval;
-    const wait = wrapTo !== undefined && this.i === last ? held + this.rest : held;
+    const wait = this.hold(this.i);
     // The timer stays set while the step is shown, so subscribers hear it as playing.
     const timer = setTimeout(() => {
       if (wrapTo !== undefined && this.i === last) this.go(wrapTo);

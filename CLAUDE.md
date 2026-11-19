@@ -19,6 +19,7 @@ Pogofish is a browser-based Pogo board game with AI opponents trained via AlphaZ
 - TypeScript + Vite library mode: the `<pogo-…>` custom elements of an article page; `src/engine.ts` is the only module that talks to the committed `wasm-pkg/` build, and it maps game A (a `null` rule set) to the WASM's `"Uncapped"` because passing null poisons the instance
 - Each element is its own chunk, defined lazily: the entry (`src/index.ts`) holds only the tag list (`src/manifest.ts`), one loader per tag (`src/registry.ts`) and the lazy-definition logic. Never import an element module statically from the entry; adding an element is the checklist in `docs/development.md`
 - Every user-facing string lives in `src/kit/strings.ts`, in French and English; red (`--pogo-red`) means the Red side on a board and, in a data figure, the one signal its legend names; never a control (the hub's `DESIGN.md`, C16)
+- Export mode (`src/kit/export.ts`, the `export` attribute) draws a figure for a picture: no transport, nothing that plays by itself, its steps and their beats offered to `tools/article-visuals/figures-export.mjs`; a step that changes on timers of its own must declare them as the Stepper's `beats` (`docs/development.md`)
 - `figures/budget.json` is the ledger of size caps (JS and data files), each with its reason; raising one needs that reason, never a silent edit
 
 ### Web app (`app/`)

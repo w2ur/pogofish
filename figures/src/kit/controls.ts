@@ -14,6 +14,7 @@
 // the figure is at rest, paused or ended, and away (its place kept) while it
 // plays.
 // A figure puts this row right under the visual it drives.
+import { offerSequence, stepperSequence } from './export';
 import { keepCase } from './keep-case';
 import { labelTip } from './move-tip';
 import type { Stepper } from './stepper';
@@ -195,6 +196,8 @@ export function transport(stepper: Stepper, o: TransportOptions): HTMLElement {
   };
 
   row.append(prev, play, next, counter, ...extras);
+  // What a capture of the figure steps through (kit/export.ts): the row's own steps.
+  offerSequence(row, stepperSequence(stepper));
   stepper.onChange(sync);
   sync();
   return row;

@@ -633,3 +633,19 @@ slot[hidden],
 .move-tip:not([data-open]) {
   display: none;
 }
+
+/*
+ * Export mode (export.ts): a figure drawn for a picture leaves out what is for a reader's
+ * hand: the transport and its counter, « Jouer cette position », a toy's invitation, a tip.
+ */
+:host([export]) .controls,
+:host([export]) .play-from,
+:host([export]) .toy-invite,
+:host([export]) .move-tip {
+  display: none !important;
+}
+
+/* Nor the dotted underline saying a move's name explains itself on hover: no one hovers a picture. */
+:host([export]) .move-name {
+  text-decoration: none;
+}

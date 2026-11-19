@@ -39,6 +39,7 @@
 //   root.append(play.invite, scene);  // call toy() last: under reduced motion onReady() runs in it
 import type { ObserverCtor } from '../follow-panel';
 import { halfOnScreen } from './autoplay';
+import { exporting, offerSequence } from './export';
 import { MOVE_TEMPO_MS } from './tempo';
 
 export type ToyPhase = 'waiting' | 'intro' | 'ready';
@@ -111,6 +112,13 @@ export function toy(host: Element, o: ToyOptions): Toy {
   set('waiting');
   const api: Toy = { invite, phase: () => phase, skip };
   if (o.signal.aborted) return api;
+  // Drawn for a picture (kit/export.ts): the introduction is the sequence a capture shows, step by
+  // step; it never plays by itself and the toy never becomes the reader's.
+  if (exporting(host)) {
+    set('intro');
+    offerSequence(o.root, { steps: o.intro.steps, loops: false, go: (i) => o.intro.show(i), hold, beats: () => [0] });
+    return api;
+  }
   if (matchMedia(REDUCED_MOTION).matches || o.intro.steps <= 0) {
     skip();
     return api;

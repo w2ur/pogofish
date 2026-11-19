@@ -8,6 +8,7 @@
 // One call per figure, after its transport exists. The IntersectionObserver is
 // injected, as in follow-panel.ts, so a test drives it.
 import type { ObserverCtor } from '../follow-panel';
+import { exporting } from './export';
 
 /** What autoplay drives: a Stepper, or a figure's own wrapper around one. */
 export interface Playable {
@@ -42,7 +43,8 @@ export function halfOnScreen(e: IntersectionObserverEntry): boolean {
 
 /** Watches `host` and plays or pauses `target` as it comes and goes; see the header. */
 export function autoplay(host: Element, target: Playable, o: AutoplayOptions): void {
-  if (o.signal.aborted) return;
+  // Drawn for a picture (kit/export.ts): the capture shows each step itself.
+  if (o.signal.aborted || exporting(host)) return;
   const reduced = (): boolean => matchMedia(REDUCED_MOTION).matches;
   if (reduced()) o.still?.();
   const Ctor = o.Observer ?? (typeof IntersectionObserver === 'function' ? IntersectionObserver : undefined);

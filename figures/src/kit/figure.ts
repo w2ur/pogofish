@@ -7,6 +7,7 @@
 // figure needs to be read (an axis, a legend) is part of what it draws.
 
 import type { State } from '../engine';
+import { exporting, findSequence, type ExportSequence } from './export';
 import { t, type Lang } from './strings';
 import themeCss from './theme.css?raw';
 // The store listens for `pogo:playfrom` on the document. Each element is its own
@@ -101,18 +102,37 @@ export abstract class PogoFigure extends HTMLElement {
     if (!this.shadowRoot) this.buildFrame();
     this.controller = new AbortController();
     if (this.rendered) return;
+    // Drawn for a picture (kit/export.ts): at once, wherever it is.
+    if (exporting(this)) {
+      this.startRender();
+      return;
+    }
     this.observer = new IntersectionObserver(
       (entries) => {
         if (this.rendered || !entries.some((e) => e.isIntersecting)) return;
         this.observer?.disconnect();
         this.observer = undefined;
-        this.rendered = true;
-        const signal = this.signal;
-        this.pending = this.pending.then(() => this.run(signal));
+        this.startRender();
       },
       { rootMargin: '50%' },
     );
     this.observer.observe(this);
+  }
+
+  /** Settles once the render under way, if any, has finished, drawn or failed. */
+  whenRendered(): Promise<void> {
+    return this.pending;
+  }
+
+  /** Under export mode, what a capture steps through (kit/export.ts); none before the figure offers one. */
+  exportSequence(): ExportSequence | undefined {
+    return this.shadowRoot ? findSequence(this.shadowRoot) : undefined;
+  }
+
+  private startRender(): void {
+    this.rendered = true;
+    const signal = this.signal;
+    this.pending = this.pending.then(() => this.run(signal));
   }
 
   disconnectedCallback(): void {
